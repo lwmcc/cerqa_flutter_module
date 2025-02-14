@@ -1,0 +1,7 @@
+{
+  "dev": {
+    "configLevel": "project",
+    "useProfile": false,
+    "awsConfigFilePath": "/Users/larrymccarty/.amplify/awscloudformation/48EMQe96FT"
+  }
+}

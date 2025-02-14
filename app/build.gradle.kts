@@ -70,13 +70,14 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
 
-    coreLibraryDesugaring(libs.desugar.jdk.libs)
-
-    implementation(libs.authenticator)
-    coreLibraryDesugaring(libs.desugar.jdk.libs.v203)
-
     implementation(libs.androidx.material3)
 
+    // AWS Amplify
+    implementation(libs.authenticator)
+    implementation(libs.aws.api)
+    implementation(libs.authenticator.vandroidauthenticatorversion)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+    implementation(libs.core)
 }
 
 kapt {

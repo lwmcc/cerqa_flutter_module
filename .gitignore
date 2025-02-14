@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# amplify
+node_modules
+.amplify
+amplify_outputs*
+amplifyconfiguration*
