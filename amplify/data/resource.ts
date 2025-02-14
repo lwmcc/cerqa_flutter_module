@@ -9,6 +9,7 @@ and "delete" any "Todo" records.
 const schema = a.schema({
     User: a
      .model({
+       id: a.string(),
        avatarUri: a.string(),
        email: a.string(),
        firstName: a.string(),
