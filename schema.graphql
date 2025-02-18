@@ -1,0 +1,148 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+type Mutation {
+  createUsers(input: CreateUsersInput!): Users
+  deleteUsers(input: DeleteUsersInput!): Users
+  updateUsers(input: UpdateUsersInput!): Users
+}
+
+type Query {
+  getUsers(user_id: String!): Users
+  listUsers(filter: TableUsersFilterInput, limit: Int, nextToken: String): UsersConnection
+}
+
+type Subscription {
+  onCreateUsers(email: String, first_name: String, last_name: String, name: String, user_id: String): Users @aws_subscribe(mutations : ["createUsers"])
+  onDeleteUsers(email: String, first_name: String, last_name: String, name: String, user_id: String): Users @aws_subscribe(mutations : ["deleteUsers"])
+  onUpdateUsers(email: String, first_name: String, last_name: String, name: String, user_id: String): Users @aws_subscribe(mutations : ["updateUsers"])
+}
+
+type Users {
+  avatar_uri: String
+  contacts: AWSJSON
+  email: String
+  first_name: String!
+  groups: AWSJSON
+  last_name: String
+  name: String!
+  phone: String
+  user_id: String!
+  vehicles: AWSJSON
+}
+
+type UsersConnection {
+  items: [Users]
+  nextToken: String
+}
+
+input CreateUsersInput {
+  avatar_uri: String
+  contacts: AWSJSON
+  email: String
+  first_name: String!
+  groups: AWSJSON
+  last_name: String
+  name: String!
+  phone: String
+  user_id: String!
+  vehicles: AWSJSON
+}
+
+input DeleteUsersInput {
+  user_id: String!
+}
+
+input ModelSizeInput {
+  between: [Int]
+  eq: Int
+  ge: Int
+  gt: Int
+  le: Int
+  lt: Int
+  ne: Int
+}
+
+input TableBooleanFilterInput {
+  attributeExists: Boolean
+  eq: Boolean
+  ne: Boolean
+}
+
+input TableFloatFilterInput {
+  attributeExists: Boolean
+  between: [Float]
+  eq: Float
+  ge: Float
+  gt: Float
+  le: Float
+  lt: Float
+  ne: Float
+}
+
+input TableIDFilterInput {
+  attributeExists: Boolean
+  beginsWith: ID
+  between: [ID]
+  contains: ID
+  eq: ID
+  ge: ID
+  gt: ID
+  le: ID
+  lt: ID
+  ne: ID
+  notContains: ID
+  size: ModelSizeInput
+}
+
+input TableIntFilterInput {
+  attributeExists: Boolean
+  between: [Int]
+  eq: Int
+  ge: Int
+  gt: Int
+  le: Int
+  lt: Int
+  ne: Int
+}
+
+input TableStringFilterInput {
+  attributeExists: Boolean
+  beginsWith: String
+  between: [String]
+  contains: String
+  eq: String
+  ge: String
+  gt: String
+  le: String
+  lt: String
+  ne: String
+  notContains: String
+  size: ModelSizeInput
+}
+
+input TableUsersFilterInput {
+  avatar_uri: TableStringFilterInput
+  email: TableStringFilterInput
+  first_name: TableStringFilterInput
+  last_name: TableStringFilterInput
+  name: TableStringFilterInput
+  phone: TableStringFilterInput
+  user_id: TableStringFilterInput
+}
+
+input UpdateUsersInput {
+  avatar_uri: String
+  contacts: AWSJSON
+  email: String
+  first_name: String
+  groups: AWSJSON
+  last_name: String
+  name: String
+  phone: String
+  user_id: String!
+  vehicles: AWSJSON
+}

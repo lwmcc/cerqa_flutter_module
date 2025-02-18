@@ -39,29 +39,27 @@ class MainActivity : ComponentActivity() {
                     Button(onClick = {
 
                         println("my click")
-/*                        val user = User.builder()
-                            .firstName("larry")
-                            .lastName("mccarty")
-                            .name("fake name")
-                            .id("fake-id")
-                            .email("lwmccarty@gmail.com")
-                            .phone("480-392-6853")
+                         val user = User.builder()
+                            .firstName("Michael")
+                            .lastName("Jordan")
+                            .name("MJ")
+                            .id("4")
+                            .email("mj@gmail.com")
+                            .phone("480-333-4444")
                             .avatarUri("https://fake-uri.com")
                             .build()
+
+                        Amplify.Auth.fetchUserAttributes(
+                            { attributes ->
+                                val userId = attributes.firstOrNull { it.key.keyString == "sub" }?.value
+                                Log.d("MainActivity *****", "User ID: $userId")
+                            },
+                            { error -> Log.e("MainActivity *****", "Failed to fetch user attributes", error) }
+                        )
 
                         Amplify.API.mutate(
                             ModelMutation.create(user),
                             { Log.i("MainActivity *****", "Added User with id: ${it}")},
-                            { Log.e("MainActivity *****", "Create failed", it)},
-                        )*/
-
-                        val todo = Todo.builder()
-                            .content("Another reset new user")
-                            .build()
-
-                       Amplify.API.mutate(
-                            ModelMutation.create(todo),
-                            { Log.i("MainActivity *****", "Added Todo with id:  ${it.data.id}")},
                             { Log.e("MainActivity *****", "Create failed", it)},
                         )
                     }) {

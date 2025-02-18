@@ -16,7 +16,9 @@ class CarClubApplication : Application() {
         try {
             Amplify.addPlugin(AWSCognitoAuthPlugin())
             Amplify.addPlugin(AWSApiPlugin())
-            Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), applicationContext)
+            Amplify.configure(
+                AmplifyOutputs(R.raw.amplify_outputs), applicationContext
+            )
             // TODO: log
         } catch (error: AmplifyException) {
             // TODO: log

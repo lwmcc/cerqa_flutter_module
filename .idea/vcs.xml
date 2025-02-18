@@ -2,6 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/amplify/carclub-api" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/carclub" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/carclub-api" vcs="Git" />
   </component>

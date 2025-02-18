@@ -1,28 +1,50 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
+import { defineAuth } from "@aws-amplify/backend"
 
-/*== STEP 1 ===============================================================
-The section below creates a Todo database table with a "content" field. Try
-adding a new "isDone" field as a boolean. The authorization rule below
-specifies that any unauthenticated user can "create", "read", "update", 
-and "delete" any "Todo" records.
-=========================================================================*/
 const schema = a.schema({
     User: a
      .model({
-       id: a.string(),
-       avatarUri: a.string(),
-       email: a.string(),
+       id: a.id.required(),
+       avatarUri: a.url(),
+       email: a.email(),
        firstName: a.string(),
        lastName: a.string(),
        name: a.string(),
-       phone: a.string(),
+       phone: a.phone(),
+       groups: a.hasMany('Group', 'users'),
+       contacts: a.hasMany('Contact', 'userId'),
      })
      .authorization((allow) => [allow.guest()]),
+
+    Group: a
+      .model({
+        id: a.id.required(),
+        userId: a.id.required(),
+        name: a.string().required(),
+        users: a.hasMany('User', 'groups'),
+      }),
+
+    Contact: a
+      .model({
+        userId: a.id,
+        name: a.string().required(),
+        phone: a.phone(),
+        email: a.email(),
+        user: a.belongsTo('User', 'userId'),
+      }),
+
+    UserGroup: a
+        .model({
+            userId: a.id.required(),
+            groupId: a.id.required(),
+            user: a.belongsTo('User', 'userId'),
+            group: a.belongsTo('Group', groupId),
+        })
 });
 
 export type Schema = ClientSchema<typeof schema>;
 
-export const data = defineData({
+const data = defineData({
   schema,
   authorizationModes: {
     defaultAuthorizationMode: 'iam',
@@ -32,8 +54,7 @@ export const data = defineData({
 // generate your data client using the Schema from your backend
 const client = generateClient<Schema>();
 
-// list all messages
-const { data } = await client.models.Message.list();
+const { data } = await client.models.Users.list();
 
 /*== STEP 2 ===============================================================
 Go to your frontend source code. From your client-side code, generate a

@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "us-east-2_jq3yQCykD",
+    "user_pool_id": "us-east-2_FuzJ0AcFB",
     "aws_region": "us-east-2",
-    "user_pool_client_id": "2tcmjv6tmupcdrr39qksbm27e6",
-    "identity_pool_id": "us-east-2:2367a10e-a779-4eb9-bf8b-10061f822189",
+    "user_pool_client_id": "1rl0jpe9s4mnsefq6k2if077rk",
+    "identity_pool_id": "us-east-2:206732fb-ea8c-45e7-9cd3-d76944253560",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -14,7 +14,6 @@
     "user_verification_types": [
       "email"
     ],
-    "groups": [],
     "mfa_configuration": "NONE",
     "password_policy": {
       "min_length": 8,
@@ -26,11 +25,13 @@
     "unauthenticated_identities_enabled": true
   },
   "data": {
-    "url": "https://h5zzkditvzckhgq73movuv6kfi.appsync-api.us-east-2.amazonaws.com/graphql",
+    "url": "https://pm5m2ypttnauheez4q5xdrvsci.appsync-api.us-east-2.amazonaws.com/graphql",
     "aws_region": "us-east-2",
-    "default_authorization_type": "AWS_IAM",
+    "api_key": "da2-uihtenjplvachd6atvnhwi4imq",
+    "default_authorization_type": "API_KEY",
     "authorization_types": [
-      "AMAZON_COGNITO_USER_POOLS"
+      "AMAZON_COGNITO_USER_POOLS",
+      "AWS_IAM"
     ],
     "model_introspection": {
       "version": 1,
@@ -63,21 +64,21 @@
               "name": "firstName",
               "isArray": false,
               "type": "String",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "lastName": {
               "name": "lastName",
               "isArray": false,
               "type": "String",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "name": {
               "name": "name",
               "isArray": false,
               "type": "String",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "phone": {
@@ -125,7 +126,7 @@
                 "rules": [
                   {
                     "allow": "public",
-                    "provider": "iam",
+                    "provider": "apiKey",
                     "operations": [
                       "create",
                       "update",
@@ -148,5 +149,5 @@
       "nonModels": {}
     }
   },
-  "version": "1.3"
+  "version": "1.1"
 }
