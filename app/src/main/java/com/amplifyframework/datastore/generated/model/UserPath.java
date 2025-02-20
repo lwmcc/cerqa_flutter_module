@@ -8,7 +8,23 @@ import com.amplifyframework.core.model.PropertyPath;
 
 /** This is an auto generated class representing the ModelPath for the User type in your schema. */
 public final class UserPath extends ModelPath<User> {
+  private UserGroupPath groups;
+  private ContactPath contacts;
   UserPath(@NonNull String name, @NonNull Boolean isCollection, @Nullable PropertyPath parent) {
     super(name, isCollection, parent, User.class);
+  }
+  
+  public synchronized UserGroupPath getGroups() {
+    if (groups == null) {
+      groups = new UserGroupPath("groups", true, this);
+    }
+    return groups;
+  }
+  
+  public synchronized ContactPath getContacts() {
+    if (contacts == null) {
+      contacts = new ContactPath("contacts", true, this);
+    }
+    return contacts;
   }
 }

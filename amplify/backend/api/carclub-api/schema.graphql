@@ -21,7 +21,8 @@ type Subscription {
   onUpdateUsers(email: String, first_name: String, last_name: String, name: String, user_id: String): Users @aws_subscribe(mutations : ["updateUsers"])
 }
 
-type Users {
+type Users@model
+            @auth(rules: [{ allow: private }, { allow: public, provider: iam, operations: [create, read, update, delete] }]) {
   avatar_uri: String
   contacts: AWSJSON
   email: String
@@ -139,7 +140,7 @@ input UpdateUsersInput {
   contacts: AWSJSON
   email: String
   first_name: String
-  groups: AWSJSON
+  groups: AWSJSONn
   last_name: String
   name: String
   phone: String

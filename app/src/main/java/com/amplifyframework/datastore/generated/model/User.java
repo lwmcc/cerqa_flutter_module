@@ -1,5 +1,7 @@
 package com.amplifyframework.datastore.generated.model;
 
+import com.amplifyframework.core.model.annotations.HasMany;
+import com.amplifyframework.core.model.ModelList;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.ModelIdentifier;
 
@@ -35,13 +37,15 @@ public final class User implements Model {
   public static final QueryField LAST_NAME = field("User", "lastName");
   public static final QueryField NAME = field("User", "name");
   public static final QueryField PHONE = field("User", "phone");
-  private final @ModelField(targetType="String", isRequired = true) String id;
-  private final @ModelField(targetType="String") String avatarUri;
-  private final @ModelField(targetType="String") String email;
+  private final @ModelField(targetType="ID", isRequired = true) String id;
+  private final @ModelField(targetType="AWSURL") String avatarUri;
+  private final @ModelField(targetType="AWSEmail") String email;
   private final @ModelField(targetType="String", isRequired = true) String firstName;
   private final @ModelField(targetType="String", isRequired = true) String lastName;
-  private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="String") String phone;
+  private final @ModelField(targetType="String") String name;
+  private final @ModelField(targetType="AWSPhone") String phone;
+  private final @ModelField(targetType="UserGroup") @HasMany(associatedWith = "user", type = UserGroup.class) ModelList<UserGroup> groups = null;
+  private final @ModelField(targetType="Contact") @HasMany(associatedWith = "user", type = Contact.class) ModelList<Contact> contacts = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -76,6 +80,14 @@ public final class User implements Model {
   
   public String getPhone() {
       return phone;
+  }
+  
+  public ModelList<UserGroup> getGroups() {
+      return groups;
+  }
+  
+  public ModelList<Contact> getContacts() {
+      return contacts;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -188,12 +200,7 @@ public final class User implements Model {
   
 
   public interface LastNameStep {
-    NameStep lastName(String lastName);
-  }
-  
-
-  public interface NameStep {
-    BuildStep name(String name);
+    BuildStep lastName(String lastName);
   }
   
 
@@ -202,17 +209,18 @@ public final class User implements Model {
     BuildStep id(String id);
     BuildStep avatarUri(String avatarUri);
     BuildStep email(String email);
+    BuildStep name(String name);
     BuildStep phone(String phone);
   }
   
 
-  public static class Builder implements FirstNameStep, LastNameStep, NameStep, BuildStep {
+  public static class Builder implements FirstNameStep, LastNameStep, BuildStep {
     private String id;
     private String firstName;
     private String lastName;
-    private String name;
     private String avatarUri;
     private String email;
+    private String name;
     private String phone;
     public Builder() {
       
@@ -250,16 +258,9 @@ public final class User implements Model {
     }
     
     @Override
-     public NameStep lastName(String lastName) {
+     public BuildStep lastName(String lastName) {
         Objects.requireNonNull(lastName);
         this.lastName = lastName;
-        return this;
-    }
-    
-    @Override
-     public BuildStep name(String name) {
-        Objects.requireNonNull(name);
-        this.name = name;
         return this;
     }
     
@@ -272,6 +273,12 @@ public final class User implements Model {
     @Override
      public BuildStep email(String email) {
         this.email = email;
+        return this;
+    }
+    
+    @Override
+     public BuildStep name(String name) {
+        this.name = name;
         return this;
     }
     
@@ -297,7 +304,6 @@ public final class User implements Model {
       super(id, avatarUri, email, firstName, lastName, name, phone);
       Objects.requireNonNull(firstName);
       Objects.requireNonNull(lastName);
-      Objects.requireNonNull(name);
     }
     
     @Override
@@ -311,11 +317,6 @@ public final class User implements Model {
     }
     
     @Override
-     public CopyOfBuilder name(String name) {
-      return (CopyOfBuilder) super.name(name);
-    }
-    
-    @Override
      public CopyOfBuilder avatarUri(String avatarUri) {
       return (CopyOfBuilder) super.avatarUri(avatarUri);
     }
@@ -323,6 +324,11 @@ public final class User implements Model {
     @Override
      public CopyOfBuilder email(String email) {
       return (CopyOfBuilder) super.email(email);
+    }
+    
+    @Override
+     public CopyOfBuilder name(String name) {
+      return (CopyOfBuilder) super.name(name);
     }
     
     @Override

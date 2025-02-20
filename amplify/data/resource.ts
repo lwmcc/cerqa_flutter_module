@@ -1,86 +1,65 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
-import { defineAuth } from "@aws-amplify/backend"
+import { generateClient } from 'aws-amplify/data';
+import { defineAuth } from "@aws-amplify/backend";
 
 const schema = a.schema({
-    User: a
-     .model({
-       id: a.id.required(),
-       avatarUri: a.url(),
-       email: a.email(),
-       firstName: a.string(),
-       lastName: a.string(),
-       name: a.string(),
-       phone: a.phone(),
-       groups: a.hasMany('Group', 'users'),
-       contacts: a.hasMany('Contact', 'userId'),
-     })
-     .authorization((allow) => [allow.guest()]),
+  User: a
+    .model({
+      id: a.id(),
+      avatarUri: a.url(),
+      email: a.email(),
+      firstName: a.string().required(),
+      lastName: a.string().required(),
+      name: a.string(),
+      phone: a.phone(),
+      groups: a.hasMany('UserGroup', 'userId'),
+      contacts: a.hasMany('Contact', 'id'),
+    })
+    .authorization((allow) => [allow.guest()]),
 
-    Group: a
-      .model({
-        id: a.id.required(),
-        userId: a.id.required(),
-        name: a.string().required(),
-        users: a.hasMany('User', 'groups'),
-      }),
+  Group: a
+    .model({
+      name: a.string().required(),
+      users: a.hasMany('UserGroup', 'groupId'),
+    }).authorization((allow) => [allow.guest()]),
 
-    Contact: a
-      .model({
-        userId: a.id,
-        name: a.string().required(),
-        phone: a.phone(),
-        email: a.email(),
-        user: a.belongsTo('User', 'userId'),
-      }),
+  Contact: a
+    .model({
+      id: a.id(),
+      name: a.string(),
+      phone: a.phone(),
+      email: a.email(),
+      user: a.belongsTo('User', 'id'),
+    }).authorization(allow => [allow.guest()]),
 
-    UserGroup: a
-        .model({
-            userId: a.id.required(),
-            groupId: a.id.required(),
-            user: a.belongsTo('User', 'userId'),
-            group: a.belongsTo('Group', groupId),
-        })
+  UserGroup: a
+    .model({
+      userId: a.id(),
+      groupId: a.id(),
+      user: a.belongsTo('User', 'userId'),
+      group: a.belongsTo('Group', 'groupId'),
+    }).authorization(allow => [allow.guest()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
 
-const data = defineData({
+export const data = defineData({
   schema,
   authorizationModes: {
     defaultAuthorizationMode: 'iam',
   },
 });
 
-// generate your data client using the Schema from your backend
+// Generate your data client using the schema
 const client = generateClient<Schema>();
 
-const { data } = await client.models.Users.list();
+async function fetchUsers() {
+  // Fetch users correctly using the plural 'User' (as per the schema definition)
+  const { data } = await client.models.User.list();
 
-/*== STEP 2 ===============================================================
-Go to your frontend source code. From your client-side code, generate a
-Data client to make CRUDL requests to your table. (THIS SNIPPET WILL ONLY
-WORK IN THE FRONTEND CODE FILE.)
+  // Example of using the fetched data
+  console.log(data);
+}
 
-Using JavaScript or Next.js React Server Components, Middleware, Server 
-Actions or Pages Router? Review how to generate Data clients for those use
-cases: https://docs.amplify.aws/gen2/build-a-backend/data/connect-to-API/
-=========================================================================*/
-
-/*
-"use client"
-import { generateClient } from "aws-amplify/data";
-import type { Schema } from "@/amplify/data/resource";
-
-const client = generateClient<Schema>() // use this Data client for CRUDL requests
-*/
-
-/*== STEP 3 ===============================================================
-Fetch records from the database and use them in your frontend component.
-(THIS SNIPPET WILL ONLY WORK IN THE FRONTEND CODE FILE.)
-=========================================================================*/
-
-/* For example, in a React component, you can use this snippet in your
-  function's RETURN statement */
-// const { data: todos } = await client.models.Todo.list()
-
-// return <ul>{todos.map(todo => <li key={todo.id}>{todo.content}</li>)}</ul>
+// Call the function to fetch data
+fetchUsers().catch(console.error);

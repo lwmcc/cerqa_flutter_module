@@ -1,7 +1,13 @@
 {
-  "projectName": "carclub-api",
+  "providers": [
+    "awscloudformation"
+  ],
+  "projectName": "carclubapi",
   "version": "3.1",
   "frontend": "android",
-  "appId": "d1au4cy3a2hv98",
-  "envName": "dev"
+  "android": {
+    "config": {
+      "ResDir": "app/src/main/res"
+    }
+  }
 }
