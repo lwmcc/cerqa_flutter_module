@@ -21,7 +21,6 @@ const schema = a.schema({
     .model({
       name: a.string().required(),
       isAdmin: a.string(),
-      members: a.json(),
       users: a.hasMany('UserGroup', 'groupId'),
     }).authorization((allow) => [allow.guest()]),
 

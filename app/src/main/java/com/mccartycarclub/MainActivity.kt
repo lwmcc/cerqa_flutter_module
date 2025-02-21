@@ -57,36 +57,33 @@ class MainActivity : ComponentActivity() {
                             .phone("480-234-1111")
                             .email("smith@gmail.com")
 
-                        val user2 = User.builder()
-                            .firstName("Larry")
-                            .lastName("McCarty")
-                            .name("LM")
-                            .id(userId)
-                            .email("lwmccarty@gmail.com")
-                            .avatarUri("https://fake-uri.com")
-                            .phone("480-392-1111")
-                            .build()
-
-                        val user = User.builder()
-                            .firstName("John")
-                            .lastName("Smith")
-                            .name("Johnny")
-                            .id(userId)
-                            .email("smith@gmail.com")
-                            .avatarUri("https://fake-uri.com")
-                            .phone("480-234-1111")
-                            .build()
-
-                        val userGroup =  UserGroup.builder()
-                            .id("")
-                            .user(user2)
-                            .group(group)
-
                         Amplify.Auth.fetchUserAttributes(
                             { attributes ->
                                 val userId =
                                     attributes.firstOrNull { it.key.keyString == "sub" }?.value
                                 Log.d("MainActivity *****", "User ID: $userId")
+
+                                val user = User.builder()
+                                    .firstName("Larry")
+                                    .lastName("McCarty")
+                                    .name("Larry M")
+                                    .id("id-test")
+                                    .email("lwmccarty@gmail.com")
+                                    .avatarUri("https://fake-uri.com")
+                                    .phone("480-392-6853")
+                                    .build()
+
+                                val userGroup =  UserGroup.builder()
+                                    .id("")
+                                    .user(user)
+                                    .group(group)
+
+                                Amplify.API.mutate(
+                                    ModelMutation.create(user),
+                                    { Log.i("MainActivity *****", "Added User with id: ${it}") },
+                                    { Log.e("MainActivity *****", "Create failed", it) },
+                                )
+
                             },
                             { error ->
                                 Log.e(
@@ -97,11 +94,8 @@ class MainActivity : ComponentActivity() {
                             }
                         )
 
-                        Amplify.API.mutate(
-                            ModelMutation.create(user2),
-                            { Log.i("MainActivity *****", "Added User with id: ${it}") },
-                            { Log.e("MainActivity *****", "Create failed", it) },
-                        )
+
+
                     }) {
                         Text(text = "Create Todo")
                     }

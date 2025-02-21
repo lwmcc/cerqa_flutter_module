@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "dependencies": {
+    "aws-amplify": "^6.13.0"
+  }
+}
