@@ -3,6 +3,25 @@ import { generateClient } from 'aws-amplify/data';
 import { defineAuth } from "@aws-amplify/backend";
 
 const schema = a.schema({
+
+     AppData: a
+       .model({
+         type: a.string(),
+         id: a.id(),
+         userName: a.string(),
+         userId: a.string(),
+         email: a.email(),
+         firstName: a.string().required(),
+         lastName: a.string().required(),
+         name: a.string(),
+         phone: a.phone(),
+         avatarUri: a.url(),
+         contacts: a.json(),
+         groups: a.json(),
+         vehicles: a.json(),
+       })
+       .authorization((allow) => [allow.guest()]),
+
   User: a
     .model({
       id: a.id(),

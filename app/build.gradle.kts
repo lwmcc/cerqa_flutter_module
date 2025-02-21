@@ -78,6 +78,8 @@ dependencies {
     implementation(libs.authenticator.vandroidauthenticatorversion)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(libs.core)
+
+    implementation("com.squareup.moshi:moshi:1.15.2")
 }
 
 kapt {

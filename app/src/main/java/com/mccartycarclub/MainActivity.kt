@@ -43,25 +43,24 @@ class MainActivity : ComponentActivity() {
 
                     Button(onClick = {
 
-                        println("my click")
-
-
-                        val group = Group.builder()
-                            .name("Test group")
-                            .id("1")
-                            .build()
-
-                        val contact = Contact.builder()
-                            .id("83d16d49-37ab-4708-bf55-6d2a6c88450e")
-                            .name("Johnny")
-                            .phone("480-234-1111")
-                            .email("smith@gmail.com")
-
                         Amplify.Auth.fetchUserAttributes(
                             { attributes ->
                                 val userId =
                                     attributes.firstOrNull { it.key.keyString == "sub" }?.value
                                 Log.d("MainActivity *****", "User ID: $userId")
+
+
+                                /*
+                                val appData = App.builder()
+                                    .firstName("Larry")
+                                    .lastName("McCarty")
+                                    .name("Larry M")
+                                    .id("id-test")
+                                    .email("lwmccarty@gmail.com")
+                                    .avatarUri("https://fake-uri.com")
+                                    .phone("480-392-6853")
+                                    .build()*/
+
 
                                 val user = User.builder()
                                     .firstName("Larry")
@@ -72,11 +71,6 @@ class MainActivity : ComponentActivity() {
                                     .avatarUri("https://fake-uri.com")
                                     .phone("480-392-6853")
                                     .build()
-
-                                val userGroup =  UserGroup.builder()
-                                    .id("")
-                                    .user(user)
-                                    .group(group)
 
                                 Amplify.API.mutate(
                                     ModelMutation.create(user),
