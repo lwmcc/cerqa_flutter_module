@@ -1,10 +1,10 @@
 package com.mccartycarclub.domain
 data class Contact(
-    val id: String
+    val userId: String
 )
 
 data class Group(
-    val id: String,
+    // val id: String,
     val isAdmin: Boolean,
     val members: List<Member>,
 )
