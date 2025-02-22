@@ -21,13 +21,13 @@ amplify_outputs*
 amplifyconfiguration*
 
 #amplify-do-not-edit-begin
-amplify/\#current-cloud-backend
-amplify/.config/local-*
-amplify/logs
-amplify/mock-data
-amplify/mock-api-resources
-amplify/backend/amplify-meta.json
-amplify/backend/.temp
+amplify-del/\#current-cloud-backend
+amplify-del/.config/local-*
+amplify-del/logs
+amplify-del/mock-data
+amplify-del/mock-api-resources
+amplify-del/backend/amplify-meta.json
+amplify-del/backend/.temp
 build/
 dist/
 node_modules/
