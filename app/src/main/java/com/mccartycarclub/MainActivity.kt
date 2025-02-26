@@ -14,6 +14,7 @@ import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.datastore.generated.model.AppData
 import com.amplifyframework.datastore.generated.model.Contact
 import com.amplifyframework.datastore.generated.model.Group
+import com.amplifyframework.datastore.generated.model.Todo
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserGroup
 import com.mccartycarclub.domain.Member
@@ -88,31 +89,24 @@ class MainActivity : ComponentActivity() {
                                     .userName("fake user name")
                                     .type("User")
                                     .userId(userId)
-                                    .contacts("")
-                                    .groups("")
-                                    .vehicles("")
+                                    .contacts(jsonString)
+                                    .groups(jsonGroups)
+                                    //.vehicles("")
                                     .build()
-
-                                /*
-                                val appData = App.builder()
-                                    .firstName("Larry")
-                                    .lastName("McCarty")
-                                    .name("Larry M")
-                                    .id("id-test")
-                                    .email("lwmccarty@gmail.com")
-                                    .avatarUri("https://fake-uri.com")
-                                    .phone("480-392-6853")
-                                    .build()*/
-
 
                                 val user = User.builder()
                                     .firstName("Larry")
                                     .lastName("McCarty")
                                     .name("Larry M")
-                                    .id("id-test")
+                                    .id("id-test-my-table-huhuuhu")
                                     .email("lwmccarty@gmail.com")
                                     .avatarUri("https://fake-uri.com")
                                     .phone("480-392-6853")
+                                    .build()
+
+                                val todo = Todo.builder()
+                                    .id("fake-new")
+                                    .content("larry new amplify")
                                     .build()
 
                                 Amplify.API.mutate(
@@ -132,13 +126,73 @@ class MainActivity : ComponentActivity() {
                         )
 
 
-
                     }) {
                         Text(text = "Create Todo")
                     }
                 }
             }
         }
+    }
+
+    companion object {
+        val jsonString = """
+            {
+              "Contact": {
+                "type": "model",
+                "properties": {
+                  "id": { "type": "id" },
+                  "name": { "type": "string" },
+                  "phone": { "type": "phone" },
+                  "email": { "type": "email" },
+                  "user": { "type": "belongsTo", "target": "User", "targetKey": "id" }
+                },
+                "authorization": {
+                  "allow": ["guest"]
+                }
+              },
+              "contacts": [
+                {
+                  "id": "1",
+                  "name": "Alice Johnson",
+                  "phone": "+11234567890",
+                  "email": "alice.johnson@example.com"
+                },
+                {
+                  "id": "2",
+                  "name": "Bob Lee",
+                  "phone": "+19876543210",
+                  "email": "bob.lee@example.com"
+                }
+              ]
+            }
+            """
+
+        val jsonGroups = """
+            {
+              "name": "Sample Contact List",
+              "users": [
+                {
+                  "id": "1",
+                  "avatarUri": "https://example.com/avatars/alice.jpg",
+                  "email": "alice.johnson@example.com",
+                  "firstName": "Alice",
+                  "lastName": "Johnson",
+                  "name": "Alice Johnson",
+                  "phone": "+11234567890"
+                },
+                {
+                  "id": "2",
+                  "avatarUri": "https://example.com/avatars/bob.jpg",
+                  "email": "bob.lee@example.com",
+                  "firstName": "Bob",
+                  "lastName": "Lee",
+                  "name": "Bob Lee",
+                  "phone": "+19876543210"
+                }
+              ]
+            }
+            """
+
     }
 
 }
