@@ -51,26 +51,6 @@ class MainActivity : ComponentActivity() {
                     val members = mutableListOf<Member>()
                     val contacts = mutableListOf<ContactM>()
 
-                    members.add(
-                        Member("", "")
-                    )
-
-                    members.add(
-                        Member("", "")
-                    )
-
-                    contacts.add(
-                        ContactM("")
-                    )
-
-                    contacts.add(
-                        ContactM("")
-                    )
-
-                    groups.add(
-                        GroupM(true, members)
-                    )
-
                     Button(onClick = {
 
                         Amplify.Auth.fetchUserAttributes(
@@ -80,12 +60,12 @@ class MainActivity : ComponentActivity() {
                                 Log.d("MainActivity *****", "User ID: $userId")
 
                                 val appData = AppData.builder()
-                                    .firstName("Larry")
-                                    .lastName("McCarty")
-                                    .name("Larry M")
+                                    .firstName("jojo")
+                                    .lastName("dann")
+                                    .name("jj")
                                     .email("lwmccarty@gmail.com")
                                     .avatarUri("https://fake-uri.com")
-                                    .phone("480-392-6853")
+                                    .phone("480-392-5666")
                                     .userName("fake user name")
                                     .type("User")
                                     .userId(userId)
@@ -95,13 +75,13 @@ class MainActivity : ComponentActivity() {
                                     .build()
 
                                 val user = User.builder()
-                                    .firstName("Larry")
-                                    .lastName("McCarty")
-                                    .name("Larry M")
-                                    .id("id-test-my-table-huhuuhu")
+                                    .firstName("hhhh")
+                                    .lastName("jan")
+                                    .name("b")
+                                    .id("id-test-my-table-1233")
                                     .email("lwmccarty@gmail.com")
                                     .avatarUri("https://fake-uri.com")
-                                    .phone("480-392-6853")
+                                    .phone("480-392-9999")
                                     .build()
 
                                 val todo = Todo.builder()
@@ -110,7 +90,7 @@ class MainActivity : ComponentActivity() {
                                     .build()
 
                                 Amplify.API.mutate(
-                                    ModelMutation.create(user),
+                                    ModelMutation.create(appData),
                                     { Log.i("MainActivity *****", "Added User with id: ${it}") },
                                     { Log.e("MainActivity *****", "Create failed", it) },
                                 )
