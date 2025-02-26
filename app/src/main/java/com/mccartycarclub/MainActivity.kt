@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
                                     .firstName("hhhh")
                                     .lastName("jan")
                                     .name("b")
-                                    .id("id-test-my-table-1233")
+                                    .id("id-test-my-table-33333333")
                                     .email("lwmccarty@gmail.com")
                                     .avatarUri("https://fake-uri.com")
                                     .phone("480-392-9999")
@@ -90,7 +90,7 @@ class MainActivity : ComponentActivity() {
                                     .build()
 
                                 Amplify.API.mutate(
-                                    ModelMutation.create(appData),
+                                    ModelMutation.create(user),
                                     { Log.i("MainActivity *****", "Added User with id: ${it}") },
                                     { Log.e("MainActivity *****", "Create failed", it) },
                                 )
