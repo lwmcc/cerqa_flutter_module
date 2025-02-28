@@ -11,16 +11,10 @@ import androidx.compose.material3.Text
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.ui.authenticator.ui.Authenticator
 import com.amplifyframework.api.graphql.model.ModelMutation
-import com.amplifyframework.api.graphql.model.ModelQuery
-import com.amplifyframework.datastore.generated.model.AppData
-import com.amplifyframework.datastore.generated.model.Contact
-import com.amplifyframework.datastore.generated.model.Group
-import com.amplifyframework.datastore.generated.model.Todo
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserGroup
 import com.mccartycarclub.domain.Member
 import com.mccartycarclub.ui.viewmodels.MainViewModel
-import com.mccartycarclub.ui.viewmodels.MainViewModel_Factory
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.UUID
 import com.mccartycarclub.domain.Group  as GroupM
@@ -60,25 +54,25 @@ class MainActivity : ComponentActivity() {
                                     attributes.firstOrNull { it.key.keyString == "sub" }?.value
                                 Log.d("MainActivity *****", "User ID: $userId")
 
-                                val appData = AppData.builder()
+                                val user = User.builder()
                                     .firstName("Larry")
                                     .lastName("McCarty")
                                     .name("LM")
                                     .email("lwmccarty@gmail.com")
                                     .avatarUri("https://fake-uri.com")
-                                    .phone("480-392-6853")
-                                    .userName("Larry M")
-                                    .type("User")
-                                    .userId(userId)
-                                    .contacts(jsonString)
-                                    .groups(jsonGroups)
+                                    .phone("480-333-4455")
+                                    .id(userId)
+                                    //.userName("Larry M")
+                                    //.userId(userId)
+                                    //.contacts(jsonString)
+                                    //.groups(jsonGroups)
                                     //.vehicles("")
                                     .build()
-/*                                Amplify.API.mutate(
-                                    ModelMutation.create(appData),
+                                Amplify.API.mutate(
+                                    ModelMutation.create(user),
                                     { Log.i("MainActivity *****", "Added User with id: ${it}") },
                                     { Log.e("MainActivity *****", "Create failed", it) },
-                                )*/
+                                )
 
                             },
                             { error ->
