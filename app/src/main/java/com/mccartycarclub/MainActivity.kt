@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -18,14 +19,23 @@ import com.amplifyframework.datastore.generated.model.Todo
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserGroup
 import com.mccartycarclub.domain.Member
+import com.mccartycarclub.ui.viewmodels.MainViewModel
+import com.mccartycarclub.ui.viewmodels.MainViewModel_Factory
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.UUID
 import com.mccartycarclub.domain.Group  as GroupM
 import com.mccartycarclub.domain.Contact as ContactM
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // TODO: to init viewmodel
+        mainViewModel
 
         setContent {
             Authenticator { state ->
@@ -40,16 +50,7 @@ class MainActivity : ComponentActivity() {
                         Text(text = "Sign Out")
                     }
 
-                    // val query = ModelQuery.list(Todo::class.java)
-
-                    // var todoList by remember { mutableStateOf(emptyList<Todo>()) }
-
                     val userId = UUID.randomUUID().toString()
-
-                    // Mock datta
-                    val groups = mutableListOf<GroupM>()
-                    val members = mutableListOf<Member>()
-                    val contacts = mutableListOf<ContactM>()
 
                     Button(onClick = {
 
@@ -60,41 +61,24 @@ class MainActivity : ComponentActivity() {
                                 Log.d("MainActivity *****", "User ID: $userId")
 
                                 val appData = AppData.builder()
-                                    .firstName("jojo")
-                                    .lastName("dann")
-                                    .name("jj")
+                                    .firstName("Larry")
+                                    .lastName("McCarty")
+                                    .name("LM")
                                     .email("lwmccarty@gmail.com")
                                     .avatarUri("https://fake-uri.com")
-                                    .phone("480-392-5666")
-                                    .userName("fake user name")
+                                    .phone("480-392-6853")
+                                    .userName("Larry M")
                                     .type("User")
                                     .userId(userId)
                                     .contacts(jsonString)
                                     .groups(jsonGroups)
                                     //.vehicles("")
                                     .build()
-
-                                val user = User.builder()
-                                    .firstName("hhhh")
-                                    .lastName("jan")
-                                    .name("b")
-                                    .id("id-test-my-table-33333333")
-                                    .email("lwmccarty@gmail.com")
-                                    .avatarUri("https://fake-uri.com")
-                                    .phone("480-392-9999")
-                                    .build()
-
-                                val todo = Todo.builder()
-                                    .id("fake-new")
-                                    .content("larry new amplify")
-                                    .build()
-
-
-                                Amplify.API.mutate(
+/*                                Amplify.API.mutate(
                                     ModelMutation.create(appData),
                                     { Log.i("MainActivity *****", "Added User with id: ${it}") },
                                     { Log.e("MainActivity *****", "Create failed", it) },
-                                )
+                                )*/
 
                             },
                             { error ->
@@ -105,7 +89,6 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         )
-
 
                     }) {
                         Text(text = "Create Todo")
