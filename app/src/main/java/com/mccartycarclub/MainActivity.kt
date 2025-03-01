@@ -54,14 +54,15 @@ class MainActivity : ComponentActivity() {
                                     attributes.firstOrNull { it.key.keyString == "sub" }?.value
                                 Log.d("MainActivity *****", "User ID: $userId")
 
+                                //  12121212-1031-7026-1ea5-9e5c424b27de
                                 val user = User.builder()
-                                    .firstName("Larry")
-                                    .lastName("McCarty")
-                                    .name("LM")
-                                    .email("lwmccarty@gmail.com")
+                                    .firstName("Kobe")
+                                    .lastName("Bryant")
+                                    .name("Mamba")
+                                    .email("kobe@gmail.com")
                                     .avatarUri("https://fake-uri.com")
-                                    .phone("480-333-4455")
-                                    .id(userId)
+                                    .phone("480-777-1155")
+                                    .id("246655-1031-7026-1ea5-9e5c424b27de")
                                     //.userName("Larry M")
                                     //.userId(userId)
                                     //.contacts(jsonString)
