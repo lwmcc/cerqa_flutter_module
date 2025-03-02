@@ -9,6 +9,6 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(val user: GetUser) : ViewModel() {
 
     init {
-        user.getUser("31cb55f0-1031-7026-1ea5-9e5c424b27de")
+        user.getUserGroups("31cb55f0-1031-7026-1ea5-9e5c424b27de")
     }
 }
