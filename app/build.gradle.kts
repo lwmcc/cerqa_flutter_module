@@ -79,7 +79,11 @@ dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(libs.core)
 
+    // Moshi
     implementation("com.squareup.moshi:moshi:1.15.2")
+    implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
+    implementation("com.squareup.moshi:moshi-adapters:1.14.0")
+    implementation("com.amplifyframework:core:1.43.2")
 }
 
 kapt {

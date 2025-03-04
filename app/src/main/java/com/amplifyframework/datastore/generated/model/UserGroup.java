@@ -26,7 +26,7 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 /** This is an auto generated class representing the UserGroup type in your schema. */
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "UserGroups", type = Model.Type.USER, version = 1, authRules = {
-  @AuthRule(allow = AuthStrategy.PUBLIC, provider = "iam", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
+  @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 }, hasLazySupport = true)
 public final class UserGroup implements Model {
   public static final UserGroupPath rootPath = new UserGroupPath("root", false, null);

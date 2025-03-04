@@ -25,18 +25,18 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 /** This is an auto generated class representing the Group type in your schema. */
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "Groups", type = Model.Type.USER, version = 1, authRules = {
-  @AuthRule(allow = AuthStrategy.PUBLIC, provider = "iam", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
+  @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 }, hasLazySupport = true)
 public final class Group implements Model {
   public static final GroupPath rootPath = new GroupPath("root", false, null);
   public static final QueryField ID = field("Group", "id");
+  public static final QueryField USER_ID = field("Group", "userId");
+  public static final QueryField MEMBER_ID = field("Group", "memberId");
   public static final QueryField NAME = field("Group", "name");
-  public static final QueryField IS_ADMIN = field("Group", "isAdmin");
-  public static final QueryField MEMBERS = field("Group", "members");
   private final @ModelField(targetType="ID", isRequired = true) String id;
+  private final @ModelField(targetType="String", isRequired = true) String userId;
+  private final @ModelField(targetType="String", isRequired = true) String memberId;
   private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="String") String isAdmin;
-  private final @ModelField(targetType="AWSJSON") String members;
   private final @ModelField(targetType="UserGroup") @HasMany(associatedWith = "group", type = UserGroup.class) ModelList<UserGroup> users = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
@@ -50,16 +50,16 @@ public final class Group implements Model {
       return id;
   }
   
+  public String getUserId() {
+      return userId;
+  }
+  
+  public String getMemberId() {
+      return memberId;
+  }
+  
   public String getName() {
       return name;
-  }
-  
-  public String getIsAdmin() {
-      return isAdmin;
-  }
-  
-  public String getMembers() {
-      return members;
   }
   
   public ModelList<UserGroup> getUsers() {
@@ -74,11 +74,11 @@ public final class Group implements Model {
       return updatedAt;
   }
   
-  private Group(String id, String name, String isAdmin, String members) {
+  private Group(String id, String userId, String memberId, String name) {
     this.id = id;
+    this.userId = userId;
+    this.memberId = memberId;
     this.name = name;
-    this.isAdmin = isAdmin;
-    this.members = members;
   }
   
   @Override
@@ -90,9 +90,9 @@ public final class Group implements Model {
       } else {
       Group group = (Group) obj;
       return ObjectsCompat.equals(getId(), group.getId()) &&
+              ObjectsCompat.equals(getUserId(), group.getUserId()) &&
+              ObjectsCompat.equals(getMemberId(), group.getMemberId()) &&
               ObjectsCompat.equals(getName(), group.getName()) &&
-              ObjectsCompat.equals(getIsAdmin(), group.getIsAdmin()) &&
-              ObjectsCompat.equals(getMembers(), group.getMembers()) &&
               ObjectsCompat.equals(getCreatedAt(), group.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), group.getUpdatedAt());
       }
@@ -102,9 +102,9 @@ public final class Group implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
+      .append(getUserId())
+      .append(getMemberId())
       .append(getName())
-      .append(getIsAdmin())
-      .append(getMembers())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -116,16 +116,16 @@ public final class Group implements Model {
     return new StringBuilder()
       .append("Group {")
       .append("id=" + String.valueOf(getId()) + ", ")
+      .append("userId=" + String.valueOf(getUserId()) + ", ")
+      .append("memberId=" + String.valueOf(getMemberId()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
-      .append("isAdmin=" + String.valueOf(getIsAdmin()) + ", ")
-      .append("members=" + String.valueOf(getMembers()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }
   
-  public static NameStep builder() {
+  public static UserIdStep builder() {
       return new Builder();
   }
   
@@ -148,10 +148,20 @@ public final class Group implements Model {
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      name,
-      isAdmin,
-      members);
+      userId,
+      memberId,
+      name);
   }
+  public interface UserIdStep {
+    MemberIdStep userId(String userId);
+  }
+  
+
+  public interface MemberIdStep {
+    NameStep memberId(String memberId);
+  }
+  
+
   public interface NameStep {
     BuildStep name(String name);
   }
@@ -160,25 +170,23 @@ public final class Group implements Model {
   public interface BuildStep {
     Group build();
     BuildStep id(String id);
-    BuildStep isAdmin(String isAdmin);
-    BuildStep members(String members);
   }
   
 
-  public static class Builder implements NameStep, BuildStep {
+  public static class Builder implements UserIdStep, MemberIdStep, NameStep, BuildStep {
     private String id;
+    private String userId;
+    private String memberId;
     private String name;
-    private String isAdmin;
-    private String members;
     public Builder() {
       
     }
     
-    private Builder(String id, String name, String isAdmin, String members) {
+    private Builder(String id, String userId, String memberId, String name) {
       this.id = id;
+      this.userId = userId;
+      this.memberId = memberId;
       this.name = name;
-      this.isAdmin = isAdmin;
-      this.members = members;
     }
     
     @Override
@@ -187,27 +195,29 @@ public final class Group implements Model {
         
         return new Group(
           id,
-          name,
-          isAdmin,
-          members);
+          userId,
+          memberId,
+          name);
+    }
+    
+    @Override
+     public MemberIdStep userId(String userId) {
+        Objects.requireNonNull(userId);
+        this.userId = userId;
+        return this;
+    }
+    
+    @Override
+     public NameStep memberId(String memberId) {
+        Objects.requireNonNull(memberId);
+        this.memberId = memberId;
+        return this;
     }
     
     @Override
      public BuildStep name(String name) {
         Objects.requireNonNull(name);
         this.name = name;
-        return this;
-    }
-    
-    @Override
-     public BuildStep isAdmin(String isAdmin) {
-        this.isAdmin = isAdmin;
-        return this;
-    }
-    
-    @Override
-     public BuildStep members(String members) {
-        this.members = members;
         return this;
     }
     
@@ -223,24 +233,26 @@ public final class Group implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String isAdmin, String members) {
-      super(id, name, isAdmin, members);
+    private CopyOfBuilder(String id, String userId, String memberId, String name) {
+      super(id, userId, memberId, name);
+      Objects.requireNonNull(userId);
+      Objects.requireNonNull(memberId);
       Objects.requireNonNull(name);
+    }
+    
+    @Override
+     public CopyOfBuilder userId(String userId) {
+      return (CopyOfBuilder) super.userId(userId);
+    }
+    
+    @Override
+     public CopyOfBuilder memberId(String memberId) {
+      return (CopyOfBuilder) super.memberId(memberId);
     }
     
     @Override
      public CopyOfBuilder name(String name) {
       return (CopyOfBuilder) super.name(name);
-    }
-    
-    @Override
-     public CopyOfBuilder isAdmin(String isAdmin) {
-      return (CopyOfBuilder) super.isAdmin(isAdmin);
-    }
-    
-    @Override
-     public CopyOfBuilder members(String members) {
-      return (CopyOfBuilder) super.members(members);
     }
   }
   

@@ -8,4 +8,8 @@ class GetUserData @Inject constructor(private val dbRepo: DbRepo): GetUser {
     override fun getUserGroups(userId: String) {
         val groups = dbRepo.fetchUserGroups(userId)
     }
+
+    override fun getUsers() {
+        dbRepo.fetchUsers()
+    }
 }

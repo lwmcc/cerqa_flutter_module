@@ -26,20 +26,18 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 /** This is an auto generated class representing the Contact type in your schema. */
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "Contacts", type = Model.Type.USER, version = 1, authRules = {
-  @AuthRule(allow = AuthStrategy.PUBLIC, provider = "iam", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
+  @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 }, hasLazySupport = true)
 @Index(name = "undefined", fields = {"id"})
 public final class Contact implements Model {
   public static final ContactPath rootPath = new ContactPath("root", false, null);
   public static final QueryField ID = field("Contact", "id");
-  public static final QueryField NAME = field("Contact", "name");
-  public static final QueryField PHONE = field("Contact", "phone");
-  public static final QueryField EMAIL = field("Contact", "email");
+  public static final QueryField USER_ID = field("Contact", "userId");
+  public static final QueryField CONTACT_ID = field("Contact", "contactId");
   public static final QueryField USER = field("Contact", "id");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="String") String name;
-  private final @ModelField(targetType="AWSPhone") String phone;
-  private final @ModelField(targetType="AWSEmail") String email;
+  private final @ModelField(targetType="ID") String userId;
+  private final @ModelField(targetType="ID") String contactId;
   private final @ModelField(targetType="User") @BelongsTo(targetName = "id", targetNames = {"id"}, type = User.class) ModelReference<User> user;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
@@ -53,16 +51,12 @@ public final class Contact implements Model {
       return id;
   }
   
-  public String getName() {
-      return name;
+  public String getUserId() {
+      return userId;
   }
   
-  public String getPhone() {
-      return phone;
-  }
-  
-  public String getEmail() {
-      return email;
+  public String getContactId() {
+      return contactId;
   }
   
   public ModelReference<User> getUser() {
@@ -77,11 +71,10 @@ public final class Contact implements Model {
       return updatedAt;
   }
   
-  private Contact(String id, String name, String phone, String email, ModelReference<User> user) {
+  private Contact(String id, String userId, String contactId, ModelReference<User> user) {
     this.id = id;
-    this.name = name;
-    this.phone = phone;
-    this.email = email;
+    this.userId = userId;
+    this.contactId = contactId;
     this.user = user;
   }
   
@@ -94,9 +87,8 @@ public final class Contact implements Model {
       } else {
       Contact contact = (Contact) obj;
       return ObjectsCompat.equals(getId(), contact.getId()) &&
-              ObjectsCompat.equals(getName(), contact.getName()) &&
-              ObjectsCompat.equals(getPhone(), contact.getPhone()) &&
-              ObjectsCompat.equals(getEmail(), contact.getEmail()) &&
+              ObjectsCompat.equals(getUserId(), contact.getUserId()) &&
+              ObjectsCompat.equals(getContactId(), contact.getContactId()) &&
               ObjectsCompat.equals(getUser(), contact.getUser()) &&
               ObjectsCompat.equals(getCreatedAt(), contact.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), contact.getUpdatedAt());
@@ -107,9 +99,8 @@ public final class Contact implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
-      .append(getName())
-      .append(getPhone())
-      .append(getEmail())
+      .append(getUserId())
+      .append(getContactId())
       .append(getUser())
       .append(getCreatedAt())
       .append(getUpdatedAt())
@@ -122,9 +113,8 @@ public final class Contact implements Model {
     return new StringBuilder()
       .append("Contact {")
       .append("id=" + String.valueOf(getId()) + ", ")
-      .append("name=" + String.valueOf(getName()) + ", ")
-      .append("phone=" + String.valueOf(getPhone()) + ", ")
-      .append("email=" + String.valueOf(getEmail()) + ", ")
+      .append("userId=" + String.valueOf(getUserId()) + ", ")
+      .append("contactId=" + String.valueOf(getContactId()) + ", ")
       .append("user=" + String.valueOf(getUser()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
@@ -149,43 +139,38 @@ public final class Contact implements Model {
       id,
       null,
       null,
-      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      name,
-      phone,
-      email,
+      userId,
+      contactId,
       user);
   }
   public interface BuildStep {
     Contact build();
     BuildStep id(String id);
-    BuildStep name(String name);
-    BuildStep phone(String phone);
-    BuildStep email(String email);
+    BuildStep userId(String userId);
+    BuildStep contactId(String contactId);
     BuildStep user(User user);
   }
   
 
   public static class Builder implements BuildStep {
     private String id;
-    private String name;
-    private String phone;
-    private String email;
+    private String userId;
+    private String contactId;
     private ModelReference<User> user;
     public Builder() {
       
     }
     
-    private Builder(String id, String name, String phone, String email, ModelReference<User> user) {
+    private Builder(String id, String userId, String contactId, ModelReference<User> user) {
       this.id = id;
-      this.name = name;
-      this.phone = phone;
-      this.email = email;
+      this.userId = userId;
+      this.contactId = contactId;
       this.user = user;
     }
     
@@ -195,27 +180,20 @@ public final class Contact implements Model {
         
         return new Contact(
           id,
-          name,
-          phone,
-          email,
+          userId,
+          contactId,
           user);
     }
     
     @Override
-     public BuildStep name(String name) {
-        this.name = name;
+     public BuildStep userId(String userId) {
+        this.userId = userId;
         return this;
     }
     
     @Override
-     public BuildStep phone(String phone) {
-        this.phone = phone;
-        return this;
-    }
-    
-    @Override
-     public BuildStep email(String email) {
-        this.email = email;
+     public BuildStep contactId(String contactId) {
+        this.contactId = contactId;
         return this;
     }
     
@@ -237,24 +215,19 @@ public final class Contact implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String phone, String email, ModelReference<User> user) {
-      super(id, name, phone, email, user);
+    private CopyOfBuilder(String id, String userId, String contactId, ModelReference<User> user) {
+      super(id, userId, contactId, user);
       
     }
     
     @Override
-     public CopyOfBuilder name(String name) {
-      return (CopyOfBuilder) super.name(name);
+     public CopyOfBuilder userId(String userId) {
+      return (CopyOfBuilder) super.userId(userId);
     }
     
     @Override
-     public CopyOfBuilder phone(String phone) {
-      return (CopyOfBuilder) super.phone(phone);
-    }
-    
-    @Override
-     public CopyOfBuilder email(String email) {
-      return (CopyOfBuilder) super.email(email);
+     public CopyOfBuilder contactId(String contactId) {
+      return (CopyOfBuilder) super.contactId(contactId);
     }
     
     @Override

@@ -4,4 +4,5 @@ import javax.inject.Inject
 
 interface GetUser {
     fun getUserGroups(userId: String)
+    fun getUsers()
 }
