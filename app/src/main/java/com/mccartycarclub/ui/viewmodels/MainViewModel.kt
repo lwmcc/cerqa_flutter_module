@@ -13,11 +13,20 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
 
     init {
+        user.getUser("31cb55f0-1031-7026-1ea5-9e5c424b27de",
+            user = {
+                userContacts.createContact(it)
+                println("MainViewModel ***** USER ${it.name}")
+                println("MainViewModel ***** USER ${it.id}")
+                println("MainViewModel ***** USER ${it.firstName}")
+        })
+
         user.getUserGroups("31cb55f0-1031-7026-1ea5-9e5c424b27de")
 
         userContacts.fetchContacts("31cb55f0-1031-7026-1ea5-9e5c424b27de", userContacts = {
             println("MainViewModel ***** CONTACTS $it")
         })
+
 
         // user.getUsers()
     }

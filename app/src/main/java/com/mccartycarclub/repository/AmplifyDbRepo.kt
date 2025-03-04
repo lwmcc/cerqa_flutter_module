@@ -1,20 +1,23 @@
 package com.mccartycarclub.repository
 
+import android.R.id
 import android.util.Log
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLResponse
+import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
+import com.amplifyframework.api.graphql.model.ModelQuery.get
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.includes
 import com.amplifyframework.datastore.generated.model.Contact
-import com.amplifyframework.datastore.generated.model.ContactPath
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserGroup
 import com.amplifyframework.datastore.generated.model.UserPath
 import javax.inject.Inject
+
 
 class AmplifyDbRepo @Inject constructor() : DbRepo {
 
@@ -35,7 +38,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
             },
             { error ->
-                println("AmplifyDbRepo ***** $error")
+              //  println("AmplifyDbRepo ***** $error")
             }
         )
     }
@@ -56,10 +59,10 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             ) { userPath -> includes(userPath.contacts) },
             {
                 val contacts = (it.data.contacts as? LoadedModelList<Contact>)?.items
-                println("AmplifyDbRepo ***** USER CONTACTS ${contacts?.size} ")
+               // println("AmplifyDbRepo ***** USER CONTACTS ${contacts?.size} ")
             },
             {
-                println("AmplifyDbRepo ***** ERROR ")
+               // println("AmplifyDbRepo ***** ERROR ")
             }
         )
     }
@@ -73,16 +76,10 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             val user = response.data
             if (user != null) {
                 // Log user info
-                Log.d("AmplifyDbRepo", "User Name: ${user.firstName} ${user.lastName}")
+               // Log.d("AmplifyDbRepo", "User Name: ${user.firstName} ${user.lastName}")
 
                 // Assuming the User model has a 'contacts' field (hasMany relationship)
                 val ct = user.contacts
-
-
-
-                println("AmplifyDbRepo ***** SIZE C ${ct}")
-
-
 
             } else {
                 Log.e("MyAmplifyApp", "User not found")
@@ -90,7 +87,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         }
 
         val onFailure = Consumer<ApiException> { error ->
-            Log.e("AmplifyDbRepo", "Failed to fetch user: ${error.message}")
+            //Log.e("AmplifyDbRepo", "Failed to fetch user: ${error.message}")
         }
 
         // Use the correct query to fetch the User by ID
@@ -104,5 +101,32 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             // Execute the query
             Amplify.API.query(this, onResponse, onFailure)
         }
+    }
+
+    override fun fetchUser(userId: String, user: (User) -> Unit) {
+        Amplify.API.query(get(User::class.java, userId),
+            { response: GraphQLResponse<User> ->
+                user(response.data as User)
+            },
+            { println("AmplifyDbRepo ***** ERROR") }
+        )
+    }
+
+    override fun createContact(user: User) {
+        val contact = Contact.builder()
+            .userId("31cb55f0-1031-7026-1ea5-9e5c424b27de")
+            .contactId("216ba540-0011-70d0-bb72-5b51c19ae56a")
+            .user(user)
+            .build()
+
+        Amplify.API.mutate(ModelMutation.create(contact),
+            { contactResponse ->
+                // println("AmplifyDbRepo ***** RESPONSE: ${response.data.id}")
+                println("AmplifyDbRepo ***** Added team with id: ${contactResponse.data}")
+            },
+            { error ->
+                // println("AmplifyDbRepo ***** \"Added team with id: ${.data.id}\"")
+            }
+        )
     }
 }

@@ -56,24 +56,20 @@ class MainActivity : ComponentActivity() {
 
                                 //  12121212-1031-7026-1ea5-9e5c424b27de
                                 val user = User.builder()
-                                    .firstName("Kobe")
-                                    .lastName("Bryant")
-                                    .name("Mamba")
-                                    .email("kobe@gmail.com")
+                                    .firstName("Lebron")
+                                    .lastName("James")
+                                    .name("Lebron")
+                                    .email("lmccarty@outlook.com")
                                     .avatarUri("https://fake-uri.com")
-                                    .phone("480-777-1155")
-                                    .id("246655-1031-7026-1ea5-9e5c424b27de")
-                                    //.userName("Larry M")
-                                    //.userId(userId)
-                                    //.contacts(jsonString)
-                                    //.groups(jsonGroups)
-                                    //.vehicles("")
+                                    .phone("480-434-1155")
+                                    .id(userId)
+                                    .userName("King James")
                                     .build()
-                                Amplify.API.mutate(
+/*                                Amplify.API.mutate(
                                     ModelMutation.create(user),
                                     { Log.i("MainActivity *****", "Added User with id: ${it}") },
                                     { Log.e("MainActivity *****", "Create failed", it) },
-                                )
+                                )*/
 
                             },
                             { error ->

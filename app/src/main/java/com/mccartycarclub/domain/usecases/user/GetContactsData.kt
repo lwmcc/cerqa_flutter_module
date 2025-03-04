@@ -1,6 +1,7 @@
 package com.mccartycarclub.domain.usecases.user
 
 import com.amplifyframework.datastore.generated.model.Contact
+import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.repository.DbRepo
 import javax.inject.Inject
 
@@ -11,5 +12,9 @@ class GetContactsData @Inject constructor(private val dbRepo: DbRepo) : GetConta
                 userContacts(it)
             }
         )
+    }
+
+    override fun createContact(user: User) {
+        dbRepo.createContact(user)
     }
 }

@@ -1,5 +1,6 @@
 package com.mccartycarclub.domain.usecases.user
 
+import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.repository.DbRepo
 import javax.inject.Inject
 
@@ -11,5 +12,14 @@ class GetUserData @Inject constructor(private val dbRepo: DbRepo): GetUser {
 
     override fun getUsers() {
         dbRepo.fetchUsers()
+    }
+
+    override fun getUser(userId: String, user: (User) -> Unit) {
+        dbRepo.fetchUser(
+            userId,
+            user = { user ->
+                user(user)
+            },
+        )
     }
 }
