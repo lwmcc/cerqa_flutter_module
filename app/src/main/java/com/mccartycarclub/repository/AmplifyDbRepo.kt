@@ -16,6 +16,7 @@ import com.amplifyframework.datastore.generated.model.Contact
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserGroup
 import com.amplifyframework.datastore.generated.model.UserPath
+import java.util.UUID
 import javax.inject.Inject
 
 
@@ -114,6 +115,8 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
     override fun createContact(user: User) {
         val contact = Contact.builder()
+            // TODO: change schema so that this is generated in db
+            .id(UUID.randomUUID().toString())
             .userId("31cb55f0-1031-7026-1ea5-9e5c424b27de")
             .contactId("216ba540-0011-70d0-bb72-5b51c19ae56a")
             .user(user)
