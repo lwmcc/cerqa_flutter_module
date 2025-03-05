@@ -31,6 +31,7 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 public final class User implements Model {
   public static final UserPath rootPath = new UserPath("root", false, null);
   public static final QueryField ID = field("User", "id");
+  public static final QueryField USER_ID = field("User", "userId");
   public static final QueryField FIRST_NAME = field("User", "firstName");
   public static final QueryField LAST_NAME = field("User", "lastName");
   public static final QueryField NAME = field("User", "name");
