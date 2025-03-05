@@ -31,7 +31,6 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @Index(name = "undefined", fields = {"id"})
 public final class Contact implements Model {
   public static final ContactPath rootPath = new ContactPath("root", false, null);
-  public static final QueryField ID = field("Contact", "id");
   public static final QueryField USER_ID = field("Contact", "userId");
   public static final QueryField CONTACT_ID = field("Contact", "contactId");
   public static final QueryField USER = field("Contact", "id");
