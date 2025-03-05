@@ -40,6 +40,7 @@ public final class User implements Model {
   public static final QueryField EMAIL = field("User", "email");
   public static final QueryField AVATAR_URI = field("User", "avatarUri");
   private final @ModelField(targetType="ID", isRequired = true) String id;
+  private final @ModelField(targetType="ID", isRequired = true) String userId;
   private final @ModelField(targetType="String", isRequired = true) String firstName;
   private final @ModelField(targetType="String", isRequired = true) String lastName;
   private final @ModelField(targetType="String") String name;
@@ -59,6 +60,10 @@ public final class User implements Model {
   
   public String getId() {
       return id;
+  }
+  
+  public String getUserId() {
+      return userId;
   }
   
   public String getFirstName() {
@@ -105,8 +110,9 @@ public final class User implements Model {
       return updatedAt;
   }
   
-  private User(String id, String firstName, String lastName, String name, String phone, String userName, String email, String avatarUri) {
+  private User(String id, String userId, String firstName, String lastName, String name, String phone, String userName, String email, String avatarUri) {
     this.id = id;
+    this.userId = userId;
     this.firstName = firstName;
     this.lastName = lastName;
     this.name = name;
@@ -125,6 +131,7 @@ public final class User implements Model {
       } else {
       User user = (User) obj;
       return ObjectsCompat.equals(getId(), user.getId()) &&
+              ObjectsCompat.equals(getUserId(), user.getUserId()) &&
               ObjectsCompat.equals(getFirstName(), user.getFirstName()) &&
               ObjectsCompat.equals(getLastName(), user.getLastName()) &&
               ObjectsCompat.equals(getName(), user.getName()) &&
@@ -141,6 +148,7 @@ public final class User implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
+      .append(getUserId())
       .append(getFirstName())
       .append(getLastName())
       .append(getName())
@@ -159,6 +167,7 @@ public final class User implements Model {
     return new StringBuilder()
       .append("User {")
       .append("id=" + String.valueOf(getId()) + ", ")
+      .append("userId=" + String.valueOf(getUserId()) + ", ")
       .append("firstName=" + String.valueOf(getFirstName()) + ", ")
       .append("lastName=" + String.valueOf(getLastName()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
@@ -172,7 +181,7 @@ public final class User implements Model {
       .toString();
   }
   
-  public static FirstNameStep builder() {
+  public static UserIdStep builder() {
       return new Builder();
   }
   
@@ -193,12 +202,14 @@ public final class User implements Model {
       null,
       null,
       null,
+      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
+      userId,
       firstName,
       lastName,
       name,
@@ -207,6 +218,11 @@ public final class User implements Model {
       email,
       avatarUri);
   }
+  public interface UserIdStep {
+    FirstNameStep userId(String userId);
+  }
+  
+
   public interface FirstNameStep {
     LastNameStep firstName(String firstName);
   }
@@ -228,8 +244,9 @@ public final class User implements Model {
   }
   
 
-  public static class Builder implements FirstNameStep, LastNameStep, BuildStep {
+  public static class Builder implements UserIdStep, FirstNameStep, LastNameStep, BuildStep {
     private String id;
+    private String userId;
     private String firstName;
     private String lastName;
     private String name;
@@ -241,8 +258,9 @@ public final class User implements Model {
       
     }
     
-    private Builder(String id, String firstName, String lastName, String name, String phone, String userName, String email, String avatarUri) {
+    private Builder(String id, String userId, String firstName, String lastName, String name, String phone, String userName, String email, String avatarUri) {
       this.id = id;
+      this.userId = userId;
       this.firstName = firstName;
       this.lastName = lastName;
       this.name = name;
@@ -258,6 +276,7 @@ public final class User implements Model {
         
         return new User(
           id,
+          userId,
           firstName,
           lastName,
           name,
@@ -265,6 +284,13 @@ public final class User implements Model {
           userName,
           email,
           avatarUri);
+    }
+    
+    @Override
+     public FirstNameStep userId(String userId) {
+        Objects.requireNonNull(userId);
+        this.userId = userId;
+        return this;
     }
     
     @Override
@@ -323,10 +349,16 @@ public final class User implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String firstName, String lastName, String name, String phone, String userName, String email, String avatarUri) {
-      super(id, firstName, lastName, name, phone, userName, email, avatarUri);
+    private CopyOfBuilder(String id, String userId, String firstName, String lastName, String name, String phone, String userName, String email, String avatarUri) {
+      super(id, userId, firstName, lastName, name, phone, userName, email, avatarUri);
+      Objects.requireNonNull(userId);
       Objects.requireNonNull(firstName);
       Objects.requireNonNull(lastName);
+    }
+    
+    @Override
+     public CopyOfBuilder userId(String userId) {
+      return (CopyOfBuilder) super.userId(userId);
     }
     
     @Override

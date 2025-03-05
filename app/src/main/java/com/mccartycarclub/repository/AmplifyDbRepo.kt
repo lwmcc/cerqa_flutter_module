@@ -116,7 +116,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     override fun createContact(user: User) {
         val contact = Contact.builder()
             //  .id(UUID.randomUUID().toString())
-            .userId("31cb55f0-1031-7026-1ea5-9e5c424b27de")
+            //.userId("31cb55f0-1031-7026-1ea5-9e5c424b27de")
             .contactId("216ba540-0011-70d0-bb72-5b51c19ae56a")
             .user(user)
             .build()
