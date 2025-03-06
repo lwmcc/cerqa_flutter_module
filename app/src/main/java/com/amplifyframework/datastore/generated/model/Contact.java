@@ -32,7 +32,7 @@ public final class Contact implements Model {
   public static final ContactPath rootPath = new ContactPath("root", false, null);
   public static final QueryField ID = field("Contact", "id");
   public static final QueryField CONTACT_ID = field("Contact", "contactId");
-  public static final QueryField USER = field("Contact", "userId");
+  //public static final QueryField USER = field("Contact", "userId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="ID") String contactId;
   private final @ModelField(targetType="User") @BelongsTo(targetName = "userId", targetNames = {"userId"}, type = User.class) ModelReference<User> user;
