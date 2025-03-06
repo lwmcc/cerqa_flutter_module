@@ -117,17 +117,17 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         val contact = Contact.builder()
             //  .id(UUID.randomUUID().toString())
             //.userId("31cb55f0-1031-7026-1ea5-9e5c424b27de")
-            .contactId("216ba540-0011-70d0-bb72-5b51c19ae56a")
+            //.contactId("216ba540-0011-70d0-bb72-5b51c19ae56a")
             .user(user)
             .build()
 
         Amplify.API.mutate(ModelMutation.create(contact),
             { contactResponse ->
                 // println("AmplifyDbRepo ***** RESPONSE: ${response.data.id}")
-                println("AmplifyDbRepo ***** Added team with id: ${contactResponse.data}")
+                println("AmplifyDbRepo ***** Added contact with id: ${contactResponse}")
             },
             { error ->
-                // println("AmplifyDbRepo ***** \"Added team with id: ${.data.id}\"")
+                 println("AmplifyDbRepo ***** Added team with id: $error")
             }
         )
     }
