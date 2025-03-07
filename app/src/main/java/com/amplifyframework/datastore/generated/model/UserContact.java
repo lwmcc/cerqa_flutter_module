@@ -1,7 +1,8 @@
 package com.amplifyframework.datastore.generated.model;
 
-import com.amplifyframework.core.model.annotations.HasMany;
-import com.amplifyframework.core.model.ModelList;
+import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.ModelReference;
+import com.amplifyframework.core.model.LoadedModelReferenceImpl;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.ModelIdentifier;
 
@@ -22,18 +23,19 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
-/** This is an auto generated class representing the Contact type in your schema. */
+/** This is an auto generated class representing the UserContact type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Contacts", type = Model.Type.USER, version = 1, authRules = {
+@ModelConfig(pluralName = "UserContacts", type = Model.Type.USER, version = 1, authRules = {
   @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 }, hasLazySupport = true)
-public final class Contact implements Model {
-  public static final ContactPath rootPath = new ContactPath("root", false, null);
-  public static final QueryField ID = field("Contact", "id");
-  public static final QueryField CONTACT_ID = field("Contact", "contactId");
+public final class UserContact implements Model {
+  public static final UserContactPath rootPath = new UserContactPath("root", false, null);
+  public static final QueryField ID = field("UserContact", "id");
+  public static final QueryField USER = field("UserContact", "userId");
+  public static final QueryField CONTACT = field("UserContact", "contactId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="String") String contactId;
-  private final @ModelField(targetType="UserContact") @HasMany(associatedWith = "contact", type = UserContact.class) ModelList<UserContact> users = null;
+  private final @ModelField(targetType="User") @BelongsTo(targetName = "userId", targetNames = {"userId"}, type = User.class) ModelReference<User> user;
+  private final @ModelField(targetType="Contact") @BelongsTo(targetName = "contactId", targetNames = {"contactId"}, type = Contact.class) ModelReference<Contact> contact;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -46,12 +48,12 @@ public final class Contact implements Model {
       return id;
   }
   
-  public String getContactId() {
-      return contactId;
+  public ModelReference<User> getUser() {
+      return user;
   }
   
-  public ModelList<UserContact> getUsers() {
-      return users;
+  public ModelReference<Contact> getContact() {
+      return contact;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -62,9 +64,10 @@ public final class Contact implements Model {
       return updatedAt;
   }
   
-  private Contact(String id, String contactId) {
+  private UserContact(String id, ModelReference<User> user, ModelReference<Contact> contact) {
     this.id = id;
-    this.contactId = contactId;
+    this.user = user;
+    this.contact = contact;
   }
   
   @Override
@@ -74,11 +77,12 @@ public final class Contact implements Model {
       } else if(obj == null || getClass() != obj.getClass()) {
         return false;
       } else {
-      Contact contact = (Contact) obj;
-      return ObjectsCompat.equals(getId(), contact.getId()) &&
-              ObjectsCompat.equals(getContactId(), contact.getContactId()) &&
-              ObjectsCompat.equals(getCreatedAt(), contact.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), contact.getUpdatedAt());
+      UserContact userContact = (UserContact) obj;
+      return ObjectsCompat.equals(getId(), userContact.getId()) &&
+              ObjectsCompat.equals(getUser(), userContact.getUser()) &&
+              ObjectsCompat.equals(getContact(), userContact.getContact()) &&
+              ObjectsCompat.equals(getCreatedAt(), userContact.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), userContact.getUpdatedAt());
       }
   }
   
@@ -86,7 +90,8 @@ public final class Contact implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
-      .append(getContactId())
+      .append(getUser())
+      .append(getContact())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -96,9 +101,10 @@ public final class Contact implements Model {
   @Override
    public String toString() {
     return new StringBuilder()
-      .append("Contact {")
+      .append("UserContact {")
       .append("id=" + String.valueOf(getId()) + ", ")
-      .append("contactId=" + String.valueOf(getContactId()) + ", ")
+      .append("user=" + String.valueOf(getUser()) + ", ")
+      .append("contact=" + String.valueOf(getContact()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
@@ -117,48 +123,60 @@ public final class Contact implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    */
-  public static Contact justId(String id) {
-    return new Contact(
+  public static UserContact justId(String id) {
+    return new UserContact(
       id,
+      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      contactId);
+      user,
+      contact);
   }
   public interface BuildStep {
-    Contact build();
+    UserContact build();
     BuildStep id(String id);
-    BuildStep contactId(String contactId);
+    BuildStep user(User user);
+    BuildStep contact(Contact contact);
   }
   
 
   public static class Builder implements BuildStep {
     private String id;
-    private String contactId;
+    private ModelReference<User> user;
+    private ModelReference<Contact> contact;
     public Builder() {
       
     }
     
-    private Builder(String id, String contactId) {
+    private Builder(String id, ModelReference<User> user, ModelReference<Contact> contact) {
       this.id = id;
-      this.contactId = contactId;
+      this.user = user;
+      this.contact = contact;
     }
     
     @Override
-     public Contact build() {
+     public UserContact build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
         
-        return new Contact(
+        return new UserContact(
           id,
-          contactId);
+          user,
+          contact);
     }
     
     @Override
-     public BuildStep contactId(String contactId) {
-        this.contactId = contactId;
+     public BuildStep user(User user) {
+        this.user = new LoadedModelReferenceImpl<>(user);
+        return this;
+    }
+    
+    @Override
+     public BuildStep contact(Contact contact) {
+        this.contact = new LoadedModelReferenceImpl<>(contact);
         return this;
     }
     
@@ -174,21 +192,26 @@ public final class Contact implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String contactId) {
-      super(id, contactId);
+    private CopyOfBuilder(String id, ModelReference<User> user, ModelReference<Contact> contact) {
+      super(id, user, contact);
       
     }
     
     @Override
-     public CopyOfBuilder contactId(String contactId) {
-      return (CopyOfBuilder) super.contactId(contactId);
+     public CopyOfBuilder user(User user) {
+      return (CopyOfBuilder) super.user(user);
+    }
+    
+    @Override
+     public CopyOfBuilder contact(Contact contact) {
+      return (CopyOfBuilder) super.contact(contact);
     }
   }
   
 
-  public static class ContactIdentifier extends ModelIdentifier<Contact> {
+  public static class UserContactIdentifier extends ModelIdentifier<UserContact> {
     private static final long serialVersionUID = 1L;
-    public ContactIdentifier(String id) {
+    public UserContactIdentifier(String id) {
       super(id);
     }
   }

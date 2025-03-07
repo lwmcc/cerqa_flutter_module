@@ -17,4 +17,8 @@ class GetContactsData @Inject constructor(private val dbRepo: DbRepo) : GetConta
     override fun createContact(user: User) {
         dbRepo.createContact(user)
     }
+
+    override fun getUserContacts() {
+        dbRepo.fetchUserContacts()
+    }
 }

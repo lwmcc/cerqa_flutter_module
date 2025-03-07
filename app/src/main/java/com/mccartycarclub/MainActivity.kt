@@ -55,17 +55,19 @@ class MainActivity : ComponentActivity() {
                                 Log.d("MainActivity *****", "User ID: $userId")
 
                                 //  12121212-1031-7026-1ea5-9e5c424b27de
-                                val user = User.builder()
-                                    .firstName("Lebron")
-                                    .lastName("James")
-                                    .name("Lebron")
+/*                                val user = User.builder()
+                                    .userId(userId)
+                                    .firstName("Larry")
+                                    .lastName("McCarty")
+                                    .name("LM")
                                     .email("lmccarty@outlook.com")
                                     .avatarUri("https://fake-uri.com")
-                                    .phone("480-434-1155")
+                                    .phone("480-434-1135")
                                     .id(userId)
-                                    .userName("King James")
+                                    .userName("LM")
                                     .build()
-/*                                Amplify.API.mutate(
+
+                                Amplify.API.mutate(
                                     ModelMutation.create(user),
                                     { Log.i("MainActivity *****", "Added User with id: ${it}") },
                                     { Log.e("MainActivity *****", "Create failed", it) },
@@ -88,66 +90,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    companion object {
-        val jsonString = """
-            {
-              "Contact": {
-                "type": "model",
-                "properties": {
-                  "id": { "type": "id" },
-                  "name": { "type": "string" },
-                  "phone": { "type": "phone" },
-                  "email": { "type": "email" },
-                  "user": { "type": "belongsTo", "target": "User", "targetKey": "id" }
-                },
-                "authorization": {
-                  "allow": ["guest"]
-                }
-              },
-              "contacts": [
-                {
-                  "id": "1",
-                  "name": "Alice Johnson",
-                  "phone": "+11234567890",
-                  "email": "alice.johnson@example.com"
-                },
-                {
-                  "id": "2",
-                  "name": "Bob Lee",
-                  "phone": "+19876543210",
-                  "email": "bob.lee@example.com"
-                }
-              ]
-            }
-            """
-
-        val jsonGroups = """
-            {
-              "name": "Sample Contact List",
-              "users": [
-                {
-                  "id": "1",
-                  "avatarUri": "https://example.com/avatars/alice.jpg",
-                  "email": "alice.johnson@example.com",
-                  "firstName": "Alice",
-                  "lastName": "Johnson",
-                  "name": "Alice Johnson",
-                  "phone": "+11234567890"
-                },
-                {
-                  "id": "2",
-                  "avatarUri": "https://example.com/avatars/bob.jpg",
-                  "email": "bob.lee@example.com",
-                  "firstName": "Bob",
-                  "lastName": "Lee",
-                  "name": "Bob Lee",
-                  "phone": "+19876543210"
-                }
-              ]
-            }
-            """
-
-    }
-
 }

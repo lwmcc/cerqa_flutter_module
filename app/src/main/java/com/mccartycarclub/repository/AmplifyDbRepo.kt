@@ -11,11 +11,15 @@ import com.amplifyframework.api.graphql.model.ModelQuery.get
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.LoadedModelList
+import com.amplifyframework.core.model.ModelReference
 import com.amplifyframework.core.model.includes
 import com.amplifyframework.datastore.generated.model.Contact
 import com.amplifyframework.datastore.generated.model.User
+import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.datastore.generated.model.UserGroup
 import com.amplifyframework.datastore.generated.model.UserPath
+import com.mccartycarclub.ui.viewmodels.MainViewModel.Companion.TEST_USER_1
+import com.mccartycarclub.ui.viewmodels.MainViewModel.Companion.TEST_USER_2
 import java.util.UUID
 import javax.inject.Inject
 
@@ -50,20 +54,19 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         userContacts: (List<Contact>) -> Unit,
     ) {
 
-        // my id "31cb55f0-1031-7026-1ea5-9e5c424b27de"
         // "344433-1031-7026-1ea5-9e5c424b27de"
-        // row id  "31cb55f0-1031-7026-1ea5-9e5c424b27de"
+
         Amplify.API.query(
             ModelQuery.get<User, UserPath>(
                 User::class.java,
-                User.UserIdentifier("31cb55f0-1031-7026-1ea5-9e5c424b27de")
+                User.UserIdentifier(TEST_USER_1)
             ) { userPath -> includes(userPath.contacts) },
             {
                 val contacts = (it.data.contacts as? LoadedModelList<Contact>)?.items
-               // println("AmplifyDbRepo ***** USER CONTACTS ${contacts?.size} ")
+                println("AmplifyDbRepo ***** USER CONTACTS ${contacts?.size} ")
             },
             {
-               // println("AmplifyDbRepo ***** ERROR ")
+                println("AmplifyDbRepo ***** ERROR ")
             }
         )
     }
@@ -94,7 +97,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         // Use the correct query to fetch the User by ID
         ModelQuery.get<User, UserPath>(
             User::class.java,
-            User.UserIdentifier("31cb55f0-1031-7026-1ea5-9e5c424b27de")
+            User.UserIdentifier(TEST_USER_1)
         ) {
             // Including the contacts field (if exists in the User model)
             includes(it.contacts)
@@ -107,6 +110,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     override fun fetchUser(userId: String, user: (User) -> Unit) {
         Amplify.API.query(get(User::class.java, userId),
             { response: GraphQLResponse<User> ->
+            //println("AmplifyDbRepo ***** USER ${response.data}")
                 user(response.data as User)
             },
             { println("AmplifyDbRepo ***** ERROR") }
@@ -115,20 +119,52 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
     override fun createContact(user: User) {
         val contact = Contact.builder()
-            //  .id(UUID.randomUUID().toString())
-            //.userId("31cb55f0-1031-7026-1ea5-9e5c424b27de")
-            //.contactId("216ba540-0011-70d0-bb72-5b51c19ae56a")
-            .user(user)
+            .contactId(TEST_USER_2)
             .build()
 
         Amplify.API.mutate(ModelMutation.create(contact),
             { contactResponse ->
-                // println("AmplifyDbRepo ***** RESPONSE: ${response.data.id}")
-                println("AmplifyDbRepo ***** Added contact with id: ${contactResponse}")
+                val userContact = UserContact.builder()
+                    .user(user)
+                    .contact(contact)
+                    .build()
+                Amplify.API.mutate(ModelMutation.create(userContact),
+                    {
+                       // println("AmplifyDbRepo ***** USER CONTACT: ${userContact}")
+                    },
+                    { error ->
+                       // println("AmplifyDbRepo *****Failed to create USER Contact: $error")
+                    }
+                )
+             //   println("AmplifyDbRepo ***** contactResponse: ${contactResponse}")
             },
             { error ->
-                 println("AmplifyDbRepo ***** Added team with id: $error")
+              //  println("AmplifyDbRepo *****Failed to create Contact: $error")
             }
+        )
+    }
+
+    override fun fetchUserContacts() {
+        Amplify.API.query(
+            get<User, UserPath>(
+                User::class.java,
+                User.UserIdentifier(TEST_USER_1)
+            ) { userPath -> includes(userPath.contacts) },
+            {
+
+
+                val contacts = (it.data.contacts as? LoadedModelList<UserContact>)?.items
+
+                contacts?.forEach { userContact ->
+                 userContact.contact
+
+                    //println("AmplifyDbRepo ***** CON ${userContact.}")
+                    println("AmplifyDbRepo ***** ID ${userContact.id}")
+                    //println("AmplifyDbRepo ***** USER ${userContact.user.}")
+
+                }
+            },
+            { println("AmplifyDbRepo ***** ERROR FETCHING USER CONTACTS") }
         )
     }
 }

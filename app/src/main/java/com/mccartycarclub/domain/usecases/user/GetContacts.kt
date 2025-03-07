@@ -8,4 +8,5 @@ interface GetContacts {
 
     // TODO: move to own interface
     fun createContact(user: User)
+    fun getUserContacts()
 }

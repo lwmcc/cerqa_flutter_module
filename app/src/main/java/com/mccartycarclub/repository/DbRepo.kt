@@ -9,4 +9,5 @@ interface DbRepo {
     fun fetchUsers()
     fun fetchUser(userId: String,  user: (User) -> Unit)
     fun createContact(user: User)
+    fun fetchUserContacts()
 }

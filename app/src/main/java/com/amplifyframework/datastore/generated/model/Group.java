@@ -31,11 +31,11 @@ public final class Group implements Model {
   public static final GroupPath rootPath = new GroupPath("root", false, null);
   public static final QueryField ID = field("Group", "id");
   public static final QueryField USER_ID = field("Group", "userId");
-  public static final QueryField MEMBER_ID = field("Group", "memberId");
+  public static final QueryField GROUP_ID = field("Group", "groupId");
   public static final QueryField NAME = field("Group", "name");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String userId;
-  private final @ModelField(targetType="String", isRequired = true) String memberId;
+  private final @ModelField(targetType="String", isRequired = true) String groupId;
   private final @ModelField(targetType="String", isRequired = true) String name;
   private final @ModelField(targetType="UserGroup") @HasMany(associatedWith = "group", type = UserGroup.class) ModelList<UserGroup> users = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
@@ -54,8 +54,8 @@ public final class Group implements Model {
       return userId;
   }
   
-  public String getMemberId() {
-      return memberId;
+  public String getGroupId() {
+      return groupId;
   }
   
   public String getName() {
@@ -74,10 +74,10 @@ public final class Group implements Model {
       return updatedAt;
   }
   
-  private Group(String id, String userId, String memberId, String name) {
+  private Group(String id, String userId, String groupId, String name) {
     this.id = id;
     this.userId = userId;
-    this.memberId = memberId;
+    this.groupId = groupId;
     this.name = name;
   }
   
@@ -91,7 +91,7 @@ public final class Group implements Model {
       Group group = (Group) obj;
       return ObjectsCompat.equals(getId(), group.getId()) &&
               ObjectsCompat.equals(getUserId(), group.getUserId()) &&
-              ObjectsCompat.equals(getMemberId(), group.getMemberId()) &&
+              ObjectsCompat.equals(getGroupId(), group.getGroupId()) &&
               ObjectsCompat.equals(getName(), group.getName()) &&
               ObjectsCompat.equals(getCreatedAt(), group.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), group.getUpdatedAt());
@@ -103,7 +103,7 @@ public final class Group implements Model {
     return new StringBuilder()
       .append(getId())
       .append(getUserId())
-      .append(getMemberId())
+      .append(getGroupId())
       .append(getName())
       .append(getCreatedAt())
       .append(getUpdatedAt())
@@ -117,7 +117,7 @@ public final class Group implements Model {
       .append("Group {")
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("userId=" + String.valueOf(getUserId()) + ", ")
-      .append("memberId=" + String.valueOf(getMemberId()) + ", ")
+      .append("groupId=" + String.valueOf(getGroupId()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
@@ -149,16 +149,16 @@ public final class Group implements Model {
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
       userId,
-      memberId,
+      groupId,
       name);
   }
   public interface UserIdStep {
-    MemberIdStep userId(String userId);
+    GroupIdStep userId(String userId);
   }
   
 
-  public interface MemberIdStep {
-    NameStep memberId(String memberId);
+  public interface GroupIdStep {
+    NameStep groupId(String groupId);
   }
   
 
@@ -173,19 +173,19 @@ public final class Group implements Model {
   }
   
 
-  public static class Builder implements UserIdStep, MemberIdStep, NameStep, BuildStep {
+  public static class Builder implements UserIdStep, GroupIdStep, NameStep, BuildStep {
     private String id;
     private String userId;
-    private String memberId;
+    private String groupId;
     private String name;
     public Builder() {
       
     }
     
-    private Builder(String id, String userId, String memberId, String name) {
+    private Builder(String id, String userId, String groupId, String name) {
       this.id = id;
       this.userId = userId;
-      this.memberId = memberId;
+      this.groupId = groupId;
       this.name = name;
     }
     
@@ -196,21 +196,21 @@ public final class Group implements Model {
         return new Group(
           id,
           userId,
-          memberId,
+          groupId,
           name);
     }
     
     @Override
-     public MemberIdStep userId(String userId) {
+     public GroupIdStep userId(String userId) {
         Objects.requireNonNull(userId);
         this.userId = userId;
         return this;
     }
     
     @Override
-     public NameStep memberId(String memberId) {
-        Objects.requireNonNull(memberId);
-        this.memberId = memberId;
+     public NameStep groupId(String groupId) {
+        Objects.requireNonNull(groupId);
+        this.groupId = groupId;
         return this;
     }
     
@@ -233,10 +233,10 @@ public final class Group implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String userId, String memberId, String name) {
-      super(id, userId, memberId, name);
+    private CopyOfBuilder(String id, String userId, String groupId, String name) {
+      super(id, userId, groupId, name);
       Objects.requireNonNull(userId);
-      Objects.requireNonNull(memberId);
+      Objects.requireNonNull(groupId);
       Objects.requireNonNull(name);
     }
     
@@ -246,8 +246,8 @@ public final class Group implements Model {
     }
     
     @Override
-     public CopyOfBuilder memberId(String memberId) {
-      return (CopyOfBuilder) super.memberId(memberId);
+     public CopyOfBuilder groupId(String groupId) {
+      return (CopyOfBuilder) super.groupId(groupId);
     }
     
     @Override

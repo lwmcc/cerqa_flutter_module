@@ -13,7 +13,7 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
 
     init {
-        user.getUser("31cb55f0-1031-7026-1ea5-9e5c424b27de",
+        user.getUser(TEST_USER_1,
             user = {
                 userContacts.createContact(it)
                 println("MainViewModel ***** USER ${it.name}")
@@ -21,13 +21,17 @@ class MainViewModel @Inject constructor(
                 println("MainViewModel ***** USER ${it.firstName}")
         })
 
-        user.getUserGroups("31cb55f0-1031-7026-1ea5-9e5c424b27de")
+        user.getUserGroups(TEST_USER_1)
 
-        userContacts.fetchContacts("31cb55f0-1031-7026-1ea5-9e5c424b27de", userContacts = {
+        userContacts.fetchContacts(TEST_USER_1, userContacts = {
             println("MainViewModel ***** CONTACTS $it")
         })
 
+        userContacts.getUserContacts()
+    }
 
-        // user.getUsers()
+    companion object {
+        const val TEST_USER_1 = "14f8f4e8-a0b1-7015-d3b4-ded92d05abe5"
+        const val TEST_USER_2 = "c468f4b8-3021-70f1-7f5b-2b7aef73da45"
     }
 }
