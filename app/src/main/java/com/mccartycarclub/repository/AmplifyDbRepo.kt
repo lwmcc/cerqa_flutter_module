@@ -128,6 +128,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                     .user(user)
                     .contact(contact)
                     .build()
+
                 Amplify.API.mutate(ModelMutation.create(userContact),
                     {
                        // println("AmplifyDbRepo ***** USER CONTACT: ${userContact}")
@@ -156,10 +157,10 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 val contacts = (it.data.contacts as? LoadedModelList<UserContact>)?.items
 
                 contacts?.forEach { userContact ->
-                 userContact.contact
 
-                    //println("AmplifyDbRepo ***** CON ${userContact.}")
-                    println("AmplifyDbRepo ***** ID ${userContact.id}")
+
+                    //println("AmplifyDbRepo ***** CON ${userContact.contact.}")
+                    //println("AmplifyDbRepo ***** ID ${userContact}")
                     //println("AmplifyDbRepo ***** USER ${userContact.user.}")
 
                 }
