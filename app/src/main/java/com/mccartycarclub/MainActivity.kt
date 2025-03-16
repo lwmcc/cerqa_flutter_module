@@ -1,13 +1,25 @@
 package com.mccartycarclub
 
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import aws.smithy.kotlin.runtime.net.Scheme.Companion.HTTP
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.ui.authenticator.ui.Authenticator
 import com.amplifyframework.api.graphql.model.ModelMutation
@@ -28,66 +40,148 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // TODO: to init viewmodel
-        mainViewModel
-
         setContent {
             Authenticator { state ->
-                Column {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
                     Text(
                         text = "Hello ${state.user.username}!",
                     )
 
-                    Button(onClick = {
-                        Amplify.Auth.signOut { }
-                    }) {
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            Amplify.Auth.signOut { }
+                        },
+                    ) {
                         Text(text = "Sign Out")
                     }
 
-                    val userId = UUID.randomUUID().toString()
-
-                    Button(onClick = {
-
-                        Amplify.Auth.fetchUserAttributes(
-                            { attributes ->
-                                val userId =
-                                    attributes.firstOrNull { it.key.keyString == "sub" }?.value
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            Amplify.Auth.fetchUserAttributes({ attributes ->
+                                val userId = attributes.firstOrNull { it.key.keyString == "sub" }?.value
                                 Log.d("MainActivity *****", "User ID: $userId")
-
-                                //  12121212-1031-7026-1ea5-9e5c424b27de
-/*                                val user = User.builder()
-                                    .userId(userId)
-                                    .firstName("Larry")
-                                    .lastName("McCarty")
-                                    .name("LM")
-                                    .email("lmccarty@outlook.com")
-                                    .avatarUri("https://fake-uri.com")
-                                    .phone("480-434-1135")
-                                    .id(userId)
-                                    .userName("LM")
-                                    .build()
-
-                                Amplify.API.mutate(
-                                    ModelMutation.create(user),
-                                    { Log.i("MainActivity *****", "Added User with id: ${it}") },
-                                    { Log.e("MainActivity *****", "Create failed", it) },
-                                )*/
-
-                            },
-                            { error ->
+                            }, { error ->
                                 Log.e(
-                                    "MainActivity *****",
-                                    "Failed to fetch user attributes",
-                                    error
+                                    "MainActivity *****", "Failed to fetch user attributes", error
                                 )
-                            }
-                        )
-
-                    }) {
+                            })
+                        }) {
                         Text(text = "Create Todo")
                     }
+
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+
+                        }) {
+                        Text(text = "Add Contact")
+                    }
+
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            sendConnectInvite(
+                                "Link Test, https://carclub.app",
+                                "555-123-4567",
+                                null,
+                            )
+                        }) {
+                        Text(text = "Send Invite")
+                    }
+
+                }
+                checkPermissions()
+            }
+        }
+        handleIncomingIntentS(intent)
+    }
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            loadUserData()
+        } else {
+            // TODO: show message stating my permission is needed
+            println("MainActivity ***** ACCESS DENIED")
+        }
+    }
+
+    private fun checkPermissions() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this@MainActivity, android.Manifest.permission.READ_CONTACTS
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                loadUserData()
+            }
+
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                this@MainActivity, android.Manifest.permission.READ_CONTACTS
+            ) -> {
+                // In an educational UI, explain to the user why your app requires this
+                // permission for a specific feature to behave as expected, and what
+                // features are disabled if it's declined. In this UI, include a
+                // "cancel" or "no thanks" button that lets the user continue
+                // using your app without granting the permission.
+                //showInContextUI(...)
+                println("MainActivity ***** SHOW WHY IT IS NEEDED")
+            }
+
+            else -> {
+                // You can directly ask for the permission.
+                // The registered ActivityResultCallback gets the result of this request.
+                requestPermissionLauncher.launch(
+                    android.Manifest.permission.READ_CONTACTS
+                )
+                println("MainActivity ***** ASK FOR PERMISSION")
+            }
+        }
+    }
+
+    private fun loadUserData() = mainViewModel.getDeviceContacts()
+
+    private fun sendConnectInvite(message: String, phoneNumber: String, attachment: Uri?) {
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("mmsto:$phoneNumber")
+            putExtra("sms_body", message)
+            // putExtra(Intent.EXTRA_STREAM, attachment)
+        }
+        // TODO: does not get passed if
+        //if (intent.resolveActivity(packageManager) != null) {
+        startActivity(intent)
+        //}
+    }
+
+    private fun handleIncomingIntentS(intent: Intent) {
+        if (intent.action.equals(LinkActions.ACTION_VIEW.action)) {
+            when (intent.data.toString()) {
+                CAR_CLUB_URL -> {
+                    // TODO: implement dialog
+                    // user is inviting a contact to connnect in the app
+                    // user 2 can accept or deny
+                    // if accepted get  user 2 user id, get user 1 user id
+                    // add user 2 to user 1 contacts
+                    // add user 1 to user 2 contacts
+                    // send message to user 1
+
+                    println("MainActivity ***** SHOW CONTACTS DIALOG")
                 }
             }
         }
+    }
+
+    enum class LinkActions(val action: String) {
+        ACTION_VIEW("android.intent.action.VIEW")
+    }
+
+    companion object {
+        const val CAR_CLUB_URL = "https://carclub.app"
     }
 }

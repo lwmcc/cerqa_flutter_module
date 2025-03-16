@@ -63,7 +63,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             ) { userPath -> includes(userPath.contacts) },
             {
                 val contacts = (it.data.contacts as? LoadedModelList<Contact>)?.items
-                println("AmplifyDbRepo ***** USER CONTACTS ${contacts?.size} ")
+                println("AmplifyDbRepo ***** fetchUserContacts FETCH USER CONTACTS ${contacts?.size} ")
             },
             {
                 println("AmplifyDbRepo ***** ERROR ")
@@ -119,20 +119,22 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
     override fun createContact(user: User) {
         val contact = Contact.builder()
-            //.id(TEST_USER_2)
-            //.contactId(TEST_USER_2)
+            .id(TEST_USER_2)
+            .contactId(TEST_USER_2)
             .build()
 
         Amplify.API.mutate(ModelMutation.create(contact),
             { contactResponse ->
                 val userContact = UserContact.builder()
+                    .id(contact.id)
                     .user(user)
                     .contact(contact)
                     .build()
 
+                //  TODO: move ot own functionn
                 Amplify.API.mutate(ModelMutation.create(userContact),
                     {
-                       // println("AmplifyDbRepo ***** USER CONTACT: ${userContact}")
+                        println("AmplifyDbRepo ***** createContact USER CONTACT: ${userContact}")
                     },
                     { error ->
                        // println("AmplifyDbRepo *****Failed to create USER Contact: $error")
@@ -146,11 +148,11 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         )
     }
 
-    override fun fetchUserContacts() {
+    override fun fetchUserContacts(userId: String) {
         Amplify.API.query(
             get<User, UserPath>(
                 User::class.java,
-                User.UserIdentifier(TEST_USER_1)
+                User.UserIdentifier(userId)
             ) { userPath -> includes(userPath.contacts) },
             {
 
@@ -158,7 +160,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 val contacts = (it.data.contacts as? LoadedModelList<UserContact>)?.items
 
                 contacts?.forEach { userContact ->
-                    println("AmplifyDbRepo ***** CON ${userContact.id}")
+                    println("AmplifyDbRepo ***** fetchUserContacts ${userContact.id}")
                     //println("AmplifyDbRepo ***** ID ${userContact.contact}")
                    // println("AmplifyDbRepo ***** USER ${userContact.user}")
 
@@ -166,5 +168,14 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             },
             { println("AmplifyDbRepo ***** ERROR FETCHING USER CONTACTS") }
         )
+    }
+
+    override fun acceptContactInvite(userId: String, rowI: (String) -> Unit) {
+
+        //UserInviteToConnect
+
+/*        Amplify.API.mutate(
+
+        )*/
     }
 }

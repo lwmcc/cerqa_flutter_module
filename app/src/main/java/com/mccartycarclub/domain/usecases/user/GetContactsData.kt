@@ -2,10 +2,15 @@ package com.mccartycarclub.domain.usecases.user
 
 import com.amplifyframework.datastore.generated.model.Contact
 import com.amplifyframework.datastore.generated.model.User
+import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.repository.DbRepo
+import com.mccartycarclub.repository.LocalRepo
 import javax.inject.Inject
 
-class GetContactsData @Inject constructor(private val dbRepo: DbRepo) : GetContacts {
+class GetContactsData @Inject constructor(
+    private val dbRepo: DbRepo,
+    private val localRepo: LocalRepo,
+    ) : GetContacts {
     override fun fetchContacts(userId: String, userContacts: (List<Contact>) -> Unit) {
         dbRepo.fetchUserContacts(
             userId, userContacts = {
@@ -18,7 +23,17 @@ class GetContactsData @Inject constructor(private val dbRepo: DbRepo) : GetConta
         dbRepo.createContact(user)
     }
 
-    override fun getUserContacts() {
-        dbRepo.fetchUserContacts()
+    override fun getUserContacts(userId: String) {
+        dbRepo.fetchUserContacts(userId)
+    }
+
+    override fun getDeviceContacts(localContacts: (List<LocalContact>) -> Unit) {
+        localRepo.getAllContacts(localContacts = { contacts ->
+            localContacts(contacts)
+        })
+    }
+
+    override fun addNewContact() {
+        dbRepo
     }
 }

@@ -4,6 +4,8 @@ import com.mccartycarclub.domain.usecases.user.GetUser
 import com.mccartycarclub.domain.usecases.user.GetUserData
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.DbRepo
+import com.mccartycarclub.repository.LocalRepo
+import com.mccartycarclub.repository.Repo
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -16,4 +18,7 @@ abstract class RepoModule {
 
     @Binds
     abstract fun bindAmplifyDbRepo(amplifyDbRepo: AmplifyDbRepo): DbRepo
+
+    @Binds
+    abstract fun bindRepo(repo: Repo): LocalRepo
 }
