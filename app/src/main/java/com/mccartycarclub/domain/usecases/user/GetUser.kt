@@ -7,4 +7,5 @@ interface GetUser {
     fun getUserGroups(userId: String)
     fun getUsers()
     fun getUser(userId: String, user: (User) -> Unit)
+    fun fetchUserIdFromSentInvite(rowId: String, userId: (String?) -> Unit)
 }

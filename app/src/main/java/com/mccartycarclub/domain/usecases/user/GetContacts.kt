@@ -11,5 +11,6 @@ interface GetContacts {
     fun createContact(user: User)
     fun getUserContacts(userId: String)
     fun getDeviceContacts(localContacts: (List<LocalContact>) -> Unit)
-    fun addNewContact()
+    fun addNewContact(userId: String, rowId: (String?) -> Unit)
+    fun acceptContactInvite()
 }

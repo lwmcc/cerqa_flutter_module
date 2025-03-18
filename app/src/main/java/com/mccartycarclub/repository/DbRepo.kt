@@ -9,9 +9,12 @@ interface DbRepo {
     fun fetchUserContacts(userId: String, userContacts: (List<Contact>) -> Unit) // TODO:: move to own interface
 
     fun fetchUsers()
-    fun fetchUser(userId: String,  user: (User) -> Unit)
+    fun fetchUser(userId: String, user: (User) -> Unit)
     fun createContact(user: User)
     fun fetchUserContacts(userId: String)
 
-    fun acceptContactInvite(userId: String, rowI: (String) -> Unit)
+    // TODO: rename
+    fun acceptContactInvite(userId: String, rowId: (String?) -> Unit)
+    fun fetchUserIdFromSentInvite(rowId: String, userId: (String?) -> Unit)
+    fun updateSenderReceiverContacts()
 }

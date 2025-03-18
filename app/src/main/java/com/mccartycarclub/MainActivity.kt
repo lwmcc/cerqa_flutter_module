@@ -87,13 +87,23 @@ class MainActivity : ComponentActivity() {
                     Button(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
-                            sendConnectInvite(
-                                "Link Test, https://carclub.app",
-                                "555-123-4567",
-                                null,
-                            )
+                            mainViewModel.inviteContact(state.user.userId, rowId = { rowId ->
+                                sendConnectInvite(
+                                    "Link Test, https://carclub.app",
+                                    "555-521-5554",
+                                    rowId,
+                                )
+                            })
                         }) {
                         Text(text = "Send Invite")
+                    }
+
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            mainViewModel.acceptContactInvite()
+                        }) {
+                        Text(text = "Accept Invite")
                     }
 
                 }
@@ -147,10 +157,11 @@ class MainActivity : ComponentActivity() {
 
     private fun loadUserData() = mainViewModel.getDeviceContacts()
 
-    private fun sendConnectInvite(message: String, phoneNumber: String, attachment: Uri?) {
+    private fun sendConnectInvite(message: String, phoneNumber: String, rowId: String) {
         val intent = Intent(Intent.ACTION_SENDTO).apply {
             data = Uri.parse("mmsto:$phoneNumber")
             putExtra("sms_body", message)
+            putExtra("row_id", rowId)
             // putExtra(Intent.EXTRA_STREAM, attachment)
         }
         // TODO: does not get passed if
@@ -171,7 +182,8 @@ class MainActivity : ComponentActivity() {
                     // add user 1 to user 2 contacts
                     // send message to user 1
 
-                    println("MainActivity ***** SHOW CONTACTS DIALOG")
+                    val rosId = intent.extras?.getString("row_id")
+                    println("MainActivity ***** SHOW CONTACTS DIALOG ID $rosId")
                 }
             }
         }

@@ -4,7 +4,9 @@ import android.R.id
 import android.util.Log
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.ApiException
+import com.amplifyframework.api.aws.GsonVariablesSerializer
 import com.amplifyframework.api.graphql.GraphQLResponse
+import com.amplifyframework.api.graphql.SimpleGraphQLRequest
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.api.graphql.model.ModelQuery.get
@@ -17,7 +19,9 @@ import com.amplifyframework.datastore.generated.model.Contact
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.datastore.generated.model.UserGroup
+import com.amplifyframework.datastore.generated.model.UserInviteToConnect
 import com.amplifyframework.datastore.generated.model.UserPath
+import com.google.gson.Gson
 import com.mccartycarclub.ui.viewmodels.MainViewModel.Companion.TEST_USER_1
 import com.mccartycarclub.ui.viewmodels.MainViewModel.Companion.TEST_USER_2
 import java.util.UUID
@@ -43,7 +47,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
             },
             { error ->
-              //  println("AmplifyDbRepo ***** $error")
+                //  println("AmplifyDbRepo ***** $error")
             }
         )
     }
@@ -80,7 +84,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             val user = response.data
             if (user != null) {
                 // Log user info
-               // Log.d("AmplifyDbRepo", "User Name: ${user.firstName} ${user.lastName}")
+                // Log.d("AmplifyDbRepo", "User Name: ${user.firstName} ${user.lastName}")
 
                 // Assuming the User model has a 'contacts' field (hasMany relationship)
                 val ct = user.contacts
@@ -110,7 +114,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     override fun fetchUser(userId: String, user: (User) -> Unit) {
         Amplify.API.query(get(User::class.java, userId),
             { response: GraphQLResponse<User> ->
-            //println("AmplifyDbRepo ***** USER ${response.data}")
+                //println("AmplifyDbRepo ***** USER ${response.data}")
                 user(response.data as User)
             },
             { println("AmplifyDbRepo ***** ERROR") }
@@ -137,13 +141,13 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                         println("AmplifyDbRepo ***** createContact USER CONTACT: ${userContact}")
                     },
                     { error ->
-                       // println("AmplifyDbRepo *****Failed to create USER Contact: $error")
+                        // println("AmplifyDbRepo *****Failed to create USER Contact: $error")
                     }
                 )
-             //   println("AmplifyDbRepo ***** contactResponse: ${contactResponse}")
+                //   println("AmplifyDbRepo ***** contactResponse: ${contactResponse}")
             },
             { error ->
-              //  println("AmplifyDbRepo *****Failed to create Contact: $error")
+                //  println("AmplifyDbRepo *****Failed to create Contact: $error")
             }
         )
     }
@@ -156,13 +160,12 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             ) { userPath -> includes(userPath.contacts) },
             {
 
-
                 val contacts = (it.data.contacts as? LoadedModelList<UserContact>)?.items
 
                 contacts?.forEach { userContact ->
                     println("AmplifyDbRepo ***** fetchUserContacts ${userContact.id}")
                     //println("AmplifyDbRepo ***** ID ${userContact.contact}")
-                   // println("AmplifyDbRepo ***** USER ${userContact.user}")
+                    // println("AmplifyDbRepo ***** USER ${userContact.user}")
 
                 }
             },
@@ -170,12 +173,77 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         )
     }
 
-    override fun acceptContactInvite(userId: String, rowI: (String) -> Unit) {
+    // TODO: rename
+    override fun acceptContactInvite(userId: String, rowId: (String?) -> Unit) {
 
-        //UserInviteToConnect
-
-/*        Amplify.API.mutate(
-
-        )*/
+        Amplify.API.mutate(ModelMutation.create(
+            UserInviteToConnect.builder().userId(userId).build()
+        ),
+            { rowId(it.data.id) },
+            { error ->
+                rowId(null)
+                // TODO: to log
+                println("AmplifyDbRepo *****Failed to create acceptContactInvite: $error")
+            }
+        )
     }
+
+    override fun fetchUserIdFromSentInvite(rowId: String, userId: (String?) -> Unit) {
+        Amplify.API.query(get(UserInviteToConnect::class.java, rowId),
+            {
+                it.data?.let { data ->
+                    userId(data.userId)
+                } ?: run { println("AmplifyDbRepo ***** ERROR $it") }
+            },
+            { println("AmplifyDbRepo ***** ERROR $it") }
+        )
+    }
+
+    override fun updateSenderReceiverContacts() {
+        val document = """
+            query SenderReceiverContactsQuery(${'$'}senderId: String!) {
+                contact-invite-accept(senderId: ${'$'}senderId) {
+                senderId
+                executionDuration
+            }
+        }
+        """.trimIndent()
+
+        val senderReceiverContactsUpdateIdsQuery = SimpleGraphQLRequest<String>(
+            document,
+            mapOf("senderId" to "Amplify"),
+            String::class.java,
+            GsonVariablesSerializer()
+        )
+
+        Amplify.API.query(
+            senderReceiverContactsUpdateIdsQuery,
+            {
+
+                if (it.hasErrors()) {
+                    println("AmplifyDbRepo ***** RAW RESPONSE ERROR : ${it.errors}")
+                } else {
+                    println("AmplifyDbRepo ***** RAW RESPONSE: ${it.data}")
+                }
+
+                val gson = Gson()
+                val response = gson.fromJson(it.data, SenderReceiverContactsResponse::class.java)
+                //println("AmplifyDbRepo ***** RESPONSE ${response.contactInviteAccept.senderId}")
+                println("AmplifyDbRepo ***** RESPONSE ${response}")
+
+            },
+            { println("AmplifyDbRepo ***** MESSAGE $it") }
+        )
+    }
+
+    // TODO: update sender and receiver contacts
+    data class SenderReceiverContactsUpdateIds(
+        val senderId: String
+    )
+
+    data class SenderReceiverContactsResponse(
+        val contactInviteAccept: SenderReceiverContactsUpdateIds
+    )
+
+
 }

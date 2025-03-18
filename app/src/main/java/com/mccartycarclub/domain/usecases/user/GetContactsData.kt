@@ -33,7 +33,13 @@ class GetContactsData @Inject constructor(
         })
     }
 
-    override fun addNewContact() {
-        dbRepo
+    override fun addNewContact(userId: String, rowId: (String?) -> Unit) {
+        dbRepo.acceptContactInvite(userId, rowId = {
+            rowId(it)
+        })
+    }
+
+    override fun acceptContactInvite() {
+        dbRepo.updateSenderReceiverContacts()
     }
 }

@@ -4,7 +4,7 @@ import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.repository.DbRepo
 import javax.inject.Inject
 
-class GetUserData @Inject constructor(private val dbRepo: DbRepo): GetUser {
+class GetUserData @Inject constructor(private val dbRepo: DbRepo) : GetUser {
 
     override fun getUserGroups(userId: String) {
         val groups = dbRepo.fetchUserGroups(userId)
@@ -21,5 +21,11 @@ class GetUserData @Inject constructor(private val dbRepo: DbRepo): GetUser {
                 user(user)
             },
         )
+    }
+
+    override fun fetchUserIdFromSentInvite(rowId: String, userId: (String?) -> Unit) {
+        dbRepo.fetchUserIdFromSentInvite(rowId, userId = {
+            userId(it)
+        })
     }
 }

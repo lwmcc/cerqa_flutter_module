@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    user: GetUser,  // TODO: edit thesee names to use usecase
+    private val user: GetUser,  // TODO: edit thesee names to use usecase
     private val userContacts: GetContacts,
 ) : ViewModel() {
 
@@ -44,5 +44,22 @@ class MainViewModel @Inject constructor(
         _localContacts.update { contacts }
     })
 
+    fun inviteContact(userId: String, rowId: (String) -> Unit) {
+        userContacts.addNewContact(userId, rowId = {
+            it?.let {
+                rowId(it)
+            }
+        })
+    }
+
+    fun fetchUserIdFromSentInvite(rowId: String) {
+        user.fetchUserIdFromSentInvite(rowId, userId = {
+            println("MainViewModel ***** USER ID $it")
+        })
+    }
+
+    fun acceptContactInvite() {
+        userContacts.acceptContactInvite()
+    }
 
 }
