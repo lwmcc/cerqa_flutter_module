@@ -199,17 +199,53 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         )
     }
 
-    override fun updateSenderReceiverContacts() {
-        val document = """
+    val document = """
             query SenderReceiverContactsQuery(${'$'}senderId: String!) {
-                contact-invite-accept(senderId: ${'$'}senderId) {
-                senderId
-                executionDuration
+                contactInviteAccept(senderId: ${'$'}senderId)
             }
-        }
+          }""".trimIndent()
+
+    // TODO: update sender and receiver contacts
+    data class SenderReceiverContactsUpdateIds(
+        val senderId: String,
+        val receiverUserId: String
+    )
+
+    data class SenderReceiverContactsResponse(
+        val contactInviteAccept: SenderReceiverContactsUpdateIds
+    )
+
+    override fun updateSenderReceiverContacts() {
+
+        val document = """
+            query InviteSenderUserIdQuery(${'$'}senderUserId: String!) {
+                inviteSenderUserId(senderUserId: ${'$'}senderUserId) {
+                    senderUserId
+                    executionDuration
+                }
+            }
         """.trimIndent()
 
-        val senderReceiverContactsUpdateIdsQuery = SimpleGraphQLRequest<String>(
+        val inviteSenderUserIdQuery = SimpleGraphQLRequest<String>(
+            document,
+            mapOf("senderUserId" to "hello world!!!"),
+            String::class.java,
+            GsonVariablesSerializer())
+
+        Amplify.API.query(
+            inviteSenderUserIdQuery,
+            {
+                println("AmplifyDbRepo ***** DATA ${it.errors}")
+                println("AmplifyDbRepo ***** DATA ${it.data}")
+                println("AmplifyDbRepo ***** DATA ${it.hasErrors()}")
+                var gson = Gson()
+                val response = gson.fromJson(it.data, InviteSenderUserIdResponse::class.java)
+                println("AmplifyDbRepo ***** RES $$response")
+            },
+            { println("AmplifyDbRepo ***** ERR $it") }
+        )
+
+/*        val senderReceiverContactsUpdateIdsQuery = SimpleGraphQLRequest<String>(
             document,
             mapOf("senderId" to "Amplify"),
             String::class.java,
@@ -219,7 +255,6 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         Amplify.API.query(
             senderReceiverContactsUpdateIdsQuery,
             {
-
                 if (it.hasErrors()) {
                     println("AmplifyDbRepo ***** RAW RESPONSE ERROR : ${it.errors}")
                 } else {
@@ -228,22 +263,19 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
                 val gson = Gson()
                 val response = gson.fromJson(it.data, SenderReceiverContactsResponse::class.java)
-                //println("AmplifyDbRepo ***** RESPONSE ${response.contactInviteAccept.senderId}")
                 println("AmplifyDbRepo ***** RESPONSE ${response}")
 
             },
-            { println("AmplifyDbRepo ***** MESSAGE $it") }
-        )
+            { println("AmplifyDbRepo ***** MESSAGE $it") },
+        )*/
     }
 
-    // TODO: update sender and receiver contacts
-    data class SenderReceiverContactsUpdateIds(
-        val senderId: String
+    data class InviteSenderUserIdDetails(
+        val senderUserId: String,
+        val executionDuration: Float
     )
 
-    data class SenderReceiverContactsResponse(
-        val contactInviteAccept: SenderReceiverContactsUpdateIds
+    data class InviteSenderUserIdResponse(
+        val inviteSenderUserId: InviteSenderUserIdDetails
     )
-
-
 }

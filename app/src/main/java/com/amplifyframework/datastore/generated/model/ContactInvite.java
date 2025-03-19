@@ -1,7 +1,5 @@
 package com.amplifyframework.datastore.generated.model;
 
-import com.amplifyframework.core.model.annotations.HasMany;
-import com.amplifyframework.core.model.ModelList;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.ModelIdentifier;
 
@@ -22,20 +20,17 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
-/** This is an auto generated class representing the Group type in your schema. */
+/** This is an auto generated class representing the ContactInvite type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Groups", type = Model.Type.USER, version = 1, authRules = {
+@ModelConfig(pluralName = "ContactInvites", type = Model.Type.USER, version = 1, authRules = {
   @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 }, hasLazySupport = true)
-public final class Group implements Model {
-  public static final GroupPath rootPath = new GroupPath("root", false, null);
-  public static final QueryField ID = field("Group", "id");
-  public static final QueryField GROUP_ID = field("Group", "groupId");
-  public static final QueryField NAME = field("Group", "name");
+public final class ContactInvite implements Model {
+  public static final ContactInvitePath rootPath = new ContactInvitePath("root", false, null);
+  public static final QueryField ID = field("ContactInvite", "id");
+  public static final QueryField SUCCESS = field("ContactInvite", "success");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="ID", isRequired = true) String groupId;
-  private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="UserGroup") @HasMany(associatedWith = "group", type = UserGroup.class) ModelList<UserGroup> users = null;
+  private final @ModelField(targetType="Boolean") Boolean success;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -48,16 +43,8 @@ public final class Group implements Model {
       return id;
   }
   
-  public String getGroupId() {
-      return groupId;
-  }
-  
-  public String getName() {
-      return name;
-  }
-  
-  public ModelList<UserGroup> getUsers() {
-      return users;
+  public Boolean getSuccess() {
+      return success;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -68,10 +55,9 @@ public final class Group implements Model {
       return updatedAt;
   }
   
-  private Group(String id, String groupId, String name) {
+  private ContactInvite(String id, Boolean success) {
     this.id = id;
-    this.groupId = groupId;
-    this.name = name;
+    this.success = success;
   }
   
   @Override
@@ -81,12 +67,11 @@ public final class Group implements Model {
       } else if(obj == null || getClass() != obj.getClass()) {
         return false;
       } else {
-      Group group = (Group) obj;
-      return ObjectsCompat.equals(getId(), group.getId()) &&
-              ObjectsCompat.equals(getGroupId(), group.getGroupId()) &&
-              ObjectsCompat.equals(getName(), group.getName()) &&
-              ObjectsCompat.equals(getCreatedAt(), group.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), group.getUpdatedAt());
+      ContactInvite contactInvite = (ContactInvite) obj;
+      return ObjectsCompat.equals(getId(), contactInvite.getId()) &&
+              ObjectsCompat.equals(getSuccess(), contactInvite.getSuccess()) &&
+              ObjectsCompat.equals(getCreatedAt(), contactInvite.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), contactInvite.getUpdatedAt());
       }
   }
   
@@ -94,8 +79,7 @@ public final class Group implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
-      .append(getGroupId())
-      .append(getName())
+      .append(getSuccess())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -105,17 +89,16 @@ public final class Group implements Model {
   @Override
    public String toString() {
     return new StringBuilder()
-      .append("Group {")
+      .append("ContactInvite {")
       .append("id=" + String.valueOf(getId()) + ", ")
-      .append("groupId=" + String.valueOf(getGroupId()) + ", ")
-      .append("name=" + String.valueOf(getName()) + ", ")
+      .append("success=" + String.valueOf(getSuccess()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }
   
-  public static GroupIdStep builder() {
+  public static BuildStep builder() {
       return new Builder();
   }
   
@@ -127,70 +110,48 @@ public final class Group implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    */
-  public static Group justId(String id) {
-    return new Group(
+  public static ContactInvite justId(String id) {
+    return new ContactInvite(
       id,
-      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      groupId,
-      name);
+      success);
   }
-  public interface GroupIdStep {
-    NameStep groupId(String groupId);
-  }
-  
-
-  public interface NameStep {
-    BuildStep name(String name);
-  }
-  
-
   public interface BuildStep {
-    Group build();
+    ContactInvite build();
     BuildStep id(String id);
+    BuildStep success(Boolean success);
   }
   
 
-  public static class Builder implements GroupIdStep, NameStep, BuildStep {
+  public static class Builder implements BuildStep {
     private String id;
-    private String groupId;
-    private String name;
+    private Boolean success;
     public Builder() {
       
     }
     
-    private Builder(String id, String groupId, String name) {
+    private Builder(String id, Boolean success) {
       this.id = id;
-      this.groupId = groupId;
-      this.name = name;
+      this.success = success;
     }
     
     @Override
-     public Group build() {
+     public ContactInvite build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
         
-        return new Group(
+        return new ContactInvite(
           id,
-          groupId,
-          name);
+          success);
     }
     
     @Override
-     public NameStep groupId(String groupId) {
-        Objects.requireNonNull(groupId);
-        this.groupId = groupId;
-        return this;
-    }
-    
-    @Override
-     public BuildStep name(String name) {
-        Objects.requireNonNull(name);
-        this.name = name;
+     public BuildStep success(Boolean success) {
+        this.success = success;
         return this;
     }
     
@@ -206,27 +167,21 @@ public final class Group implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String groupId, String name) {
-      super(id, groupId, name);
-      Objects.requireNonNull(groupId);
-      Objects.requireNonNull(name);
+    private CopyOfBuilder(String id, Boolean success) {
+      super(id, success);
+      
     }
     
     @Override
-     public CopyOfBuilder groupId(String groupId) {
-      return (CopyOfBuilder) super.groupId(groupId);
-    }
-    
-    @Override
-     public CopyOfBuilder name(String name) {
-      return (CopyOfBuilder) super.name(name);
+     public CopyOfBuilder success(Boolean success) {
+      return (CopyOfBuilder) super.success(success);
     }
   }
   
 
-  public static class GroupIdentifier extends ModelIdentifier<Group> {
+  public static class ContactInviteIdentifier extends ModelIdentifier<ContactInvite> {
     private static final long serialVersionUID = 1L;
-    public GroupIdentifier(String id) {
+    public ContactInviteIdentifier(String id) {
       super(id);
     }
   }

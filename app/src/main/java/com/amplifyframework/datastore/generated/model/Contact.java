@@ -32,7 +32,7 @@ public final class Contact implements Model {
   public static final QueryField ID = field("Contact", "id");
   public static final QueryField CONTACT_ID = field("Contact", "contactId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="String") String contactId;
+  private final @ModelField(targetType="ID", isRequired = true) String contactId;
   private final @ModelField(targetType="UserContact") @HasMany(associatedWith = "contact", type = UserContact.class) ModelList<UserContact> users = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
@@ -105,7 +105,7 @@ public final class Contact implements Model {
       .toString();
   }
   
-  public static BuildStep builder() {
+  public static ContactIdStep builder() {
       return new Builder();
   }
   
@@ -128,14 +128,18 @@ public final class Contact implements Model {
     return new CopyOfBuilder(id,
       contactId);
   }
-  public interface BuildStep {
-    Contact build();
-    BuildStep id(String id);
+  public interface ContactIdStep {
     BuildStep contactId(String contactId);
   }
   
 
-  public static class Builder implements BuildStep {
+  public interface BuildStep {
+    Contact build();
+    BuildStep id(String id);
+  }
+  
+
+  public static class Builder implements ContactIdStep, BuildStep {
     private String id;
     private String contactId;
     public Builder() {
@@ -158,6 +162,7 @@ public final class Contact implements Model {
     
     @Override
      public BuildStep contactId(String contactId) {
+        Objects.requireNonNull(contactId);
         this.contactId = contactId;
         return this;
     }
@@ -176,7 +181,7 @@ public final class Contact implements Model {
   public final class CopyOfBuilder extends Builder {
     private CopyOfBuilder(String id, String contactId) {
       super(id, contactId);
-      
+      Objects.requireNonNull(contactId);
     }
     
     @Override
