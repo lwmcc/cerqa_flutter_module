@@ -11,7 +11,7 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "@aws-amplify/backend": "^1.14.1",
+    "@aws-amplify/backend": "^1.14.3",
     "@aws-amplify/backend-cli": "^1.4.11",
     "@types/aws-lambda": "^8.10.147",
     "aws-cdk": "^2.1003.0",
