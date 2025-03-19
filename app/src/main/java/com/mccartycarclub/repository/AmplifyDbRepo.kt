@@ -123,7 +123,6 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
     override fun createContact(user: User) {
         val contact = Contact.builder()
-            .id(TEST_USER_2)
             .contactId(TEST_USER_2)
             .build()
 
