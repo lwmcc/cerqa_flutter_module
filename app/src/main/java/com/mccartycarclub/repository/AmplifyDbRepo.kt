@@ -198,22 +198,6 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         )
     }
 
-    val document = """
-            query SenderReceiverContactsQuery(${'$'}senderId: String!) {
-                contactInviteAccept(senderId: ${'$'}senderId)
-            }
-          }""".trimIndent()
-
-    // TODO: update sender and receiver contacts
-    data class SenderReceiverContactsUpdateIds(
-        val senderId: String,
-        val receiverUserId: String
-    )
-
-    data class SenderReceiverContactsResponse(
-        val contactInviteAccept: SenderReceiverContactsUpdateIds
-    )
-
     override fun updateSenderReceiverContacts() {
 
         val document = """
@@ -234,39 +218,15 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         Amplify.API.query(
             inviteSenderUserIdQuery,
             {
-                println("AmplifyDbRepo ***** DATA ${it.errors}")
+                // println("AmplifyDbRepo ***** DATA ${it.errors}")
                 println("AmplifyDbRepo ***** DATA ${it.data}")
-                println("AmplifyDbRepo ***** DATA ${it.hasErrors()}")
+                // println("AmplifyDbRepo ***** DATA ${it.hasErrors()}")
                 var gson = Gson()
                 val response = gson.fromJson(it.data, InviteSenderUserIdResponse::class.java)
                 println("AmplifyDbRepo ***** RES $$response")
             },
             { println("AmplifyDbRepo ***** ERR $it") }
         )
-
-/*        val senderReceiverContactsUpdateIdsQuery = SimpleGraphQLRequest<String>(
-            document,
-            mapOf("senderId" to "Amplify"),
-            String::class.java,
-            GsonVariablesSerializer()
-        )
-
-        Amplify.API.query(
-            senderReceiverContactsUpdateIdsQuery,
-            {
-                if (it.hasErrors()) {
-                    println("AmplifyDbRepo ***** RAW RESPONSE ERROR : ${it.errors}")
-                } else {
-                    println("AmplifyDbRepo ***** RAW RESPONSE: ${it.data}")
-                }
-
-                val gson = Gson()
-                val response = gson.fromJson(it.data, SenderReceiverContactsResponse::class.java)
-                println("AmplifyDbRepo ***** RESPONSE ${response}")
-
-            },
-            { println("AmplifyDbRepo ***** MESSAGE $it") },
-        )*/
     }
 
     data class InviteSenderUserIdDetails(
