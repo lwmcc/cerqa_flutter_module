@@ -200,18 +200,28 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
     override fun updateSenderReceiverContacts() {
 
+        // TODO: testing
+        val rowId = "ed57dbd4-b965-4658-82ae-0972bbded7eb"
         val document = """
+            query GetUser(${'$'}rowId: String!) {
+                getSenderUserId(rowId: ${'$'}rowId) {
+                    id
+                }
+            }
+        """.trimIndent()
+
+/*        val document = """
             query InviteSenderUserIdQuery(${'$'}senderUserId: String!) {
                 inviteSenderUserId(senderUserId: ${'$'}senderUserId) {
                     senderUserId
                     executionDuration
                 }
             }
-        """.trimIndent()
+        """.trimIndent()*/
 
         val inviteSenderUserIdQuery = SimpleGraphQLRequest<String>(
             document,
-            mapOf("senderUserId" to "hello world!!!"),
+            mapOf("rowId0" to "hello Larry!!!"),
             String::class.java,
             GsonVariablesSerializer())
 
