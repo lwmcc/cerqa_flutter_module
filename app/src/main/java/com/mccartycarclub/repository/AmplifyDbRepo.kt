@@ -221,7 +221,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
         val inviteSenderUserIdQuery = SimpleGraphQLRequest<String>(
             document,
-            mapOf("rowId0" to "hello Larry!!!"),
+            mapOf("rowId" to "hello Larry!!!"),
             String::class.java,
             GsonVariablesSerializer())
 
