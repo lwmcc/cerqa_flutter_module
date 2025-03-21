@@ -203,21 +203,12 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         // TODO: testing
         val rowId = "ed57dbd4-b965-4658-82ae-0972bbded7eb"
         val document = """
-            query GetUser(${'$'}senderUserId: String!) {
-                getSenderUserId(senderUserId: ${'$'}senderUserId) {
-                    id
+            query userInviteToConnect(${'$'}senderUserId: String!) {
+                userInviteToConnect(senderUserId: ${'$'}senderUserId) {
+                    senderUserId
                 }
             }
         """.trimIndent()
-
-/*        val document = """
-            query InviteSenderUserIdQuery(${'$'}senderUserId: String!) {
-                inviteSenderUserId(senderUserId: ${'$'}senderUserId) {
-                    senderUserId
-                    executionDuration
-                }
-            }
-        """.trimIndent()*/
 
         val inviteSenderUserIdQuery = SimpleGraphQLRequest<String>(
             document,
@@ -245,6 +236,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     )
 
     data class InviteSenderUserIdResponse(
-        val inviteSenderUserId: InviteSenderUserIdDetails
+        val userInviteToConnect: InviteSenderUserIdDetails
     )
+
 }
