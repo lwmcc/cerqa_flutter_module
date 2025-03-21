@@ -219,7 +219,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         Amplify.API.query(
             inviteSenderUserIdQuery,
             {
-                // println("AmplifyDbRepo ***** DATA ${it.errors}")
+                println("AmplifyDbRepo ***** ERRORS ${it.errors}")
                 println("AmplifyDbRepo ***** DATA ${it.data}")
                 // println("AmplifyDbRepo ***** DATA ${it.hasErrors()}")
                 var gson = Gson()
