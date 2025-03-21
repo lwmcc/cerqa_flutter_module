@@ -202,17 +202,27 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
         // TODO: testing
         val rowId = "ed57dbd4-b965-4658-82ae-0972bbded7eb"
-        val document = """
-            query userInviteToConnect(${'$'}senderUserId: String!) {
-                userInviteToConnect(senderUserId: ${'$'}senderUserId) {
-                    senderUserId
+/*        val document = """
+            query userInviteToConnect(${'$'}rowId: String!) {
+                userInviteToConnect(rowId: ${'$'}rowId) {
+                    userId
                 }
             }
-        """.trimIndent()
+        """.trimIndent()*/
+
+        val document = """
+            query listUserInvites {
+                listUserInviteToConnects {
+                    items {
+                        userId
+                    }
+                }
+            }
+            """.trimIndent()
 
         val inviteSenderUserIdQuery = SimpleGraphQLRequest<String>(
             document,
-            mapOf("senderUserId" to "hello Larry!!!"),
+            mapOf("userId" to "hello Larry!!!"),
             String::class.java,
             GsonVariablesSerializer())
 
