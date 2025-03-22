@@ -58,8 +58,6 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         userContacts: (List<Contact>) -> Unit,
     ) {
 
-        // "344433-1031-7026-1ea5-9e5c424b27de"
-
         Amplify.API.query(
             ModelQuery.get<User, UserPath>(
                 User::class.java,
