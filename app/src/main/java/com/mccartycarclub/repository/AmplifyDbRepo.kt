@@ -201,28 +201,19 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     override fun updateSenderReceiverContacts() {
 
         // TODO: testing
-        val rowId = "ed57dbd4-b965-4658-82ae-0972bbded7eb"
-/*        val document = """
-            query userInviteToConnect(${'$'}rowId: String!) {
-                userInviteToConnect(rowId: ${'$'}rowId) {
-                    userId
-                }
-            }
-        """.trimIndent()*/
+        val rowId = "0d8c7b76-204c-47ee-a5ca-215402cd4a88"
 
         val document = """
-            query listUserInvites {
-                listUserInviteToConnects {
-                    items {
-                        userId
-                    }
+            query getUserInvite(${'$'}id: ID!) {
+                getUserInviteToConnect(id: ${'$'}id) {
+                    userId
                 }
             }
             """.trimIndent()
 
         val inviteSenderUserIdQuery = SimpleGraphQLRequest<String>(
             document,
-            mapOf("userId" to "hello Larry!!!"),
+            mapOf("id" to rowId),
             String::class.java,
             GsonVariablesSerializer())
 
@@ -234,7 +225,21 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 // println("AmplifyDbRepo ***** DATA ${it.hasErrors()}")
                 var gson = Gson()
                 val response = gson.fromJson(it.data, InviteSenderUserIdResponse::class.java)
-                println("AmplifyDbRepo ***** RES $$response")
+
+                response?.userInviteToConnect?.senderUserId?.let { userId ->
+                    println("AmplifyDbRepo ***** DATA USER ID $userId")
+
+                    val mutationDocument = """
+                        mutation addContactToReceiver(${'$'}userId: String!, ${'$'}contactName: String!) {
+                            createContact(input: {userId: ${'$'}userId, contactName: ${'$'}contactName}) {
+                                contactId
+                                userId
+                                contactName
+                            }
+                        }
+                        """.trimIndent()
+                   // println("AmplifyDbRepo ***** CONTACT $mutationDocument")
+                }
             },
             { println("AmplifyDbRepo ***** ERR $it") }
         )
