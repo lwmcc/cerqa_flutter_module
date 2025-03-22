@@ -236,7 +236,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                             }
                         }
                         """.trimIndent()
-                   // println("AmplifyDbRepo ***** CONTACT $mutationDocument")
+                     println("AmplifyDbRepo ***** CONTACT $mutationDocument")
                 }
             },
             { println("AmplifyDbRepo ***** ERR $it") }
