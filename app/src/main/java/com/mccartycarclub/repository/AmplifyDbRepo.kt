@@ -39,6 +39,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 UserGroup.USER.eq("344433-1031-7026-1ea5-9e5c424b27de")
             ),
             { response ->
+
                 response.data.items.forEach { item ->
                     //println("AmplifyDbRepo ***** RESPONSE ${item.id}")
                     // println("AmplifyDbRepo ***** RESPONSE ${item.user.getIdentifier()}")
