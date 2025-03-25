@@ -224,6 +224,8 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 var gson = Gson()
                 val response = gson.fromJson(it.data, InviteSenderUserIdResponse::class.java)
 
+                println("AmplifyDbRepo ***** RESPONSE DATA ${response.userInviteToConnect.senderUserId}")
+
                 response?.userInviteToConnect?.senderUserId?.let { userId ->
                     println("AmplifyDbRepo ***** DATA USER ID $userId")
 
