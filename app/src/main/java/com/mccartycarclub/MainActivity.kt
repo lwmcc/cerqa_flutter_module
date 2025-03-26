@@ -59,7 +59,8 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             Amplify.Auth.fetchUserAttributes({ attributes ->
-                                val userId = attributes.firstOrNull { it.key.keyString == "sub" }?.value
+                                val userId =
+                                    attributes.firstOrNull { it.key.keyString == "sub" }?.value
 
                                 if (userId.isNullOrEmpty()) {
                                     Log.e("AmplifyUser", "User ID is null or empty!")
@@ -67,15 +68,15 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 val user = User.builder()
-                                    .userId(userId)   // Required
-                                    .firstName("Larry")  // Required
-                                    .lastName("McCarty")  // Required
-                                    .name("Larry M")  // Optional
-                                    .phone("555-111-4545")  // Optional
-                                    .userName("Larry Mc") // Optional
-                                    .email("lwmccarty@gmail.com") // Optional
-                                    .avatarUri("https://example.com/avatar.png") // Optional
-                                    .id(userId)
+                                    .userId(userId)
+                                    .firstName("Larry")
+                                    .lastName("McCarty")
+                                    .name("Larry M")
+                                    .phone("555-111-4545")
+                                    .userName("Larry Mc")
+                                    .email("lwmccarty@gmail.com")
+                                    .avatarUri("https://example.com/avatar.png")
+                                    //.id(userId)
                                     .build()
                                 Amplify.API.mutate(
                                     ModelMutation.create(user),
