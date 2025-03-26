@@ -59,29 +59,27 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             Amplify.Auth.fetchUserAttributes({ attributes ->
-                                val userId =
-                                    attributes.firstOrNull { it.key.keyString == "sub" }?.value
+                                val userId = attributes.firstOrNull { it.key.keyString == "sub" }?.value
 
-                                if (userId.isNullOrEmpty()) {
-                                    Log.e("AmplifyUser", "User ID is null or empty!")
-                                    return@fetchUserAttributes
-                                }
+                                println("MainActivity ***** USER ID $userId")
 
                                 val user = User.builder()
-                                    .userId(userId)
                                     .firstName("Larry")
                                     .lastName("McCarty")
                                     .name("Larry M")
-                                    .phone("555-111-4545")
+                                    .phone("+15551114545")
                                     .userName("Larry Mc")
                                     .email("lwmccarty@gmail.com")
                                     .avatarUri("https://example.com/avatar.png")
+                                    .userId(userId)
                                     //.id(userId)
                                     .build()
                                 Amplify.API.mutate(
                                     ModelMutation.create(user),
                                     { response ->
                                         Log.i("MainActivity", "User created: ${response.data}")
+                                        println("MainActivity ***** ERROR ${response.hasErrors()}")
+                                        println("MainActivity ***** ERROR ${response.errors}")
                                     },
                                     { error ->
                                         Log.e("MainActivity", "User creation failed", error)
@@ -219,26 +217,27 @@ class MainActivity : ComponentActivity() {
 
     fun testUser1(userId: String) = run {
         User.builder()
-            .userId(userId)
+
             .firstName("Larry")
             .lastName("McCarty")
             .name("LM")
             .email("lwmccarty@gmail.com")
             .avatarUri("https://www.google.com")
-            .phone("480-555-1212")
-            .id(userId)
+            .phone("+15551114545")
+            .userId(userId)
+            //.id(userId)
             .build()
     }
 
     fun testUser2(userId: String) = run {
         User.builder()
-            .userId("fake-user-id")
             .firstName("Lebron")
             .lastName("James")
             .name("King James")
             .avatarUri("https://www.google.com")
-            .phone("480-111-1212")
-            .id(userId)
+            .phone("+15552224545")
+            .userId("fake-user-id")
+            //.id(userId)
             .build()
     }
 }
