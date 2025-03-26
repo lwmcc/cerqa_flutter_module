@@ -61,13 +61,25 @@ class MainActivity : ComponentActivity() {
                             Amplify.Auth.fetchUserAttributes({ attributes ->
                                 val userId =
                                     attributes.firstOrNull { it.key.keyString == "sub" }?.value
-
-                                Log.d("MainActivity *****", "User ID: $userId")
-
-                                val user = testUser1(userId.toString())
+                                //val user = testUser1(userId.toString())
                                 Amplify.API.mutate(
-                                    ModelMutation.create(user),
-                                    { Log.i("MainActivity *****", "Added User with id: ${user.userId}") },
+                                    ModelMutation.create(
+                                        User.builder()
+                                            .userId(userId)
+                                            .firstName("Larry")
+                                            .lastName("McCarty")
+                                            .name("LM")
+                                            .email("lwmccarty@gmail.com")
+                                            .avatarUri("https://www.google.com")
+                                            .phone("480-555-1212")
+                                            .id(userId)
+                                            .build()),
+                                    {
+                                        Log.i(
+                                            "MainActivity *****",
+                                            "Added User with id: -- ${it.data}"
+                                        )
+                                    },
                                     { Log.e("MainActivity *****", "Create failed", it) },
                                 )
                             }, { error ->
@@ -219,9 +231,9 @@ class MainActivity : ComponentActivity() {
             .firstName("Lebron")
             .lastName("James")
             .name("King James")
-            .avatarUri("https://www.cnn.com")
-            .avatarUri("")
+            .avatarUri("https://www.google.com")
             .phone("480-111-1212")
+            .id(userId)
             .build()
     }
 }

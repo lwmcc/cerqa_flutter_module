@@ -39,7 +39,6 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 UserGroup.USER.eq("344433-1031-7026-1ea5-9e5c424b27de")
             ),
             { response ->
-
                 response.data.items.forEach { item ->
                     //println("AmplifyDbRepo ***** RESPONSE ${item.id}")
                     // println("AmplifyDbRepo ***** RESPONSE ${item.user.getIdentifier()}")
@@ -114,7 +113,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         Amplify.API.query(get(User::class.java, userId),
             { response: GraphQLResponse<User> ->
                 //println("AmplifyDbRepo ***** USER ${response.data}")
-                user(response.data as User)
+                //user(response.data as User)
             },
             { println("AmplifyDbRepo ***** ERROR") }
         )
@@ -158,14 +157,14 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             ) { userPath -> includes(userPath.contacts) },
             {
 
-                val contacts = (it.data.contacts as? LoadedModelList<UserContact>)?.items
+                //val contacts = (it.data.contacts as? LoadedModelList<UserContact>)?.items
 
-                contacts?.forEach { userContact ->
-                    println("AmplifyDbRepo ***** fetchUserContacts ${userContact.id}")
+               // contacts?.forEach { userContact ->
+               //     println("AmplifyDbRepo ***** fetchUserContacts ${userContact.id}")
                     //println("AmplifyDbRepo ***** ID ${userContact.contact}")
                     // println("AmplifyDbRepo ***** USER ${userContact.user}")
 
-                }
+             //   }
             },
             { println("AmplifyDbRepo ***** ERROR FETCHING USER CONTACTS") }
         )
