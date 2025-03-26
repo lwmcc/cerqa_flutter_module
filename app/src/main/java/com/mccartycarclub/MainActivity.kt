@@ -80,10 +80,10 @@ class MainActivity : ComponentActivity() {
                                 Amplify.API.mutate(
                                     ModelMutation.create(user),
                                     { response ->
-                                        Log.i("AmplifyUser", "User created: ${response.data}")
+                                        Log.i("MainActivity", "User created: ${response.data}")
                                     },
                                     { error ->
-                                        Log.e("AmplifyUser", "User creation failed", error)
+                                        Log.e("MainActivity", "User creation failed", error)
                                     }
                                 )
                             }, { error ->
