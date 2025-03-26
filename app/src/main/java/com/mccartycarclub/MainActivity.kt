@@ -59,28 +59,32 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             Amplify.Auth.fetchUserAttributes({ attributes ->
-                                val userId =
-                                    attributes.firstOrNull { it.key.keyString == "sub" }?.value
-                                //val user = testUser1(userId.toString())
+                                val userId = attributes.firstOrNull { it.key.keyString == "sub" }?.value
+
+                                if (userId.isNullOrEmpty()) {
+                                    Log.e("AmplifyUser", "User ID is null or empty!")
+                                    return@fetchUserAttributes
+                                }
+
+                                val user = User.builder()
+                                    .userId(userId)   // Required
+                                    .firstName("Larry")  // Required
+                                    .lastName("McCarty")  // Required
+                                    .name("Larry M")  // Optional
+                                    .phone("555-111-4545")  // Optional
+                                    .userName("Larry Mc") // Optional
+                                    .email("lwmccarty@gmail.com") // Optional
+                                    .avatarUri("https://example.com/avatar.png") // Optional
+                                    .id(userId)
+                                    .build()
                                 Amplify.API.mutate(
-                                    ModelMutation.create(
-                                        User.builder()
-                                            .userId(userId)
-                                            .firstName("Larry")
-                                            .lastName("McCarty")
-                                            .name("LM")
-                                            .email("lwmccarty@gmail.com")
-                                            .avatarUri("https://www.google.com")
-                                            .phone("480-555-1212")
-                                            .id(userId)
-                                            .build()),
-                                    {
-                                        Log.i(
-                                            "MainActivity *****",
-                                            "Added User with id: -- ${it.data}"
-                                        )
+                                    ModelMutation.create(user),
+                                    { response ->
+                                        Log.i("AmplifyUser", "User created: ${response.data}")
                                     },
-                                    { Log.e("MainActivity *****", "Create failed", it) },
+                                    { error ->
+                                        Log.e("AmplifyUser", "User creation failed", error)
+                                    }
                                 )
                             }, { error ->
                                 Log.e(
