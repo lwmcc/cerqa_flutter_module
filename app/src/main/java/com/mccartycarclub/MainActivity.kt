@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
                                     .email("lwmccarty@gmail.com")
                                     .avatarUri("https://example.com/avatar.png")
                                     .userId(userId)
-                                    //.id(userId)
+                                    .id(userId)
                                     .build()
                                 Amplify.API.mutate(
                                     ModelMutation.create(user),
