@@ -19,18 +19,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import aws.smithy.kotlin.runtime.net.Scheme.Companion.HTTP
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.ui.authenticator.ui.Authenticator
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.datastore.generated.model.User
-import com.amplifyframework.datastore.generated.model.UserGroup
-import com.mccartycarclub.domain.Member
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.UUID
-import com.mccartycarclub.domain.Group  as GroupM
-import com.mccartycarclub.domain.Contact as ContactM
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -65,15 +59,24 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             Amplify.Auth.fetchUserAttributes({ attributes ->
-                                val userId = attributes.firstOrNull { it.key.keyString == "sub" }?.value
+                                val userId =
+                                    attributes.firstOrNull { it.key.keyString == "sub" }?.value
+
                                 Log.d("MainActivity *****", "User ID: $userId")
+
+                                val user = testUser1(userId.toString())
+                                Amplify.API.mutate(
+                                    ModelMutation.create(user),
+                                    { Log.i("MainActivity *****", "Added User with id: ${user.userId}") },
+                                    { Log.e("MainActivity *****", "Create failed", it) },
+                                )
                             }, { error ->
                                 Log.e(
                                     "MainActivity *****", "Failed to fetch user attributes", error
                                 )
                             })
                         }) {
-                        Text(text = "Create Todo")
+                        Text(text = "Create User")
                     }
 
                     Button(
@@ -195,5 +198,30 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val CAR_CLUB_URL = "https://carclub.app"
+    }
+
+    fun testUser1(userId: String) = run {
+        User.builder()
+            .userId(userId)
+            .firstName("Larry")
+            .lastName("McCarty")
+            .name("LM")
+            .email("lwmccarty@gmail.com")
+            .avatarUri("https://www.google.com")
+            .phone("480-555-1212")
+            .id(userId)
+            .build()
+    }
+
+    fun testUser2(userId: String) = run {
+        User.builder()
+            .userId("fake-user-id")
+            .firstName("Lebron")
+            .lastName("James")
+            .name("King James")
+            .avatarUri("https://www.cnn.com")
+            .avatarUri("")
+            .phone("480-111-1212")
+            .build()
     }
 }
