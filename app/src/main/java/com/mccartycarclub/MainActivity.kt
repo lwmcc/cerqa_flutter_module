@@ -63,19 +63,8 @@ class MainActivity : ComponentActivity() {
 
                                 println("MainActivity ***** USER ID $userId")
 
-                                val user = User.builder()
-                                    .firstName("Larry")
-                                    .lastName("McCarty")
-                                    .name("Larry M")
-                                    .phone("+15551114545")
-                                    .userName("Larry Mc")
-                                    .email("lwmccarty@gmail.com")
-                                    .avatarUri("https://example.com/avatar.png")
-                                    .userId(userId)
-                                    .id(userId)
-                                    .build()
                                 Amplify.API.mutate(
-                                    ModelMutation.create(user),
+                                    ModelMutation.create(testUser2(userId!!)),
                                     { response ->
                                         Log.i("MainActivity", "User created: ${response.data}")
                                         println("MainActivity ***** ERROR ${response.hasErrors()}")
@@ -108,7 +97,7 @@ class MainActivity : ComponentActivity() {
                             mainViewModel.inviteContact(state.user.userId, rowId = { rowId ->
                                 sendConnectInvite(
                                     "Link Test, https://carclub.app",
-                                    "555-521-5554",
+                                    "+15551234567",
                                     rowId,
                                 )
                             })
@@ -229,15 +218,17 @@ class MainActivity : ComponentActivity() {
             .build()
     }
 
-    fun testUser2(userId: String) = run {
-        User.builder()
+    fun testUser2(userId: String): User {
+        return User.builder()
             .firstName("Lebron")
             .lastName("James")
-            .name("King James")
-            .avatarUri("https://www.google.com")
-            .phone("+15552224545")
-            .userId("fake-user-id")
-            //.id(userId)
+            .name("Lebron J")
+            .phone("+15555554545")
+            .userName("KingJames")
+            .email("lmccarty@outlook.com")
+            .avatarUri("https://example.com/avatar.png")
+            .userId(userId)
+            .id(userId)
             .build()
     }
 }

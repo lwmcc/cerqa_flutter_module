@@ -159,12 +159,12 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
                 //val contacts = (it.data.contacts as? LoadedModelList<UserContact>)?.items
 
-               // contacts?.forEach { userContact ->
-               //     println("AmplifyDbRepo ***** fetchUserContacts ${userContact.id}")
-                    //println("AmplifyDbRepo ***** ID ${userContact.contact}")
-                    // println("AmplifyDbRepo ***** USER ${userContact.user}")
+                // contacts?.forEach { userContact ->
+                //     println("AmplifyDbRepo ***** fetchUserContacts ${userContact.id}")
+                //println("AmplifyDbRepo ***** ID ${userContact.contact}")
+                // println("AmplifyDbRepo ***** USER ${userContact.user}")
 
-             //   }
+                //   }
             },
             { println("AmplifyDbRepo ***** ERROR FETCHING USER CONTACTS") }
         )
@@ -199,7 +199,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     override fun updateSenderReceiverContacts() {
 
         // TODO: testing
-        val rowId = "0d8c7b76-204c-47ee-a5ca-215402cd4a88"
+        val rowId = "31cb55f0-1031-7026-1ea5-9e5c424b27de"
 
         val document = """
             query getUserInvite(${'$'}id: ID!) {
@@ -208,6 +208,8 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 }
             }
             """.trimIndent()
+
+        println("AmplifyDbRepo ***** DOC $document")
 
         val inviteSenderUserIdQuery = SimpleGraphQLRequest<String>(
             document,
@@ -221,10 +223,10 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 println("AmplifyDbRepo ***** ERRORS ${it.errors}")
                 println("AmplifyDbRepo ***** DATA ${it.data}")
                 // println("AmplifyDbRepo ***** DATA ${it.hasErrors()}")
-                var gson = Gson()
+                val gson = Gson()
                 val response = gson.fromJson(it.data, InviteSenderUserIdResponse::class.java)
 
-                println("AmplifyDbRepo ***** RESPONSE DATA ${response.userInviteToConnect.senderUserId}")
+                println("AmplifyDbRepo ***** RESPONSE DATA ${response}")
 
                 response?.userInviteToConnect?.senderUserId?.let { userId ->
                     println("AmplifyDbRepo ***** DATA USER ID $userId")
