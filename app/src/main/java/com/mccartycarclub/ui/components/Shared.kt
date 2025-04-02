@@ -31,6 +31,7 @@ import com.mccartycarclub.MainActivity.Companion.GROUPS_SCREEN
 import com.mccartycarclub.MainActivity.Companion.MAIN_SCREEN
 import com.mccartycarclub.R
 import com.mccartycarclub.navigation.AppNavigationActions
+import com.mccartycarclub.navigation.ClickNavigation
 
 
 @Composable
@@ -49,16 +50,12 @@ fun StartScreen(
                 inviteContact,
                 topBarClick = {
                     when (it) {
-                        "contacts" -> {
+                        ClickNavigation.NavToContacts -> {
                             navActions.navigateToContacts()
                         }
 
-                        "groups" -> {
+                        ClickNavigation.NavToGroups -> {
                             navActions.navigateToGroups()
-                        }
-
-                        else -> {
-                            // TODO
                         }
                     }
                 }
@@ -79,7 +76,7 @@ fun StartScreen(
 fun AppAuthenticator(
     acceptInvite: () -> Unit,
     inviteContact: (String) -> Unit,
-    topBarClick: (String) -> Unit,
+    topBarClick: (ClickNavigation) -> Unit,
 ) {
 
     Scaffold(
@@ -180,7 +177,7 @@ fun AppAuthenticator(
 @Composable
 fun TopBar(
     appBarTitle: String,
-    topBarClick: (String) -> Unit,
+    topBarClick: (ClickNavigation) -> Unit,
 ) {
     TopAppBar(
         title = {
@@ -189,7 +186,7 @@ fun TopBar(
         actions = {
             IconButton(
                 onClick = {
-                    topBarClick("groups")
+                    topBarClick(ClickNavigation.NavToGroups)
                 }
             ) {
                 Icon(
@@ -199,7 +196,7 @@ fun TopBar(
             }
             IconButton(
                 onClick = {
-                    topBarClick("contacts")
+                    topBarClick(ClickNavigation.NavToContacts)
                 }
             ) {
                 Icon(
