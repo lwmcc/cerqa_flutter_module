@@ -50,45 +50,37 @@ fun StartScreen(
                 acceptInvite,
                 inviteContact,
                 topBarClick = {
-                    when (it) {
-                        ClickNavigation.NavToContacts -> {
-                            navActions.navigateToContacts()
-                        }
-
-                        ClickNavigation.NavToGroups -> {
-                            navActions.navigateToGroups()
-                        }
-
-                        ClickNavigation.PopBackstack -> {
-                            // TODO: go to menu
-                        }
-                    }
+                    navToScreen(it, navActions)
                 }
             )
         }
 
         composable(GROUPS_SCREEN) { backStackEntry ->
             Groups(topBarClick = {
-                when(it) {
-                    ClickNavigation.NavToContacts -> { }
-                    ClickNavigation.NavToGroups -> { }
-                    ClickNavigation.PopBackstack -> {
-                        navActions.popBackStack()
-                    }
-                }
+                navToScreen(it, navActions)
             })
         }
 
         composable(CONTACTS_SCREEN) { backStackEntry ->
             Contacts(topBarClick = {
-                when(it) {
-                    ClickNavigation.NavToContacts -> { }
-                    ClickNavigation.NavToGroups -> { }
-                    ClickNavigation.PopBackstack -> {
-                        navActions.popBackStack()
-                    }
-                }
+                navToScreen(it, navActions)
             })
+        }
+    }
+}
+
+private fun navToScreen(clickNavigation: ClickNavigation, navActions: AppNavigationActions) {
+    when (clickNavigation) {
+        ClickNavigation.NavToContacts -> {
+            navActions.navigateToContacts()
+        }
+
+        ClickNavigation.NavToGroups -> {
+            navActions.navigateToGroups()
+        }
+
+        ClickNavigation.PopBackstack -> {
+            navActions.popBackStack()
         }
     }
 }
