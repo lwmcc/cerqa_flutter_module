@@ -2,9 +2,10 @@ package com.mccartycarclub.ui.components
 
 import android.util.Log
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -57,17 +58,37 @@ fun StartScreen(
                         ClickNavigation.NavToGroups -> {
                             navActions.navigateToGroups()
                         }
+
+                        ClickNavigation.PopBackstack -> {
+                            // TODO: go to menu
+                        }
                     }
                 }
             )
         }
 
         composable(GROUPS_SCREEN) { backStackEntry ->
-            Groups()
+            Groups(topBarClick = {
+                when(it) {
+                    ClickNavigation.NavToContacts -> { }
+                    ClickNavigation.NavToGroups -> { }
+                    ClickNavigation.PopBackstack -> {
+                        navActions.popBackStack()
+                    }
+                }
+            })
         }
 
         composable(CONTACTS_SCREEN) { backStackEntry ->
-            Contacts()
+            Contacts(topBarClick = {
+                when(it) {
+                    ClickNavigation.NavToContacts -> { }
+                    ClickNavigation.NavToGroups -> { }
+                    ClickNavigation.PopBackstack -> {
+                        navActions.popBackStack()
+                    }
+                }
+            })
         }
     }
 }
@@ -78,7 +99,6 @@ fun AppAuthenticator(
     inviteContact: (String) -> Unit,
     topBarClick: (ClickNavigation) -> Unit,
 ) {
-
     Scaffold(
         topBar = {
             TopBar(
@@ -118,7 +138,8 @@ fun AppAuthenticator(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             Amplify.Auth.fetchUserAttributes({ attributes ->
-                                val userId = attributes.firstOrNull { it.key.keyString == "sub" }?.value
+                                val userId =
+                                    attributes.firstOrNull { it.key.keyString == "sub" }?.value
 
                                 println("MainActivity ***** USER ID $userId")
 
@@ -208,6 +229,72 @@ fun TopBar(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopBarContacts(
+    appBarTitle: String,
+    topBarClick: (ClickNavigation) -> Unit,
+) {
+    TopAppBar(
+        title = {
+            Text(text = appBarTitle)
+        },
+        actions = {
+            IconButton(
+                onClick = {
+                    topBarClick(ClickNavigation.NavToGroups)
+                }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_action_groups), // Use your drawable resource
+                    contentDescription = "Localized description"
+                )
+            }
+        },
+        navigationIcon = {
+            IconButton(onClick = { topBarClick(ClickNavigation.PopBackstack) }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Localized description"
+                )
+            }
+        },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopBarGroups(
+    appBarTitle: String,
+    topBarClick: (ClickNavigation) -> Unit,
+) {
+    TopAppBar(
+        title = {
+            Text(text = appBarTitle)
+        },
+        actions = {
+            IconButton(
+                onClick = {
+                    topBarClick(ClickNavigation.NavToGroups)
+                }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_action_groups), // Use your drawable resource
+                    contentDescription = "Localized description"
+                )
+            }
+        },
+        navigationIcon = {
+            IconButton(onClick = { topBarClick(ClickNavigation.PopBackstack) }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Localized description"
+                )
+            }
+        },
+    )
+}
+
 fun testUser1(userId: String) = run {
     User.builder()
 
@@ -223,13 +310,47 @@ fun testUser1(userId: String) = run {
 }
 
 @Composable
-fun Contacts() {
-    Text(text = "Contacts")
+fun Contacts(topBarClick: (ClickNavigation) -> Unit) {
+    Scaffold(
+        topBar = {
+            TopBarContacts(
+                stringResource(id = R.string.app_name),
+                topBarClick = {
+                    topBarClick(it)
+                }
+            )
+        },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(innerPadding),
+        ) {
+            Text(text = "Contacts")
+        }
+    }
 }
 
 @Composable
-fun Groups() {
-    Text(text = "Groups")
+fun Groups(topBarClick: (ClickNavigation) -> Unit) {
+    Scaffold(
+        topBar = {
+            TopBarGroups(
+                stringResource(id = R.string.app_name),
+                topBarClick = {
+                    topBarClick(it)
+                }
+            )
+        },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(innerPadding),
+        ) {
+            Text(text = "Groups")
+        }
+    }
 }
 
 fun testUser2(userId: String): User {

@@ -12,4 +12,8 @@ class AppNavigationActions(private val navController: NavHostController) {
     fun navigateToGroups() {
         navController.navigate(GROUPS_SCREEN)
     }
+
+    fun popBackStack() {
+        navController.popBackStack()
+    }
 }
