@@ -199,7 +199,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     override fun updateSenderReceiverContacts() {
 
         // TODO: testing
-        val rowId = "31cb55f0-1031-7026-1ea5-9e5c424b27de"
+        val rowId = "3f725f30-4e34-4111-aa67-4870921536e8"
 
         val document = """
             query getUserInvite(${'$'}id: ID!) {
@@ -220,40 +220,66 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         Amplify.API.query(
             inviteSenderUserIdQuery,
             {
-                println("AmplifyDbRepo ***** ERRORS ${it.errors}")
-                println("AmplifyDbRepo ***** DATA ${it.data}")
-                // println("AmplifyDbRepo ***** DATA ${it.hasErrors()}")
                 val gson = Gson()
                 val response = gson.fromJson(it.data, InviteSenderUserIdResponse::class.java)
 
-                println("AmplifyDbRepo ***** RESPONSE DATA ${response}")
+                response?.getUserInviteToConnect?.userId?.let { userId ->
 
-                response?.userInviteToConnect?.senderUserId?.let { userId ->
-                    println("AmplifyDbRepo ***** DATA USER ID $userId")
-
+                    val contactId = "216ba540-0011-70d0-bb72-5b51c19ae56a"
                     val mutationDocument = """
-                        mutation addContactToReceiver(${'$'}userId: String!, ${'$'}contactName: String!) {
-                            createContact(input: {userId: ${'$'}userId, contactName: ${'$'}contactName}) {
-                                contactId
+                        mutation addUserContact(${'$'}userId: ID!, ${'$'}contactId: ID!) {
+                            createUserContact(input: {userId: ${'$'}userId, contactId: ${'$'}contactId}) {
                                 userId
-                                contactName
+                                contactId
                             }
                         }
-                        """.trimIndent()
-                     println("AmplifyDbRepo ***** CONTACT $mutationDocument")
+                    """.trimIndent()
+
+                    val addUserContactMutation = SimpleGraphQLRequest<String>(
+                        mutationDocument,
+                        mapOf("userId" to userId, "contactId" to contactId),
+                        String::class.java,
+                        GsonVariablesSerializer()
+                    )
+
+                    Amplify.API.mutate(
+                        addUserContactMutation,
+                        { mutationResult ->
+                            println("AmplifyDbRepo ***** Mutation SUCCESS: ${mutationResult.data}")
+                        },
+                        { mutationError ->
+                            println("AmplifyDbRepo ***** Mutation FAILED: $mutationError")
+                        }
+                    )
+
+                    val addUserContactMutation2 = SimpleGraphQLRequest<String>(
+                        mutationDocument,
+                        mapOf("contactId" to userId, "userId" to contactId),
+                        String::class.java,
+                        GsonVariablesSerializer()
+                    )
+
+                    Amplify.API.mutate(
+                        addUserContactMutation2,
+                        { mutationResult ->
+                            println("AmplifyDbRepo ***** Mutation SUCCESS: ${mutationResult.data}")
+                        },
+                        { mutationError ->
+                            println("AmplifyDbRepo ***** Mutation FAILED: $mutationError")
+                        }
+                    )
+
                 }
             },
             { println("AmplifyDbRepo ***** ERR $it") }
         )
     }
 
-    data class InviteSenderUserIdDetails(
-        val senderUserId: String,
-        val executionDuration: Float
-    )
-
     data class InviteSenderUserIdResponse(
-        val userInviteToConnect: InviteSenderUserIdDetails
+        val getUserInviteToConnect: UserInviteDetails
     )
 
+    data class UserInviteDetails(
+        val userId: String
+    )
 }

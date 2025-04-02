@@ -4,25 +4,17 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.ui.res.stringResource
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.ui.authenticator.ui.Authenticator
-import com.amplifyframework.api.graphql.model.ModelMutation
-import com.amplifyframework.datastore.generated.model.User
+import com.mccartycarclub.ui.components.StartScreen
+import com.mccartycarclub.ui.components.TopBar
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -31,91 +23,29 @@ class MainActivity : ComponentActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            Authenticator { state ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = "Hello ${state.user.username}!",
-                    )
-
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-                            Amplify.Auth.signOut { }
+            StartScreen( // TODO: use a main compose screen change this
+                acceptInvite = { // TODO: rename
+                    mainViewModel.acceptContactInvite()
+                },
+                inviteContact = { userId ->
+                    mainViewModel.inviteContact(
+                        rowId = { rowId ->
+                            sendConnectInvite(
+                                "Link Test, https://carclub.app",
+                                "+15551234567",
+                                rowId,
+                            )
                         },
-                    ) {
-                        Text(text = "Sign Out")
-                    }
-
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-                            Amplify.Auth.fetchUserAttributes({ attributes ->
-                                val userId = attributes.firstOrNull { it.key.keyString == "sub" }?.value
-
-                                println("MainActivity ***** USER ID $userId")
-
-                                Amplify.API.mutate(
-                                    ModelMutation.create(testUser2(userId!!)),
-                                    { response ->
-                                        Log.i("MainActivity", "User created: ${response.data}")
-                                        println("MainActivity ***** ERROR ${response.hasErrors()}")
-                                        println("MainActivity ***** ERROR ${response.errors}")
-                                    },
-                                    { error ->
-                                        Log.e("MainActivity", "User creation failed", error)
-                                    }
-                                )
-                            }, { error ->
-                                Log.e(
-                                    "MainActivity *****", "Failed to fetch user attributes", error
-                                )
-                            })
-                        }) {
-                        Text(text = "Create User")
-                    }
-
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-
-                        }) {
-                        Text(text = "Add Contact")
-                    }
-
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-                            mainViewModel.inviteContact(state.user.userId, rowId = { rowId ->
-                                sendConnectInvite(
-                                    "Link Test, https://carclub.app",
-                                    "+15551234567",
-                                    rowId,
-                                )
-                            })
-                        }) {
-                        Text(text = "Send Invite")
-                    }
-
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-                            mainViewModel.acceptContactInvite()
-                        }) {
-                        Text(text = "Accept Invite")
-                    }
-
+                        userId = userId,
+                    )
                 }
-                checkPermissions()
-            }
+            )
+            checkPermissions()
         }
         handleIncomingIntentS(intent)
     }
@@ -202,33 +132,8 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val CAR_CLUB_URL = "https://carclub.app"
-    }
-
-    fun testUser1(userId: String) = run {
-        User.builder()
-
-            .firstName("Larry")
-            .lastName("McCarty")
-            .name("LM")
-            .email("lwmccarty@gmail.com")
-            .avatarUri("https://www.google.com")
-            .phone("+15551114545")
-            .userId(userId)
-            //.id(userId)
-            .build()
-    }
-
-    fun testUser2(userId: String): User {
-        return User.builder()
-            .firstName("Lebron")
-            .lastName("James")
-            .name("Lebron J")
-            .phone("+15555554545")
-            .userName("KingJames")
-            .email("lmccarty@outlook.com")
-            .avatarUri("https://example.com/avatar.png")
-            .userId(userId)
-            .id(userId)
-            .build()
+        const val MAIN_SCREEN = "main_screen"
+        const val CONTACTS_SCREEN = "contacts_screen"
+        const val GROUPS_SCREEN = "groups_screen"
     }
 }
