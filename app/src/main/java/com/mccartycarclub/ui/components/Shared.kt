@@ -5,8 +5,10 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
@@ -507,8 +509,14 @@ fun UserCard(user: User?, onCardClick: (String?) -> Unit) {
                 model = "https://example.com/image.jpg", // TODO: add an image user.avatarUri
                 contentDescription = "Translated description of what the image contains"
             )
-            Column {
+            Column(
+                modifier = Modifier.padding(
+                    dimensionResource(id = R.dimen.card_padding_start),
+                    dimensionResource(id = R.dimen.card_padding_top),
+                )
+            ) {
                 user?.userName?.let { Text(it) }
+                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.spacer_height)))
                 user?.name?.let { Text(it) }
             }
         }

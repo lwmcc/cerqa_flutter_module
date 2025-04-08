@@ -136,13 +136,13 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                         println("AmplifyDbRepo ***** createContact USER CONTACT: ${userContact}")
                     },
                     { error ->
-                        // println("AmplifyDbRepo *****Failed to create USER Contact: $error")
+                        println("AmplifyDbRepo *****Failed to create USER Contact: $error")
                     }
                 )
-                //   println("AmplifyDbRepo ***** contactResponse: ${contactResponse}")
+                println("AmplifyDbRepo ***** contactResponse: ${contactResponse}")
             },
             { error ->
-                //  println("AmplifyDbRepo *****Failed to create Contact: $error")
+                println("AmplifyDbRepo *****Failed to create Contact: $error")
             }
         )
     }

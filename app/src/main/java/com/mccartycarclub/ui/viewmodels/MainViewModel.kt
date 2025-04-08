@@ -26,7 +26,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val user: GetUser,  // TODO: edit thesee names to use usecase
+    private val user: GetUser,  // TODO: edit these names to use usecase
     private val userContacts: GetContacts,
     private val dbRepo: AmplifyDbRepo,
 ) : ViewModel() {
@@ -62,7 +62,7 @@ class MainViewModel @Inject constructor(
     init {
         user.getUser(TEST_USER_1,
             user = {
-                //userContacts.createContact(it) //  Create contact for user
+               // dbRepo.createContact(it)
             })
 
 //        user.getUserGroups(TEST_USER_1)

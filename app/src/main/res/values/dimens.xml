@@ -4,4 +4,8 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
 
     <dimen name="card_padding">8dp</dimen>
+    <dimen name="card_padding_start">8dp</dimen>
+    <dimen name="card_padding_top">12dp</dimen>
+
+    <dimen name="spacer_height">8dp</dimen>
 </resources>
