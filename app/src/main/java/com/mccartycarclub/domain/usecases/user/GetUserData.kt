@@ -23,6 +23,10 @@ class GetUserData @Inject constructor(private val dbRepo: DbRepo) : GetUser {
         )
     }
 
+    override fun fetchUserByUserName(userName: String) {
+        //dbRepo.fetchUserByUserName(userName)
+    }
+
     override fun fetchUserIdFromSentInvite(rowId: String, userId: (String?) -> Unit) {
         dbRepo.fetchUserIdFromSentInvite(rowId, userId = {
             userId(it)

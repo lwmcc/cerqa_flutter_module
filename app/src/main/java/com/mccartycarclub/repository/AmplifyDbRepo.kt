@@ -1,6 +1,5 @@
 package com.mccartycarclub.repository
 
-import android.R.id
 import android.util.Log
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.ApiException
@@ -13,7 +12,7 @@ import com.amplifyframework.api.graphql.model.ModelQuery.get
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.LoadedModelList
-import com.amplifyframework.core.model.ModelReference
+import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.includes
 import com.amplifyframework.datastore.generated.model.Contact
 import com.amplifyframework.datastore.generated.model.User
@@ -24,7 +23,6 @@ import com.amplifyframework.datastore.generated.model.UserPath
 import com.google.gson.Gson
 import com.mccartycarclub.ui.viewmodels.MainViewModel.Companion.TEST_USER_1
 import com.mccartycarclub.ui.viewmodels.MainViewModel.Companion.TEST_USER_2
-import java.util.UUID
 import javax.inject.Inject
 
 
@@ -36,7 +34,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         Amplify.API.query(
             ModelQuery.list(
                 UserGroup::class.java,
-                UserGroup.USER.eq("344433-1031-7026-1ea5-9e5c424b27de")
+                UserGroup.USER.eq(userId)
             ),
             { response ->
                 response.data.items.forEach { item ->
@@ -112,7 +110,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     override fun fetchUser(userId: String, user: (User) -> Unit) {
         Amplify.API.query(get(User::class.java, userId),
             { response: GraphQLResponse<User> ->
-                //println("AmplifyDbRepo ***** USER ${response.data}")
+                println("AmplifyDbRepo ***** USER ${response.data}")
                 //user(response.data as User)
             },
             { println("AmplifyDbRepo ***** ERROR") }
@@ -148,6 +146,44 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             }
         )
     }
+/*
+    override fun fetchUserByUserName(
+        userName: String,
+        data: (NetResult<User>) -> Unit,
+    ) {
+        Amplify.API.query(
+            ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)),
+            { response ->
+                // TODO: log success
+                validate(response, data = {
+                    data(it)
+                })
+            },
+            { error ->
+                // TODO: log error
+                data(NetResult.Error(error))
+            }
+        )
+    }*/
+
+    override fun fetchUserByUserName(
+        userName: String,
+        data: (NetResult<User?>) -> Unit,
+    ) {
+        Amplify.API.query(
+            ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)),
+            { response ->
+                if (response.hasData()) {
+                    data(NetResult.Success(response.data.firstOrNull()))
+                } else {
+                    data(NetResult.Success(null))
+                }
+            },
+            { error ->
+                data(NetResult.Error(error))
+            }
+        )
+    }
 
     override fun fetchUserContacts(userId: String) {
         Amplify.API.query(
@@ -157,17 +193,20 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             ) { userPath -> includes(userPath.contacts) },
             {
 
-                //val contacts = (it.data.contacts as? LoadedModelList<UserContact>)?.items
+                val contacts = (it.data.contacts as? LoadedModelList<UserContact>)?.items
 
-                // contacts?.forEach { userContact ->
-                //     println("AmplifyDbRepo ***** fetchUserContacts ${userContact.id}")
-                //println("AmplifyDbRepo ***** ID ${userContact.contact}")
-                // println("AmplifyDbRepo ***** USER ${userContact.user}")
+                contacts?.forEach { userContact ->
+                    println("AmplifyDbRepo ***** fetchUserContacts ${userContact.id}")
+                    println("AmplifyDbRepo ***** ID ${userContact.contact}")
+                    println("AmplifyDbRepo ***** USER ${userContact.user}")
 
-                //   }
+                }
             },
             { println("AmplifyDbRepo ***** ERROR FETCHING USER CONTACTS") }
         )
+
+
+
     }
 
     // TODO: rename
@@ -283,3 +322,18 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         val userId: String
     )
 }
+
+/*
+query GetContactIds {
+  listUserContacts(filter: { userId: { eq: "31cb55f0-1031-7026-1ea5-9e5c424b27de" } }) {
+    items {
+      contactId
+    }
+  }
+}
+ */
+
+/*
+"216ba540-0011-70d0-bb72-5b51c19ae56a"
+"31cb55f0-1031-7026-1ea5-9e5c424b27de"
+ */

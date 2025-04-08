@@ -12,6 +12,7 @@ interface DbRepo {
     fun fetchUser(userId: String, user: (User) -> Unit)
     fun createContact(user: User)
     fun fetchUserContacts(userId: String)
+    fun fetchUserByUserName(userName: String, data: (NetResult<User?>) -> Unit)
 
     // TODO: rename
     fun acceptContactInvite(userId: String, rowId: (String?) -> Unit)

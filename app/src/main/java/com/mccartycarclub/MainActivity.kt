@@ -35,6 +35,7 @@ class MainActivity : ComponentActivity() {
                 inviteContact = { userId ->
                     mainViewModel.inviteContact(
                         rowId = { rowId ->
+                            // TODO: for testing
                             sendConnectInvite(
                                 "Link Test, https://carclub.app",
                                 "+15551234567",
@@ -135,5 +136,6 @@ class MainActivity : ComponentActivity() {
         const val MAIN_SCREEN = "main_screen"
         const val CONTACTS_SCREEN = "contacts_screen"
         const val GROUPS_SCREEN = "groups_screen"
+        const val SEARCH_SCREEN = "search_screen"
     }
 }

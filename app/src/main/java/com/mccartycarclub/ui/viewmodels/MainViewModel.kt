@@ -1,12 +1,26 @@
 package com.mccartycarclub.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.usecases.user.GetUser
+import com.mccartycarclub.repository.AmplifyDbRepo
+import com.mccartycarclub.repository.NetResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
@@ -14,16 +28,40 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val user: GetUser,  // TODO: edit thesee names to use usecase
     private val userContacts: GetContacts,
+    private val dbRepo: AmplifyDbRepo,
 ) : ViewModel() {
 
     private val _localContacts = MutableStateFlow(emptyList<LocalContact>())
     val localContacts = _localContacts.asStateFlow()
 
+    private val _query = MutableStateFlow("")
+    val searchResults: StateFlow<NetResult<User?>> = _query
+        .debounce(1000)
+        .filter { it.isNotBlank() }
+        .distinctUntilChanged()
+        .flatMapLatest { userName ->
+            callbackFlow {
+                dbRepo.fetchUserByUserName(
+                    userName = userName,
+                    data = { result ->
+                        trySend(result)
+                    }
+                )
+
+                awaitClose { /* No cleanup needed here */ }
+            }
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            NetResult.Pending
+        )
+
     init {
         user.getUser(TEST_USER_1,
             user = {
                 //userContacts.createContact(it) //  Create contact for user
-        })
+            })
 
 //        user.getUserGroups(TEST_USER_1)
 //
@@ -31,7 +69,7 @@ class MainViewModel @Inject constructor(
 //            println("MainViewModel ***** CONTACTS $it")
 //        })
 //
-        userContacts.getUserContacts(TEST_USER_1)
+        //userContacts.getUserContacts(TEST_USER_1)
         // TODO: get all contacts
     }
 
@@ -60,6 +98,14 @@ class MainViewModel @Inject constructor(
 
     fun acceptContactInvite() {
         userContacts.acceptContactInvite()
+    }
+
+    fun fetchUserContacts(userId: String) {
+        userContacts.getUserContacts(userId)
+    }
+
+    fun onQueryChange(searchQuery: String) {
+        _query.value = searchQuery
     }
 
 }

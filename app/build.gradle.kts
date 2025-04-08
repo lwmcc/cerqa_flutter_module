@@ -83,10 +83,17 @@ dependencies {
     implementation("com.squareup.moshi:moshi:1.15.2")
     implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
     implementation("com.squareup.moshi:moshi-adapters:1.14.0")
+
     implementation("com.amplifyframework:core:1.43.2")
 
     val nav_version = "2.8.9"
     implementation("androidx.navigation:navigation-compose:$nav_version")
+
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    // Coil
+    implementation("io.coil-kt.coil3:coil-compose:3.1.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.1.0")
 }
 
 kapt {
