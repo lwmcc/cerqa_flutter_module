@@ -48,7 +48,9 @@ class MainViewModel @Inject constructor(
                     }
                 )
 
-                awaitClose { /* No cleanup needed here */ }
+                awaitClose {
+                    // TODO: do I need this?
+                }
             }
         }
         .stateIn(
