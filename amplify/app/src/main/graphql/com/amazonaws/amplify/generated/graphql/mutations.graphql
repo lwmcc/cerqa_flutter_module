@@ -1,0 +1,49 @@
+# this is an auto generated file. This will be overwritten
+
+mutation CreateUsers($input: CreateUsersInput!) {
+  createUsers(input: $input) {
+    avatar_uri
+    contacts
+    email
+    first_name
+    groups
+    last_name
+    name
+    phone
+    user_id
+    vehicles
+    __typename
+  }
+}
+
+mutation DeleteUsers($input: DeleteUsersInput!) {
+  deleteUsers(input: $input) {
+    avatar_uri
+    contacts
+    email
+    first_name
+    groups
+    last_name
+    name
+    phone
+    user_id
+    vehicles
+    __typename
+  }
+}
+
+mutation UpdateUsers($input: UpdateUsersInput!) {
+  updateUsers(input: $input) {
+    avatar_uri
+    contacts
+    email
+    first_name
+    groups
+    last_name
+    name
+    phone
+    user_id
+    vehicles
+    __typename
+  }
+}

@@ -18,4 +18,6 @@ interface DbRepo {
     fun acceptContactInvite(userId: String, rowId: (String?) -> Unit)
     fun fetchUserIdFromSentInvite(rowId: String, userId: (String?) -> Unit)
     fun updateSenderReceiverContacts()
+
+    fun createConnectInvite(userIds: Pair<String?, String?>)
 }

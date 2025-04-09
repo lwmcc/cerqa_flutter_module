@@ -453,6 +453,7 @@ fun Search(
                     //val user = (searchQuery).data as User
                     val user = (searchQuery as? NetResult.Success)?.data
                     UserCard(user, onCardClick = {
+                        mainViewModel.createConnectInvite(it)
                         println("StartScreen ***** USER ID $it")
                     })
                 }

@@ -1,0 +1,85 @@
+# this is an auto generated file. This will be overwritten
+
+subscription OnCreateUsers(
+  $email: String
+  $first_name: String
+  $last_name: String
+  $name: String
+  $user_id: String
+) {
+  onCreateUsers(
+    email: $email
+    first_name: $first_name
+    last_name: $last_name
+    name: $name
+    user_id: $user_id
+  ) {
+    avatar_uri
+    contacts
+    email
+    first_name
+    groups
+    last_name
+    name
+    phone
+    user_id
+    vehicles
+    __typename
+  }
+}
+
+subscription OnDeleteUsers(
+  $email: String
+  $first_name: String
+  $last_name: String
+  $name: String
+  $user_id: String
+) {
+  onDeleteUsers(
+    email: $email
+    first_name: $first_name
+    last_name: $last_name
+    name: $name
+    user_id: $user_id
+  ) {
+    avatar_uri
+    contacts
+    email
+    first_name
+    groups
+    last_name
+    name
+    phone
+    user_id
+    vehicles
+    __typename
+  }
+}
+
+subscription OnUpdateUsers(
+  $email: String
+  $first_name: String
+  $last_name: String
+  $name: String
+  $user_id: String
+) {
+  onUpdateUsers(
+    email: $email
+    first_name: $first_name
+    last_name: $last_name
+    name: $name
+    user_id: $user_id
+  ) {
+    avatar_uri
+    contacts
+    email
+    first_name
+    groups
+    last_name
+    name
+    phone
+    user_id
+    vehicles
+    __typename
+  }
+}

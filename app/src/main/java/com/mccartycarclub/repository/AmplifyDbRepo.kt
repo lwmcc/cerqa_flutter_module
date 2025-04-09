@@ -15,6 +15,8 @@ import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.includes
 import com.amplifyframework.datastore.generated.model.Contact
+import com.amplifyframework.datastore.generated.model.ContactInvite
+import com.amplifyframework.datastore.generated.model.InviteToConnect
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.datastore.generated.model.UserGroup
@@ -314,6 +316,24 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         )
     }
 
+    override fun createConnectInvite(userIds: Pair<String?, String?>) {
+        val contact = Contact.builder()
+            .contactId(TEST_USER_2)
+            .build()
+
+/*        val inviteToConnect = InviteToConnect.builder()
+            .receiverUserId("")
+            .
+            .build()*/
+
+
+
+
+
+       // Amplify.API.mutate()
+        println("AmplifyDbRepo ***** PAIR ${userIds.first} SECOND ${userIds.second}")
+    }
+
     data class InviteSenderUserIdResponse(
         val getUserInviteToConnect: UserInviteDetails
     )
@@ -323,17 +343,3 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     )
 }
 
-/*
-query GetContactIds {
-  listUserContacts(filter: { userId: { eq: "31cb55f0-1031-7026-1ea5-9e5c424b27de" } }) {
-    items {
-      contactId
-    }
-  }
-}
- */
-
-/*
-"216ba540-0011-70d0-bb72-5b51c19ae56a"
-"31cb55f0-1031-7026-1ea5-9e5c424b27de"
- */

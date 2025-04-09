@@ -2,12 +2,14 @@ package com.mccartycarclub.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.usecases.user.GetUser
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.NetResult
+import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -108,6 +110,20 @@ class MainViewModel @Inject constructor(
 
     fun onQueryChange(searchQuery: String) {
         _query.value = searchQuery
+    }
+
+    fun createConnectInvite(receiverUserId: String?) {
+        // TODO: make reusable
+        fetchUserId {
+            if (it.loggedIn) {
+                it.userId?.let { userId ->
+                    dbRepo.createConnectInvite(
+                        Pair(userId, receiverUserId)
+                    )
+                }
+            }
+        }
+
     }
 
 }
