@@ -317,21 +317,23 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     }
 
     override fun createConnectInvite(userIds: Pair<String?, String?>) {
-        val contact = Contact.builder()
-            .contactId(TEST_USER_2)
+
+        val senderUser = User.builder()
+            .firstName("test first")
+            .lastName("test second")
+            .userId(userIds.first)
             .build()
 
-/*        val inviteToConnect = InviteToConnect.builder()
-            .receiverUserId("")
-            .
-            .build()*/
+        val inviteToConnect = InviteToConnect.builder()
+            .receiverUserId(userIds.second)
+            .invites(senderUser)
+            .build()
 
-
-
-
-
-       // Amplify.API.mutate()
-        println("AmplifyDbRepo ***** PAIR ${userIds.first} SECOND ${userIds.second}")
+        Amplify.API.mutate(
+            ModelMutation.create(inviteToConnect),
+            { response -> println("Success! Invite created: ${response.data}") },
+            { error -> println("Failed to create invite: $error") }
+        )
     }
 
     data class InviteSenderUserIdResponse(
