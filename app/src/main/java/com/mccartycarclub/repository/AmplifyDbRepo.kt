@@ -321,6 +321,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         val senderUser = User.builder()
             .firstName("test first")
             .lastName("test second")
+            .id(userIds.first)
             .userId(userIds.first)
             .build()
 
