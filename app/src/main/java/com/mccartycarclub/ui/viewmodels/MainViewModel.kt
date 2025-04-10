@@ -10,8 +10,11 @@ import com.mccartycarclub.domain.usecases.user.GetUser
 import com.mccartycarclub.navigation.ClickNavigation
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.NetResult
+import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,10 +24,13 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -32,6 +38,7 @@ class MainViewModel @Inject constructor(
     private val user: GetUser,  // TODO: edit these names to use usecase
     private val userContacts: GetContacts,
     private val dbRepo: AmplifyDbRepo,
+    private val repo: RemoteRepo,
 ) : ViewModel() {
 
     private val _hasPendingInvite = MutableStateFlow(false)
@@ -39,6 +46,9 @@ class MainViewModel @Inject constructor(
 
     private val _hasConnection = MutableStateFlow(false)
     val hasConnection = _hasConnection.asStateFlow()
+
+    private val _receiverQueryPending = MutableStateFlow(true)
+    val receiverQueryPending = _receiverQueryPending.asStateFlow()
 
     private val _localContacts = MutableStateFlow(emptyList<LocalContact>())
     val localContacts = _localContacts.asStateFlow()
@@ -63,7 +73,7 @@ class MainViewModel @Inject constructor(
                                 fetchUserId { loggedIn ->
                                     if (loggedIn.loggedIn) {
                                         loggedIn.userId?.let { userId ->
-                                            dbRepo.hasExistingInvite(
+    /*                                        dbRepo.hasExistingInvite(
                                                 senderUserId = userId,
                                                 receiverUserId = data.data?.userId.toString(), // TODO: do right was
                                                 hasInvite = { hasPendingInvite ->
@@ -77,8 +87,37 @@ class MainViewModel @Inject constructor(
                                                     println("MainViewModel ***** CONNECTION $hasConnection")
                                                     _hasConnection.value = hasConnection
                                                 }
-                                            )
+                                            )*/
+                                            _receiverQueryPending.value = true
+                                            viewModelScope.launch {
+                                                val hasConnection: Deferred<Boolean> = async {
+                                                    repo.contactExists(
+                                                        userId,
+                                                        data.data?.userId.toString(),
+                                                    ).firstOrNull() ?: false
+                                                }
+
+                                                val hasExistingInvite = async {
+                                                    repo.hasExistingInvite(
+                                                        userId,
+                                                        data.data?.userId.toString()
+                                                    ).firstOrNull() ?: false
+                                                }
+
+                                                val connection = hasConnection.await()
+                                                val invite = hasExistingInvite.await()
+
+                                                _receiverQueryPending.value = false
+                                                _hasPendingInvite.value = invite
+                                                _hasConnection.value = connection
+                                            }
                                         }
+                                    }
+                                }
+
+                                viewModelScope.launch {
+                                    async {
+                                        recevierHasExistingInvite()
                                     }
                                 }
                             }
@@ -100,22 +139,6 @@ class MainViewModel @Inject constructor(
             SharingStarted.WhileSubscribed(5000),
             NetResult.Pending
         )
-
-    init {
-        user.getUser(TEST_USER_1,
-            user = {
-               // dbRepo.createContact(it)
-            })
-
-//        user.getUserGroups(TEST_USER_1)
-//
-//        userContacts.fetchContacts(TEST_USER_1, userContacts = {
-//            println("MainViewModel ***** CONTACTS $it")
-//        })
-//
-        //userContacts.getUserContacts(TEST_USER_1)
-        // TODO: get all contacts
-    }
 
     companion object {
         const val TEST_USER_1 = "14f8f4e8-a0b1-7015-d3b4-ded92d05abe5"
@@ -152,31 +175,16 @@ class MainViewModel @Inject constructor(
         _query.value = searchQuery
     }
 
-    fun createConnectInvite(receiverUserId: String?) {
-        // TODO: make reusable
-        fetchUserId { loggedIn ->
-            if (loggedIn.loggedIn) {
-                loggedIn.userId?.let { userId ->
-                    dbRepo.hasExistingInvite(
-                        senderUserId = userId,
-                        receiverUserId = receiverUserId.toString(), // TODO: do right was
-                        hasInvite = { hasPendingInvite ->
-                            _hasPendingInvite.value = hasPendingInvite
-                        })
-
-                    dbRepo.contactExists(
-                        senderUserId = userId,
-                        receiverUserId = receiverUserId.toString(),
-                        hasConnection = { hasConnection ->
-                            println("MainViewModel ***** CONNECTION $hasConnection")
-                            _hasConnection.value = hasConnection
-                        }
-                    )
-                }
-            }
-        }
+    suspend fun recevierHasExistingInvite() {
+        // repo.hasExistingInvite()
     }
 
-
-
+    suspend fun usersHaveExistingConnection(
+        senderUserId: String,
+        receiverUserId: String,
+    ) {
+        repo.contactExists(senderUserId, receiverUserId).collect { hasConnection ->
+            hasConnection
+        }
+    }
 }

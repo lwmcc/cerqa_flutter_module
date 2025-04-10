@@ -355,13 +355,13 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         hasExistingInvite: (Boolean) -> Unit,
     ) {
 
-        hasExistingInvite(
+/*        hasExistingInvite(
             senderUserId = userIds.first.toString(),
             receiverUserId = userIds.second.toString(),
             hasInvite = { hasInvite ->
                 hasExistingInvite(hasInvite)
             },
-        )
+        )*/
 
         val senderUser = User.builder()
             .firstName("test first")
@@ -377,8 +377,8 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
         Amplify.API.mutate(
             ModelMutation.create(inviteToConnect),
-            { response -> println("Success! Invite created: ${response.data}") },
-            { error -> println("Failed to create invite: $error") }
+            { response -> println("AmplifyDbRepo ***** Success! Invite created: ${response.data}") },
+            { error -> println("AmplifyDbRepo *****Failed to create invite: $error") }
         )
     }
 

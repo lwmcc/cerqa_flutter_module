@@ -38,6 +38,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -426,6 +427,9 @@ fun Search(
         val searchQuery = mainViewModel.searchResults.collectAsStateWithLifecycle().value
         val hasConnection = mainViewModel.hasConnection.collectAsStateWithLifecycle().value
         val hasPendingInvite = mainViewModel.hasPendingInvite.collectAsStateWithLifecycle().value
+        val receiverQueryPending =
+            mainViewModel.receiverQueryPending.collectAsStateWithLifecycle().value
+
         var input by remember { mutableStateOf("") }
 
         Column(
@@ -457,6 +461,7 @@ fun Search(
                         user,
                         hasConnection = hasConnection,
                         hasPendingInvite = hasPendingInvite,
+                        receiverQueryPending = receiverQueryPending,
                         onButtonClick = { receiverUserId ->
                             //mainViewModel.createConnectInvite(receiverUserId)
                         })
@@ -487,6 +492,21 @@ fun Pending() {
 }
 
 @Composable
+fun PendingV2(spinnerSize: Dp) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.width(spinnerSize),
+            color = MaterialTheme.colorScheme.secondary,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+        )
+    }
+}
+
+@Composable
 fun Error() {
     Column {
 
@@ -498,6 +518,7 @@ fun UserCard(
     user: User?,
     hasConnection: Boolean,
     hasPendingInvite: Boolean,
+    receiverQueryPending: Boolean,
     onButtonClick: (String?) -> Unit,
 ) {
     Card(
@@ -540,20 +561,23 @@ fun UserCard(
                 user?.name?.let { Text(it) }
             }
 
-            println("UserCard ***** CONNECTION $hasConnection")
-            if (hasConnection) {
-                Text("Connected")
+            if (receiverQueryPending) {
+                PendingV2(16.dp)
             } else {
-                if (hasPendingInvite) {
-                    Text("Invite Pending")
+                if (hasConnection) {
+                    Text("Connected")
                 } else {
-                    Button(
-                        onClick = {
-                            onButtonClick(user?.userId)
-                        },
+                    if (hasPendingInvite) {
+                        Text("Invite Pending")
+                    } else {
+                        Button(
+                            onClick = {
+                                onButtonClick(user?.userId)
+                            },
 
-                        ) {
-                        Text("Invite to Connect")
+                            ) {
+                            Text("Invite to Connect")
+                        }
                     }
                 }
             }

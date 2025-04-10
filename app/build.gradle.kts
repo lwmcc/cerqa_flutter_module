@@ -78,13 +78,14 @@ dependencies {
     implementation(libs.authenticator.vandroidauthenticatorversion)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(libs.core)
+    implementation("com.amplifyframework:core:1.43.2")
+    implementation("com.amplifyframework:core-kotlin:2.24.0")
+
 
     // Moshi
     implementation("com.squareup.moshi:moshi:1.15.2")
     implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
     implementation("com.squareup.moshi:moshi-adapters:1.14.0")
-
-    implementation("com.amplifyframework:core:1.43.2")
 
     val nav_version = "2.8.9"
     implementation("androidx.navigation:navigation-compose:$nav_version")
