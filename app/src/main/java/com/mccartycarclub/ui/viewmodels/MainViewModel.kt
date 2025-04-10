@@ -7,6 +7,7 @@ import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.usecases.user.GetUser
+import com.mccartycarclub.navigation.ClickNavigation
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.NetResult
 import com.mccartycarclub.utils.fetchUserId
@@ -33,6 +34,12 @@ class MainViewModel @Inject constructor(
     private val dbRepo: AmplifyDbRepo,
 ) : ViewModel() {
 
+    private val _hasPendingInvite = MutableStateFlow(false)
+    val hasPendingInvite = _hasPendingInvite.asStateFlow()
+
+    private val _hasConnection = MutableStateFlow(false)
+    val hasConnection = _hasConnection.asStateFlow()
+
     private val _localContacts = MutableStateFlow(emptyList<LocalContact>())
     val localContacts = _localContacts.asStateFlow()
 
@@ -45,8 +52,41 @@ class MainViewModel @Inject constructor(
             callbackFlow {
                 dbRepo.fetchUserByUserName(
                     userName = userName,
-                    data = { result ->
-                        trySend(result)
+                    data = { data ->
+                        when (data) {
+                            NetResult.Pending -> {
+
+                            }
+
+                            is NetResult.Success -> {
+                                trySend(data)
+                                fetchUserId { loggedIn ->
+                                    if (loggedIn.loggedIn) {
+                                        loggedIn.userId?.let { userId ->
+                                            dbRepo.hasExistingInvite(
+                                                senderUserId = userId,
+                                                receiverUserId = data.data?.userId.toString(), // TODO: do right was
+                                                hasInvite = { hasPendingInvite ->
+                                                    _hasPendingInvite.value = hasPendingInvite
+                                                })
+
+                                            dbRepo.contactExists(
+                                                senderUserId = userId,
+                                                receiverUserId = data.data?.userId.toString(),
+                                                hasConnection = { hasConnection ->
+                                                    println("MainViewModel ***** CONNECTION $hasConnection")
+                                                    _hasConnection.value = hasConnection
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            is NetResult.Error -> {
+
+                            }
+                        }
                     }
                 )
 
@@ -114,16 +154,29 @@ class MainViewModel @Inject constructor(
 
     fun createConnectInvite(receiverUserId: String?) {
         // TODO: make reusable
-        fetchUserId {
-            if (it.loggedIn) {
-                it.userId?.let { userId ->
-                    dbRepo.createConnectInvite(
-                        Pair(userId, receiverUserId)
+        fetchUserId { loggedIn ->
+            if (loggedIn.loggedIn) {
+                loggedIn.userId?.let { userId ->
+                    dbRepo.hasExistingInvite(
+                        senderUserId = userId,
+                        receiverUserId = receiverUserId.toString(), // TODO: do right was
+                        hasInvite = { hasPendingInvite ->
+                            _hasPendingInvite.value = hasPendingInvite
+                        })
+
+                    dbRepo.contactExists(
+                        senderUserId = userId,
+                        receiverUserId = receiverUserId.toString(),
+                        hasConnection = { hasConnection ->
+                            println("MainViewModel ***** CONNECTION $hasConnection")
+                            _hasConnection.value = hasConnection
+                        }
                     )
                 }
             }
         }
-
     }
+
+
 
 }

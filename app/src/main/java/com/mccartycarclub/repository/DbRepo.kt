@@ -1,6 +1,7 @@
 package com.mccartycarclub.repository
 
 import com.amplifyframework.datastore.generated.model.Contact
+import com.amplifyframework.datastore.generated.model.InviteToConnect.ReceiverUserIdStep
 import com.amplifyframework.datastore.generated.model.User
 
 // TODO: rename this
@@ -10,14 +11,31 @@ interface DbRepo {
 
     fun fetchUsers()
     fun fetchUser(userId: String, user: (User) -> Unit)
-    fun createContact(user: User)
     fun fetchUserContacts(userId: String)
     fun fetchUserByUserName(userName: String, data: (NetResult<User?>) -> Unit)
+    fun fetchUserIdFromSentInvite(rowId: String, userId: (String?) -> Unit)
 
     // TODO: rename
     fun acceptContactInvite(userId: String, rowId: (String?) -> Unit)
-    fun fetchUserIdFromSentInvite(rowId: String, userId: (String?) -> Unit)
+
+
     fun updateSenderReceiverContacts()
 
-    fun createConnectInvite(userIds: Pair<String?, String?>)
+    fun createContact(user: User)
+    fun createConnectInvite(
+        userIds: Pair<String?, String?>,
+        hasExistingInvite: (Boolean) -> Unit,
+    )
+
+    fun contactExists(
+        senderUserId: String,
+        receiverUserId: String,
+        hasConnection: (Boolean) -> Unit,
+    )
+
+    fun hasExistingInvite(
+        senderUserId: String,
+        receiverUserId: String,
+        hasInvite: (Boolean) -> Unit,
+    )
 }

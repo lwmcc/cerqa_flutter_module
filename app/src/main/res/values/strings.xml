@@ -6,4 +6,7 @@
 
     <!-- Search -->
     <string name="user_search">User Search</string>
+
+    <!-- User -->
+    <string name="user_avatar">User avatar</string>
 </resources>

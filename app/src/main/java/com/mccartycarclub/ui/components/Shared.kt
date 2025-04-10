@@ -424,6 +424,8 @@ fun Search(
     ) { innerPadding ->
 
         val searchQuery = mainViewModel.searchResults.collectAsStateWithLifecycle().value
+        val hasConnection = mainViewModel.hasConnection.collectAsStateWithLifecycle().value
+        val hasPendingInvite = mainViewModel.hasPendingInvite.collectAsStateWithLifecycle().value
         var input by remember { mutableStateOf("") }
 
         Column(
@@ -450,12 +452,14 @@ fun Search(
                 }
 
                 is NetResult.Success -> {
-                    //val user = (searchQuery).data as User
                     val user = (searchQuery as? NetResult.Success)?.data
-                    UserCard(user, onCardClick = {
-                        mainViewModel.createConnectInvite(it)
-                        println("StartScreen ***** USER ID $it")
-                    })
+                    UserCard(
+                        user,
+                        hasConnection = hasConnection,
+                        hasPendingInvite = hasPendingInvite,
+                        onButtonClick = { receiverUserId ->
+                            //mainViewModel.createConnectInvite(receiverUserId)
+                        })
                 }
 
                 is NetResult.Error -> {
@@ -490,7 +494,12 @@ fun Error() {
 }
 
 @Composable
-fun UserCard(user: User?, onCardClick: (String?) -> Unit) {
+fun UserCard(
+    user: User?,
+    hasConnection: Boolean,
+    hasPendingInvite: Boolean,
+    onButtonClick: (String?) -> Unit,
+) {
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -498,27 +507,55 @@ fun UserCard(user: User?, onCardClick: (String?) -> Unit) {
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
         ),
-        onClick = {
+/*        onClick = {
             onCardClick(user?.userId)
-        },
+            // Load when id available
+        },*/
         modifier = Modifier
             .fillMaxWidth()
             .padding(dimensionResource(id = R.dimen.card_padding)),
     ) {
         Row {
             AsyncImage(
-                model = "https://example.com/image.jpg", // TODO: add an image user.avatarUri
-                contentDescription = "Translated description of what the image contains"
+                model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
+                // TODO: add an image user.avatarUri
+                contentDescription = stringResource(id = R.string.user_avatar),
+                modifier = Modifier
+                    .width(60.dp)
+                    .padding(
+                        dimensionResource(id = R.dimen.card_padding_start),
+                        dimensionResource(id = R.dimen.card_padding_top),
+                    )
             )
             Column(
-                modifier = Modifier.padding(
-                    dimensionResource(id = R.dimen.card_padding_start),
-                    dimensionResource(id = R.dimen.card_padding_top),
-                )
+                modifier = Modifier
+                    .padding(
+                        dimensionResource(id = R.dimen.card_padding_start),
+                        dimensionResource(id = R.dimen.card_padding_top),
+                    )
+                    .weight(1f)
             ) {
                 user?.userName?.let { Text(it) }
                 Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.spacer_height)))
                 user?.name?.let { Text(it) }
+            }
+
+            println("UserCard ***** CONNECTION $hasConnection")
+            if (hasConnection) {
+                Text("Connected")
+            } else {
+                if (hasPendingInvite) {
+                    Text("Invite Pending")
+                } else {
+                    Button(
+                        onClick = {
+                            onButtonClick(user?.userId)
+                        },
+
+                        ) {
+                        Text("Invite to Connect")
+                    }
+                }
             }
         }
     }

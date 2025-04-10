@@ -4,6 +4,7 @@ import android.util.Log
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.aws.GsonVariablesSerializer
+import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
 import com.amplifyframework.api.graphql.model.ModelMutation
@@ -12,10 +13,9 @@ import com.amplifyframework.api.graphql.model.ModelQuery.get
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.LoadedModelList
-import com.amplifyframework.core.model.Model
+import com.amplifyframework.core.model.ModelReference
 import com.amplifyframework.core.model.includes
 import com.amplifyframework.datastore.generated.model.Contact
-import com.amplifyframework.datastore.generated.model.ContactInvite
 import com.amplifyframework.datastore.generated.model.InviteToConnect
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
@@ -25,6 +25,10 @@ import com.amplifyframework.datastore.generated.model.UserPath
 import com.google.gson.Gson
 import com.mccartycarclub.ui.viewmodels.MainViewModel.Companion.TEST_USER_1
 import com.mccartycarclub.ui.viewmodels.MainViewModel.Companion.TEST_USER_2
+import com.squareup.moshi.Json
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import org.json.JSONObject
 import javax.inject.Inject
 
 
@@ -59,7 +63,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     ) {
 
         Amplify.API.query(
-            ModelQuery.get<User, UserPath>(
+            get<User, UserPath>(
                 User::class.java,
                 User.UserIdentifier(TEST_USER_1)
             ) { userPath -> includes(userPath.contacts) },
@@ -74,9 +78,6 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     }
 
     override fun fetchUsers() {
-
-        // 344433-1031-7026-1ea5-9e5c424b27de
-        // 31cb55f0-1031-7026-1ea5-9e5c424b27de
 
         val onResponse = Consumer<GraphQLResponse<User>> { response ->
             val user = response.data
@@ -96,8 +97,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             //Log.e("AmplifyDbRepo", "Failed to fetch user: ${error.message}")
         }
 
-        // Use the correct query to fetch the User by ID
-        ModelQuery.get<User, UserPath>(
+        get<User, UserPath>(
             User::class.java,
             User.UserIdentifier(TEST_USER_1)
         ) {
@@ -148,25 +148,6 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             }
         )
     }
-/*
-    override fun fetchUserByUserName(
-        userName: String,
-        data: (NetResult<User>) -> Unit,
-    ) {
-        Amplify.API.query(
-            ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)),
-            { response ->
-                // TODO: log success
-                validate(response, data = {
-                    data(it)
-                })
-            },
-            { error ->
-                // TODO: log error
-                data(NetResult.Error(error))
-            }
-        )
-    }*/
 
     override fun fetchUserByUserName(
         userName: String,
@@ -176,7 +157,9 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)),
             { response ->
                 if (response.hasData()) {
-                    data(NetResult.Success(response.data.firstOrNull()))
+                    val data = response.data.firstOrNull()
+                    data(NetResult.Success(data))
+                    //data?.userId
                 } else {
                     data(NetResult.Success(null))
                 }
@@ -237,6 +220,57 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         )
     }
 
+    override fun hasExistingInvite(
+        senderUserId: String,
+        receiverUserId: String,
+        hasInvite: (Boolean) -> Unit,
+    ) {
+        val document = """
+            query ListInviteToConnects {
+              listInviteToConnects(
+                filter: {
+                  senderUserId: { eq: "$senderUserId" }
+                  receiverUserId: { eq: "$receiverUserId" }
+                }
+              ) {
+                items {
+                  id
+                  senderUserId
+                  receiverUserId
+                  invites {
+                    id
+                    firstName
+                    lastName
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+
+        val request = SimpleGraphQLRequest<String>(
+            document,
+            mapOf(USER_ID to senderUserId),
+            String::class.java,
+            GsonVariablesSerializer()
+        )
+
+        Amplify.API.query(
+            request,
+            { response ->
+                val numInvites = parseJson(response.data)?.listInviteToConnects?.items?.size ?: 0
+                if (numInvites > 0) {
+                    hasInvite(true)
+                } else {
+                    hasInvite(false)
+                }
+            },
+            { error ->
+                hasInvite(false)
+                println("AmplifyDbRepo ***** ERROR ${error.message}")
+            }
+        )
+    }
+
     override fun updateSenderReceiverContacts() {
 
         // TODO: testing
@@ -254,7 +288,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
         val inviteSenderUserIdQuery = SimpleGraphQLRequest<String>(
             document,
-            mapOf("id" to rowId),
+            mapOf(USER_ID to rowId),
             String::class.java,
             GsonVariablesSerializer())
 
@@ -316,7 +350,18 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         )
     }
 
-    override fun createConnectInvite(userIds: Pair<String?, String?>) {
+    override fun createConnectInvite(
+        userIds: Pair<String?, String?>,
+        hasExistingInvite: (Boolean) -> Unit,
+    ) {
+
+        hasExistingInvite(
+            senderUserId = userIds.first.toString(),
+            receiverUserId = userIds.second.toString(),
+            hasInvite = { hasInvite ->
+                hasExistingInvite(hasInvite)
+            },
+        )
 
         val senderUser = User.builder()
             .firstName("test first")
@@ -337,12 +382,63 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         )
     }
 
-    data class InviteSenderUserIdResponse(
-        val getUserInviteToConnect: UserInviteDetails
-    )
+    override fun contactExists(
+        senderUserId: String,
+        receiverUserId: String,
+        hasConnection: (Boolean) -> Unit,
+    ) {
 
-    data class UserInviteDetails(
-        val userId: String
-    )
+        val filter = UserContact.USER.eq(senderUserId)
+            .and(UserContact.CONTACT.eq(receiverUserId))
+
+        Amplify.API.query(
+            ModelQuery.list(UserContact::class.java, filter),
+            { response ->
+                val count = response.data.items.count()
+                hasConnection(count > 0)
+            },
+            { error ->
+                println("AmplifyDbRepo ***** ${error.message}")
+                hasConnection(false)
+            }
+        )
+    }
+
+    companion object {
+        const val USER_ID = "id"
+    }
 }
+
+data class InviteSenderUserIdResponse(
+    val getUserInviteToConnect: UserInviteDetails
+)
+
+data class UserInviteDetails(
+    val userId: String
+)
+
+// TODO: move
+data class CheckUserContactResponse(
+    val listUserContacts: ListUserContacts
+)
+
+data class ListUserContacts(
+    val items: List<UserContact>
+)
+
+data class UserContact(
+    val userId: String,
+    val contactId: String
+)
+
+// TODO: move
+data class RootResponse(
+    @Json(name = "listUserContacts")
+    val listUserContacts: ListUserContacts
+)
+
+data class ContactItem(
+    val userId: String,
+    val contactId: String
+)
 
