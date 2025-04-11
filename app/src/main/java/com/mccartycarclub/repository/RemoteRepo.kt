@@ -1,5 +1,6 @@
 package com.mccartycarclub.repository
 
+import com.amplifyframework.datastore.generated.model.User
 import kotlinx.coroutines.flow.Flow
 
 interface RemoteRepo {
@@ -12,4 +13,6 @@ interface RemoteRepo {
         senderUserId: String,
         receiverUserId: String,
     ): Flow<Boolean>
+
+    suspend fun fetchUserByUserName(userName: String): Flow<NetResult<User?>>
 }

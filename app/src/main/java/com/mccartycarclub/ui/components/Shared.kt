@@ -495,7 +495,6 @@ fun Pending() {
 fun PendingV2(spinnerSize: Dp) {
     Column(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CircularProgressIndicator(
@@ -528,55 +527,81 @@ fun UserCard(
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
         ),
-/*        onClick = {
-            onCardClick(user?.userId)
-            // Load when id available
-        },*/
         modifier = Modifier
             .fillMaxWidth()
             .padding(dimensionResource(id = R.dimen.card_padding)),
     ) {
-        Row {
-            AsyncImage(
-                model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
-                // TODO: add an image user.avatarUri
-                contentDescription = stringResource(id = R.string.user_avatar),
-                modifier = Modifier
-                    .width(60.dp)
-                    .padding(
-                        dimensionResource(id = R.dimen.card_padding_start),
-                        dimensionResource(id = R.dimen.card_padding_top),
-                    )
-            )
-            Column(
-                modifier = Modifier
-                    .padding(
-                        dimensionResource(id = R.dimen.card_padding_start),
-                        dimensionResource(id = R.dimen.card_padding_top),
-                    )
-                    .weight(1f)
-            ) {
-                user?.userName?.let { Text(it) }
-                Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.spacer_height)))
-                user?.name?.let { Text(it) }
-            }
-
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             if (receiverQueryPending) {
-                PendingV2(16.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    PendingV2(16.dp)
+                }
             } else {
-                if (hasConnection) {
-                    Text("Connected")
-                } else {
-                    if (hasPendingInvite) {
-                        Text("Invite Pending")
-                    } else {
-                        Button(
-                            onClick = {
-                                onButtonClick(user?.userId)
-                            },
+                Row {
+                    AsyncImage(
+                        model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
+                        // TODO: add an image user.avatarUri
+                        contentDescription = stringResource(id = R.string.user_avatar),
+                        modifier = Modifier
+                            .width(60.dp)
+                            .padding(
+                                dimensionResource(id = R.dimen.card_padding_start),
+                                dimensionResource(id = R.dimen.card_padding_top),
+                            )
+                    )
+                    Column(
+                        modifier = Modifier
+                            .padding(
+                                dimensionResource(id = R.dimen.card_padding_start),
+                                dimensionResource(id = R.dimen.card_padding_top),
+                            )
+                            .weight(1f)
+                    ) {
+                        user?.userName?.let { Text(it) }
+                        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.spacer_height)))
+                        user?.name?.let { Text(it) }
+                    }
 
-                            ) {
-                            Text("Invite to Connect")
+                    if (hasConnection) {
+                        Row {
+                            Text("Connected")
+                            Button(
+                                onClick = {
+                                    onButtonClick(user?.userId)
+                                }) {
+                                Text("Disconnect")
+                            }
+                        }
+                    } else {
+                        if (hasPendingInvite) {
+                            Row {
+                                Text("Invite Pending")
+                                Button(
+                                    onClick = {
+                                        onButtonClick(user?.userId)
+                                    }) {
+                                    Text("Cancel Invite")
+                                }
+                            }
+                        } else {
+                            Button(
+                                onClick = {
+                                    onButtonClick(user?.userId)
+                                }) {
+                                Text("Invite to Connect")
+                            }
                         }
                     }
                 }
