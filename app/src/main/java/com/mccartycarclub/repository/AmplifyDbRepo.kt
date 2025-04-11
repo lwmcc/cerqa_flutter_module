@@ -23,12 +23,7 @@ import com.amplifyframework.datastore.generated.model.UserGroup
 import com.amplifyframework.datastore.generated.model.UserInviteToConnect
 import com.amplifyframework.datastore.generated.model.UserPath
 import com.google.gson.Gson
-import com.mccartycarclub.ui.viewmodels.MainViewModel.Companion.TEST_USER_1
-import com.mccartycarclub.ui.viewmodels.MainViewModel.Companion.TEST_USER_2
 import com.squareup.moshi.Json
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import org.json.JSONObject
 import javax.inject.Inject
 
 
@@ -65,7 +60,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         Amplify.API.query(
             get<User, UserPath>(
                 User::class.java,
-                User.UserIdentifier(TEST_USER_1)
+                User.UserIdentifier(userId)
             ) { userPath -> includes(userPath.contacts) },
             {
                 val contacts = (it.data.contacts as? LoadedModelList<Contact>)?.items
@@ -99,7 +94,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
         get<User, UserPath>(
             User::class.java,
-            User.UserIdentifier(TEST_USER_1)
+            User.UserIdentifier("")
         ) {
             // Including the contacts field (if exists in the User model)
             includes(it.contacts)
@@ -121,7 +116,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
     override fun createContact(user: User) {
         val contact = Contact.builder()
-            .contactId(TEST_USER_2)
+            .contactId(user.userId)
             .build()
 
         Amplify.API.mutate(ModelMutation.create(contact),

@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -22,8 +24,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -452,7 +456,8 @@ fun Search(
 
             when (searchQuery) {
                 NetResult.Pending -> {
-                    Pending()
+                    // TODO: maybe remove this
+                    //Pending()
                 }
 
                 is NetResult.Success -> {
@@ -495,10 +500,11 @@ fun Pending() {
 fun PendingV2(spinnerSize: Dp) {
     Column(
         modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CircularProgressIndicator(
-            modifier = Modifier.width(spinnerSize),
+            modifier = Modifier.size(spinnerSize),
             color = MaterialTheme.colorScheme.secondary,
             trackColor = MaterialTheme.colorScheme.surfaceVariant,
         )
@@ -534,7 +540,7 @@ fun UserCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp),
+                .height(140.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -542,11 +548,11 @@ fun UserCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(150.dp),
+                        .height(140.dp),
                     verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    PendingV2(16.dp)
+                    PendingV2(16.dp) // TODO remove V2
                 }
             } else {
                 Row {
@@ -573,35 +579,49 @@ fun UserCard(
                         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.spacer_height)))
                         user?.name?.let { Text(it) }
                     }
+                }
 
-                    if (hasConnection) {
-                        Row {
-                            Text("Connected")
-                            Button(
+                if (hasConnection) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(2.dp),
+                    ) {
+                        Text("Connected")
+                        Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.spacer_width)))
+                        OutlinedButton(
+                            onClick = {
+                                onButtonClick(user?.userId)
+                            },
+                            shape = RoundedCornerShape(4.dp),
+                        ) {
+                            Text("Disconnect")
+                        }
+                    }
+                } else {
+                    if (hasPendingInvite) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(2.dp),
+                        ) {
+                            Text("Pending")
+                            Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.spacer_width)))
+                            OutlinedButton(
                                 onClick = {
                                     onButtonClick(user?.userId)
-                                }) {
-                                Text("Disconnect")
+                                },
+                                shape = RoundedCornerShape(4.dp),
+                            ) {
+                                Text("Cancel")
                             }
                         }
                     } else {
-                        if (hasPendingInvite) {
-                            Row {
-                                Text("Invite Pending")
-                                Button(
-                                    onClick = {
-                                        onButtonClick(user?.userId)
-                                    }) {
-                                    Text("Cancel Invite")
-                                }
-                            }
-                        } else {
-                            Button(
-                                onClick = {
-                                    onButtonClick(user?.userId)
-                                }) {
-                                Text("Invite to Connect")
-                            }
+                        OutlinedButton(
+                            onClick = {
+                                onButtonClick(user?.userId)
+                            },
+                            shape = RoundedCornerShape(4.dp),
+                        ) {
+                            Text("Connect")
                         }
                     }
                 }

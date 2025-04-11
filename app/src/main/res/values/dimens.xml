@@ -8,4 +8,5 @@
     <dimen name="card_padding_top">12dp</dimen>
 
     <dimen name="spacer_height">8dp</dimen>
+    <dimen name="spacer_width">16dp</dimen>
 </resources>
