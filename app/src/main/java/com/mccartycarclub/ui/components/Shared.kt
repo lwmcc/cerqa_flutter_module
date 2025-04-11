@@ -1,7 +1,6 @@
 package com.mccartycarclub.ui.components
 
 import android.util.Log
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,11 +26,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,7 +48,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
-import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.MainActivity.Companion.CONTACTS_SCREEN
@@ -62,9 +58,9 @@ import com.mccartycarclub.R
 import com.mccartycarclub.navigation.AppNavigationActions
 import com.mccartycarclub.navigation.ClickNavigation
 import com.mccartycarclub.repository.NetResult
+import com.mccartycarclub.ui.callbacks.connectionclicks.ConnectionEvent
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 import com.mccartycarclub.utils.fetchUserId
-import kotlinx.coroutines.flow.MutableStateFlow
 
 
 @Composable
@@ -181,8 +177,10 @@ fun AppAuthenticator(
                                     attributes.firstOrNull { it.key.keyString == "sub" }?.value
 
                                 println("MainActivity ***** USER ID $userId")
+                                // TODO: create test users
+                                // testUser1  testUser2
 
-                                Amplify.API.mutate(
+  /*                              Amplify.API.mutate(
                                     ModelMutation.create(testUser2(userId!!)),
                                     { response ->
                                         Log.i("MainActivity", "User created: ${response.data}")
@@ -192,7 +190,7 @@ fun AppAuthenticator(
                                     { error ->
                                         Log.e("MainActivity", "User creation failed", error)
                                     }
-                                )
+                                )*/
                             }, { error ->
                                 Log.e(
                                     "MainActivity *****", "Failed to fetch user attributes", error
@@ -345,20 +343,6 @@ fun TopBarSearch(
     )
 }
 
-fun testUser1(userId: String) = run {
-    User.builder()
-
-        .firstName("Larry")
-        .lastName("McCarty")
-        .name("LM")
-        .email("lwmccarty@gmail.com")
-        .avatarUri("https://www.google.com")
-        .phone("+15551114545")
-        .userId(userId)
-        //.id(userId)
-        .build()
-}
-
 @Composable
 fun Contacts(mainViewModel: MainViewModel = hiltViewModel(), topBarClick: (ClickNavigation) -> Unit) {
     Scaffold(
@@ -431,6 +415,7 @@ fun Search(
         val searchQuery = mainViewModel.searchResults.collectAsStateWithLifecycle().value
         val hasConnection = mainViewModel.hasConnection.collectAsStateWithLifecycle().value
         val hasPendingInvite = mainViewModel.hasPendingInvite.collectAsStateWithLifecycle().value
+        val isSendingInvite = mainViewModel.isSendingInvite.collectAsStateWithLifecycle().value
         val receiverQueryPending =
             mainViewModel.receiverQueryPending.collectAsStateWithLifecycle().value
 
@@ -467,6 +452,10 @@ fun Search(
                         hasConnection = hasConnection,
                         hasPendingInvite = hasPendingInvite,
                         receiverQueryPending = receiverQueryPending,
+                        isSendingInvite = isSendingInvite,
+                        connectionEvent = { connectionEvent ->
+                            mainViewModel.userConnectionEvent(connectionEvent)
+                        },
                         onButtonClick = { receiverUserId ->
                             //mainViewModel.createConnectInvite(receiverUserId)
                         })
@@ -499,7 +488,7 @@ fun Pending() {
 @Composable
 fun PendingV2(spinnerSize: Dp) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -523,7 +512,9 @@ fun UserCard(
     user: User?,
     hasConnection: Boolean,
     hasPendingInvite: Boolean,
+    isSendingInvite: Boolean,
     receiverQueryPending: Boolean,
+    connectionEvent: (ConnectionEvent) -> Unit,
     onButtonClick: (String?) -> Unit,
 ) {
     Card(
@@ -539,23 +530,21 @@ fun UserCard(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp),
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (receiverQueryPending) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(140.dp),
+                        .fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     PendingV2(16.dp) // TODO remove V2
                 }
             } else {
-                Row {
+                Row(modifier = Modifier.fillMaxWidth()) {
                     AsyncImage(
                         model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
                         // TODO: add an image user.avatarUri
@@ -590,7 +579,8 @@ fun UserCard(
                         Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.spacer_width)))
                         OutlinedButton(
                             onClick = {
-                                onButtonClick(user?.userId)
+                                //onButtonClick(user?.userId) // TODO: moving this
+                                connectionEvent(ConnectionEvent.DisconnectEvent)
                             },
                             shape = RoundedCornerShape(4.dp),
                         ) {
@@ -607,7 +597,9 @@ fun UserCard(
                             Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.spacer_width)))
                             OutlinedButton(
                                 onClick = {
-                                    onButtonClick(user?.userId)
+                                    user?.userId?.let { receiverUserId ->
+                                        connectionEvent(ConnectionEvent.CancelEvent(receiverUserId))
+                                    }
                                 },
                                 shape = RoundedCornerShape(4.dp),
                             ) {
@@ -617,9 +609,12 @@ fun UserCard(
                     } else {
                         OutlinedButton(
                             onClick = {
-                                onButtonClick(user?.userId)
+                                user?.userId?.let { receiverUserId ->
+                                    connectionEvent(ConnectionEvent.ConnectEvent(receiverUserId))
+                                }
                             },
                             shape = RoundedCornerShape(4.dp),
+                            enabled = !isSendingInvite
                         ) {
                             Text("Connect")
                         }
@@ -630,17 +625,31 @@ fun UserCard(
     }
 }
 
+fun testUser1(userId: String): User {
+    return User.builder()
+        .firstName("Larry")
+        .lastName("McCarty")
+        .name("LM")
+        .email("lwmccarty@gmail.com")
+        .avatarUri("https://www.google.com")
+        .phone("+14808104545")
+        .userName("LarryM")
+        .userId(userId)
+        //.id(userId)
+        .build()
+}
+
 fun testUser2(userId: String): User {
     return User.builder()
         .firstName("Lebron")
         .lastName("James")
         .name("Lebron J")
-        .phone("+15555554545")
+        .phone("+14805554545")
         .userName("KingJames")
         .email("lmccarty@outlook.com")
         .avatarUri("https://example.com/avatar.png")
         .userId(userId)
-        .id(userId)
+        //.id(userId)
         .build()
 }
 

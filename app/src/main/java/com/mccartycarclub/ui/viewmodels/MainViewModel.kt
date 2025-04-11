@@ -2,15 +2,14 @@ package com.mccartycarclub.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.usecases.user.GetUser
-import com.mccartycarclub.navigation.ClickNavigation
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.NetResult
 import com.mccartycarclub.repository.RemoteRepo
+import com.mccartycarclub.ui.callbacks.connectionclicks.ConnectionEvent
 import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Deferred
@@ -21,14 +20,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -47,6 +43,9 @@ class MainViewModel @Inject constructor(
 
     private val _hasConnection = MutableStateFlow(false)
     val hasConnection = _hasConnection.asStateFlow()
+
+    private val _isSendingInvite = MutableStateFlow(false)
+    val isSendingInvite = _isSendingInvite.asStateFlow()
 
     private val _receiverQueryPending = MutableStateFlow(true)
     val receiverQueryPending = _receiverQueryPending.asStateFlow()
@@ -159,4 +158,46 @@ class MainViewModel @Inject constructor(
             hasConnection
         }
     }
+
+    fun userConnectionEvent(connectionEvent: ConnectionEvent) {
+        when (connectionEvent) {
+            is ConnectionEvent.CancelEvent -> {
+                viewModelScope.launch {
+                    val userID = fetchUserId()
+                    repo.cancelInviteToConnect(
+                        senderUserId = userID,
+                        receiverUserId = connectionEvent.receiverUserId,
+                    )
+                }
+            }
+
+            is ConnectionEvent.ConnectEvent -> {
+                viewModelScope.launch {
+                    val userID = fetchUserId()
+                    _isSendingInvite.value = true
+                    resetButtonsToPendingOnSuccess(
+                        repo.sendInviteToConnect(
+                            senderUserId = userID,
+                            receiverUserId = connectionEvent.receiverUserId,
+                        )
+                    )
+                }
+            }
+
+            ConnectionEvent.DisconnectEvent -> {
+
+            }
+        }
+    }
+
+    private fun resetButtonsToPendingOnSuccess(success: Boolean) {
+        if (success) {
+            _receiverQueryPending.value = false
+            _hasConnection.value = false
+            _hasPendingInvite.value = true
+        } else {
+            _isSendingInvite.value = false
+        }
+    }
+
 }

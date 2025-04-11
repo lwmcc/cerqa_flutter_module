@@ -1,9 +1,7 @@
 package com.mccartycarclub.utils
 
-import android.util.Log
-import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.Amplify
-import com.mccartycarclub.ui.components.testUser2
+import com.amplifyframework.kotlin.core.Amplify as CoreAmplify
 import java.util.UUID
 
 
@@ -21,6 +19,10 @@ fun fetchUserId(loggedIn: (LoggedIn) -> Unit) {
         loggedIn(LoggedIn(loggedIn = false, errorMessage = error.message))
     })
 }
+
+suspend fun fetchUserId() = CoreAmplify.Auth.fetchUserAttributes()
+    .firstOrNull { it.key.keyString == "sub" }?.value
+
 
 data class LoggedIn(
     val loggedIn: Boolean = false,
