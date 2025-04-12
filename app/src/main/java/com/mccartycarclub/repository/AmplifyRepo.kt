@@ -1,6 +1,7 @@
 package com.mccartycarclub.repository
 
 import com.amplifyframework.api.ApiException
+import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.datastore.generated.model.InviteToConnect
@@ -10,6 +11,7 @@ import com.amplifyframework.kotlin.core.Amplify
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
+import javax.xml.validation.Schema
 
 class AmplifyRepo @Inject constructor() : RemoteRepo {
     override suspend fun contactExists(
@@ -71,33 +73,15 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
         receiverUserId: String
     ): Boolean {
 
-        /*val invite = InviteToConnect.builder()
-            .receiverUserId(receiverUserId)
-            .invites(User.justId(senderUserId))
-            .build()
+       // val request = GraphQLRequest(SchemaQueries.getSchema())
 
-        val response = Amplify.API.mutate(ModelMutation.delete(invite))
-        println("AmplifyRepo ***** RESPONSE ${response.hasData()}")*/
+        //val response = Amplify.API.query(ModelQuery.get(InviteToConnect::class.java, {senderUserId: 'f', receiverUserId: 'f'}))
+        //Amplify.API.query(ModelQuery.get(InviteToConnect::class, "")
 
-        val predicate = InviteToConnect.RECEIVER_USER_ID.contains(receiverUserId)
-            .and(InviteToConnect.INVITES.eq(User.justId(senderUserId)))
-
-        val response = Amplify.API.query(
-            ModelQuery.list(InviteToConnect::class.java, predicate))
-
-        println("AmplifyRepo ***** RESPONSE ${response.hasData()} --  ${response}")
-
-/*        val filter = InviteToConnect.ID.eq(senderUserId)
-            .and(InviteToConnect.RECEIVER_USER_ID.eq(receiverUserId))
-
-        val query = InviteToConnect.RECEIVER_USER_ID .eq(receiverUserId)
-            .and(InviteToConnect.INVITES.eq(User.justId(senderUserId)))
-
-        val response = Amplify.API.query(
-            ModelQuery.list(InviteToConnect::class.java, filter))*/
-
+        //    val response = Amplify.API.query(ModelQuery.get(Todo::class.java, id))
 
 
         return true
     }
+
 }
