@@ -32,7 +32,6 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
         val filter = InviteToConnect.INVITES.eq(senderUserId)
             .and(InviteToConnect.RECEIVER_USER_ID.eq(receiverUserId))
         val response = Amplify.API.query(ModelQuery.list(InviteToConnect::class.java, filter))
-        println("AmplifyRepo ***** ${response.hasData()}")
         if (response.hasData()) {
             val count = response.data.items.count()
             emit(count > 0)
@@ -67,7 +66,6 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
 
         return try {
             val result = Amplify.API.mutate(ModelMutation.create(invite))
-            println("AmplifyRepo ***** ${result.data}")
             result.hasData()
         } catch (error: ApiException) {
             false
@@ -79,18 +77,58 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
         receiverUserId: String
     ): Boolean {
 
-
         val invite = InviteToConnect.builder()
             .receiverUserId(receiverUserId)
-            .invites(User.justId(senderUserId))
             .build()
 
-        val filter = InviteToConnect.INVITES.eq(senderUserId)
-            .and(InviteToConnect.RECEIVER_USER_ID.eq(receiverUserId))
-        val response = Amplify.API.query(ModelQuery.list(InviteToConnect::class.java, filter))
+        val rowId = fetchRowId(
+            senderUserId = senderUserId,
+            receiverUserId = receiverUserId,
+        )
 
-        println("AmplifyRepo ***** ${response.data}")
+        if (rowId != null) {
+            try {
+
+                val response = Amplify.API.query(ModelQuery.get(InviteToConnect::class.java, rowId))
+
+                if (response.hasData()) {
+                    val delete = Amplify.API.mutate(ModelMutation.delete(response.data))
+                    if (delete.hasData()) {
+                        println("AmplifyRepo ***** DELETE ${delete.data}")
+                    } else {
+                        println("AmplifyRepo ***** DELETE NOT DATA")
+                    }
+                } else {
+                    println("AmplifyRepo ***** DELETE RESPONSE NO DATA ${response.data}")
+                }
+
+
+            } catch (e: ApiException) {
+                println("AmplifyRepo ***** ERROR ${e.message}")
+            }
+        }
+
         return true
     }
 
+    private suspend fun fetchRowId(
+        senderUserId: String?,
+        receiverUserId: String,
+    ): String? {
+        val filter = InviteToConnect.INVITES.eq(senderUserId)
+            .and(InviteToConnect.RECEIVER_USER_ID.eq(receiverUserId))
+
+        return try {
+            val response = Amplify.API.query(ModelQuery.list(InviteToConnect::class.java, filter))
+            val rowId = response.data.items.firstOrNull()
+
+            return if (rowId?.id != null) {
+                return rowId.id
+            } else {
+                null
+            }
+        } catch (e: ApiException) {
+            null
+        }
+    }
 }
