@@ -1,14 +1,20 @@
 package com.mccartycarclub.repository
 
 import com.amplifyframework.api.ApiException
-import com.amplifyframework.api.graphql.GraphQLRequest
-import com.amplifyframework.api.graphql.model.ModelMutation
+ import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
+import com.amplifyframework.core.model.LoadedModelList
+import com.amplifyframework.core.model.includes
+import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.datastore.generated.model.Contact
 import com.amplifyframework.datastore.generated.model.InviteToConnect
+import com.amplifyframework.datastore.generated.model.InviteToConnectPath
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
+import com.amplifyframework.datastore.generated.model.UserPath
 import com.amplifyframework.kotlin.core.Amplify
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
@@ -44,11 +50,10 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
         try {
             val response =
                 Amplify.API.query(ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)))
-            if (response.hasData()) {
-                val data = response.data.firstOrNull()
-                emit(NetResult.Success(data))
+            if (response.hasData() && response.data.firstOrNull() != null) {
+                emit(NetResult.Success(response.data.first()))
             } else {
-                emit(NetResult.Success(null))
+                emit(NetResult.Error(ResponseException("No User Name Found")))
             }
         } catch (e: ApiException) {
             emit(NetResult.Error(e))
@@ -77,39 +82,62 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
         receiverUserId: String
     ): Boolean {
 
-        val invite = InviteToConnect.builder()
-            .receiverUserId(receiverUserId)
-            .build()
+        val rowId =
+            fetchRowId(senderUserId = senderUserId, receiverUserId = receiverUserId) ?: return false
 
-        val rowId = fetchRowId(
-            senderUserId = senderUserId,
-            receiverUserId = receiverUserId,
+        return try {
+            val response = Amplify.API.query(ModelQuery[InviteToConnect::class.java, rowId])
+            if (response.hasData()) {
+                println("AmplifyRepo ***** DELETE SUCCESS ${response.data}")
+                Amplify.API.mutate(ModelMutation.delete(response.data)).hasData()
+            } else {
+                println("AmplifyRepo ***** DELETE RESPONSE NO DATA ${response.data}")
+                false
+            }
+
+        } catch (e: ApiException) {
+            println("AmplifyRepo ***** ERROR ${e.message}")
+            false
+        }
+    }
+
+    override suspend fun fetchContacts(inviteReceiverUserId: String) {
+
+/*        val invite = InviteToConnect.builder()
+            .receiverUserId(inviteReceiverUserId)
+            .id("the-correct-id")
+            .build()*/
+
+        val request = ModelQuery.list(
+            InviteToConnect::class.java,
+            InviteToConnect.RECEIVER_USER_ID.eq(inviteReceiverUserId)
         )
 
-        if (rowId != null) {
-            try {
+        val response = Amplify.API.query(request)
 
-                val response = Amplify.API.query(ModelQuery.get(InviteToConnect::class.java, rowId))
-
-                if (response.hasData()) {
-                    val delete = Amplify.API.mutate(ModelMutation.delete(response.data))
-                    if (delete.hasData()) {
-                        println("AmplifyRepo ***** DELETE ${delete.data}")
-                    } else {
-                        println("AmplifyRepo ***** DELETE NOT DATA")
-                    }
-                } else {
-                    println("AmplifyRepo ***** DELETE RESPONSE NO DATA ${response.data}")
-                }
-
-
-            } catch (e: ApiException) {
-                println("AmplifyRepo ***** ERROR ${e.message}")
-            }
+        response.data.items.forEach { item ->
+           // println("AmplifyRepo ***** ${item.id}")
         }
 
-        return true
+        val invite2 = Amplify.API.query(
+            ModelQuery.get(InviteToConnect::class.java, "d1f6ba85-a033-46e7-a750-b9f8c1c9b0e9")
+        ).data
+
+       // println("AmplifyRepo ***** ${invite2.invites}")
+
+        val invite3 = Amplify.API.query(
+            ModelQuery[InviteToConnect::class.java, "d1f6ba85-a033-46e7-a750-b9f8c1c9b0e9"]
+        ).data
+
+        if (invite3 != null) {
+            val senderUser = invite3.invites
+            invite3 to senderUser
+            println("AmplifyRepo ***** ${invite3} -- $senderUser")
+        }
+
     }
+
+
 
     private suspend fun fetchRowId(
         senderUserId: String?,
@@ -132,3 +160,5 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
         }
     }
 }
+
+class ResponseException(message: String) : Exception(message)

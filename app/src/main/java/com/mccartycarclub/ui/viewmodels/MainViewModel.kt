@@ -11,6 +11,7 @@ import com.mccartycarclub.repository.NetResult
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.ui.callbacks.connectionclicks.ConnectionEvent
 import com.mccartycarclub.utils.fetchUserId
+import com.mccartycarclub.utils.fetchUserIdv2
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -47,6 +48,9 @@ class MainViewModel @Inject constructor(
     private val _isSendingInvite = MutableStateFlow(false)
     val isSendingInvite = _isSendingInvite.asStateFlow()
 
+    private val _isCancellingInvite = MutableStateFlow(false)
+    val isCancellingInvite = _isCancellingInvite.asStateFlow()
+
     private val _receiverQueryPending = MutableStateFlow(true)
     val receiverQueryPending = _receiverQueryPending.asStateFlow()
 
@@ -67,10 +71,11 @@ class MainViewModel @Inject constructor(
                         }
 
                         is NetResult.Error -> {
-
+                            println("MainViewModel ***** ${data.exception.message}")
                         }
 
                         is NetResult.Success -> {
+
                             trySend(data)
                             fetchUserId { loggedIn ->
                                 if (loggedIn.loggedIn) {
@@ -101,6 +106,8 @@ class MainViewModel @Inject constructor(
                                     }
                                 }
                             }
+
+
                         }
                     }
                 }
@@ -138,8 +145,8 @@ class MainViewModel @Inject constructor(
         userContacts.acceptContactInvite()
     }
 
-    fun fetchUserContacts(userId: String) {
-        userContacts.getUserContacts(userId)
+    fun fetchUserContacts(inviteReceiverUserId: String) {
+        userContacts.getUserContacts(inviteReceiverUserId)
     }
 
     fun onQueryChange(searchQuery: String) {
@@ -159,14 +166,23 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun fetchContacts(inviteReceiverUserId: String) {
+        viewModelScope.launch {
+            repo.fetchContacts(inviteReceiverUserId)
+        }
+    }
+
     fun userConnectionEvent(connectionEvent: ConnectionEvent) {
         when (connectionEvent) {
             is ConnectionEvent.CancelEvent -> {
                 viewModelScope.launch {
                     val userID = fetchUserId()
-                    repo.cancelInviteToConnect(
-                        senderUserId = userID,
-                        receiverUserId = connectionEvent.receiverUserId,
+                    _isCancellingInvite.value = true
+                    resetButtonToConnect(
+                        repo.cancelInviteToConnect(
+                            senderUserId = userID,
+                            receiverUserId = connectionEvent.receiverUserId,
+                        )
                     )
                 }
             }
@@ -195,9 +211,24 @@ class MainViewModel @Inject constructor(
             _receiverQueryPending.value = false
             _hasConnection.value = false
             _hasPendingInvite.value = true
+
+            // Re-enable cancel invite button
+            _isCancellingInvite.value = false
         } else {
             _isSendingInvite.value = false
         }
     }
 
+    private fun resetButtonToConnect(success: Boolean) {
+        if (success) {
+            _receiverQueryPending.value = false
+            _hasConnection.value = false
+            _hasPendingInvite.value = false
+
+            // Re-enable Invite button
+            _isSendingInvite.value = false
+        } else {
+            _isCancellingInvite.value = false
+        }
+    }
 }

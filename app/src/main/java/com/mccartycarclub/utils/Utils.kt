@@ -1,5 +1,6 @@
 package com.mccartycarclub.utils
 
+import com.amplifyframework.api.ApiException
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.kotlin.core.Amplify as CoreAmplify
 import java.util.UUID
@@ -22,6 +23,22 @@ fun fetchUserId(loggedIn: (LoggedIn) -> Unit) {
 
 suspend fun fetchUserId() = CoreAmplify.Auth.fetchUserAttributes()
     .firstOrNull { it.key.keyString == "sub" }?.value
+
+suspend fun fetchUserIdv2() {
+    try {
+        CoreAmplify.Auth.fetchUserAttributes()
+            .firstOrNull { it.key.keyString == "sub" }?.value
+    } catch (e: Exception) {
+        println("Utils ***** ${e.message} CAUSE ${e.cause?.message}")
+
+        /*
+                 aws.smithy.kotlin.runtime.http.HttpException:
+                 java.net.UnknownHostException: Unable to resolve host "cognito-idp.us-east-1.amazonaws.com": No address associated with hostname CAUSE java.net.UnknownHostException: Unable to resolve host "cognito-idp.us-east-1.amazonaws.com": No address associated with hostname
+
+         */
+    }
+}
+
 
 
 data class LoggedIn(

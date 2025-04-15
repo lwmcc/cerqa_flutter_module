@@ -360,11 +360,15 @@ fun Contacts(mainViewModel: MainViewModel = hiltViewModel(), topBarClick: (Click
                 .fillMaxWidth()
                 .padding(innerPadding),
         ) {
+
+
             Text(text = "Contacts")
             fetchUserId {
                 if (it.loggedIn) {
-                    it.userId?.let { userId ->
-                        mainViewModel.fetchUserContacts(userId)
+                    it.userId?.let { inviteReceiverUserId ->
+                        println("Shared ***** ID $inviteReceiverUserId")
+                        mainViewModel.fetchContacts(inviteReceiverUserId)
+                        mainViewModel.fetchUserContacts(inviteReceiverUserId)
                     }
                 } else {
                     // TODO: log message
@@ -416,6 +420,8 @@ fun Search(
         val hasConnection = mainViewModel.hasConnection.collectAsStateWithLifecycle().value
         val hasPendingInvite = mainViewModel.hasPendingInvite.collectAsStateWithLifecycle().value
         val isSendingInvite = mainViewModel.isSendingInvite.collectAsStateWithLifecycle().value
+        val isCancellingInvite =
+            mainViewModel.isCancellingInvite.collectAsStateWithLifecycle().value
         val receiverQueryPending =
             mainViewModel.receiverQueryPending.collectAsStateWithLifecycle().value
 
@@ -453,6 +459,7 @@ fun Search(
                         hasPendingInvite = hasPendingInvite,
                         receiverQueryPending = receiverQueryPending,
                         isSendingInvite = isSendingInvite,
+                        isCancellingInvite = isCancellingInvite,
                         connectionEvent = { connectionEvent ->
                             mainViewModel.userConnectionEvent(connectionEvent)
                         },
@@ -513,6 +520,7 @@ fun UserCard(
     hasConnection: Boolean,
     hasPendingInvite: Boolean,
     isSendingInvite: Boolean,
+    isCancellingInvite: Boolean,
     receiverQueryPending: Boolean,
     connectionEvent: (ConnectionEvent) -> Unit,
     onButtonClick: (String?) -> Unit,
@@ -602,6 +610,7 @@ fun UserCard(
                                     }
                                 },
                                 shape = RoundedCornerShape(4.dp),
+                                enabled = !isCancellingInvite,
                             ) {
                                 Text("Cancel")
                             }

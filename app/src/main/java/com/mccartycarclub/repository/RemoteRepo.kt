@@ -25,4 +25,6 @@ interface RemoteRepo {
         senderUserId: String?,
         receiverUserId: String,
     ): Boolean
+
+    suspend fun fetchContacts(inviteReceiverUserId: String)
 }
