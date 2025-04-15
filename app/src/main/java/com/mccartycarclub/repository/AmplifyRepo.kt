@@ -103,37 +103,8 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
 
     override suspend fun fetchContacts(inviteReceiverUserId: String) {
 
-/*        val invite = InviteToConnect.builder()
-            .receiverUserId(inviteReceiverUserId)
-            .id("the-correct-id")
-            .build()*/
 
-        val request = ModelQuery.list(
-            InviteToConnect::class.java,
-            InviteToConnect.RECEIVER_USER_ID.eq(inviteReceiverUserId)
-        )
 
-        val response = Amplify.API.query(request)
-
-        response.data.items.forEach { item ->
-           // println("AmplifyRepo ***** ${item.id}")
-        }
-
-        val invite2 = Amplify.API.query(
-            ModelQuery.get(InviteToConnect::class.java, "d1f6ba85-a033-46e7-a750-b9f8c1c9b0e9")
-        ).data
-
-       // println("AmplifyRepo ***** ${invite2.invites}")
-
-        val invite3 = Amplify.API.query(
-            ModelQuery[InviteToConnect::class.java, "d1f6ba85-a033-46e7-a750-b9f8c1c9b0e9"]
-        ).data
-
-        if (invite3 != null) {
-            val senderUser = invite3.invites
-            invite3 to senderUser
-            println("AmplifyRepo ***** ${invite3} -- $senderUser")
-        }
 
     }
 

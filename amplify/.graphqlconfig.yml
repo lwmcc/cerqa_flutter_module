@@ -14,3 +14,6 @@ projects:
         apiId: null
         frontend: android
         maxDepth: 2
+extensions:
+  amplify:
+    version: 3
