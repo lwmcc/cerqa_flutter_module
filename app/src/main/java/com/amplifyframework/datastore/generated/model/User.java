@@ -35,6 +35,7 @@ public final class User implements Model {
   public static final QueryField EMAIL = field("User", "email");
   public static final QueryField FIRST_NAME = field("User", "firstName");
   public static final QueryField LAST_NAME = field("User", "lastName");
+  public static final QueryField USER_NAME = field("User", "userName");
   public static final QueryField NAME = field("User", "name");
   public static final QueryField PHONE = field("User", "phone");
   private final @ModelField(targetType="ID", isRequired = true) String id;
