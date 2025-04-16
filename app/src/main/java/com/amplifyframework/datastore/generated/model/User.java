@@ -25,27 +25,30 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 /** This is an auto generated class representing the User type in your schema. */
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "Users", type = Model.Type.USER, version = 1, authRules = {
-  @AuthRule(allow = AuthStrategy.PUBLIC, provider = "iam", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
+  @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 }, hasLazySupport = true)
-@Index(name = "undefined", fields = {"id"})
 public final class User implements Model {
   public static final UserPath rootPath = new UserPath("root", false, null);
   public static final QueryField ID = field("User", "id");
-  public static final QueryField AVATAR_URI = field("User", "avatarUri");
-  public static final QueryField EMAIL = field("User", "email");
+  public static final QueryField USER_ID = field("User", "userId");
   public static final QueryField FIRST_NAME = field("User", "firstName");
   public static final QueryField LAST_NAME = field("User", "lastName");
   public static final QueryField NAME = field("User", "name");
   public static final QueryField PHONE = field("User", "phone");
+  public static final QueryField USER_NAME = field("User", "userName");
+  public static final QueryField EMAIL = field("User", "email");
+  public static final QueryField AVATAR_URI = field("User", "avatarUri");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="AWSURL") String avatarUri;
-  private final @ModelField(targetType="AWSEmail") String email;
+  private final @ModelField(targetType="ID") String userId;
   private final @ModelField(targetType="String", isRequired = true) String firstName;
   private final @ModelField(targetType="String", isRequired = true) String lastName;
   private final @ModelField(targetType="String") String name;
   private final @ModelField(targetType="AWSPhone") String phone;
+  private final @ModelField(targetType="String") String userName;
+  private final @ModelField(targetType="AWSEmail") String email;
+  private final @ModelField(targetType="AWSURL") String avatarUri;
+  private final @ModelField(targetType="UserContact") @HasMany(associatedWith = "user", type = UserContact.class) ModelList<UserContact> contacts = null;
   private final @ModelField(targetType="UserGroup") @HasMany(associatedWith = "user", type = UserGroup.class) ModelList<UserGroup> groups = null;
-  private final @ModelField(targetType="Contact") @HasMany(associatedWith = "user", type = Contact.class) ModelList<Contact> contacts = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -58,12 +61,8 @@ public final class User implements Model {
       return id;
   }
   
-  public String getAvatarUri() {
-      return avatarUri;
-  }
-  
-  public String getEmail() {
-      return email;
+  public String getUserId() {
+      return userId;
   }
   
   public String getFirstName() {
@@ -82,12 +81,24 @@ public final class User implements Model {
       return phone;
   }
   
-  public ModelList<UserGroup> getGroups() {
-      return groups;
+  public String getUserName() {
+      return userName;
   }
   
-  public ModelList<Contact> getContacts() {
+  public String getEmail() {
+      return email;
+  }
+  
+  public String getAvatarUri() {
+      return avatarUri;
+  }
+  
+  public ModelList<UserContact> getContacts() {
       return contacts;
+  }
+  
+  public ModelList<UserGroup> getGroups() {
+      return groups;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -98,14 +109,16 @@ public final class User implements Model {
       return updatedAt;
   }
   
-  private User(String id, String avatarUri, String email, String firstName, String lastName, String name, String phone) {
+  private User(String id, String userId, String firstName, String lastName, String name, String phone, String userName, String email, String avatarUri) {
     this.id = id;
-    this.avatarUri = avatarUri;
-    this.email = email;
+    this.userId = userId;
     this.firstName = firstName;
     this.lastName = lastName;
     this.name = name;
     this.phone = phone;
+    this.userName = userName;
+    this.email = email;
+    this.avatarUri = avatarUri;
   }
   
   @Override
@@ -117,12 +130,14 @@ public final class User implements Model {
       } else {
       User user = (User) obj;
       return ObjectsCompat.equals(getId(), user.getId()) &&
-              ObjectsCompat.equals(getAvatarUri(), user.getAvatarUri()) &&
-              ObjectsCompat.equals(getEmail(), user.getEmail()) &&
+              ObjectsCompat.equals(getUserId(), user.getUserId()) &&
               ObjectsCompat.equals(getFirstName(), user.getFirstName()) &&
               ObjectsCompat.equals(getLastName(), user.getLastName()) &&
               ObjectsCompat.equals(getName(), user.getName()) &&
               ObjectsCompat.equals(getPhone(), user.getPhone()) &&
+              ObjectsCompat.equals(getUserName(), user.getUserName()) &&
+              ObjectsCompat.equals(getEmail(), user.getEmail()) &&
+              ObjectsCompat.equals(getAvatarUri(), user.getAvatarUri()) &&
               ObjectsCompat.equals(getCreatedAt(), user.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), user.getUpdatedAt());
       }
@@ -132,12 +147,14 @@ public final class User implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
-      .append(getAvatarUri())
-      .append(getEmail())
+      .append(getUserId())
       .append(getFirstName())
       .append(getLastName())
       .append(getName())
       .append(getPhone())
+      .append(getUserName())
+      .append(getEmail())
+      .append(getAvatarUri())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -149,12 +166,14 @@ public final class User implements Model {
     return new StringBuilder()
       .append("User {")
       .append("id=" + String.valueOf(getId()) + ", ")
-      .append("avatarUri=" + String.valueOf(getAvatarUri()) + ", ")
-      .append("email=" + String.valueOf(getEmail()) + ", ")
+      .append("userId=" + String.valueOf(getUserId()) + ", ")
       .append("firstName=" + String.valueOf(getFirstName()) + ", ")
       .append("lastName=" + String.valueOf(getLastName()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
       .append("phone=" + String.valueOf(getPhone()) + ", ")
+      .append("userName=" + String.valueOf(getUserName()) + ", ")
+      .append("email=" + String.valueOf(getEmail()) + ", ")
+      .append("avatarUri=" + String.valueOf(getAvatarUri()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
@@ -181,18 +200,22 @@ public final class User implements Model {
       null,
       null,
       null,
+      null,
+      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      avatarUri,
-      email,
+      userId,
       firstName,
       lastName,
       name,
-      phone);
+      phone,
+      userName,
+      email,
+      avatarUri);
   }
   public interface FirstNameStep {
     LastNameStep firstName(String firstName);
@@ -207,10 +230,12 @@ public final class User implements Model {
   public interface BuildStep {
     User build();
     BuildStep id(String id);
-    BuildStep avatarUri(String avatarUri);
-    BuildStep email(String email);
+    BuildStep userId(String userId);
     BuildStep name(String name);
     BuildStep phone(String phone);
+    BuildStep userName(String userName);
+    BuildStep email(String email);
+    BuildStep avatarUri(String avatarUri);
   }
   
 
@@ -218,22 +243,26 @@ public final class User implements Model {
     private String id;
     private String firstName;
     private String lastName;
-    private String avatarUri;
-    private String email;
+    private String userId;
     private String name;
     private String phone;
+    private String userName;
+    private String email;
+    private String avatarUri;
     public Builder() {
       
     }
     
-    private Builder(String id, String avatarUri, String email, String firstName, String lastName, String name, String phone) {
+    private Builder(String id, String userId, String firstName, String lastName, String name, String phone, String userName, String email, String avatarUri) {
       this.id = id;
-      this.avatarUri = avatarUri;
-      this.email = email;
+      this.userId = userId;
       this.firstName = firstName;
       this.lastName = lastName;
       this.name = name;
       this.phone = phone;
+      this.userName = userName;
+      this.email = email;
+      this.avatarUri = avatarUri;
     }
     
     @Override
@@ -242,12 +271,14 @@ public final class User implements Model {
         
         return new User(
           id,
-          avatarUri,
-          email,
+          userId,
           firstName,
           lastName,
           name,
-          phone);
+          phone,
+          userName,
+          email,
+          avatarUri);
     }
     
     @Override
@@ -265,14 +296,8 @@ public final class User implements Model {
     }
     
     @Override
-     public BuildStep avatarUri(String avatarUri) {
-        this.avatarUri = avatarUri;
-        return this;
-    }
-    
-    @Override
-     public BuildStep email(String email) {
-        this.email = email;
+     public BuildStep userId(String userId) {
+        this.userId = userId;
         return this;
     }
     
@@ -288,6 +313,24 @@ public final class User implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep userName(String userName) {
+        this.userName = userName;
+        return this;
+    }
+    
+    @Override
+     public BuildStep email(String email) {
+        this.email = email;
+        return this;
+    }
+    
+    @Override
+     public BuildStep avatarUri(String avatarUri) {
+        this.avatarUri = avatarUri;
+        return this;
+    }
+    
     /**
      * @param id id
      * @return Current Builder instance, for fluent method chaining
@@ -300,8 +343,8 @@ public final class User implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String avatarUri, String email, String firstName, String lastName, String name, String phone) {
-      super(id, avatarUri, email, firstName, lastName, name, phone);
+    private CopyOfBuilder(String id, String userId, String firstName, String lastName, String name, String phone, String userName, String email, String avatarUri) {
+      super(id, userId, firstName, lastName, name, phone, userName, email, avatarUri);
       Objects.requireNonNull(firstName);
       Objects.requireNonNull(lastName);
     }
@@ -317,13 +360,8 @@ public final class User implements Model {
     }
     
     @Override
-     public CopyOfBuilder avatarUri(String avatarUri) {
-      return (CopyOfBuilder) super.avatarUri(avatarUri);
-    }
-    
-    @Override
-     public CopyOfBuilder email(String email) {
-      return (CopyOfBuilder) super.email(email);
+     public CopyOfBuilder userId(String userId) {
+      return (CopyOfBuilder) super.userId(userId);
     }
     
     @Override
@@ -334,6 +372,21 @@ public final class User implements Model {
     @Override
      public CopyOfBuilder phone(String phone) {
       return (CopyOfBuilder) super.phone(phone);
+    }
+    
+    @Override
+     public CopyOfBuilder userName(String userName) {
+      return (CopyOfBuilder) super.userName(userName);
+    }
+    
+    @Override
+     public CopyOfBuilder email(String email) {
+      return (CopyOfBuilder) super.email(email);
+    }
+    
+    @Override
+     public CopyOfBuilder avatarUri(String avatarUri) {
+      return (CopyOfBuilder) super.avatarUri(avatarUri);
     }
   }
   

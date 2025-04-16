@@ -47,7 +47,7 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
     }
 
     override suspend fun fetchUserByUserName(userName: String): Flow<NetResult<User?>> = flow {
-        try {
+/*        try {
             val response =
                 Amplify.API.query(ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)))
             if (response.hasData()) {
@@ -56,14 +56,14 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
             } else {
                 emit(NetResult.Success(null))
             }
-/*            if (response.hasData() && response.data.firstOrNull() != null) {
-                emit(NetResult.Success(response.data.first()))
-            } else {
-                emit(NetResult.Error(ResponseException("No User Name Found")))
-            }*/
+            *//*            if (response.hasData() && response.data.firstOrNull() != null) {
+                            emit(NetResult.Success(response.data.first()))
+                        } else {
+                            emit(NetResult.Error(ResponseException("No User Name Found")))
+                        }*//*
         } catch (e: ApiException) {
             emit(NetResult.Error(e))
-        }
+        }*/
     }
 
     override suspend fun sendInviteToConnect(

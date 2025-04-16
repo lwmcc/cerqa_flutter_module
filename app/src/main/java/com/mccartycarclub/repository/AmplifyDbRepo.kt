@@ -10,7 +10,7 @@ import com.amplifyframework.api.graphql.SimpleGraphQLRequest
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.api.graphql.model.ModelQuery.get
-import com.amplifyframework.core.Amplify
+
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.ModelReference
@@ -22,6 +22,7 @@ import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.datastore.generated.model.UserGroup
 import com.amplifyframework.datastore.generated.model.UserInviteToConnect
 import com.amplifyframework.datastore.generated.model.UserPath
+import com.amplifyframework.kotlin.core.Amplify
 import com.google.gson.Gson
 import com.squareup.moshi.Json
 import javax.inject.Inject
@@ -32,7 +33,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     @OptIn(InternalAmplifyApi::class)
     override fun fetchUserGroups(userId: String) {
 
-        Amplify.API.query(
+/*        Amplify.API.query(
             ModelQuery.list(
                 UserGroup::class.java,
                 UserGroup.USER.eq(userId)
@@ -48,7 +49,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             { error ->
                 //  println("AmplifyDbRepo ***** $error")
             }
-        )
+        )*/
     }
 
     // TODO: move to own class
@@ -57,7 +58,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         userContacts: (List<Contact>) -> Unit,
     ) {
 
-        Amplify.API.query(
+/*        Amplify.API.query(
             get<User, UserPath>(
                 User::class.java,
                 User.UserIdentifier(userId)
@@ -69,12 +70,12 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             {
                 println("AmplifyDbRepo ***** ERROR ")
             }
-        )
+        )*/
     }
 
     override fun fetchUsers() {
 
-        val onResponse = Consumer<GraphQLResponse<User>> { response ->
+/*        val onResponse = Consumer<GraphQLResponse<User>> { response ->
             val user = response.data
             if (user != null) {
                 // Log user info
@@ -101,17 +102,17 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         }.apply {
             // Execute the query
             Amplify.API.query(this, onResponse, onFailure)
-        }
+        }*/
     }
 
     override fun fetchUser(userId: String, user: (User) -> Unit) {
-        Amplify.API.query(get(User::class.java, userId),
+/*        Amplify.API.query(get(User::class.java, userId),
             { response: GraphQLResponse<User> ->
                 println("AmplifyDbRepo ***** USER ${response.data}")
                 //user(response.data as User)
             },
             { println("AmplifyDbRepo ***** ERROR") }
-        )
+        )*/
     }
 
     override fun createContact(user: User) {
@@ -148,7 +149,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         userName: String,
         data: (NetResult<User?>) -> Unit,
     ) {
-        Amplify.API.query(
+/*        Amplify.API.query(
             ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)),
             { response ->
                 if (response.hasData()) {
@@ -162,11 +163,11 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             { error ->
                 data(NetResult.Error(error))
             }
-        )
+        )*/
     }
 
     override fun fetchUserContacts(userId: String) {
-        Amplify.API.query(
+/*        Amplify.API.query(
             get<User, UserPath>(
                 User::class.java,
                 User.UserIdentifier(userId)
@@ -183,7 +184,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 }
             },
             { println("AmplifyDbRepo ***** ERROR FETCHING USER CONTACTS") }
-        )
+        )*/
 
 
 
@@ -192,7 +193,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     // TODO: rename
     override fun acceptContactInvite(userId: String, rowId: (String?) -> Unit) {
 
-        Amplify.API.mutate(ModelMutation.create(
+/*        Amplify.API.mutate(ModelMutation.create(
             UserInviteToConnect.builder().userId(userId).build()
         ),
             { rowId(it.data.id) },
@@ -201,18 +202,18 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 // TODO: to log
                 println("AmplifyDbRepo *****Failed to create acceptContactInvite: $error")
             }
-        )
+        )*/
     }
 
     override fun fetchUserIdFromSentInvite(rowId: String, userId: (String?) -> Unit) {
-        Amplify.API.query(get(UserInviteToConnect::class.java, rowId),
+/*        Amplify.API.query(get(UserInviteToConnect::class.java, rowId),
             {
                 it.data?.let { data ->
                     userId(data.userId)
                 } ?: run { println("AmplifyDbRepo ***** ERROR $it") }
             },
             { println("AmplifyDbRepo ***** ERROR $it") }
-        )
+        )*/
     }
 
     override fun hasExistingInvite(
@@ -248,7 +249,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             String::class.java,
             GsonVariablesSerializer()
         )
-
+/*
         Amplify.API.query(
             request,
             { response ->
@@ -263,7 +264,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 hasInvite(false)
                 println("AmplifyDbRepo ***** ERROR ${error.message}")
             }
-        )
+        )*/
     }
 
     override fun updateSenderReceiverContacts() {
@@ -287,7 +288,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             String::class.java,
             GsonVariablesSerializer())
 
-        Amplify.API.query(
+/*        Amplify.API.query(
             inviteSenderUserIdQuery,
             {
                 val gson = Gson()
@@ -342,7 +343,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 }
             },
             { println("AmplifyDbRepo ***** ERR $it") }
-        )
+        )*/
     }
 
     override fun createConnectInvite(
@@ -386,7 +387,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
         val filter = UserContact.USER.eq(senderUserId)
             .and(UserContact.CONTACT.eq(receiverUserId))
 
-        Amplify.API.query(
+/*        Amplify.API.query(
             ModelQuery.list(UserContact::class.java, filter),
             { response ->
                 val count = response.data.items.count()
@@ -396,7 +397,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 println("AmplifyDbRepo ***** ${error.message}")
                 hasConnection(false)
             }
-        )
+        )*/
     }
 
     companion object {

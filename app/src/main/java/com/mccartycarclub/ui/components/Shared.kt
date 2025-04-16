@@ -587,7 +587,7 @@ fun UserCard(
                         Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.spacer_width)))
                         OutlinedButton(
                             onClick = {
-                                //onButtonClick(user?.userId) // TODO: moving this
+                                onButtonClick(user?.userId) // TODO: moving this
                                 connectionEvent(ConnectionEvent.DisconnectEvent)
                             },
                             shape = RoundedCornerShape(4.dp),
@@ -605,9 +605,9 @@ fun UserCard(
                             Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.spacer_width)))
                             OutlinedButton(
                                 onClick = {
-/*                                    user?.userId?.let { receiverUserId ->
+                                    user?.userId?.let { receiverUserId ->
                                         connectionEvent(ConnectionEvent.CancelEvent(receiverUserId))
-                                    }*/
+                                    }
                                 },
                                 shape = RoundedCornerShape(4.dp),
                                 enabled = !isCancellingInvite,
@@ -618,9 +618,9 @@ fun UserCard(
                     } else {
                         OutlinedButton(
                             onClick = {
-   /*                             user?.userId?.let { receiverUserId ->
+                                user?.userId?.let { receiverUserId ->
                                     connectionEvent(ConnectionEvent.ConnectEvent(receiverUserId))
-                                }*/
+                                }
                             },
                             shape = RoundedCornerShape(4.dp),
                             enabled = !isSendingInvite
