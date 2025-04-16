@@ -115,7 +115,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
     }
 
     override fun createContact(user: User) {
-        val contact = Contact.builder()
+/*        val contact = Contact.builder()
             .contactId(user.userId)
             .build()
 
@@ -141,7 +141,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             { error ->
                 println("AmplifyDbRepo *****Failed to create Contact: $error")
             }
-        )
+        )*/
     }
 
     override fun fetchUserByUserName(
@@ -357,7 +357,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
                 hasExistingInvite(hasInvite)
             },
         )*/
-
+/*
         val senderUser = User.builder()
             .firstName("test first")
             .lastName("test second")
@@ -374,7 +374,7 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
             ModelMutation.create(inviteToConnect),
             { response -> println("AmplifyDbRepo ***** Success! Invite created: ${response.data}") },
             { error -> println("AmplifyDbRepo *****Failed to create invite: $error") }
-        )
+        )*/
     }
 
     override fun contactExists(

@@ -50,11 +50,17 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
         try {
             val response =
                 Amplify.API.query(ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)))
-            if (response.hasData() && response.data.firstOrNull() != null) {
+            if (response.hasData()) {
+                val data = response.data.firstOrNull()
+                emit(NetResult.Success(data))
+            } else {
+                emit(NetResult.Success(null))
+            }
+/*            if (response.hasData() && response.data.firstOrNull() != null) {
                 emit(NetResult.Success(response.data.first()))
             } else {
                 emit(NetResult.Error(ResponseException("No User Name Found")))
-            }
+            }*/
         } catch (e: ApiException) {
             emit(NetResult.Error(e))
         }
@@ -108,6 +114,9 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
 
     }
 
+    override suspend fun createContact(user: User) {
+        val response = Amplify.API.mutate(ModelMutation.create(user))
+    }
 
 
     private suspend fun fetchRowId(

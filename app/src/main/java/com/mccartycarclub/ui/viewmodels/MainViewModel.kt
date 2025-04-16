@@ -85,14 +85,15 @@ class MainViewModel @Inject constructor(
                                             val hasConnection: Deferred<Boolean> = async {
                                                 repo.contactExists(
                                                     userId,
-                                                    data.data?.userId.toString(),
+                                                   /* data.data?.userId.toString()*/"1222",
                                                 ).firstOrNull() ?: false
                                             }
 
                                             val hasExistingInvite = async {
                                                 repo.hasExistingInvite(
                                                     userId,
-                                                    data.data?.userId.toString()
+                                                    "1222"
+                                                    /*data.data?.userId.toString()*/
                                                 ).firstOrNull() ?: false
                                             }
 

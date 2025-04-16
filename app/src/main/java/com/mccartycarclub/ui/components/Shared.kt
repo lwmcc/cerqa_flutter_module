@@ -572,7 +572,7 @@ fun UserCard(
                             )
                             .weight(1f)
                     ) {
-                        user?.userName?.let { Text(it) }
+                        user?.firstName?.let { Text(it) }
                         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.spacer_height)))
                         user?.name?.let { Text(it) }
                     }
@@ -605,9 +605,9 @@ fun UserCard(
                             Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.spacer_width)))
                             OutlinedButton(
                                 onClick = {
-                                    user?.userId?.let { receiverUserId ->
+/*                                    user?.userId?.let { receiverUserId ->
                                         connectionEvent(ConnectionEvent.CancelEvent(receiverUserId))
-                                    }
+                                    }*/
                                 },
                                 shape = RoundedCornerShape(4.dp),
                                 enabled = !isCancellingInvite,
@@ -618,9 +618,9 @@ fun UserCard(
                     } else {
                         OutlinedButton(
                             onClick = {
-                                user?.userId?.let { receiverUserId ->
+   /*                             user?.userId?.let { receiverUserId ->
                                     connectionEvent(ConnectionEvent.ConnectEvent(receiverUserId))
-                                }
+                                }*/
                             },
                             shape = RoundedCornerShape(4.dp),
                             enabled = !isSendingInvite
@@ -642,9 +642,9 @@ fun testUser1(userId: String): User {
         .email("lwmccarty@gmail.com")
         .avatarUri("https://www.google.com")
         .phone("+14808104545")
-        .userName("LarryM")
-        .userId(userId)
-        //.id(userId)
+        //.userName("LarryM")
+        //.userId(userId)
+        .id(userId)
         .build()
 }
 
@@ -654,11 +654,11 @@ fun testUser2(userId: String): User {
         .lastName("James")
         .name("Lebron J")
         .phone("+14805554545")
-        .userName("KingJames")
+        //.userName("KingJames")
         .email("lmccarty@outlook.com")
         .avatarUri("https://example.com/avatar.png")
-        .userId(userId)
-        //.id(userId)
+        //.userId(userId)
+        .id(userId)
         .build()
 }
 
