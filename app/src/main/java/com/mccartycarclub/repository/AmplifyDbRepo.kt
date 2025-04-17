@@ -19,7 +19,6 @@ import com.amplifyframework.datastore.generated.model.Contact
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.datastore.generated.model.UserGroup
-import com.amplifyframework.datastore.generated.model.UserInviteToConnect
 import com.amplifyframework.datastore.generated.model.UserPath
 import com.amplifyframework.kotlin.core.Amplify
 import com.google.gson.Gson

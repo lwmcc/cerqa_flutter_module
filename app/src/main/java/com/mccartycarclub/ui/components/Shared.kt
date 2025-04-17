@@ -369,8 +369,8 @@ fun Contacts(
                 if (it.loggedIn) {
                     it.userId?.let { inviteReceiverUserId ->
                         println("Shared ***** ID $inviteReceiverUserId")
-                        //mainViewModel.fetchContacts(inviteReceiverUserId)
-                        //mainViewModel.fetchUserContacts(inviteReceiverUserId)
+                        mainViewModel.fetchContacts(inviteReceiverUserId)
+                        mainViewModel.fetchUserContacts(inviteReceiverUserId)
 
                         // TODO: testing
                         mainViewModel.fetchReceivedInvites(inviteReceiverUserId)

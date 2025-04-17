@@ -1,11 +1,14 @@
 package com.mccartycarclub.repository
 
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiException
  import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.core.model.LazyModelList
 import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.ModelList
+import com.amplifyframework.core.model.ModelPage
+import com.amplifyframework.core.model.ModelReference
 import com.amplifyframework.core.model.includes
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.datastore.generated.model.Invite
@@ -18,8 +21,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class AmplifyRepo @Inject constructor() : RemoteRepo {
     override suspend fun contactExists(
@@ -147,26 +153,11 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
 
     override suspend fun fetchReceivedInvites(receiverUserId: String) {
 
-        //val user = Amplify.API.query(ModelQuery.get(User::class.java, receiverUserId)).data
+        val user = Amplify.API.query(ModelQuery.get(User::class.java, receiverUserId)).data
         //val user = Amplify.API.query(ModelQuery.get(User::class.java, User.USER_ID.eq(receiverUserId))).data
 
-
-        CoroutineScope(Dispatchers.IO).launch {
-            val q = Amplify.API.query(
-                ModelQuery.get<User, UserPath>(
-                    User::class.java,
-                    User.UserIdentifier(receiverUserId)
-                ) { userPath ->
-                    includes(userPath.receivedInvites.sender) // eagerly load nested sender
-                }
-            ).data
-
-
-        }
-
-
-
     }
+
 
 
     private suspend fun fetchRowId(
