@@ -9,4 +9,8 @@
 
     <!-- User -->
     <string name="user_avatar">User avatar</string>
+
+    <!-- Contacts -->
+    <string name="connect_to_user">Connect</string>
+    <string name="connect_cancel">Cancel</string>
 </resources>

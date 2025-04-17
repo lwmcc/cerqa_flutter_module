@@ -75,7 +75,7 @@ class MainViewModel @Inject constructor(
                         }
 
                         is NetResult.Success -> {
-
+                            println("MainViewModel ***** SEARCH")
                             trySend(data)
                             fetchUserId { loggedIn ->
                                 if (loggedIn.loggedIn) {
@@ -85,15 +85,14 @@ class MainViewModel @Inject constructor(
                                             val hasConnection: Deferred<Boolean> = async {
                                                 repo.contactExists(
                                                     userId,
-                                                   /* data.data?.userId.toString()*/"1222",
+                                                    data.data?.userId.toString(),
                                                 ).firstOrNull() ?: false
                                             }
 
                                             val hasExistingInvite = async {
                                                 repo.hasExistingInvite(
                                                     userId,
-                                                    "1222"
-                                                    /*data.data?.userId.toString()*/
+                                                    data.data?.userId.toString()
                                                 ).firstOrNull() ?: false
                                             }
 
@@ -151,6 +150,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun onQueryChange(searchQuery: String) {
+        println("MainViewModel ***** ${searchQuery}")
         _query.value = searchQuery
     }
 
@@ -181,7 +181,7 @@ class MainViewModel @Inject constructor(
                     _isCancellingInvite.value = true
                     resetButtonToConnect(
                         repo.cancelInviteToConnect(
-                            senderUserId = userID,
+                            senderUserId = userID/*connectionEvent.senderUserId*/,
                             receiverUserId = connectionEvent.receiverUserId,
                         )
                     )
@@ -204,6 +204,12 @@ class MainViewModel @Inject constructor(
             ConnectionEvent.DisconnectEvent -> {
 
             }
+        }
+    }
+
+    fun fetchReceivedInvites(receiverUserId: String) {
+        viewModelScope.launch {
+            repo.fetchReceivedInvites(receiverUserId)
         }
     }
 

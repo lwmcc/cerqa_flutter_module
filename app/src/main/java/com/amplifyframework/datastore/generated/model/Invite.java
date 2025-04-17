@@ -1,5 +1,8 @@
 package com.amplifyframework.datastore.generated.model;
 
+import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.ModelReference;
+import com.amplifyframework.core.model.LoadedModelReferenceImpl;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.ModelIdentifier;
 
@@ -20,17 +23,20 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
-/** This is an auto generated class representing the ContactInvite type in your schema. */
+/** This is an auto generated class representing the Invite type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "ContactInvites", type = Model.Type.USER, version = 1, authRules = {
+@ModelConfig(pluralName = "Invites", type = Model.Type.USER, version = 1, authRules = {
   @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 }, hasLazySupport = true)
-public final class ContactInvite implements Model {
-  public static final ContactInvitePath rootPath = new ContactInvitePath("root", false, null);
-  public static final QueryField ID = field("ContactInvite", "id");
-  public static final QueryField SUCCESS = field("ContactInvite", "success");
+@Index(name = "undefined", fields = {"id"})
+public final class Invite implements Model {
+  public static final InvitePath rootPath = new InvitePath("root", false, null);
+  public static final QueryField ID = field("Invite", "id");
+  public static final QueryField SENDER = field("Invite", "senderUserId");
+  public static final QueryField RECEIVER = field("Invite", "receiverUserId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="Boolean") Boolean success;
+  private final @ModelField(targetType="User") @BelongsTo(targetName = "senderUserId", targetNames = {"senderUserId"}, type = User.class) ModelReference<User> sender;
+  private final @ModelField(targetType="User") @BelongsTo(targetName = "receiverUserId", targetNames = {"receiverUserId"}, type = User.class) ModelReference<User> receiver;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -43,8 +49,12 @@ public final class ContactInvite implements Model {
       return id;
   }
   
-  public Boolean getSuccess() {
-      return success;
+  public ModelReference<User> getSender() {
+      return sender;
+  }
+  
+  public ModelReference<User> getReceiver() {
+      return receiver;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -55,9 +65,10 @@ public final class ContactInvite implements Model {
       return updatedAt;
   }
   
-  private ContactInvite(String id, Boolean success) {
+  private Invite(String id, ModelReference<User> sender, ModelReference<User> receiver) {
     this.id = id;
-    this.success = success;
+    this.sender = sender;
+    this.receiver = receiver;
   }
   
   @Override
@@ -67,11 +78,12 @@ public final class ContactInvite implements Model {
       } else if(obj == null || getClass() != obj.getClass()) {
         return false;
       } else {
-      ContactInvite contactInvite = (ContactInvite) obj;
-      return ObjectsCompat.equals(getId(), contactInvite.getId()) &&
-              ObjectsCompat.equals(getSuccess(), contactInvite.getSuccess()) &&
-              ObjectsCompat.equals(getCreatedAt(), contactInvite.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), contactInvite.getUpdatedAt());
+      Invite invite = (Invite) obj;
+      return ObjectsCompat.equals(getId(), invite.getId()) &&
+              ObjectsCompat.equals(getSender(), invite.getSender()) &&
+              ObjectsCompat.equals(getReceiver(), invite.getReceiver()) &&
+              ObjectsCompat.equals(getCreatedAt(), invite.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), invite.getUpdatedAt());
       }
   }
   
@@ -79,7 +91,8 @@ public final class ContactInvite implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
-      .append(getSuccess())
+      .append(getSender())
+      .append(getReceiver())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -89,9 +102,10 @@ public final class ContactInvite implements Model {
   @Override
    public String toString() {
     return new StringBuilder()
-      .append("ContactInvite {")
+      .append("Invite {")
       .append("id=" + String.valueOf(getId()) + ", ")
-      .append("success=" + String.valueOf(getSuccess()) + ", ")
+      .append("sender=" + String.valueOf(getSender()) + ", ")
+      .append("receiver=" + String.valueOf(getReceiver()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
@@ -110,48 +124,60 @@ public final class ContactInvite implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    */
-  public static ContactInvite justId(String id) {
-    return new ContactInvite(
+  public static Invite justId(String id) {
+    return new Invite(
       id,
+      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      success);
+      sender,
+      receiver);
   }
   public interface BuildStep {
-    ContactInvite build();
+    Invite build();
     BuildStep id(String id);
-    BuildStep success(Boolean success);
+    BuildStep sender(User sender);
+    BuildStep receiver(User receiver);
   }
   
 
   public static class Builder implements BuildStep {
     private String id;
-    private Boolean success;
+    private ModelReference<User> sender;
+    private ModelReference<User> receiver;
     public Builder() {
       
     }
     
-    private Builder(String id, Boolean success) {
+    private Builder(String id, ModelReference<User> sender, ModelReference<User> receiver) {
       this.id = id;
-      this.success = success;
+      this.sender = sender;
+      this.receiver = receiver;
     }
     
     @Override
-     public ContactInvite build() {
+     public Invite build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
         
-        return new ContactInvite(
+        return new Invite(
           id,
-          success);
+          sender,
+          receiver);
     }
     
     @Override
-     public BuildStep success(Boolean success) {
-        this.success = success;
+     public BuildStep sender(User sender) {
+        this.sender = new LoadedModelReferenceImpl<>(sender);
+        return this;
+    }
+    
+    @Override
+     public BuildStep receiver(User receiver) {
+        this.receiver = new LoadedModelReferenceImpl<>(receiver);
         return this;
     }
     
@@ -167,21 +193,26 @@ public final class ContactInvite implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, Boolean success) {
-      super(id, success);
+    private CopyOfBuilder(String id, ModelReference<User> sender, ModelReference<User> receiver) {
+      super(id, sender, receiver);
       
     }
     
     @Override
-     public CopyOfBuilder success(Boolean success) {
-      return (CopyOfBuilder) super.success(success);
+     public CopyOfBuilder sender(User sender) {
+      return (CopyOfBuilder) super.sender(sender);
+    }
+    
+    @Override
+     public CopyOfBuilder receiver(User receiver) {
+      return (CopyOfBuilder) super.receiver(receiver);
     }
   }
   
 
-  public static class ContactInviteIdentifier extends ModelIdentifier<ContactInvite> {
+  public static class InviteIdentifier extends ModelIdentifier<Invite> {
     private static final long serialVersionUID = 1L;
-    public ContactInviteIdentifier(String id) {
+    public InviteIdentifier(String id) {
       super(id);
     }
   }

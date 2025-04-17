@@ -1,7 +1,6 @@
 package com.mccartycarclub.repository
 
 import com.amplifyframework.datastore.generated.model.Contact
-import com.amplifyframework.datastore.generated.model.InviteToConnect.ReceiverUserIdStep
 import com.amplifyframework.datastore.generated.model.User
 
 // TODO: rename this

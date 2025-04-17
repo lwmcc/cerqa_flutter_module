@@ -16,7 +16,6 @@ import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.ModelReference
 import com.amplifyframework.core.model.includes
 import com.amplifyframework.datastore.generated.model.Contact
-import com.amplifyframework.datastore.generated.model.InviteToConnect
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.datastore.generated.model.UserGroup
@@ -386,6 +385,8 @@ class AmplifyDbRepo @Inject constructor() : DbRepo {
 
         val filter = UserContact.USER.eq(senderUserId)
             .and(UserContact.CONTACT.eq(receiverUserId))
+
+
 
 /*        Amplify.API.query(
             ModelQuery.list(UserContact::class.java, filter),

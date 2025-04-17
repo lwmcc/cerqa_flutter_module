@@ -344,7 +344,10 @@ fun TopBarSearch(
 }
 
 @Composable
-fun Contacts(mainViewModel: MainViewModel = hiltViewModel(), topBarClick: (ClickNavigation) -> Unit) {
+fun Contacts(
+    mainViewModel: MainViewModel = hiltViewModel(),
+    topBarClick: (ClickNavigation) -> Unit,
+) {
     Scaffold(
         topBar = {
             TopBarContacts(
@@ -361,14 +364,16 @@ fun Contacts(mainViewModel: MainViewModel = hiltViewModel(), topBarClick: (Click
                 .padding(innerPadding),
         ) {
 
-
             Text(text = "Contacts")
             fetchUserId {
                 if (it.loggedIn) {
                     it.userId?.let { inviteReceiverUserId ->
                         println("Shared ***** ID $inviteReceiverUserId")
-                        mainViewModel.fetchContacts(inviteReceiverUserId)
-                        mainViewModel.fetchUserContacts(inviteReceiverUserId)
+                        //mainViewModel.fetchContacts(inviteReceiverUserId)
+                        //mainViewModel.fetchUserContacts(inviteReceiverUserId)
+
+                        // TODO: testing
+                        mainViewModel.fetchReceivedInvites(inviteReceiverUserId)
                     }
                 } else {
                     // TODO: log message
@@ -448,7 +453,7 @@ fun Search(
             when (searchQuery) {
                 NetResult.Pending -> {
                     // TODO: maybe remove this
-                    //Pending()
+                    //  Pending()
                 }
 
                 is NetResult.Success -> {
@@ -464,7 +469,7 @@ fun Search(
                             mainViewModel.userConnectionEvent(connectionEvent)
                         },
                         onButtonClick = { receiverUserId ->
-                            //mainViewModel.createConnectInvite(receiverUserId)
+                           // mainViewModel.createConnectInvite(receiverUserId)
                         })
                 }
 
@@ -587,7 +592,7 @@ fun UserCard(
                         Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.spacer_width)))
                         OutlinedButton(
                             onClick = {
-                                onButtonClick(user?.userId) // TODO: moving this
+                                onButtonClick(user?.userName) // TODO: moving this
                                 connectionEvent(ConnectionEvent.DisconnectEvent)
                             },
                             shape = RoundedCornerShape(4.dp),
@@ -606,13 +611,18 @@ fun UserCard(
                             OutlinedButton(
                                 onClick = {
                                     user?.userId?.let { receiverUserId ->
-                                        connectionEvent(ConnectionEvent.CancelEvent(receiverUserId))
+                                        connectionEvent(
+                                            ConnectionEvent.CancelEvent(
+                                                user.userId, // TODO: receiver id
+                                                receiverUserId,
+                                            )
+                                        )
                                     }
                                 },
                                 shape = RoundedCornerShape(4.dp),
                                 enabled = !isCancellingInvite,
                             ) {
-                                Text("Cancel")
+                                Text(stringResource(id = R.string.connect_cancel))
                             }
                         }
                     } else {
@@ -625,7 +635,7 @@ fun UserCard(
                             shape = RoundedCornerShape(4.dp),
                             enabled = !isSendingInvite
                         ) {
-                            Text("Connect")
+                            Text(stringResource(id = R.string.connect_to_user))
                         }
                     }
                 }
@@ -636,18 +646,17 @@ fun UserCard(
 
 fun testUser1(userId: String): User {
     return User.builder()
+        .userId(userId)
         .firstName("Larry")
         .lastName("McCarty")
-        .name("LM")
+        .userName("LarryM")
         .email("lwmccarty@gmail.com")
-        .avatarUri("https://www.google.com")
         .phone("+14808104545")
-        //.userName("LarryM")
-        //.userId(userId)
-        .id(userId)
+        .name("LM")
+        .avatarUri("https://www.google.com")
         .build()
 }
-
+/*
 fun testUser2(userId: String): User {
     return User.builder()
         .firstName("Lebron")
@@ -660,7 +669,7 @@ fun testUser2(userId: String): User {
         //.userId(userId)
         .id(userId)
         .build()
-}
+}*/
 
 data class Ids(
     val rowId: String,
