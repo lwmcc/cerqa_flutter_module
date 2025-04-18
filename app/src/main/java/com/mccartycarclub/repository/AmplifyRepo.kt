@@ -34,16 +34,17 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
         senderUserId: String,
         receiverUserId: String,
     ): Flow<Boolean> = flow {
-/*        val filter = InviteToConnect.INVITES.eq(senderUserId)
-            .and(InviteToConnect.RECEIVER_USER_ID.eq(receiverUserId))
+
+        val filter = Invite.SENDER.eq(senderUserId)
+            .and(Invite.RECEIVER.eq(receiverUserId))
+
         val response = Amplify.API.query(ModelQuery.list(Invite::class.java, filter))
         if (response.hasData()) {
             val count = response.data.items.count()
             emit(count > 0)
         } else { // TODO: need try catch
             emit(false)
-        }*/
-        emit(true)
+        }
     }
 
     override suspend fun fetchUserByUserName(userName: String): Flow<NetResult<User?>> = flow {
@@ -84,7 +85,15 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
             .build()
 
         return try {
-            Amplify.API.mutate(ModelMutation.create(invite)).data.id != null
+            val result = Amplify.API.mutate(ModelMutation.create(invite))
+            if (result.hasData()) {
+                println("AmplifyRepo ***** ${result.data}")
+            } else {
+                println("AmplifyRepo ***** NO DATA")
+            }
+
+            //Amplify.API.mutate(ModelMutation.create(invite)).data.id != null
+            false
         } catch (e: ApiException) {
             // TODO: to log
             false
@@ -157,14 +166,6 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
                 Invite.RECEIVER.eq(receiverUserId)
             )
         )
-
-
-        println("AmplifyRepo ***** ITEMS ${response.data.items}")
-
-        val ids = response.data.items.toList()
-        ids.forEach {
-            println("AmplifyRepo ***** IDS ${it.id}")
-        }
 
 
 
