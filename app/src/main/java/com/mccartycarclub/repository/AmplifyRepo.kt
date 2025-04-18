@@ -5,10 +5,13 @@ import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.core.model.LazyModelList
 import com.amplifyframework.core.model.LoadedModelList
+import com.amplifyframework.core.model.ModelReference
+import com.amplifyframework.core.model.includes
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
+import com.amplifyframework.datastore.generated.model.UserPath
 import com.amplifyframework.kotlin.core.Amplify
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -140,9 +143,12 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
 
     override suspend fun fetchReceivedInvites(receiverUserId: String) {
 
-        val user = Amplify.API.query(ModelQuery.get(User::class.java, receiverUserId)).data
-        //val user = Amplify.API.query(ModelQuery.get(User::class.java, User.USER_ID.eq(receiverUserId))).data
-        println("AmplifyRepo ***** UID ${user.userId}")
+        val user = Amplify.API.query(
+            ModelQuery.list(
+                User::class.java,
+                User.USER_ID.eq(receiverUserId)
+            )
+        )
 
 
         val response = Amplify.API.query(
@@ -151,6 +157,35 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
                 Invite.RECEIVER.eq(receiverUserId)
             )
         )
+
+
+        println("AmplifyRepo ***** ITEMS ${response.data.items}")
+
+        val ids = response.data.items.toList()
+        ids.forEach {
+            println("AmplifyRepo ***** IDS ${it.id}")
+        }
+
+
+
+
+
+
+/*
+        val test = Amplify.API.query(
+            ModelQuery.get<User, UserPath>(
+                User::class.java,
+                User.UserIdentifier(receiverUserId)
+            ) { userPath -> includes(userPath.sentInvites) }
+        )
+
+        //val invites = (test.data.receivedInvites as? LoadedModelList<Invite>)?.items
+        //invites?.forEach {
+            println("AmplifyRepo ***** MY ID  ${test.data}")
+        //    it.id
+        //}
+*/
+
 
 
 

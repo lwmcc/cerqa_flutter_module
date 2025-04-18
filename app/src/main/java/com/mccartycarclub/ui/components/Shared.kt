@@ -48,6 +48,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.MainActivity.Companion.CONTACTS_SCREEN
@@ -180,7 +181,7 @@ fun AppAuthenticator(
                                 // TODO: create test users
                                 // testUser1  testUser2
 
-  /*                              Amplify.API.mutate(
+                                Amplify.API.mutate(
                                     ModelMutation.create(testUser2(userId!!)),
                                     { response ->
                                         Log.i("MainActivity", "User created: ${response.data}")
@@ -190,7 +191,7 @@ fun AppAuthenticator(
                                     { error ->
                                         Log.e("MainActivity", "User creation failed", error)
                                     }
-                                )*/
+                                )
                             }, { error ->
                                 Log.e(
                                     "MainActivity *****", "Failed to fetch user attributes", error
@@ -656,9 +657,20 @@ fun testUser1(userId: String): User {
         .avatarUri("https://www.google.com")
         .build()
 }
-/*
+
 fun testUser2(userId: String): User {
     return User.builder()
+            .userId(userId)
+        .firstName("Lebron")
+        .lastName("James")
+        .userName("KingJames")
+        .email("lmccarty@outlook.com")
+        .phone("+14805554545")
+        .name("Bron")
+        .avatarUri("https://example.com/avatar.png")
+        .build()
+        /*
+
         .firstName("Lebron")
         .lastName("James")
         .name("Lebron J")
@@ -668,8 +680,8 @@ fun testUser2(userId: String): User {
         .avatarUri("https://example.com/avatar.png")
         //.userId(userId)
         .id(userId)
-        .build()
-}*/
+        .build()*/
+}
 
 data class Ids(
     val rowId: String,
