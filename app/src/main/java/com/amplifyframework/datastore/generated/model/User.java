@@ -103,7 +103,7 @@ public final class User implements Model {
   public ModelList<UserGroup> getGroups() {
       return groups;
   }
-
+  
   public ModelList<Invite> getSentInvites() {
       return sentInvites;
   }

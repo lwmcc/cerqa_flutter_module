@@ -370,8 +370,8 @@ fun Contacts(
                 if (it.loggedIn) {
                     it.userId?.let { inviteReceiverUserId ->
                         println("Shared ***** ID $inviteReceiverUserId")
-                        mainViewModel.fetchContacts(inviteReceiverUserId)
-                        mainViewModel.fetchUserContacts(inviteReceiverUserId)
+                        //mainViewModel.fetchContacts(inviteReceiverUserId)
+                        //mainViewModel.fetchUserContacts(inviteReceiverUserId)
 
                         // TODO: testing
                         mainViewModel.fetchReceivedInvites(inviteReceiverUserId)
@@ -651,6 +651,7 @@ fun testUser1(userId: String): User {
         .firstName("Larry")
         .lastName("McCarty")
         .userName("LarryM")
+        //.userId(userId)
         .email("lwmccarty@gmail.com")
         .phone("+14808104545")
         .name("LM")
@@ -664,14 +665,15 @@ fun testUser2(userId: String): User {
         .firstName("Lebron")
         .lastName("James")
         .userName("KingJames")
+        //.userId(userId)
         .email("lmccarty@outlook.com")
         .phone("+14805554545")
         .name("Bron")
         .avatarUri("https://example.com/avatar.png")
         .build()
-        /*
 
-        .firstName("Lebron")
+
+        /*.firstName("Lebron")
         .lastName("James")
         .name("Lebron J")
         .phone("+14805554545")

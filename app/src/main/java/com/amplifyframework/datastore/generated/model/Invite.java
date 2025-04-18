@@ -28,15 +28,16 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @ModelConfig(pluralName = "Invites", type = Model.Type.USER, version = 1, authRules = {
   @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 }, hasLazySupport = true)
-@Index(name = "undefined", fields = {"id"})
 public final class Invite implements Model {
   public static final InvitePath rootPath = new InvitePath("root", false, null);
   public static final QueryField ID = field("Invite", "id");
-  public static final QueryField SENDER = field("Invite", "senderUserId");
-  public static final QueryField RECEIVER = field("Invite", "receiverUserId");
+  public static final QueryField SENDER = field("Invite", "sender");
+  public static final QueryField RECEIVER = field("Invite", "receiver");
+  public static final QueryField USER = field("Invite", "inviteId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="User") @BelongsTo(targetName = "senderUserId", targetNames = {"senderUserId"}, type = User.class) ModelReference<User> sender;
-  private final @ModelField(targetType="User") @BelongsTo(targetName = "receiverUserId", targetNames = {"receiverUserId"}, type = User.class) ModelReference<User> receiver;
+  private final @ModelField(targetType="String", isRequired = true) String sender;
+  private final @ModelField(targetType="String", isRequired = true) String receiver;
+  private final @ModelField(targetType="User") @BelongsTo(targetName = "inviteId", targetNames = {"inviteId"}, type = User.class) ModelReference<User> user;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -49,12 +50,16 @@ public final class Invite implements Model {
       return id;
   }
   
-  public ModelReference<User> getSender() {
+  public String getSender() {
       return sender;
   }
   
-  public ModelReference<User> getReceiver() {
+  public String getReceiver() {
       return receiver;
+  }
+  
+  public ModelReference<User> getUser() {
+      return user;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -65,10 +70,11 @@ public final class Invite implements Model {
       return updatedAt;
   }
   
-  private Invite(String id, ModelReference<User> sender, ModelReference<User> receiver) {
+  private Invite(String id, String sender, String receiver, ModelReference<User> user) {
     this.id = id;
     this.sender = sender;
     this.receiver = receiver;
+    this.user = user;
   }
   
   @Override
@@ -82,6 +88,7 @@ public final class Invite implements Model {
       return ObjectsCompat.equals(getId(), invite.getId()) &&
               ObjectsCompat.equals(getSender(), invite.getSender()) &&
               ObjectsCompat.equals(getReceiver(), invite.getReceiver()) &&
+              ObjectsCompat.equals(getUser(), invite.getUser()) &&
               ObjectsCompat.equals(getCreatedAt(), invite.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), invite.getUpdatedAt());
       }
@@ -93,6 +100,7 @@ public final class Invite implements Model {
       .append(getId())
       .append(getSender())
       .append(getReceiver())
+      .append(getUser())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -106,13 +114,14 @@ public final class Invite implements Model {
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("sender=" + String.valueOf(getSender()) + ", ")
       .append("receiver=" + String.valueOf(getReceiver()) + ", ")
+      .append("user=" + String.valueOf(getUser()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }
   
-  public static BuildStep builder() {
+  public static SenderStep builder() {
       return new Builder();
   }
   
@@ -128,6 +137,7 @@ public final class Invite implements Model {
     return new Invite(
       id,
       null,
+      null,
       null
     );
   }
@@ -135,28 +145,40 @@ public final class Invite implements Model {
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
       sender,
-      receiver);
+      receiver,
+      user);
   }
-  public interface BuildStep {
-    Invite build();
-    BuildStep id(String id);
-    BuildStep sender(User sender);
-    BuildStep receiver(User receiver);
+  public interface SenderStep {
+    ReceiverStep sender(String sender);
   }
   
 
-  public static class Builder implements BuildStep {
+  public interface ReceiverStep {
+    BuildStep receiver(String receiver);
+  }
+  
+
+  public interface BuildStep {
+    Invite build();
+    BuildStep id(String id);
+    BuildStep user(User user);
+  }
+  
+
+  public static class Builder implements SenderStep, ReceiverStep, BuildStep {
     private String id;
-    private ModelReference<User> sender;
-    private ModelReference<User> receiver;
+    private String sender;
+    private String receiver;
+    private ModelReference<User> user;
     public Builder() {
       
     }
     
-    private Builder(String id, ModelReference<User> sender, ModelReference<User> receiver) {
+    private Builder(String id, String sender, String receiver, ModelReference<User> user) {
       this.id = id;
       this.sender = sender;
       this.receiver = receiver;
+      this.user = user;
     }
     
     @Override
@@ -166,18 +188,27 @@ public final class Invite implements Model {
         return new Invite(
           id,
           sender,
-          receiver);
+          receiver,
+          user);
     }
     
     @Override
-     public BuildStep sender(User sender) {
-        this.sender = new LoadedModelReferenceImpl<>(sender);
+     public ReceiverStep sender(String sender) {
+        Objects.requireNonNull(sender);
+        this.sender = sender;
         return this;
     }
     
     @Override
-     public BuildStep receiver(User receiver) {
-        this.receiver = new LoadedModelReferenceImpl<>(receiver);
+     public BuildStep receiver(String receiver) {
+        Objects.requireNonNull(receiver);
+        this.receiver = receiver;
+        return this;
+    }
+    
+    @Override
+     public BuildStep user(User user) {
+        this.user = new LoadedModelReferenceImpl<>(user);
         return this;
     }
     
@@ -193,19 +224,25 @@ public final class Invite implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, ModelReference<User> sender, ModelReference<User> receiver) {
-      super(id, sender, receiver);
-      
+    private CopyOfBuilder(String id, String sender, String receiver, ModelReference<User> user) {
+      super(id, sender, receiver, user);
+      Objects.requireNonNull(sender);
+      Objects.requireNonNull(receiver);
     }
     
     @Override
-     public CopyOfBuilder sender(User sender) {
+     public CopyOfBuilder sender(String sender) {
       return (CopyOfBuilder) super.sender(sender);
     }
     
     @Override
-     public CopyOfBuilder receiver(User receiver) {
+     public CopyOfBuilder receiver(String receiver) {
       return (CopyOfBuilder) super.receiver(receiver);
+    }
+    
+    @Override
+     public CopyOfBuilder user(User user) {
+      return (CopyOfBuilder) super.user(user);
     }
   }
   

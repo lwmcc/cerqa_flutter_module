@@ -76,12 +76,13 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
         val receiver =
             User.builder().userId(receiverUserId).firstName(DUMMY).lastName(DUMMY)
             //User.builder().firstName(DUMMY).lastName(DUMMY).id(receiverUserId)
-                .build()
+            //    .build()
 
         val invite = Invite
             .builder()
-            .sender(sender)
-            .receiver(receiver)
+            .sender(senderUserId)
+            .receiver(receiverUserId)
+            .user(sender)
             .build()
 
         return try {
@@ -105,7 +106,7 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
         receiverUserId: String
     ): Boolean {
 
-        val sender = getInviteSender(receiverUserId)
+/*        val sender = getInviteSender(receiverUserId)
         val receiver = getInviteReceiver(receiverUserId)
 
         if (sender == null && receiver == null) {
@@ -126,7 +127,8 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
             response.data.id != null
         } catch (e: ApiException) {
             false
-        }
+        }*/
+        return false
     }
 
     private suspend fun fetchInviteId(senderUserId: String?, receiverUserId: String): String? {
@@ -152,20 +154,33 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
 
     override suspend fun fetchReceivedInvites(receiverUserId: String) {
 
-        val user = Amplify.API.query(
-            ModelQuery.list(
-                User::class.java,
-                User.USER_ID.eq(receiverUserId)
+        try {
+/*            val user = Amplify.API.query(
+                ModelQuery.list(
+                    User::class.java,
+                    User.USER_ID.eq(receiverUserId)
+                )
+            )*/
+            val response = Amplify.API.query(
+                ModelQuery.list(
+                    Invite::class.java,
+                    Invite.RECEIVER.eq("216ba540-0011-70d0-bb72-5b51c19ae56a")
+                )
             )
-        )
 
 
-        val response = Amplify.API.query(
+        } catch (e: Exception) {
+            println("AmplifyRepo ***** ${e.message}")
+        }
+
+
+
+        /*val response = Amplify.API.query(
             ModelQuery.list(
                 Invite::class.java,
                 Invite.RECEIVER.eq(receiverUserId)
             )
-        )
+        )*/
 
 
 
@@ -245,6 +260,9 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
     private fun getInviteSender(senderUserId: String) =
         //User.builder().id(senderUserId).firstName(DUMMY).lastName(DUMMY)
         //    .build()
+        //User.builder().firstName(DUMMY).lastName(DUMMY).userId(senderUserId)
+
+
         User.builder().userId(senderUserId).firstName(DUMMY).lastName(DUMMY).build()
 
     private fun getInviteReceiver(receiverUserId: String) =
