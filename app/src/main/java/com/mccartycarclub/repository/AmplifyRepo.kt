@@ -170,7 +170,7 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
 
 
         } catch (e: Exception) {
-            println("AmplifyRepo ***** ${e.message}")
+            //println("AmplifyRepo ***** ${e.message}")
         }
 
 
