@@ -1,31 +1,18 @@
 package com.mccartycarclub.repository
 
-import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiException
  import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.core.model.LazyModelList
 import com.amplifyframework.core.model.LoadedModelList
-import com.amplifyframework.core.model.ModelList
-import com.amplifyframework.core.model.ModelPage
-import com.amplifyframework.core.model.ModelReference
-import com.amplifyframework.core.model.includes
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
-import com.amplifyframework.datastore.generated.model.UserPath
 import com.amplifyframework.kotlin.core.Amplify
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 class AmplifyRepo @Inject constructor() : RemoteRepo {
     override suspend fun contactExists(
@@ -155,7 +142,45 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
 
         val user = Amplify.API.query(ModelQuery.get(User::class.java, receiverUserId)).data
         //val user = Amplify.API.query(ModelQuery.get(User::class.java, User.USER_ID.eq(receiverUserId))).data
+        println("AmplifyRepo ***** UID ${user.userId}")
 
+
+        val response = Amplify.API.query(
+            ModelQuery.list(
+                Invite::class.java,
+                Invite.RECEIVER.eq(receiverUserId)
+            )
+        )
+
+
+
+
+
+
+
+/*        val response = Amplify.API.query(ModelQuery.get(User::class.java, User.UserIdentifier(receiverUserId)))
+
+        val invites =
+            when (val inviteModels = response.data.receivedInvites) {
+                is LazyModelList -> {
+                    var page = inviteModels.fetchPage()
+                    var loadedInvites = mutableListOf(page.items)
+                    while (page.hasNextPage) {
+                        val nextToken = page.nextToken
+                        page = inviteModels.fetchPage(nextToken)
+                        loadedInvites += page.items
+
+                    }
+                    loadedInvites
+                }
+
+                is LoadedModelList -> {
+
+                }
+            }*/
+
+
+        //println("AmplifyRepo ***** INVITES ${invites.}")
     }
 
 
