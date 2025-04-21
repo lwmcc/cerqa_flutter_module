@@ -1,0 +1,1 @@
+This is a full stack android and AWS Amplify app. Amplify is the client to the AppSync GraphQL APIs, DynamoDb, and to other AWS services.  When completed, this app will be part communicatin tool, part navigation tool etc. The code is written in kotlin, with a small amount of code in TypeScript for the db schema.
