@@ -85,6 +85,7 @@ fun StartScreen(
         }
 
         composable(CONTACTS_SCREEN) { backStackEntry ->
+            println("Shared ***** SCREEN CALL")
             Contacts(topBarClick = {
                 navToScreen(it, navActions)
             })
@@ -366,18 +367,16 @@ fun Contacts(
         ) {
 
             Text(text = "Contacts")
+            println("Shared ***** CONTACT TEXT")
             fetchUserId {
-                if (it.loggedIn) {
-                    it.userId?.let { inviteReceiverUserId ->
-                        println("Shared ***** ID $inviteReceiverUserId")
-                        //mainViewModel.fetchContacts(inviteReceiverUserId)
-                        //mainViewModel.fetchUserContacts(inviteReceiverUserId)
+                println("Shared ***** ID ${it.userId}")
+                //mainViewModel.fetchContacts(inviteReceiverUserId)
+                //mainViewModel.fetchUserContacts(inviteReceiverUserId)
 
-                        // TODO: testing
-                        mainViewModel.fetchReceivedInvites(inviteReceiverUserId)
-                    }
-                } else {
-                    // TODO: log message
+                // TODO: testing
+                println("Share ***** LAUNCH")
+                if (it.userId != null) {
+                    mainViewModel.fetchReceivedInvites(it.userId)
                 }
             }
         }

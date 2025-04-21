@@ -3,21 +3,26 @@ package com.mccartycarclub.repository
 import com.amplifyframework.api.ApiException
  import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
-import com.amplifyframework.core.model.LazyModelList
-import com.amplifyframework.core.model.LoadedModelList
-import com.amplifyframework.core.model.ModelReference
-import com.amplifyframework.core.model.includes
 import com.amplifyframework.core.model.query.predicate.QueryField
+import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
-import com.amplifyframework.datastore.generated.model.UserPath
+import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.amplifyframework.kotlin.core.Amplify
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import java.util.Date
 import javax.inject.Inject
 
-class AmplifyRepo @Inject constructor() : RemoteRepo {
+class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) : RemoteRepo {
+
+    sealed class ContactType() {
+        data class Received(val type: String) : ContactType()
+        data class Sent(val type: String) : ContactType()
+        data class Current(val type: String) : ContactType()
+    }
+
     override suspend fun contactExists(
         senderUserId: String,
         receiverUserId: String,
@@ -144,97 +149,62 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
         }
     }
 
-    override suspend fun fetchContacts(inviteReceiverUserId: String) {
+    override suspend fun fetchContacts(userId: String) {
 
+        amplifyApi.query(ModelQuery.list(User::class.java), "")
     }
 
     override suspend fun createContact(user: User) {
         val response = Amplify.API.mutate(ModelMutation.create(user))
     }
 
-    override suspend fun fetchReceivedInvites(receiverUserId: String) {
+    override suspend fun fetchReceivedInvites(receiverUserId: String): NetWorkResult<MutableList<Contact>> {
 
-        try {
-/*            val user = Amplify.API.query(
-                ModelQuery.list(
-                    User::class.java,
-                    User.USER_ID.eq(receiverUserId)
-                )
-            )*/
-            val response = Amplify.API.query(
-                ModelQuery.list(
-                    Invite::class.java,
-                    Invite.RECEIVER.eq("216ba540-0011-70d0-bb72-5b51c19ae56a")
-                )
-            )
+        // TODO: set up so that no invites does not cause crash
+        // val senderResponse = sentInvites(receiverUserId)
+        // fetchInvites(senderResponse)
 
-
-        } catch (e: Exception) {
-            //println("AmplifyRepo ***** ${e.message}")
-        }
-
-
-
-        /*val response = Amplify.API.query(
-            ModelQuery.list(
-                Invite::class.java,
-                Invite.RECEIVER.eq(receiverUserId)
-            )
-        )*/
-
-
-
-
-
-
-/*
-        val test = Amplify.API.query(
-            ModelQuery.get<User, UserPath>(
-                User::class.java,
-                User.UserIdentifier(receiverUserId)
-            ) { userPath -> includes(userPath.sentInvites) }
-        )
-
-        //val invites = (test.data.receivedInvites as? LoadedModelList<Invite>)?.items
-        //invites?.forEach {
-            println("AmplifyRepo ***** MY ID  ${test.data}")
-        //    it.id
-        //}
-*/
-
-
-
-
-
-
-
-
-/*        val response = Amplify.API.query(ModelQuery.get(User::class.java, User.UserIdentifier(receiverUserId)))
-
-        val invites =
-            when (val inviteModels = response.data.receivedInvites) {
-                is LazyModelList -> {
-                    var page = inviteModels.fetchPage()
-                    var loadedInvites = mutableListOf(page.items)
-                    while (page.hasNextPage) {
-                        val nextToken = page.nextToken
-                        page = inviteModels.fetchPage(nextToken)
-                        loadedInvites += page.items
-
-                    }
-                    loadedInvites
-                }
-
-                is LoadedModelList -> {
-
-                }
-            }*/
-
-
-        //println("AmplifyRepo ***** INVITES ${invites.}")
+        val receiverResponse = receivedInvites(receiverUserId)
+        return fetchInvites(receiverResponse)
     }
 
+    private suspend fun sentInvites(senderUserId: String): Set<String> {
+        val set = mutableSetOf<String>()
+        val senderResponse = Amplify.API.query(
+            ModelQuery.list(
+                Invite::class.java,
+                Invite.SENDER.eq(senderUserId)
+            )
+        )
 
+        if (senderResponse.hasData()) {
+            senderResponse.data.items.forEach { item ->
+                println("AmplifyRepo ***** WHO RECEIVED ${item.receiver}")
+            }
+        }
+
+        return set
+    }
+
+    private suspend fun receivedInvites(receiverUserId: String): Set<String> {
+
+        val set = mutableSetOf<String>()
+
+        return try {
+            val receiverResponse = Amplify.API.query(
+                ModelQuery.list(
+                    Invite::class.java,
+                    Invite.RECEIVER.eq(receiverUserId)
+                )
+            )
+            receiverResponse.data.items.forEach { item ->
+                set.add(item.sender)
+            }
+            set
+        } catch (e: ApiException) {
+            emptySet()
+        }
+    }
 
     private suspend fun fetchRowId(
         senderUserId: String?,
@@ -258,18 +228,43 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
     }
 
     private fun getInviteSender(senderUserId: String) =
-        //User.builder().id(senderUserId).firstName(DUMMY).lastName(DUMMY)
-        //    .build()
-        //User.builder().firstName(DUMMY).lastName(DUMMY).userId(senderUserId)
-
-
         User.builder().userId(senderUserId).firstName(DUMMY).lastName(DUMMY).build()
 
     private fun getInviteReceiver(receiverUserId: String) =
-
         User.builder().userId(receiverUserId).firstName(DUMMY).lastName(DUMMY).build()
-        //User.builder().firstName(DUMMY).lastName(DUMMY).id(receiverUserId)
-        //    .build()
+
+    // TODO: change param
+    private suspend fun fetchInvites(connectionInvites: Set<String>): NetWorkResult<MutableList<Contact>> {
+
+        if (connectionInvites.isEmpty()) {
+            emptyList<Contact>()
+        }
+
+        val invites = mutableListOf<Contact>()
+
+        try {
+            val predicate = createQueryPredicate(connectionInvites)
+            val response = amplifyApi.query(ModelQuery.list(User::class.java, predicate))
+            response.data.items.forEach { item ->
+                invites.add(ReceivedContactInvite(
+                        avatarUri = item.avatarUri,
+                        name = item.name,
+                        receivedDate = item.updatedAt.toDate(),
+                        receiverUserId = "",
+                        userId = item.userId,
+                        userName = item.userName,
+                    )
+                )
+            }
+            return NetWorkResult.Success(invites)
+        } catch (e: ApiException) {
+            return NetWorkResult.Error(e)
+        }
+    }
+
+    private fun createQueryPredicate(ids: Set<String>) = ids
+        .map { User.USER_ID.eq(it) as QueryPredicate }
+        .reduce { acc, value -> acc.or(value) }
 
 
     companion object {
@@ -278,3 +273,27 @@ class AmplifyRepo @Inject constructor() : RemoteRepo {
 }
 
 class ResponseException(message: String) : Exception(message)
+
+open class Contact(
+    val userId: String,
+    val userName: String,
+    val name: String,
+    val avatarUri: String,
+)
+
+class ReceivedContactInvite(
+    val receiverUserId: String,
+    val receivedDate: Date, // TODO: use correct type
+    userId: String, userName: String, name: String, avatarUri: String,
+) : Contact(userId, userName, name, avatarUri)
+
+class SentContactInvite(
+    val senderUserId: String,
+    val sentDate: Date,
+    userId: String, userName: String, name: String, avatarUri: String,
+) : Contact(userId, userName, name, avatarUri)
+
+class CurrentContact(
+    val senderUserId: String,
+    userId: String, userName: String, name: String, avatarUri: String,
+) : Contact(userId, userName, name, avatarUri)

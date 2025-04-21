@@ -9,7 +9,9 @@ import java.util.UUID
 fun getUuid() = UUID.randomUUID().toString()
 
 fun fetchUserId(loggedIn: (LoggedIn) -> Unit) {
+    println("Shared ***** attributes CALL")
     Amplify.Auth.fetchUserAttributes({ attributes ->
+        println("Shared ***** attributes ${attributes}")
         loggedIn(
             LoggedIn(
                 loggedIn = true,

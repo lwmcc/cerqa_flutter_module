@@ -7,6 +7,7 @@ import com.mccartycarclub.MainActivity.Companion.SEARCH_SCREEN
 
 class AppNavigationActions(private val navController: NavHostController) {
     fun navigateToContacts() {
+        println("Shared ***** NAV ${navController.toString()}")
         navController.navigate(CONTACTS_SCREEN)
     }
 

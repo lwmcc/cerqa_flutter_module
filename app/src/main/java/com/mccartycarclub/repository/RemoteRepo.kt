@@ -26,9 +26,9 @@ interface RemoteRepo {
         receiverUserId: String,
     ): Boolean
 
-    suspend fun fetchContacts(inviteReceiverUserId: String)
+    suspend fun fetchContacts(userId: String)
 
     suspend fun createContact(user: User)
 
-    suspend fun fetchReceivedInvites(receiverUserId: String)
+    suspend fun fetchReceivedInvites(receiverUserId: String): NetWorkResult<MutableList<Contact>>
 }

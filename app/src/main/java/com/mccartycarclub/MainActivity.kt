@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
+            println("Shared ***** SET CONTENT")
             StartScreen( // TODO: use a main compose screen change this
                 acceptInvite = { // TODO: rename
                     mainViewModel.acceptContactInvite()

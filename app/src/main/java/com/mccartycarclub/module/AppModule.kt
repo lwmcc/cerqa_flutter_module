@@ -1,7 +1,10 @@
 package com.mccartycarclub.module
 
 import android.content.Context
-import com.amplifyframework.core.Amplify
+import com.amplifyframework.api.ApiCategory
+import com.amplifyframework.datastore.generated.model.User
+import com.amplifyframework.kotlin.api.KotlinApiFacade
+import com.amplifyframework.kotlin.core.Amplify
 import com.mccartycarclub.domain.helpers.ContactsHelper
 import dagger.Module
 import dagger.Provides
@@ -22,4 +25,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideContactsHelper(@ApplicationContext context: Context): ContactsHelper = ContactsHelper(context)
+
+    @Provides
+    @Singleton
+    fun provideAmplifyApi(): KotlinApiFacade = Amplify.API
 }

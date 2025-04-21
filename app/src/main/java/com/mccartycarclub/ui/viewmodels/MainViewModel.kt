@@ -8,6 +8,7 @@ import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.usecases.user.GetUser
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.NetResult
+import com.mccartycarclub.repository.NetWorkResult
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.ui.callbacks.connectionclicks.ConnectionEvent
 import com.mccartycarclub.utils.fetchUserId
@@ -208,8 +209,25 @@ class MainViewModel @Inject constructor(
     }
 
     fun fetchReceivedInvites(receiverUserId: String) {
+        println("MainViewModel ***** LAUNCH FUNCTION CALL")
         viewModelScope.launch {
-            repo.fetchReceivedInvites(receiverUserId)
+            println("MainViewModel ***** LAUNCH")
+            // val result = repo.fetchReceivedInvites(receiverUserId)
+            when (val result = repo.fetchReceivedInvites(receiverUserId)) {
+                is NetWorkResult.Error -> {
+
+                }
+
+                NetWorkResult.Pending -> {
+
+                }
+
+                is NetWorkResult.Success -> {
+                    result.data?.forEach { item ->
+                        println("MainViewModel ***** ${item.userName}")
+                    }
+                }
+            }
         }
     }
 
