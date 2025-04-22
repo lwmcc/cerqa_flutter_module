@@ -7,6 +7,7 @@ import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.usecases.user.GetUser
 import com.mccartycarclub.repository.AmplifyDbRepo
+import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.NetResult
 import com.mccartycarclub.repository.NetWorkResult
 import com.mccartycarclub.repository.RemoteRepo
@@ -22,9 +23,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
@@ -39,6 +42,12 @@ class MainViewModel @Inject constructor(
     private val dbRepo: AmplifyDbRepo,
     private val repo: RemoteRepo,
 ) : ViewModel() {
+
+    sealed class UserContacts {
+        data object Pending : UserContacts()
+        data class Error(val message: String) : UserContacts()
+        data class Success(val data: List<Contact>) : UserContacts()
+    }
 
     private val _hasPendingInvite = MutableStateFlow(false)
     val hasPendingInvite = _hasPendingInvite.asStateFlow()
@@ -57,6 +66,9 @@ class MainViewModel @Inject constructor(
 
     private val _localContacts = MutableStateFlow(emptyList<LocalContact>())
     val localContacts = _localContacts.asStateFlow()
+
+    private val _contacts = MutableStateFlow<UserContacts>(UserContacts.Pending)
+    val contacts = _contacts.asStateFlow()
 
     private val _query = MutableStateFlow("")
     val searchResults: StateFlow<NetResult<User?>> = _query
@@ -107,8 +119,6 @@ class MainViewModel @Inject constructor(
                                     }
                                 }
                             }
-
-
                         }
                     }
                 }
@@ -168,9 +178,9 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun fetchContacts(inviteReceiverUserId: String) {
+    fun fetchContacts(fetchContacts: String) {
         viewModelScope.launch {
-            repo.fetchContacts(inviteReceiverUserId)
+            repo.fetchContacts(fetchContacts)
         }
     }
 
@@ -208,12 +218,53 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun fetchReceivedInvites(receiverUserId: String) {
-        println("MainViewModel ***** LAUNCH FUNCTION CALL")
+    fun fetchReceivedInvites(loggedInUserId: String) {
         viewModelScope.launch {
-            println("MainViewModel ***** LAUNCH")
-            // val result = repo.fetchReceivedInvites(receiverUserId)
-            when (val result = repo.fetchReceivedInvites(receiverUserId)) {
+            val contacts: Deferred<List<Contact>> = async {
+                when (val items = repo.fetchReceivedInvites(loggedInUserId).catch {
+                    // TODO: log this
+                }.first()) {
+                    is NetWorkResult.Error -> {
+                        emptyList()
+                    }
+
+                    NetWorkResult.Pending -> {
+                        emptyList()
+                    }
+
+                    is NetWorkResult.Success -> {
+                        items.data ?: emptyList()
+                    }
+                }
+            }
+
+            _contacts.value = UserContacts.Success(contacts.await())
+
+            val sentInvites: Deferred<List<Contact>> = async {
+                when (val items = repo.fetchSentInvites(loggedInUserId).catch {
+                    // TODO: log this
+                }.first()) {
+                    is NetWorkResult.Error -> {
+                        emptyList()
+                    }
+
+                    NetWorkResult.Pending -> {
+                        emptyList()
+                    }
+
+                    is NetWorkResult.Success -> {
+                        items.data ?: emptyList()
+                    }
+                }
+            }
+
+            println("MainViewModel ***** SEND SIZE ${sentInvites.await().size}")
+            sentInvites.await().forEach { item ->
+                println("MainViewModel ***** AWAIT ${item.userName}")
+            }
+
+
+            /*            when (val result = repo.fetchReceivedInvites(loggedInUserId)) {
                 is NetWorkResult.Error -> {
 
                 }
@@ -227,7 +278,7 @@ class MainViewModel @Inject constructor(
                         println("MainViewModel ***** ${item.userName}")
                     }
                 }
-            }
+            }*/
         }
     }
 

@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,7 +59,10 @@ import com.mccartycarclub.MainActivity.Companion.SEARCH_SCREEN
 import com.mccartycarclub.R
 import com.mccartycarclub.navigation.AppNavigationActions
 import com.mccartycarclub.navigation.ClickNavigation
+import com.mccartycarclub.repository.CurrentContact
 import com.mccartycarclub.repository.NetResult
+import com.mccartycarclub.repository.ReceivedContactInvite
+import com.mccartycarclub.repository.SentContactInvite
 import com.mccartycarclub.ui.callbacks.connectionclicks.ConnectionEvent
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 import com.mccartycarclub.utils.fetchUserId
@@ -85,7 +89,6 @@ fun StartScreen(
         }
 
         composable(CONTACTS_SCREEN) { backStackEntry ->
-            println("Shared ***** SCREEN CALL")
             Contacts(topBarClick = {
                 navToScreen(it, navActions)
             })
@@ -350,6 +353,18 @@ fun Contacts(
     mainViewModel: MainViewModel = hiltViewModel(),
     topBarClick: (ClickNavigation) -> Unit,
 ) {
+
+    val contacts = mainViewModel.contacts.collectAsStateWithLifecycle().value
+
+    LaunchedEffect(Unit) {
+        fetchUserId {
+            if (it.userId != null) {
+                // mainViewModel.fetchContacts(loggedInUserId)
+                mainViewModel.fetchReceivedInvites(it.userId)
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopBarContacts(
@@ -360,23 +375,53 @@ fun Contacts(
             )
         },
     ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(innerPadding),
         ) {
+            when (contacts) {
+                is MainViewModel.UserContacts.Error -> {
+                    println("Shared ***** ERROR")
+                }
 
-            Text(text = "Contacts")
-            println("Shared ***** CONTACT TEXT")
-            fetchUserId {
-                println("Shared ***** ID ${it.userId}")
-                //mainViewModel.fetchContacts(inviteReceiverUserId)
-                //mainViewModel.fetchUserContacts(inviteReceiverUserId)
+                MainViewModel.UserContacts.Pending -> {
+                    PendingCard(dimensionResource(id = R.dimen.card_pending_spinner))
+                }
 
-                // TODO: testing
-                println("Share ***** LAUNCH")
-                if (it.userId != null) {
-                    mainViewModel.fetchReceivedInvites(it.userId)
+                is MainViewModel.UserContacts.Success -> {
+                    contacts.data.forEach { contact ->
+
+                        when (contact) {
+                            is ReceivedContactInvite -> {
+                                ContactCard(
+                                    firstLine = contact.userName,
+                                    secondLine = contact.name,
+                                    thirdLine = "date here",
+                                    buttonPair = true,
+                                    primaryButtonText = stringResource(id = R.string.connect_cancel),
+                                    secondaryButtonText = stringResource(id = R.string.connect_to_user),
+                                    avatar = R.drawable.ic_dashboard_black_24dp,
+                                    onClick = { data ->
+
+                                    },
+                                )
+                            }
+
+                            is SentContactInvite -> {
+                                println("Shared ***** SentContactInvite")
+                            }
+
+                            is CurrentContact -> {
+                                println("Shared ***** CurrentContact")
+                            }
+
+                            else -> {
+                                println("Shared ***** HANDLE ELSE")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -498,7 +543,7 @@ fun Pending() {
 }
 
 @Composable
-fun PendingV2(spinnerSize: Dp) {
+fun PendingCard(spinnerSize: Dp) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
@@ -554,7 +599,7 @@ fun UserCard(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    PendingV2(16.dp) // TODO remove V2
+                    PendingCard(16.dp) // TODO remove V2
                 }
             } else {
                 Row(modifier = Modifier.fillMaxWidth()) {
@@ -643,6 +688,50 @@ fun UserCard(
         }
     }
 }
+
+/*@Preview
+@Composable
+fun ContactCard() {
+
+    Row(modifier = Modifier.fillMaxWidth()) {
+        AsyncImage(
+            model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
+            // TODO: add an image user.avatarUri
+            contentDescription = stringResource(id = R.string.user_avatar),
+            modifier = Modifier
+                .width(60.dp)
+                .padding(
+                    dimensionResource(id = R.dimen.card_padding_start),
+                    dimensionResource(id = R.dimen.card_padding_top),
+                )
+        )
+    }
+
+    Column {
+        Text(text = "Name")
+        Text(text = "User Name")
+        Text(text = "Date")
+    }
+
+    Row(modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(
+            onClick = {
+
+            },
+            shape = RoundedCornerShape(4.dp),
+        ) {
+            Text("Test Button")
+        }
+        OutlinedButton(
+            onClick = {
+
+            },
+            shape = RoundedCornerShape(4.dp),
+        ) {
+            Text("Test Button 2")
+        }
+    }
+}*/
 
 fun testUser1(userId: String): User {
     return User.builder()
