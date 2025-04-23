@@ -21,6 +21,7 @@ object UserMapper {
                     receiverUserId = "",
                     userId = item.userId,
                     userName = item.userName,
+                    rowId = item.id,
                 )
             )
         }

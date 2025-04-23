@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import java.util.Date
 import javax.inject.Inject
+import com.amplifyframework.datastore.generated.model.Contact as AmplifyContact
 
 class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) : RemoteRepo {
 
@@ -185,6 +186,63 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
             emit(fetchInvites(receiverResponse))
         }
 
+    override suspend fun createContact(senderUserId: String, receiverUserId: String) {
+        val sender = User.justId(senderUserId)
+        val receiver = User.justId(receiverUserId)
+
+        val senderContact = AmplifyContact.builder()
+            .contactId(receiverUserId)
+            .id(senderUserId)
+            .build()
+
+        val receiverContact = AmplifyContact.builder()
+            .contactId(senderUserId)
+            .id(receiverUserId)
+            .build()
+
+        val senderContactResponse = amplifyApi.mutate(ModelMutation.create(senderContact))
+        val receiverContactResponse = amplifyApi.mutate(ModelMutation.create(receiverContact))
+
+        if (senderContactResponse.hasData() && receiverContactResponse.hasData()) {
+            val userSenderContact = UserContact.builder()
+                .user(receiver)
+                .contact(senderContact)
+                .build()
+
+            val userReceiverContact = UserContact.builder()
+                .user(sender)
+                .contact(receiverContact)
+                .build()
+
+            val userSenderContactResponse =
+                amplifyApi.mutate(ModelMutation.create(userSenderContact))
+            val userReceiverContactResponse =
+                amplifyApi.mutate(ModelMutation.create(userReceiverContact))
+
+            if (userSenderContactResponse.hasData() && userReceiverContactResponse.hasData()) {
+                // TODO: success
+                val predicate = QueryField.field("sender").eq(senderUserId)
+                    .and(QueryField.field("receiver").eq(receiverUserId))
+                val response = amplifyApi.query(ModelQuery.list(Invite::class.java, predicate))
+                val inviteRowId = response.data.items.first().id
+
+                val invite = Invite
+                    .builder()
+                    .sender(DUMMY)
+                    .receiver(DUMMY)
+                    .id(inviteRowId)
+                    .build()
+
+                val deleteResponse = amplifyApi.mutate(ModelMutation.delete(invite))
+                println("AmplifyRepo ***** DELETE RES ${deleteResponse.data}")
+            } else {
+                // TODO: fail
+            }
+        } else {
+            // TODO: fail
+        }
+    }
+
     private suspend fun sentInvites(loggedInUserId: String): Set<String> {
         val set = mutableSetOf<String>()
         val senderResponse = Amplify.API.query(
@@ -284,6 +342,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
 class ResponseException(message: String) : Exception(message)
 
 open class Contact(
+    val rowId: String,
     val userId: String,
     val userName: String,
     val name: String,
@@ -293,16 +352,16 @@ open class Contact(
 class ReceivedContactInvite(
     val receiverUserId: String,
     val receivedDate: Date, // TODO: use correct type
-    userId: String, userName: String, name: String, avatarUri: String,
-) : Contact(userId, userName, name, avatarUri)
+    rowId: String, userId: String, userName: String, name: String, avatarUri: String,
+) : Contact(rowId, userId, userName, name, avatarUri)
 
 class SentContactInvite(
     val senderUserId: String,
     val sentDate: Date,
-    userId: String, userName: String, name: String, avatarUri: String,
-) : Contact(userId, userName, name, avatarUri)
+    rowId: String, userId: String, userName: String, name: String, avatarUri: String,
+) : Contact(rowId, userId, userName, name, avatarUri)
 
 class CurrentContact(
     val senderUserId: String,
-    userId: String, userName: String, name: String, avatarUri: String,
-) : Contact(userId, userName, name, avatarUri)
+    rowId: String, userId: String, userName: String, name: String, avatarUri: String,
+) : Contact(rowId, userId, userName, name, avatarUri)

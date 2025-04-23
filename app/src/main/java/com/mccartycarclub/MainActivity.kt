@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import com.mccartycarclub.ui.components.StartScreen
 import com.mccartycarclub.ui.components.TopBar
 import com.mccartycarclub.ui.viewmodels.MainViewModel
+import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -23,7 +24,6 @@ class MainActivity : ComponentActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
 
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

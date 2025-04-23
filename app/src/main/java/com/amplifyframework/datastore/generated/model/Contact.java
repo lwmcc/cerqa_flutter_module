@@ -1,8 +1,7 @@
 package com.amplifyframework.datastore.generated.model;
 
-import com.amplifyframework.core.model.annotations.BelongsTo;
-import com.amplifyframework.core.model.ModelReference;
-import com.amplifyframework.core.model.LoadedModelReferenceImpl;
+import com.amplifyframework.core.model.annotations.HasMany;
+import com.amplifyframework.core.model.ModelList;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.ModelIdentifier;
 
@@ -26,21 +25,15 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 /** This is an auto generated class representing the Contact type in your schema. */
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "Contacts", type = Model.Type.USER, version = 1, authRules = {
-  @AuthRule(allow = AuthStrategy.PUBLIC, provider = "iam", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
+  @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 }, hasLazySupport = true)
-@Index(name = "undefined", fields = {"id"})
 public final class Contact implements Model {
   public static final ContactPath rootPath = new ContactPath("root", false, null);
   public static final QueryField ID = field("Contact", "id");
-  public static final QueryField NAME = field("Contact", "name");
-  public static final QueryField PHONE = field("Contact", "phone");
-  public static final QueryField EMAIL = field("Contact", "email");
-  public static final QueryField USER = field("Contact", "id");
+  public static final QueryField CONTACT_ID = field("Contact", "contactId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="String") String name;
-  private final @ModelField(targetType="AWSPhone") String phone;
-  private final @ModelField(targetType="AWSEmail") String email;
-  private final @ModelField(targetType="User") @BelongsTo(targetName = "id", targetNames = {"id"}, type = User.class) ModelReference<User> user;
+  private final @ModelField(targetType="ID", isRequired = true) String contactId;
+  private final @ModelField(targetType="UserContact") @HasMany(associatedWith = "contact", type = UserContact.class) ModelList<UserContact> users = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -53,20 +46,12 @@ public final class Contact implements Model {
       return id;
   }
   
-  public String getName() {
-      return name;
+  public String getContactId() {
+      return contactId;
   }
   
-  public String getPhone() {
-      return phone;
-  }
-  
-  public String getEmail() {
-      return email;
-  }
-  
-  public ModelReference<User> getUser() {
-      return user;
+  public ModelList<UserContact> getUsers() {
+      return users;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -77,12 +62,9 @@ public final class Contact implements Model {
       return updatedAt;
   }
   
-  private Contact(String id, String name, String phone, String email, ModelReference<User> user) {
+  private Contact(String id, String contactId) {
     this.id = id;
-    this.name = name;
-    this.phone = phone;
-    this.email = email;
-    this.user = user;
+    this.contactId = contactId;
   }
   
   @Override
@@ -94,10 +76,7 @@ public final class Contact implements Model {
       } else {
       Contact contact = (Contact) obj;
       return ObjectsCompat.equals(getId(), contact.getId()) &&
-              ObjectsCompat.equals(getName(), contact.getName()) &&
-              ObjectsCompat.equals(getPhone(), contact.getPhone()) &&
-              ObjectsCompat.equals(getEmail(), contact.getEmail()) &&
-              ObjectsCompat.equals(getUser(), contact.getUser()) &&
+              ObjectsCompat.equals(getContactId(), contact.getContactId()) &&
               ObjectsCompat.equals(getCreatedAt(), contact.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), contact.getUpdatedAt());
       }
@@ -107,10 +86,7 @@ public final class Contact implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
-      .append(getName())
-      .append(getPhone())
-      .append(getEmail())
-      .append(getUser())
+      .append(getContactId())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -122,17 +98,14 @@ public final class Contact implements Model {
     return new StringBuilder()
       .append("Contact {")
       .append("id=" + String.valueOf(getId()) + ", ")
-      .append("name=" + String.valueOf(getName()) + ", ")
-      .append("phone=" + String.valueOf(getPhone()) + ", ")
-      .append("email=" + String.valueOf(getEmail()) + ", ")
-      .append("user=" + String.valueOf(getUser()) + ", ")
+      .append("contactId=" + String.valueOf(getContactId()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }
   
-  public static BuildStep builder() {
+  public static ContactIdStep builder() {
       return new Builder();
   }
   
@@ -147,46 +120,35 @@ public final class Contact implements Model {
   public static Contact justId(String id) {
     return new Contact(
       id,
-      null,
-      null,
-      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      name,
-      phone,
-      email,
-      user);
+      contactId);
   }
-  public interface BuildStep {
-    Contact build();
-    BuildStep id(String id);
-    BuildStep name(String name);
-    BuildStep phone(String phone);
-    BuildStep email(String email);
-    BuildStep user(User user);
+  public interface ContactIdStep {
+    BuildStep contactId(String contactId);
   }
   
 
-  public static class Builder implements BuildStep {
+  public interface BuildStep {
+    Contact build();
+    BuildStep id(String id);
+  }
+  
+
+  public static class Builder implements ContactIdStep, BuildStep {
     private String id;
-    private String name;
-    private String phone;
-    private String email;
-    private ModelReference<User> user;
+    private String contactId;
     public Builder() {
       
     }
     
-    private Builder(String id, String name, String phone, String email, ModelReference<User> user) {
+    private Builder(String id, String contactId) {
       this.id = id;
-      this.name = name;
-      this.phone = phone;
-      this.email = email;
-      this.user = user;
+      this.contactId = contactId;
     }
     
     @Override
@@ -195,33 +157,13 @@ public final class Contact implements Model {
         
         return new Contact(
           id,
-          name,
-          phone,
-          email,
-          user);
+          contactId);
     }
     
     @Override
-     public BuildStep name(String name) {
-        this.name = name;
-        return this;
-    }
-    
-    @Override
-     public BuildStep phone(String phone) {
-        this.phone = phone;
-        return this;
-    }
-    
-    @Override
-     public BuildStep email(String email) {
-        this.email = email;
-        return this;
-    }
-    
-    @Override
-     public BuildStep user(User user) {
-        this.user = new LoadedModelReferenceImpl<>(user);
+     public BuildStep contactId(String contactId) {
+        Objects.requireNonNull(contactId);
+        this.contactId = contactId;
         return this;
     }
     
@@ -237,29 +179,14 @@ public final class Contact implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String phone, String email, ModelReference<User> user) {
-      super(id, name, phone, email, user);
-      
+    private CopyOfBuilder(String id, String contactId) {
+      super(id, contactId);
+      Objects.requireNonNull(contactId);
     }
     
     @Override
-     public CopyOfBuilder name(String name) {
-      return (CopyOfBuilder) super.name(name);
-    }
-    
-    @Override
-     public CopyOfBuilder phone(String phone) {
-      return (CopyOfBuilder) super.phone(phone);
-    }
-    
-    @Override
-     public CopyOfBuilder email(String email) {
-      return (CopyOfBuilder) super.email(email);
-    }
-    
-    @Override
-     public CopyOfBuilder user(User user) {
-      return (CopyOfBuilder) super.user(user);
+     public CopyOfBuilder contactId(String contactId) {
+      return (CopyOfBuilder) super.contactId(contactId);
     }
   }
   

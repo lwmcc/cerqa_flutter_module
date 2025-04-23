@@ -64,6 +64,7 @@ import com.mccartycarclub.repository.NetResult
 import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.SentContactInvite
 import com.mccartycarclub.ui.callbacks.connectionclicks.ConnectionEvent
+import com.mccartycarclub.ui.viewmodels.ContactsViewModel
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 import com.mccartycarclub.utils.fetchUserId
 
@@ -180,6 +181,10 @@ fun AppAuthenticator(
                             Amplify.Auth.fetchUserAttributes({ attributes ->
                                 val userId =
                                     attributes.firstOrNull { it.key.keyString == "sub" }?.value
+
+                                if (userId != null) {
+                                    mainViewModel.setLoggedInUserId(userId)
+                                }
 
                                 println("MainActivity ***** USER ID $userId")
                                 // TODO: create test users
@@ -350,17 +355,18 @@ fun TopBarSearch(
 
 @Composable
 fun Contacts(
-    mainViewModel: MainViewModel = hiltViewModel(),
+    contactsViewModel: ContactsViewModel = hiltViewModel(),
     topBarClick: (ClickNavigation) -> Unit,
 ) {
 
-    val contacts = mainViewModel.contacts.collectAsStateWithLifecycle().value
+    val contacts = contactsViewModel.contacts.collectAsStateWithLifecycle().value
 
     LaunchedEffect(Unit) {
+        println("Shared ***** Contacts")
         fetchUserId {
             if (it.userId != null) {
-                // mainViewModel.fetchContacts(loggedInUserId)
-                mainViewModel.fetchReceivedInvites(it.userId)
+                // contactsViewModel.fetchContacts(loggedInUserId)
+                contactsViewModel.fetchReceivedInvites(it.userId)
             }
         }
     }
@@ -382,15 +388,15 @@ fun Contacts(
                 .padding(innerPadding),
         ) {
             when (contacts) {
-                is MainViewModel.UserContacts.Error -> {
+                is ContactsViewModel.UserContacts.Error -> {
                     println("Shared ***** ERROR")
                 }
 
-                MainViewModel.UserContacts.Pending -> {
+                ContactsViewModel.UserContacts.Pending -> {
                     PendingCard(dimensionResource(id = R.dimen.card_pending_spinner))
                 }
 
-                is MainViewModel.UserContacts.Success -> {
+                is ContactsViewModel.UserContacts.Success -> {
                     contacts.data.forEach { contact ->
 
                         when (contact) {
@@ -399,26 +405,56 @@ fun Contacts(
                                     firstLine = contact.userName,
                                     secondLine = contact.name,
                                     thirdLine = "date here",
-                                    buttonPair = true,
+                                    hasButtonPair = true,
                                     primaryButtonText = stringResource(id = R.string.connect_cancel),
                                     secondaryButtonText = stringResource(id = R.string.connect_to_user),
                                     avatar = R.drawable.ic_dashboard_black_24dp,
-                                    onClick = { data ->
-
+                                    onClick = { event ->
+                                        if (event == ContactCardEvent.ConnectClick) {
+                                            fetchUserId { loggedInUser ->
+                                                // TODO: store userId in cache
+                                                if (loggedInUser.userId != null) {
+                                                    contactsViewModel.contactButtonClickAction(
+                                                        ContactCardEvent.Connect(
+                                                            contact.userId,
+                                                            loggedInUser.userId,
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        }
                                     },
                                 )
                             }
 
                             is SentContactInvite -> {
-                                println("Shared ***** SentContactInvite")
+                                ContactCard(
+                                    firstLine = contact.userName,
+                                    secondLine = contact.name,
+                                    thirdLine = "date here",
+                                    hasButtonPair = false,
+                                    primaryButtonText = stringResource(id = R.string.connect_cancel),
+                                    secondaryButtonText = stringResource(id = R.string.connect_to_user),
+                                    avatar = R.drawable.ic_dashboard_black_24dp,
+                                    onClick = { event ->
+
+                                    },
+                                )
                             }
 
                             is CurrentContact -> {
-                                println("Shared ***** CurrentContact")
-                            }
+                                ContactCard(
+                                    firstLine = contact.userName,
+                                    secondLine = contact.name,
+                                    thirdLine = "date here",
+                                    hasButtonPair = false,
+                                    primaryButtonText = stringResource(id = R.string.connect_cancel),
+                                    secondaryButtonText = stringResource(id = R.string.connect_to_user),
+                                    avatar = R.drawable.ic_dashboard_black_24dp,
+                                    onClick = { event ->
 
-                            else -> {
-                                println("Shared ***** HANDLE ELSE")
+                                    },
+                                )
                             }
                         }
                     }
@@ -452,7 +488,7 @@ fun Groups(mainViewModel: MainViewModel = hiltViewModel(), topBarClick: (ClickNa
 
 @Composable
 fun Search(
-    mainViewModel: MainViewModel = hiltViewModel(),
+    contactsViewModel: ContactsViewModel = hiltViewModel(),
     topBarClick: (ClickNavigation) -> Unit,
 ) {
     Scaffold(
@@ -466,14 +502,14 @@ fun Search(
         },
     ) { innerPadding ->
 
-        val searchQuery = mainViewModel.searchResults.collectAsStateWithLifecycle().value
-        val hasConnection = mainViewModel.hasConnection.collectAsStateWithLifecycle().value
-        val hasPendingInvite = mainViewModel.hasPendingInvite.collectAsStateWithLifecycle().value
-        val isSendingInvite = mainViewModel.isSendingInvite.collectAsStateWithLifecycle().value
+        val searchQuery = contactsViewModel.searchResults.collectAsStateWithLifecycle().value
+        val hasConnection = contactsViewModel.hasConnection.collectAsStateWithLifecycle().value
+        val hasPendingInvite = contactsViewModel.hasPendingInvite.collectAsStateWithLifecycle().value
+        val isSendingInvite = contactsViewModel.isSendingInvite.collectAsStateWithLifecycle().value
         val isCancellingInvite =
-            mainViewModel.isCancellingInvite.collectAsStateWithLifecycle().value
+            contactsViewModel.isCancellingInvite.collectAsStateWithLifecycle().value
         val receiverQueryPending =
-            mainViewModel.receiverQueryPending.collectAsStateWithLifecycle().value
+            contactsViewModel.receiverQueryPending.collectAsStateWithLifecycle().value
 
         var input by remember { mutableStateOf("") }
 
@@ -487,7 +523,7 @@ fun Search(
                 maxLines = 2,
                 onValueChange = {
                     input = it
-                    mainViewModel.onQueryChange(it)
+                    contactsViewModel.onQueryChange(it)
                 },
                 label = { Text(stringResource(id = R.string.user_search)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
@@ -511,10 +547,10 @@ fun Search(
                         isSendingInvite = isSendingInvite,
                         isCancellingInvite = isCancellingInvite,
                         connectionEvent = { connectionEvent ->
-                            mainViewModel.userConnectionEvent(connectionEvent)
+                            contactsViewModel.userConnectionEvent(connectionEvent)
                         },
                         onButtonClick = { receiverUserId ->
-                           // mainViewModel.createConnectInvite(receiverUserId)
+                           // contactsViewModel.createConnectInvite(receiverUserId)
                         })
                 }
 

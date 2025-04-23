@@ -1,8 +1,6 @@
 package com.mccartycarclub.ui.components
 
-import android.graphics.drawable.Drawable
 import androidx.annotation.DrawableRes
-import androidx.annotation.IntegerRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,11 +27,11 @@ fun ContactCard(
     firstLine: String,
     secondLine: String,
     thirdLine: String,
-    buttonPair: Boolean,
+    hasButtonPair: Boolean,
     primaryButtonText: String,
     secondaryButtonText: String,
     @DrawableRes avatar: Int,
-    onClick: (ContactCardActions) -> Unit,
+    onClick: (ContactCardEvent) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -66,17 +64,17 @@ fun ContactCard(
             horizontalArrangement = Arrangement.Center,
         ) {
 
-            if (buttonPair) {
+            if (hasButtonPair) {
                 ContactCardButton(primaryButtonText, onClick = {
-                    onClick(ContactCardActions.DeleteReceivedInvite(""))
+                    onClick(ContactCardEvent.DeleteReceivedInvite(""))
                 })
 
                 ContactCardButton(secondaryButtonText, onClick = {
-                    onClick(ContactCardActions.Connect(""))
+                    onClick(ContactCardEvent.ConnectClick)
                 })
             } else {
                 ContactCardButton(secondaryButtonText, onClick = {
-                    onClick(ContactCardActions.Connect(""))
+                  //  onClick(ContactCardEvent.Connect(""))
                 })
             }
         }
@@ -90,7 +88,7 @@ fun ContactCardPreview() {
         firstLine = "LM",
         secondLine = "Larry",
         thirdLine = "4-21-2025",
-        buttonPair = true,
+        hasButtonPair = true,
         primaryButtonText = "Cancel",
         secondaryButtonText = "Connect",
         avatar = R.drawable.ic_dashboard_black_24dp,
