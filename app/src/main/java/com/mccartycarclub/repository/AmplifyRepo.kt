@@ -7,7 +7,9 @@ import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.core.model.LazyModelList
+import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.LoadedModelList
+import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
@@ -157,14 +159,9 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
             Amplify.API.query(ModelQuery.list(User::class.java, User.USER_ID.eq(loggedInUserId)))
 
         response.data.forEach {
-            println("AmplifyRepo ***** Q CONTACTS ${it.contacts}")
-            println("AmplifyRepo ***** Q CONTACTS ${it.name}")
-            println("AmplifyRepo ***** Q CONTACTS ${it.userName}")
+            println("AmplifyRepo ***** fetchContacts CONTACTS ${it.name}")
+            println("AmplifyRepo ***** fetchContacts CONTACTS ${it.userName}")
         }
-
-
-
-
 
     }
 
@@ -390,36 +387,49 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
     ) = amplifyApi.query(ModelQuery.list(modelClass, predicate)).data.items.firstOrNull()
 
     override suspend fun myTest(loggedInUserId: String) {
+
         val response = amplifyApi.query(
             ModelQuery[User::class.java, User.UserIdentifier(loggedInUserId)],
         )
 
-        when (val contacts = response.data.contacts) {
+        when (val userContacts = response.data.contacts) {
             is LoadedModelList -> {
 
-                println("AmplifyRepo ***** ITEMS ${contacts.items}")
             }
 
             is LazyModelList -> {
+
                 val allContacts = mutableListOf<UserContact>()
-                var page = contacts.fetchPage()
+                var page = userContacts.fetchPage()
 
                 allContacts.addAll(page.items)
 
                 while (page.hasNextPage) {
-                    val nextPage = contacts.fetchPage(page.nextToken)
+                    val nextPage = userContacts.fetchPage(page.nextToken)
                     allContacts.addAll(nextPage.items)
-                    println("AmplifyRepo ***** NEXT ${nextPage.items}")
                     page = nextPage
                 }
 
-                println("AmplifyRepo ***** CT ${allContacts[0].user}")
-                println("AmplifyRepo ***** CT ${allContacts[0].id}")
-                println("AmplifyRepo ***** CT ${allContacts[0].contact}")
 
 
+                allContacts.forEach { userContact ->
+
+                    val contactUser = (userContact.contact as LazyModelReference).fetchModel()
+                    println("AmplifyRepo ***** ${contactUser.}")
+
+                    when (val contactRef = userContact.contact) {
+                        is LazyModelReference -> {
+
+                            val contact = contactRef.fetchModel() as User
+                            println("AmplifyRepo ***** USER ${contact.userName}")
 
 
+                        }
+                        is LoadedModelReference -> {
+
+                        }
+                    }
+                }
             }
         }
     }
