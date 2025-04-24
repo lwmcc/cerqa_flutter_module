@@ -415,7 +415,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
                 allContacts.forEach { userContact ->
 
                     val contactUser = (userContact.contact as LazyModelReference).fetchModel()
-                    println("AmplifyRepo ***** ${contactUser.}")
+
 
                     when (val contactRef = userContact.contact) {
                         is LazyModelReference -> {
