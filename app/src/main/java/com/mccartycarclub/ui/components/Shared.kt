@@ -362,7 +362,6 @@ fun Contacts(
     val contacts = contactsViewModel.contacts.collectAsStateWithLifecycle().value
 
     LaunchedEffect(Unit) {
-        println("Shared ***** Contacts")
         fetchUserId {
             if (it.userId != null) {
                 // contactsViewModel.fetchContacts(loggedInUserId)

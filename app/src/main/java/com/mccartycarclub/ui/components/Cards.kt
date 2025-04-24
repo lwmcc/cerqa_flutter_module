@@ -74,7 +74,7 @@ fun ContactCard(
                 })
             } else {
                 ContactCardButton(secondaryButtonText, onClick = {
-                  //  onClick(ContactCardEvent.Connect(""))
+                    //  onClick(ContactCardEvent.Connect(""))
                 })
             }
         }

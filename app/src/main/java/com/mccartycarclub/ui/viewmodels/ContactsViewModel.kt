@@ -2,7 +2,9 @@ package com.mccartycarclub.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.datastore.generated.model.User
+import com.amplifyframework.kotlin.core.Amplify
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.NetResult
@@ -13,6 +15,7 @@ import com.mccartycarclub.ui.components.ContactCardEvent
 import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +32,11 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 @HiltViewModel
 class ContactsViewModel @Inject constructor(
@@ -176,6 +183,7 @@ class ContactsViewModel @Inject constructor(
         }
     }
 
+    // TODO: rename this function
     fun fetchReceivedInvites(loggedInUserId: String) {
         viewModelScope.launch {
             val contacts: Deferred<List<Contact>> = async {
@@ -221,22 +229,14 @@ class ContactsViewModel @Inject constructor(
                 println("ContactsViewModel ***** AWAIT ${item.userName}")
             }
 
+            repo.fetchContacts(loggedInUserId).collect { data ->
 
-            /*            when (val result = repo.fetchReceivedInvites(loggedInUserId)) {
-                is NetWorkResult.Error -> {
 
-                }
+            }
 
-                NetWorkResult.Pending -> {
+            repo.myTest(loggedInUserId)
 
-                }
-
-                is NetWorkResult.Success -> {
-                    result.data?.forEach { item ->
-                        println("MainViewModel ***** ${item.userName}")
-                    }
-                }
-            }*/
+            // TODO: testing
         }
     }
 
@@ -249,8 +249,24 @@ class ContactsViewModel @Inject constructor(
             is ContactCardEvent.Connect -> {
                 viewModelScope.launch {
                     event.receiverUserId?.let { receiverUserId ->
-                        repo.createContact(event.senderUserId, receiverUserId)
+                        repo.createContact(event.senderUserId, receiverUserId).collect { data ->
+                            when (data) {
+                                NetResult.Pending -> {
+                                    println("ContactsViewModel ***** PENDING")
+                                }
+
+                                is NetResult.Error -> {
+                                    println("ContactsViewModel ***** ERROR ")
+                                }
+
+                                is NetResult.Success -> {
+                                    println("ContactsViewModel ***** SUCCESS")
+                                }
+                            }
+                        }
                     }
+
+
                 }
             }
 
