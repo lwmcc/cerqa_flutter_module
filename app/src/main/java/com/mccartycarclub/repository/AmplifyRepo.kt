@@ -4,6 +4,10 @@ import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
+import com.amplifyframework.core.model.LazyModelList
+import com.amplifyframework.core.model.LazyModelReference
+import com.amplifyframework.core.model.LoadedModelList
+import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
@@ -388,20 +392,17 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
     override suspend fun fetchContacts(loggedInUserId: String) {
 
         try {
-         //   val response = amplifyApi.query(ModelQuery[User::class.java, loggedInUserId])
-        val response = amplifyApi.query(ModelQuery[User::class.java, loggedInUserId])
+            val response =
+                amplifyApi.query(ModelQuery[User::class.java, loggedInUserId])
 
-
-           // println("AmplifyRepo ***** ${response.data}")
-
-/*            when (val userContacts = response.data.contacts) {
+            when (val userContacts = response.data.contacts) {
                 is LoadedModelList -> {
 
                 }
 
-                is LazyModelList -> {*/
+                is LazyModelList -> {
 
-     /*               val allContacts = mutableListOf<UserContact>()
+                    val allContacts = mutableListOf<UserContact>()
                     var page = userContacts.fetchPage()
 
                     allContacts.addAll(page.items)
@@ -412,28 +413,25 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
                         page = nextPage
                     }
 
-
-
                     allContacts.forEach { userContact ->
-
-                        val contactUser = (userContact.contact as LazyModelReference).fetchModel()
-
                         when (val contactRef = userContact.contact) {
                             is LazyModelReference -> {
 
-                                val contact = contactRef.fetchModel() as User
+                                val contact = contactRef.fetchModel() as AmplifyContact
                                 println("AmplifyRepo ***** USER ${contact.userName}")
-
-
+                                println("AmplifyRepo ***** USER ${contact.contactId}")
+                                println("AmplifyRepo ***** USER ${contact.id}")
+                                println("AmplifyRepo ***** USER ${contact.firstName}")
+                                println("AmplifyRepo ***** USER ${contact.avatarUri}")
                             }
                             is LoadedModelReference -> {
 
                             }
                         }
-                    }*/
+                    }
 
-               // }
-            //}
+                }
+            }
         } catch (e: ApiException) {
             println("AmplifyRepo ***** ERROR ${e.message}")
         }
