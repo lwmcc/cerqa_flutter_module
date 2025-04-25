@@ -2,14 +2,8 @@ package com.mccartycarclub.repository
 
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
-import com.amplifyframework.api.graphql.GraphQLResponse
-import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
-import com.amplifyframework.core.model.LazyModelList
-import com.amplifyframework.core.model.LazyModelReference
-import com.amplifyframework.core.model.LoadedModelList
-import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
@@ -17,8 +11,10 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
 import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
+
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.amplifyframework.kotlin.core.Amplify
+import com.mccartycarclub.ui.components.ConnectionAccepted
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.util.Date
@@ -83,7 +79,12 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         // firstName and lastName are required when creating a record,
         // but here we just need the id because we're creating an invite
         val sender =
-            User.builder().userId(DUMMY).firstName("").lastName(DUMMY)
+            User.builder()
+                //.firstName(DUMMY)
+                //.lastName(DUMMY)
+                .userId(DUMMY)
+                .firstName(DUMMY)
+                .lastName(DUMMY)
                 .build()
 
         val invite = Invite
@@ -141,7 +142,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
 
     private suspend fun fetchInviteId(senderUserId: String?, receiverUserId: String): String? {
         return try {
-            Amplify.API.query(
+            amplifyApi.query(
                 ModelQuery.list(
                     Invite::class.java, Invite.SENDER.eq(senderUserId)
                         .and(Invite.RECEIVER.eq(receiverUserId))
@@ -153,17 +154,17 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
     }
 
     // TODO make private
-    override suspend fun fetchContacts(loggedInUserId: String):
+/*    override suspend fun fetchContacts(loggedInUserId: String):
             Flow<GraphQLResponse<PaginatedResult<User>>> = flow {
         val response =
-            Amplify.API.query(ModelQuery.list(User::class.java, User.USER_ID.eq(loggedInUserId)))
+            amplifyApi.query(ModelQuery.list(User::class.java, User.USER_ID.eq(loggedInUserId)))
 
         response.data.forEach {
             println("AmplifyRepo ***** fetchContacts CONTACTS ${it.name}")
             println("AmplifyRepo ***** fetchContacts CONTACTS ${it.userName}")
         }
 
-    }
+    }*/
 
     override suspend fun createContact(user: User) {
         val response = Amplify.API.mutate(ModelMutation.create(user))
@@ -180,86 +181,89 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
 
             // TODO: and return flow
             // TODO: set up so that no invites does not cause crash
-            val senderResponse = sentInvites(loggedInUserId)
-            fetchInvites(senderResponse)
+            //val senderResponse = sentInvites(loggedInUserId)
+            //fetchInvites(senderResponse)
 
             // TODO: change name receivedInvites
             val receiverResponse = receivedInvites(loggedInUserId)
             emit(fetchInvites(receiverResponse))
         }
 
-    override suspend fun createContact(
-        senderUserId: String,
-        receiverUserId: String
-    ): Flow<NetResult<String>> = flow {
-        emit(NetResult.Pending)
-        val sender = User.justId(senderUserId)
-        val receiver = User.justId(receiverUserId)
+    override suspend fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetResult<String>> = flow {
+            emit(NetResult.Pending)
+            val sender = User.justId(connectionAccepted.senderUserId)
+            val receiver = User.justId(connectionAccepted.receiverUserId)
 
-        val senderContact = AmplifyContact.builder()
-            .contactId(receiverUserId)
-            .id(senderUserId)
-            .build()
+            val senderContact = AmplifyContact.builder()
+                .contactId(connectionAccepted.receiverUserId)
+                .id(connectionAccepted.senderUserId)
+                .firstName(connectionAccepted.name) // TODO: decide first name or name
+                .userName(connectionAccepted.userName)
+                .avatarUri(connectionAccepted.avatarUri)
+                .build()
 
-        val receiverContact = AmplifyContact.builder()
-            .contactId(senderUserId)
-            .id(receiverUserId)
-            .build()
+            val receiverContact = AmplifyContact.builder()
+                .contactId(connectionAccepted.senderUserId)
+                .id(connectionAccepted.receiverUserId)
+                .firstName(connectionAccepted.name) // TODO: decide first name or name
+                .userName(connectionAccepted.userName)
+                .avatarUri(connectionAccepted.avatarUri)
+                .build()
 
-        try {
-            val senderPutResult = putSenderContact(senderContact)
-            val receiverPutResult = putReceiverContact(receiverContact)
-            if (!senderPutResult.hasData() || !receiverPutResult.hasData()) {
-                emit(NetResult.Error(ResponseException("")))
-                return@flow
-            }
+            try {
+                val senderPutResult = putSenderContact(senderContact)
+                val receiverPutResult = putReceiverContact(receiverContact)
+                if (!senderPutResult.hasData() || !receiverPutResult.hasData()) {
+                    emit(NetResult.Error(ResponseException("")))
+                    return@flow
+                }
 
-            val putSenderSuccess = putSenderUserContact(
-                ModelMutation.create(
-                    buildSenderUserContact(
-                        receiver,
-                        senderContact
+                val putSenderSuccess = putSenderUserContact(
+                    ModelMutation.create(
+                        buildSenderUserContact(
+                            receiver,
+                            senderContact
+                        )
                     )
                 )
-            )
 
-            val putReceiverSuccess = putReceiverUserContact(
-                ModelMutation.create(
-                    buildReceiverUserContact(
-                        sender,
-                        receiverContact
+                val putReceiverSuccess = putReceiverUserContact(
+                    ModelMutation.create(
+                        buildReceiverUserContact(
+                            sender,
+                            receiverContact
+                        )
                     )
                 )
-            )
 
-            if (!putSenderSuccess || !putReceiverSuccess) {
-                emit(NetResult.Error(ResponseException("")))
-                return@flow
+                if (!putSenderSuccess || !putReceiverSuccess) {
+                    emit(NetResult.Error(ResponseException("")))
+                    return@flow
+                }
+
+                val predicate = QueryField.field(SENDER).eq(connectionAccepted.senderUserId)
+                    .and(QueryField.field(RECEIVER).eq(connectionAccepted.receiverUserId))
+
+                val invites = fetchInviteList(Invite::class.java, predicate)
+
+                if (invites == null) {
+                    emit(NetResult.Error(ResponseException("")))
+                    return@flow
+                }
+
+                deleteInvite(invites)
+                emit(NetResult.Success("send message"))
+
+            } catch (e: ApiException) {
+                emit(NetResult.Error(e))
+            } catch (ex: Exception) {
+                emit(NetResult.Error(ex))
             }
-
-            val predicate = QueryField.field(SENDER).eq(senderUserId)
-                .and(QueryField.field(RECEIVER).eq(receiverUserId))
-
-            val invites = fetchInviteList(Invite::class.java, predicate)
-
-            if (invites == null) {
-                emit(NetResult.Error(ResponseException("")))
-                return@flow
-            }
-
-            deleteInvite(invites)
-            emit(NetResult.Success("send message"))
-
-        } catch (e: ApiException) {
-            emit(NetResult.Error(e))
-        } catch (ex: Exception) {
-            emit(NetResult.Error(ex))
         }
-    }
 
-    private suspend fun sentInvites(loggedInUserId: String): Set<String> {
-        val set = mutableSetOf<String>()
-        val senderResponse = Amplify.API.query(
+    private suspend fun sentInvites(loggedInUserId: String): List<String> {
+        val invites = mutableSetOf<String>()
+        val senderResponse = amplifyApi.query(
             ModelQuery.list(
                 Invite::class.java,
                 Invite.SENDER.eq(loggedInUserId)
@@ -272,26 +276,27 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
             }
         }
 
-        return set
+        return invites.toList()
     }
 
-    private suspend fun receivedInvites(loggedInUserId: String): Set<String> {
+    private suspend fun receivedInvites(loggedInUserId: String): List<String> {
 
-        val set = mutableSetOf<String>()
+        val invites = mutableSetOf<String>()
 
         return try {
-            val receiverResponse = Amplify.API.query(
+
+            val receiverResponse = amplifyApi.query(
                 ModelQuery.list(
                     Invite::class.java,
                     Invite.RECEIVER.eq(loggedInUserId)
                 )
             )
             receiverResponse.data.items.forEach { item ->
-                set.add(item.sender)
+                invites.add(item.sender)
             }
-            set
+            invites.toList()
         } catch (e: ApiException) {
-            emptySet()
+            emptyList()
         }
     }
 
@@ -316,14 +321,8 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         return ""
     }
 
-    private fun getInviteSender(senderUserId: String) =
-        User.builder().userId(senderUserId).firstName(DUMMY).lastName(DUMMY).build()
-
-    private fun getInviteReceiver(receiverUserId: String) =
-        User.builder().userId(receiverUserId).firstName(DUMMY).lastName(DUMMY).build()
-
     // TODO: change param, change function name
-    private suspend fun fetchInvites(connectionInvites: Set<String>): NetWorkResult<List<Contact>> {
+    private suspend fun fetchInvites(connectionInvites: List<String>): NetWorkResult<List<Contact>> {
 
         if (connectionInvites.isEmpty()) {
             return NetWorkResult.Success(emptyList())
@@ -343,7 +342,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         }
     }
 
-    private fun createQueryPredicate(ids: Set<String>) = ids
+    private fun createQueryPredicate(ids: List<String>) = ids
         .map { User.USER_ID.eq(it) as QueryPredicate }
         .reduce { acc, value -> acc.or(value) }
 
@@ -375,10 +374,10 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
     private suspend fun deleteInvite(inviteRowId: Invite) =
         amplifyApi.mutate(ModelMutation.delete(createInvite(inviteRowId.id)))
 
-    private suspend fun putSenderUserContact(contact: GraphQLRequest<UserContact>) =
+    private suspend fun putSenderUserContact(contact: GraphQLRequest<com.amplifyframework.datastore.generated.model.UserContact>) =
         amplifyApi.mutate(contact).hasData()
 
-    private suspend fun putReceiverUserContact(contact: GraphQLRequest<UserContact>) =
+    private suspend fun putReceiverUserContact(contact: GraphQLRequest<com.amplifyframework.datastore.generated.model.UserContact>) =
         amplifyApi.mutate(contact).hasData()
 
     private suspend fun <T : Model> fetchInviteList(
@@ -386,52 +385,67 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         predicate: QueryPredicateGroup,
     ) = amplifyApi.query(ModelQuery.list(modelClass, predicate)).data.items.firstOrNull()
 
-    override suspend fun myTest(loggedInUserId: String) {
+    override suspend fun fetchContacts(loggedInUserId: String) {
 
-        val response = amplifyApi.query(
-            ModelQuery[User::class.java, User.UserIdentifier(loggedInUserId)],
-        )
+        try {
+         //   val response = amplifyApi.query(ModelQuery[User::class.java, loggedInUserId])
+        val response = amplifyApi.query(ModelQuery[User::class.java, loggedInUserId])
 
-        when (val userContacts = response.data.contacts) {
-            is LoadedModelList -> {
 
-            }
+           // println("AmplifyRepo ***** ${response.data}")
 
-            is LazyModelList -> {
+/*            when (val userContacts = response.data.contacts) {
+                is LoadedModelList -> {
 
-                val allContacts = mutableListOf<UserContact>()
-                var page = userContacts.fetchPage()
-
-                allContacts.addAll(page.items)
-
-                while (page.hasNextPage) {
-                    val nextPage = userContacts.fetchPage(page.nextToken)
-                    allContacts.addAll(nextPage.items)
-                    page = nextPage
                 }
 
+                is LazyModelList -> {*/
 
+     /*               val allContacts = mutableListOf<UserContact>()
+                    var page = userContacts.fetchPage()
 
-                allContacts.forEach { userContact ->
+                    allContacts.addAll(page.items)
 
-                    val contactUser = (userContact.contact as LazyModelReference).fetchModel()
-
-
-                    when (val contactRef = userContact.contact) {
-                        is LazyModelReference -> {
-
-                            val contact = contactRef.fetchModel() as User
-                            println("AmplifyRepo ***** USER ${contact.userName}")
-
-
-                        }
-                        is LoadedModelReference -> {
-
-                        }
+                    while (page.hasNextPage) {
+                        val nextPage = userContacts.fetchPage(page.nextToken)
+                        allContacts.addAll(nextPage.items)
+                        page = nextPage
                     }
-                }
-            }
+
+
+
+                    allContacts.forEach { userContact ->
+
+                        val contactUser = (userContact.contact as LazyModelReference).fetchModel()
+
+                        when (val contactRef = userContact.contact) {
+                            is LazyModelReference -> {
+
+                                val contact = contactRef.fetchModel() as User
+                                println("AmplifyRepo ***** USER ${contact.userName}")
+
+
+                            }
+                            is LoadedModelReference -> {
+
+                            }
+                        }
+                    }*/
+
+               // }
+            //}
+        } catch (e: ApiException) {
+            println("AmplifyRepo ***** ERROR ${e.message}")
         }
+
+
+
+
+        //val response = amplifyApi.query(
+        //    ModelQuery[User::class.java, User.UserIdentifier(loggedInUserId)],
+        //)
+
+
     }
 
     companion object {

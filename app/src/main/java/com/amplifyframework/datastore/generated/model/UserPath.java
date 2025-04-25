@@ -10,8 +10,7 @@ import com.amplifyframework.core.model.PropertyPath;
 public final class UserPath extends ModelPath<User> {
   private UserContactPath contacts;
   private UserGroupPath groups;
-  private InvitePath sentInvites;
-  private InvitePath receivedInvites;
+  private InvitePath invites;
   UserPath(@NonNull String name, @NonNull Boolean isCollection, @Nullable PropertyPath parent) {
     super(name, isCollection, parent, User.class);
   }
@@ -30,17 +29,10 @@ public final class UserPath extends ModelPath<User> {
     return groups;
   }
   
-  public synchronized InvitePath getSentInvites() {
-    if (sentInvites == null) {
-      sentInvites = new InvitePath("sentInvites", true, this);
+  public synchronized InvitePath getInvites() {
+    if (invites == null) {
+      invites = new InvitePath("invites", true, this);
     }
-    return sentInvites;
-  }
-  
-  public synchronized InvitePath getReceivedInvites() {
-    if (receivedInvites == null) {
-      receivedInvites = new InvitePath("receivedInvites", true, this);
-    }
-    return receivedInvites;
+    return invites;
   }
 }

@@ -415,9 +415,19 @@ fun Contacts(
                                                 if (loggedInUser.userId != null) {
                                                     contactsViewModel.contactButtonClickAction(
                                                         ContactCardEvent.Connect(
+                                                            ConnectionAccepted(
+                                                                userName = contact.userName,
+                                                                name = contact.name,
+                                                                avatarUri = contact.avatarUri,
+                                                                rowId = contact.rowId,
+                                                                senderUserId = contact.userId,
+                                                                receiverUserId = loggedInUser.userId,
+                                                            )
+                                                        )
+                                                        /*ContactCardEvent.Connect(
                                                             contact.userId,
                                                             loggedInUser.userId,
-                                                        )
+                                                        )*/
                                                     )
                                                 }
                                             }
@@ -634,7 +644,7 @@ fun UserCard(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    PendingCard(16.dp) // TODO remove V2
+                    PendingCard(16.dp)
                 }
             } else {
                 Row(modifier = Modifier.fillMaxWidth()) {
@@ -724,50 +734,7 @@ fun UserCard(
     }
 }
 
-/*@Preview
-@Composable
-fun ContactCard() {
-
-    Row(modifier = Modifier.fillMaxWidth()) {
-        AsyncImage(
-            model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
-            // TODO: add an image user.avatarUri
-            contentDescription = stringResource(id = R.string.user_avatar),
-            modifier = Modifier
-                .width(60.dp)
-                .padding(
-                    dimensionResource(id = R.dimen.card_padding_start),
-                    dimensionResource(id = R.dimen.card_padding_top),
-                )
-        )
-    }
-
-    Column {
-        Text(text = "Name")
-        Text(text = "User Name")
-        Text(text = "Date")
-    }
-
-    Row(modifier = Modifier.fillMaxWidth()) {
-        OutlinedButton(
-            onClick = {
-
-            },
-            shape = RoundedCornerShape(4.dp),
-        ) {
-            Text("Test Button")
-        }
-        OutlinedButton(
-            onClick = {
-
-            },
-            shape = RoundedCornerShape(4.dp),
-        ) {
-            Text("Test Button 2")
-        }
-    }
-}*/
-
+// TODO: remove just to test
 fun testUser1(userId: String): User {
     return User.builder()
         .userId(userId)
@@ -784,7 +751,7 @@ fun testUser1(userId: String): User {
 
 fun testUser2(userId: String): User {
     return User.builder()
-            .userId(userId)
+        .userId(userId)
         .firstName("Lebron")
         .lastName("James")
         .userName("KingJames")
@@ -811,4 +778,13 @@ fun testUser2(userId: String): User {
 data class Ids(
     val rowId: String,
     val userId: String,
+)
+
+data class ConnectionAccepted(
+    val userName: String,
+    val name: String?,
+    val avatarUri: String,
+    val rowId: String,
+    val senderUserId: String,
+    val receiverUserId: String,
 )

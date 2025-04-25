@@ -31,8 +31,14 @@ public final class Contact implements Model {
   public static final ContactPath rootPath = new ContactPath("root", false, null);
   public static final QueryField ID = field("Contact", "id");
   public static final QueryField CONTACT_ID = field("Contact", "contactId");
+  public static final QueryField USER_NAME = field("Contact", "userName");
+  public static final QueryField FIRST_NAME = field("Contact", "firstName");
+  public static final QueryField AVATAR_URI = field("Contact", "avatarUri");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="ID", isRequired = true) String contactId;
+  private final @ModelField(targetType="String") String userName;
+  private final @ModelField(targetType="String") String firstName;
+  private final @ModelField(targetType="AWSURL") String avatarUri;
   private final @ModelField(targetType="UserContact") @HasMany(associatedWith = "contact", type = UserContact.class) ModelList<UserContact> users = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
@@ -50,6 +56,18 @@ public final class Contact implements Model {
       return contactId;
   }
   
+  public String getUserName() {
+      return userName;
+  }
+  
+  public String getFirstName() {
+      return firstName;
+  }
+  
+  public String getAvatarUri() {
+      return avatarUri;
+  }
+  
   public ModelList<UserContact> getUsers() {
       return users;
   }
@@ -62,9 +80,12 @@ public final class Contact implements Model {
       return updatedAt;
   }
   
-  private Contact(String id, String contactId) {
+  private Contact(String id, String contactId, String userName, String firstName, String avatarUri) {
     this.id = id;
     this.contactId = contactId;
+    this.userName = userName;
+    this.firstName = firstName;
+    this.avatarUri = avatarUri;
   }
   
   @Override
@@ -77,6 +98,9 @@ public final class Contact implements Model {
       Contact contact = (Contact) obj;
       return ObjectsCompat.equals(getId(), contact.getId()) &&
               ObjectsCompat.equals(getContactId(), contact.getContactId()) &&
+              ObjectsCompat.equals(getUserName(), contact.getUserName()) &&
+              ObjectsCompat.equals(getFirstName(), contact.getFirstName()) &&
+              ObjectsCompat.equals(getAvatarUri(), contact.getAvatarUri()) &&
               ObjectsCompat.equals(getCreatedAt(), contact.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), contact.getUpdatedAt());
       }
@@ -87,6 +111,9 @@ public final class Contact implements Model {
     return new StringBuilder()
       .append(getId())
       .append(getContactId())
+      .append(getUserName())
+      .append(getFirstName())
+      .append(getAvatarUri())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -99,6 +126,9 @@ public final class Contact implements Model {
       .append("Contact {")
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("contactId=" + String.valueOf(getContactId()) + ", ")
+      .append("userName=" + String.valueOf(getUserName()) + ", ")
+      .append("firstName=" + String.valueOf(getFirstName()) + ", ")
+      .append("avatarUri=" + String.valueOf(getAvatarUri()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
@@ -120,13 +150,19 @@ public final class Contact implements Model {
   public static Contact justId(String id) {
     return new Contact(
       id,
+      null,
+      null,
+      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      contactId);
+      contactId,
+      userName,
+      firstName,
+      avatarUri);
   }
   public interface ContactIdStep {
     BuildStep contactId(String contactId);
@@ -136,19 +172,28 @@ public final class Contact implements Model {
   public interface BuildStep {
     Contact build();
     BuildStep id(String id);
+    BuildStep userName(String userName);
+    BuildStep firstName(String firstName);
+    BuildStep avatarUri(String avatarUri);
   }
   
 
   public static class Builder implements ContactIdStep, BuildStep {
     private String id;
     private String contactId;
+    private String userName;
+    private String firstName;
+    private String avatarUri;
     public Builder() {
       
     }
     
-    private Builder(String id, String contactId) {
+    private Builder(String id, String contactId, String userName, String firstName, String avatarUri) {
       this.id = id;
       this.contactId = contactId;
+      this.userName = userName;
+      this.firstName = firstName;
+      this.avatarUri = avatarUri;
     }
     
     @Override
@@ -157,13 +202,34 @@ public final class Contact implements Model {
         
         return new Contact(
           id,
-          contactId);
+          contactId,
+          userName,
+          firstName,
+          avatarUri);
     }
     
     @Override
      public BuildStep contactId(String contactId) {
         Objects.requireNonNull(contactId);
         this.contactId = contactId;
+        return this;
+    }
+    
+    @Override
+     public BuildStep userName(String userName) {
+        this.userName = userName;
+        return this;
+    }
+    
+    @Override
+     public BuildStep firstName(String firstName) {
+        this.firstName = firstName;
+        return this;
+    }
+    
+    @Override
+     public BuildStep avatarUri(String avatarUri) {
+        this.avatarUri = avatarUri;
         return this;
     }
     
@@ -179,14 +245,29 @@ public final class Contact implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String contactId) {
-      super(id, contactId);
+    private CopyOfBuilder(String id, String contactId, String userName, String firstName, String avatarUri) {
+      super(id, contactId, userName, firstName, avatarUri);
       Objects.requireNonNull(contactId);
     }
     
     @Override
      public CopyOfBuilder contactId(String contactId) {
       return (CopyOfBuilder) super.contactId(contactId);
+    }
+    
+    @Override
+     public CopyOfBuilder userName(String userName) {
+      return (CopyOfBuilder) super.userName(userName);
+    }
+    
+    @Override
+     public CopyOfBuilder firstName(String firstName) {
+      return (CopyOfBuilder) super.firstName(firstName);
+    }
+    
+    @Override
+     public CopyOfBuilder avatarUri(String avatarUri) {
+      return (CopyOfBuilder) super.avatarUri(avatarUri);
     }
   }
   

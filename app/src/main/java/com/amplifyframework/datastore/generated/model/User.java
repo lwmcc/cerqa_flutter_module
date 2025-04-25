@@ -27,7 +27,6 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @ModelConfig(pluralName = "Users", type = Model.Type.USER, version = 1, authRules = {
   @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 }, hasLazySupport = true)
-@Index(name = "undefined", fields = {"id"})
 public final class User implements Model {
   public static final UserPath rootPath = new UserPath("root", false, null);
   public static final QueryField ID = field("User", "id");
@@ -40,7 +39,7 @@ public final class User implements Model {
   public static final QueryField EMAIL = field("User", "email");
   public static final QueryField AVATAR_URI = field("User", "avatarUri");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="ID", isRequired = true) String userId;
+  private final @ModelField(targetType="String", isRequired = true) String userId;
   private final @ModelField(targetType="String", isRequired = true) String firstName;
   private final @ModelField(targetType="String", isRequired = true) String lastName;
   private final @ModelField(targetType="String") String name;
@@ -50,8 +49,7 @@ public final class User implements Model {
   private final @ModelField(targetType="AWSURL") String avatarUri;
   private final @ModelField(targetType="UserContact") @HasMany(associatedWith = "user", type = UserContact.class) ModelList<UserContact> contacts = null;
   private final @ModelField(targetType="UserGroup") @HasMany(associatedWith = "user", type = UserGroup.class) ModelList<UserGroup> groups = null;
-  private final @ModelField(targetType="Invite") @HasMany(associatedWith = "sender", type = Invite.class) ModelList<Invite> sentInvites = null;
-  private final @ModelField(targetType="Invite") @HasMany(associatedWith = "receiver", type = Invite.class) ModelList<Invite> receivedInvites = null;
+  private final @ModelField(targetType="Invite") @HasMany(associatedWith = "user", type = Invite.class) ModelList<Invite> invites = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -104,12 +102,8 @@ public final class User implements Model {
       return groups;
   }
   
-  public ModelList<Invite> getSentInvites() {
-      return sentInvites;
-  }
-  
-  public ModelList<Invite> getReceivedInvites() {
-      return receivedInvites;
+  public ModelList<Invite> getInvites() {
+      return invites;
   }
   
   public Temporal.DateTime getCreatedAt() {

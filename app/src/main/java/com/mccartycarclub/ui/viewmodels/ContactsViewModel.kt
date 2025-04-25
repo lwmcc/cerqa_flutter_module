@@ -2,9 +2,7 @@ package com.mccartycarclub.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.datastore.generated.model.User
-import com.amplifyframework.kotlin.core.Amplify
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.NetResult
@@ -15,7 +13,6 @@ import com.mccartycarclub.ui.components.ContactCardEvent
 import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,11 +29,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 @HiltViewModel
 class ContactsViewModel @Inject constructor(
@@ -188,6 +181,7 @@ class ContactsViewModel @Inject constructor(
         viewModelScope.launch {
             val contacts: Deferred<List<Contact>> = async {
                 when (val items = repo.fetchReceivedInvites(loggedInUserId).catch {
+                    println("ContactsViewModel ***** ${it.message}")
                     // TODO: log this
                 }.first()) {
                     is NetWorkResult.Error -> {
@@ -228,13 +222,14 @@ class ContactsViewModel @Inject constructor(
             sentInvites.await().forEach { item ->
                 println("ContactsViewModel ***** AWAIT ${item.userName}")
             }
-
+/*
             repo.fetchContacts(loggedInUserId).collect { data ->
-
-
+                println("ContactsViewModel ***** AWAIT CONTACTS ${data.data}")
             }
+            }
+ */
 
-            repo.myTest(loggedInUserId)
+            repo.fetchContacts(loggedInUserId)
 
             // TODO: testing
         }
@@ -248,25 +243,21 @@ class ContactsViewModel @Inject constructor(
 
             is ContactCardEvent.Connect -> {
                 viewModelScope.launch {
-                    event.receiverUserId?.let { receiverUserId ->
-                        repo.createContact(event.senderUserId, receiverUserId).collect { data ->
-                            when (data) {
-                                NetResult.Pending -> {
-                                    println("ContactsViewModel ***** PENDING")
-                                }
+                    repo.createContact(event.connectionAccepted).collect { data ->
+                        when (data) {
+                            NetResult.Pending -> {
+                                println("ContactsViewModel ***** PENDING")
+                            }
 
-                                is NetResult.Error -> {
-                                    println("ContactsViewModel ***** ERROR ")
-                                }
+                            is NetResult.Error -> {
+                                println("ContactsViewModel ***** ERROR ")
+                            }
 
-                                is NetResult.Success -> {
-                                    println("ContactsViewModel ***** SUCCESS")
-                                }
+                            is NetResult.Success -> {
+                                println("ContactsViewModel ***** SUCCESS")
                             }
                         }
                     }
-
-
                 }
             }
 
@@ -280,11 +271,11 @@ class ContactsViewModel @Inject constructor(
         }
     }
 
-    fun fetchContacts(fetchContacts: String) {
+/*    fun fetchContacts(fetchContacts: String) {
         viewModelScope.launch {
             repo.fetchContacts(fetchContacts)
         }
-    }
+    }*/
 
     fun fetchUserContacts(inviteReceiverUserId: String) {
         userContacts.getUserContacts(inviteReceiverUserId)

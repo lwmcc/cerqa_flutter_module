@@ -1,8 +1,7 @@
 package com.mccartycarclub.repository
 
-import com.amplifyframework.api.graphql.GraphQLResponse
-import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.datastore.generated.model.User
+import com.mccartycarclub.ui.components.ConnectionAccepted
 import kotlinx.coroutines.flow.Flow
 
 interface RemoteRepo {
@@ -28,7 +27,7 @@ interface RemoteRepo {
         receiverUserId: String,
     ): Boolean
 
-    suspend fun fetchContacts(userId: String): Flow<GraphQLResponse<PaginatedResult<User>>>
+    // suspend fun fetchContacts(userId: String): Flow<GraphQLResponse<PaginatedResult<User>>>
 
     suspend fun createContact(user: User)
 
@@ -36,7 +35,7 @@ interface RemoteRepo {
 
     suspend fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>>
 
-    suspend fun createContact(senderUserId: String, receiverUserId: String): Flow<NetResult<String>>
+    suspend fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetResult<String>>
 
-    suspend fun myTest(loggedInUserId: String)
+    suspend fun fetchContacts(loggedInUserId: String)
 }
