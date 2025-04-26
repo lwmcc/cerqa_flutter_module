@@ -402,8 +402,8 @@ fun Contacts(
                             is ReceivedContactInvite -> {
                                 ContactCard(
                                     firstLine = contact.userName,
-                                    secondLine = contact.name,
-                                    thirdLine = "date here",
+                                    secondLine = "${contact.name} RECEIVED TEST",
+                                    thirdLine = contact.createdAt.toDate().toString(), // TODO: change,
                                     hasButtonPair = true,
                                     primaryButtonText = stringResource(id = R.string.connect_cancel),
                                     secondaryButtonText = stringResource(id = R.string.connect_to_user),
@@ -424,10 +424,6 @@ fun Contacts(
                                                                 receiverUserId = loggedInUser.userId,
                                                             )
                                                         )
-                                                        /*ContactCardEvent.Connect(
-                                                            contact.userId,
-                                                            loggedInUser.userId,
-                                                        )*/
                                                     )
                                                 }
                                             }
@@ -439,8 +435,8 @@ fun Contacts(
                             is SentContactInvite -> {
                                 ContactCard(
                                     firstLine = contact.userName,
-                                    secondLine = contact.name,
-                                    thirdLine = "date here",
+                                    secondLine = "${contact.name} SENT TEST",
+                                    thirdLine = contact.createdAt.toDate().toString(), // TODO: change
                                     hasButtonPair = false,
                                     primaryButtonText = stringResource(id = R.string.connect_cancel),
                                     secondaryButtonText = stringResource(id = R.string.connect_to_user),
@@ -454,8 +450,9 @@ fun Contacts(
                             is CurrentContact -> {
                                 ContactCard(
                                     firstLine = contact.userName,
-                                    secondLine = contact.name,
-                                    thirdLine = "date here",
+                                    secondLine = "${contact.name} CURRENT TEST",
+                                    thirdLine = contact.createdAt.toDate()
+                                        .toString(), // TODO: change
                                     hasButtonPair = false,
                                     primaryButtonText = stringResource(id = R.string.connect_cancel),
                                     secondaryButtonText = stringResource(id = R.string.connect_to_user),

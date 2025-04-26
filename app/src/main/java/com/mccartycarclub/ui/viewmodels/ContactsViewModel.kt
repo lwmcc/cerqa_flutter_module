@@ -179,7 +179,10 @@ class ContactsViewModel @Inject constructor(
     // TODO: rename this function
     fun fetchReceivedInvites(loggedInUserId: String) {
         viewModelScope.launch {
-            val contacts: Deferred<List<Contact>> = async {
+
+            val allContacts = mutableListOf<Contact>()
+
+            val contactsDeferred = async {
                 when (val items = repo.fetchReceivedInvites(loggedInUserId).catch {
                     println("ContactsViewModel ***** ${it.message}")
                     // TODO: log this
@@ -198,12 +201,10 @@ class ContactsViewModel @Inject constructor(
                 }
             }
 
-            _contacts.value = UserContacts.Success(contacts.await())
-
-            val sentInvites: Deferred<List<Contact>> = async {
+            val sentInvitesDeferred = async {
                 when (val items = repo.fetchSentInvites(loggedInUserId).catch {
                     // TODO: log this
-                }.first()) {
+                }.first()) {  // TODO: change from first
                     is NetWorkResult.Error -> {
                         emptyList()
                     }
@@ -218,20 +219,30 @@ class ContactsViewModel @Inject constructor(
                 }
             }
 
-            println("ContactsViewModel ***** SEND SIZE ${sentInvites.await().size}")
-            sentInvites.await().forEach { item ->
-                println("ContactsViewModel ***** AWAIT ${item.userName}")
-            }
-/*
-            repo.fetchContacts(loggedInUserId).collect { data ->
-                println("ContactsViewModel ***** AWAIT CONTACTS ${data.data}")
-            }
-            }
- */
 
-            repo.fetchContacts(loggedInUserId)
+            // TODO: move the function
+            val currentContactsDeferred: Deferred<List<Contact>> = async {
+                when (val items = repo.fetchContacts(loggedInUserId).catch {
+                    // TODO: log this
+                }.first()) {  // TODO: change from first
+                    is NetResult.Error -> {
+                        emptyList()
+                    }
 
-            // TODO: testing
+                    NetResult.Pending -> {
+                        emptyList()
+                    }
+
+                    is NetResult.Success -> {
+                        items.data!! // TODO:
+                    }
+                }
+            }
+
+            allContacts.addAll(contactsDeferred.await())
+            allContacts.addAll(sentInvitesDeferred.await())
+            allContacts.addAll(currentContactsDeferred.await())
+            _contacts.value = UserContacts.Success(allContacts)
         }
     }
 

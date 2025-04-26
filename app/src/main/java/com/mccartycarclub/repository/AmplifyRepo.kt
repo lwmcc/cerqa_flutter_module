@@ -4,14 +4,14 @@ import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
-import com.amplifyframework.core.model.LazyModelList
 import com.amplifyframework.core.model.LazyModelReference
-import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.Model
+import com.amplifyframework.core.model.ModelReference
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
+import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
@@ -389,62 +389,45 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         predicate: QueryPredicateGroup,
     ) = amplifyApi.query(ModelQuery.list(modelClass, predicate)).data.items.firstOrNull()
 
-    override suspend fun fetchContacts(loggedInUserId: String) {
+    override suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>> = flow {
 
-        try {
-            val response =
-                amplifyApi.query(ModelQuery[User::class.java, loggedInUserId])
+            val contacts = mutableListOf<Contact>()
+            try {
+                val response = amplifyApi.query(
+                    ModelQuery.list(
+                        UserContact::class.java,
+                        UserContact.CONTACT.eq(loggedInUserId)
+                    )
+                )
 
-            when (val userContacts = response.data.contacts) {
-                is LoadedModelList -> {
+                response.data.items.forEach {
+                    when (val user: ModelReference<User> = it.user) {
+                        is LazyModelReference -> {
+                            val contact = user.fetchModel()
 
-                }
+                            contacts.add(
+                                CurrentContact(
+                                    senderUserId = contact?.userId ?: "",
+                                    avatarUri = contact?.avatarUri ?: "",
+                                    name = contact?.name ?: "",
+                                    rowId = contact?.id ?: "",
+                                    userName = contact?.userName ?: "",
+                                    userId = "",
+                                    createdAt = contact?.createdAt!!, // TODO: fix this
+                                )
+                            )
+                        }
 
-                is LazyModelList -> {
+                        is LoadedModelReference -> {
 
-                    val allContacts = mutableListOf<UserContact>()
-                    var page = userContacts.fetchPage()
-
-                    allContacts.addAll(page.items)
-
-                    while (page.hasNextPage) {
-                        val nextPage = userContacts.fetchPage(page.nextToken)
-                        allContacts.addAll(nextPage.items)
-                        page = nextPage
-                    }
-
-                    allContacts.forEach { userContact ->
-                        when (val contactRef = userContact.contact) {
-                            is LazyModelReference -> {
-
-                                val contact = contactRef.fetchModel() as AmplifyContact
-                                println("AmplifyRepo ***** USER ${contact.userName}")
-                                println("AmplifyRepo ***** USER ${contact.contactId}")
-                                println("AmplifyRepo ***** USER ${contact.id}")
-                                println("AmplifyRepo ***** USER ${contact.firstName}")
-                                println("AmplifyRepo ***** USER ${contact.avatarUri}")
-                            }
-                            is LoadedModelReference -> {
-
-                            }
                         }
                     }
-
                 }
+                emit(NetResult.Success(contacts))
+            } catch (e: ApiException) {
+                println("AmplifyRepo ***** ERROR ${e.message}")
             }
-        } catch (e: ApiException) {
-            println("AmplifyRepo ***** ERROR ${e.message}")
         }
-
-
-
-
-        //val response = amplifyApi.query(
-        //    ModelQuery[User::class.java, User.UserIdentifier(loggedInUserId)],
-        //)
-
-
-    }
 
     companion object {
         const val DUMMY = "dummy"
@@ -461,21 +444,37 @@ open class Contact(
     val userName: String,
     val name: String,
     val avatarUri: String,
+    val createdAt: Temporal.DateTime,
 )
 
 class ReceivedContactInvite(
     val receiverUserId: String,
     val receivedDate: Date, // TODO: use correct type
-    rowId: String, userId: String, userName: String, name: String, avatarUri: String,
-) : Contact(rowId, userId, userName, name, avatarUri)
+    rowId: String,
+    userId: String,
+    userName: String,
+    name: String,
+    avatarUri: String,
+    createdAt: Temporal.DateTime,
+) : Contact(rowId, userId, userName, name, avatarUri, createdAt)
 
 class SentContactInvite(
     val senderUserId: String,
     val sentDate: Date,
-    rowId: String, userId: String, userName: String, name: String, avatarUri: String,
-) : Contact(rowId, userId, userName, name, avatarUri)
+    rowId: String,
+    userId: String,
+    userName: String,
+    name: String,
+    avatarUri: String,
+    createdAt: Temporal.DateTime,
+) : Contact(rowId, userId, userName, name, avatarUri, createdAt)
 
 class CurrentContact(
     val senderUserId: String,
-    rowId: String, userId: String, userName: String, name: String, avatarUri: String,
-) : Contact(rowId, userId, userName, name, avatarUri)
+    rowId: String,
+    userId: String,
+    userName: String,
+    name: String,
+    avatarUri: String,
+    createdAt: Temporal.DateTime,
+) : Contact(rowId, userId, userName, name, avatarUri, createdAt)

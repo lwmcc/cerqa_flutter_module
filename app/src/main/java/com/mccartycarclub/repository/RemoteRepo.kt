@@ -27,8 +27,6 @@ interface RemoteRepo {
         receiverUserId: String,
     ): Boolean
 
-    // suspend fun fetchContacts(userId: String): Flow<GraphQLResponse<PaginatedResult<User>>>
-
     suspend fun createContact(user: User)
 
     suspend fun fetchReceivedInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>>
@@ -37,5 +35,5 @@ interface RemoteRepo {
 
     suspend fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetResult<String>>
 
-    suspend fun fetchContacts(loggedInUserId: String)
+    suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>>
 }
