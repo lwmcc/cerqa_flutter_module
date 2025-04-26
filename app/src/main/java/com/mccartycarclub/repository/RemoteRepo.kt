@@ -15,7 +15,7 @@ interface RemoteRepo {
         receiverUserId: String,
     ): Flow<Boolean>
 
-    suspend fun fetchUserByUserName(userName: String): Flow<NetResult<User?>>
+    suspend fun fetchUserByUserName(userName: String): Flow<NetSearchResult<User?>>
 
     suspend fun sendInviteToConnect(
         senderUserId: String?,

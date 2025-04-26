@@ -62,19 +62,19 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         }
     }
 
-    override suspend fun fetchUserByUserName(userName: String): Flow<NetResult<User?>> = flow {
-        try {
-            val response =
-                Amplify.API.query(ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)))
-            if (response.hasData() && response.data.firstOrNull() != null) {
-                emit(NetResult.Success(response.data.first()))
-            } else {
-                emit(NetResult.Error(ResponseException("No User Name Found")))
+    override suspend fun fetchUserByUserName(userName: String): Flow<NetSearchResult<User?>> = flow {
+            try {
+                val response =
+                    Amplify.API.query(ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)))
+                if (response.hasData() && response.data.firstOrNull() != null) {
+                    emit(NetSearchResult.Success(response.data.first()))
+                } else {
+                    emit(NetSearchResult.Error(ResponseException("No User Name Found")))
+                }
+            } catch (e: ApiException) {
+                emit(NetSearchResult.Error(e))
             }
-        } catch (e: ApiException) {
-            emit(NetResult.Error(e))
         }
-    }
 
     override suspend fun sendInviteToConnect(
         senderUserId: String?,
@@ -156,19 +156,6 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
             null
         }
     }
-
-    // TODO make private
-/*    override suspend fun fetchContacts(loggedInUserId: String):
-            Flow<GraphQLResponse<PaginatedResult<User>>> = flow {
-        val response =
-            amplifyApi.query(ModelQuery.list(User::class.java, User.USER_ID.eq(loggedInUserId)))
-
-        response.data.forEach {
-            println("AmplifyRepo ***** fetchContacts CONTACTS ${it.name}")
-            println("AmplifyRepo ***** fetchContacts CONTACTS ${it.userName}")
-        }
-
-    }*/
 
     override suspend fun createContact(user: User) {
         val response = Amplify.API.mutate(ModelMutation.create(user))
@@ -276,7 +263,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
 
         if (senderResponse.hasData()) {
             senderResponse.data.items.forEach { item ->
-                println("AmplifyRepo ***** WHO RECEIVED ${item.receiver}")
+                invites.add(item.receiver)
             }
         }
 

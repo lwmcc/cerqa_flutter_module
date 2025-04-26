@@ -6,6 +6,7 @@ import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.NetResult
+import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.NetWorkResult
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.ui.callbacks.connectionclicks.ConnectionEvent
@@ -27,9 +28,11 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class ContactsViewModel @Inject constructor(
@@ -61,68 +64,74 @@ class ContactsViewModel @Inject constructor(
     private val _contacts = MutableStateFlow<UserContacts>(UserContacts.Pending)
     val contacts = _contacts.asStateFlow()
 
-    private val _query = MutableStateFlow("") // TODO: null?
-    val searchResults: StateFlow<NetResult<User?>> = _query
-        .debounce(1000)
-        .filter { it.isNotBlank() }
+    private val _query = MutableStateFlow<String?>(null)
+    val searchResults: StateFlow<NetSearchResult<User?>> = _query
+        .debounce(SEARCH_DELAY.milliseconds)
+        .filter { !it.isNullOrBlank() }
         .distinctUntilChanged()
         .flatMapLatest { userName ->
-            callbackFlow {
-                repo.fetchUserByUserName(userName).collect { data ->
-                    when (data) {
-                        NetResult.Pending -> {
+            userName?.let { name ->
+                callbackFlow {
+                    repo.fetchUserByUserName(name).collect { data ->
+                        when (data) {
+                            NetSearchResult.Idle -> {
 
-                        }
+                            }
 
-                        is NetResult.Error -> {
-                            println("ContactsViewModel ***** ${data.exception.message}")
-                        }
+                            NetSearchResult.Pending -> {
 
-                        is NetResult.Success -> {
-                            println("ContactsViewModel ***** SEARCH")
-                            trySend(data)
-                            fetchUserId { loggedIn ->
-                                if (loggedIn.loggedIn) {
-                                    loggedIn.userId?.let { userId ->
-                                        _receiverQueryPending.value = true
-                                        viewModelScope.launch {
-                                            val hasConnection: Deferred<Boolean> = async {
-                                                repo.contactExists(
-                                                    userId,
-                                                    data.data?.userId.toString(),
-                                                ).firstOrNull() ?: false
+                            }
+
+                            is NetSearchResult.Error -> {
+                                println("ContactsViewModel ***** ${data.exception.message}")
+                            }
+
+                            is NetSearchResult.Success -> {
+                                println("ContactsViewModel ***** SEARCH")
+                                trySend(data)
+                                fetchUserId { loggedIn ->
+                                    if (loggedIn.loggedIn) {
+                                        loggedIn.userId?.let { userId ->
+                                            _receiverQueryPending.value = true
+                                            viewModelScope.launch {
+                                                val hasConnection: Deferred<Boolean> = async {
+                                                    repo.contactExists(
+                                                        userId,
+                                                        data.data?.userId.toString(),
+                                                    ).firstOrNull() ?: false
+                                                }
+
+                                                val hasExistingInvite = async {
+                                                    repo.hasExistingInvite(
+                                                        userId,
+                                                        data.data?.userId.toString()
+                                                    ).firstOrNull() ?: false
+                                                }
+
+                                                val connection = hasConnection.await()
+                                                val invite = hasExistingInvite.await()
+
+                                                _receiverQueryPending.value = false
+                                                _hasPendingInvite.value = invite
+                                                _hasConnection.value = connection
                                             }
-
-                                            val hasExistingInvite = async {
-                                                repo.hasExistingInvite(
-                                                    userId,
-                                                    data.data?.userId.toString()
-                                                ).firstOrNull() ?: false
-                                            }
-
-                                            val connection = hasConnection.await()
-                                            val invite = hasExistingInvite.await()
-
-                                            _receiverQueryPending.value = false
-                                            _hasPendingInvite.value = invite
-                                            _hasConnection.value = connection
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                    awaitClose {
+                        // TODO: do I need this?
+                        // YES, what should i put here?
+                    }
                 }
-                awaitClose {
-                    // TODO: do I need this?
-                    // YES, what should i put here?
-                }
-            }
+            } ?: flow { emit(NetSearchResult.Pending) }
         }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
-            NetResult.Pending
+            NetSearchResult.Idle
         )
 
     fun onQueryChange(searchQuery: String) {
@@ -179,9 +188,7 @@ class ContactsViewModel @Inject constructor(
     // TODO: rename this function
     fun fetchReceivedInvites(loggedInUserId: String) {
         viewModelScope.launch {
-
             val allContacts = mutableListOf<Contact>()
-
             val contactsDeferred = async {
                 when (val items = repo.fetchReceivedInvites(loggedInUserId).catch {
                     println("ContactsViewModel ***** ${it.message}")
@@ -191,9 +198,9 @@ class ContactsViewModel @Inject constructor(
                         emptyList()
                     }
 
-                    NetWorkResult.Pending -> {
+/*                    NetWorkResult.Pending -> {
                         emptyList()
-                    }
+                    }*/
 
                     is NetWorkResult.Success -> {
                         items.data ?: emptyList()
@@ -209,9 +216,9 @@ class ContactsViewModel @Inject constructor(
                         emptyList()
                     }
 
-                    NetWorkResult.Pending -> {
+/*                    NetWorkResult.Pending -> {
                         emptyList()
-                    }
+                    }*/
 
                     is NetWorkResult.Success -> {
                         items.data ?: emptyList()
@@ -242,6 +249,7 @@ class ContactsViewModel @Inject constructor(
             allContacts.addAll(contactsDeferred.await())
             allContacts.addAll(sentInvitesDeferred.await())
             allContacts.addAll(currentContactsDeferred.await())
+            //val currentContacts = currentContactsDeferred.await()
             _contacts.value = UserContacts.Success(allContacts)
         }
     }
@@ -282,20 +290,6 @@ class ContactsViewModel @Inject constructor(
         }
     }
 
-/*    fun fetchContacts(fetchContacts: String) {
-        viewModelScope.launch {
-            repo.fetchContacts(fetchContacts)
-        }
-    }*/
-
-    fun fetchUserContacts(inviteReceiverUserId: String) {
-        userContacts.getUserContacts(inviteReceiverUserId)
-    }
-
-    suspend fun recevierHasExistingInvite() {
-        // repo.hasExistingInvite()
-    }
-
     suspend fun usersHaveExistingConnection(
         senderUserId: String,
         receiverUserId: String,
@@ -329,5 +323,9 @@ class ContactsViewModel @Inject constructor(
         } else {
             _isCancellingInvite.value = false
         }
+    }
+
+    companion object {
+        const val SEARCH_DELAY: Int = 1_000
     }
 }

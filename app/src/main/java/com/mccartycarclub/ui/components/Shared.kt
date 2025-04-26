@@ -61,6 +61,7 @@ import com.mccartycarclub.navigation.AppNavigationActions
 import com.mccartycarclub.navigation.ClickNavigation
 import com.mccartycarclub.repository.CurrentContact
 import com.mccartycarclub.repository.NetResult
+import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.SentContactInvite
 import com.mccartycarclub.ui.callbacks.connectionclicks.ConnectionEvent
@@ -191,7 +192,7 @@ fun AppAuthenticator(
                                 // testUser1  testUser2
 
                                 Amplify.API.mutate(
-                                    ModelMutation.create(testUser2(userId!!)),
+                                    ModelMutation.create(testUser3(userId!!)),
                                     { response ->
                                         Log.i("MainActivity", "User created: ${response.data}")
                                         println("MainActivity ***** ERROR ${response.hasErrors()}")
@@ -538,13 +539,13 @@ fun Search(
             )
 
             when (searchQuery) {
-                NetResult.Pending -> {
+                NetSearchResult.Pending -> {
                     // TODO: maybe remove this
                     //  Pending()
                 }
 
-                is NetResult.Success -> {
-                    val user = (searchQuery as? NetResult.Success)?.data
+                is NetSearchResult.Success -> {
+                    val user = (searchQuery as? NetSearchResult.Success)?.data
                     UserCard(
                         user,
                         hasConnection = hasConnection,
@@ -556,11 +557,15 @@ fun Search(
                             contactsViewModel.userConnectionEvent(connectionEvent)
                         },
                         onButtonClick = { receiverUserId ->
-                           // contactsViewModel.createConnectInvite(receiverUserId)
+                            // contactsViewModel.createConnectInvite(receiverUserId)
                         })
                 }
 
-                is NetResult.Error -> {
+                is NetSearchResult.Error -> {
+
+                }
+
+                is NetSearchResult.Idle -> {
 
                 }
             }
@@ -758,18 +763,19 @@ fun testUser2(userId: String): User {
         .name("Bron")
         .avatarUri("https://example.com/avatar.png")
         .build()
+}
 
-
-        /*.firstName("Lebron")
-        .lastName("James")
-        .name("Lebron J")
-        .phone("+14805554545")
-        //.userName("KingJames")
-        .email("lmccarty@outlook.com")
-        .avatarUri("https://example.com/avatar.png")
-        //.userId(userId)
-        .id(userId)
-        .build()*/
+fun testUser3(userId: String): User {
+    return User.builder()
+        .userId(userId)
+        .firstName("Luka")
+        .lastName("Doncic")
+        .userName("Luka")
+        .email("luka@gmail.com")
+        .phone("+14805553211")
+        .name("Luka")
+        .avatarUri("https://example.com/luka/avatar.png")
+        .build()
 }
 
 data class Ids(
