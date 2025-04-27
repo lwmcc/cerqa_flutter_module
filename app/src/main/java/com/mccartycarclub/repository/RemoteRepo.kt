@@ -5,17 +5,17 @@ import com.mccartycarclub.ui.components.ConnectionAccepted
 import kotlinx.coroutines.flow.Flow
 
 interface RemoteRepo {
-    suspend fun contactExists(
+    fun contactExists(
         senderUserId: String,
         receiverUserId: String,
     ): Flow<Boolean>
 
-    suspend fun hasExistingInvite(
+    fun hasExistingInvite(
         senderUserId: String,
         receiverUserId: String,
     ): Flow<Boolean>
 
-    suspend fun fetchUserByUserName(userName: String): Flow<NetSearchResult<User?>>
+    fun fetchUserByUserName(userName: String): Flow<NetSearchResult<User?>>
 
     suspend fun sendInviteToConnect(
         senderUserId: String?,
@@ -29,11 +29,11 @@ interface RemoteRepo {
 
     suspend fun createContact(user: User)
 
-    suspend fun fetchReceivedInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>>
+    fun fetchReceivedInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>>
 
-    suspend fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>>
+    fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>>
 
-    suspend fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetResult<String>>
+    fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetResult<String>>
 
     suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>>
 }

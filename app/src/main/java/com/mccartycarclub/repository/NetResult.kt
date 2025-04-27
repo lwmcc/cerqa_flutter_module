@@ -7,7 +7,6 @@ sealed class NetResult<out T> {
 }
 
 sealed class NetWorkResult<out T> {
-    //data object Pending : NetResult<Nothing>()
     data class Success<out T>(val data: T?) : NetWorkResult<T>()
     data class Error(val exception: Throwable) : NetWorkResult<Nothing>()
 }

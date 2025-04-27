@@ -198,10 +198,6 @@ class ContactsViewModel @Inject constructor(
                         emptyList()
                     }
 
-/*                    NetWorkResult.Pending -> {
-                        emptyList()
-                    }*/
-
                     is NetWorkResult.Success -> {
                         items.data ?: emptyList()
                     }
@@ -215,10 +211,6 @@ class ContactsViewModel @Inject constructor(
                     is NetWorkResult.Error -> {
                         emptyList()
                     }
-
-/*                    NetWorkResult.Pending -> {
-                        emptyList()
-                    }*/
 
                     is NetWorkResult.Success -> {
                         items.data ?: emptyList()
@@ -249,7 +241,6 @@ class ContactsViewModel @Inject constructor(
             allContacts.addAll(contactsDeferred.await())
             allContacts.addAll(sentInvitesDeferred.await())
             allContacts.addAll(currentContactsDeferred.await())
-            //val currentContacts = currentContactsDeferred.await()
             _contacts.value = UserContacts.Success(allContacts)
         }
     }

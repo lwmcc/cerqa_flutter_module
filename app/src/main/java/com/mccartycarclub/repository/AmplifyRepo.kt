@@ -33,7 +33,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         data class Current(val type: String) : ContactType()
     }
 
-    override suspend fun contactExists(
+    override fun contactExists(
         senderUserId: String,
         receiverUserId: String,
     ): Flow<Boolean> = flow {
@@ -45,7 +45,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         emit(count > 0)
     }
 
-    override suspend fun hasExistingInvite(
+    override fun hasExistingInvite(
         senderUserId: String,
         receiverUserId: String,
     ): Flow<Boolean> = flow {
@@ -62,7 +62,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         }
     }
 
-    override suspend fun fetchUserByUserName(userName: String): Flow<NetSearchResult<User?>> = flow {
+    override fun fetchUserByUserName(userName: String): Flow<NetSearchResult<User?>> = flow {
             try {
                 val response =
                     Amplify.API.query(ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)))
@@ -161,26 +161,19 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         val response = Amplify.API.mutate(ModelMutation.create(user))
     }
 
-    override suspend fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
+    override fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
         flow {
             val senderResponse = sentInvites(loggedInUserId)
             emit(fetchInvites(senderResponse))
         }
 
-    override suspend fun fetchReceivedInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
+    override fun fetchReceivedInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
         flow {
-
-            // TODO: and return flow
-            // TODO: set up so that no invites does not cause crash
-            //val senderResponse = sentInvites(loggedInUserId)
-            //fetchInvites(senderResponse)
-
-            // TODO: change name receivedInvites
             val receiverResponse = receivedInvites(loggedInUserId)
             emit(fetchInvites(receiverResponse))
         }
 
-    override suspend fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetResult<String>> = flow {
+    override fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetResult<String>> = flow {
             emit(NetResult.Pending)
             val sender = User.justId(connectionAccepted.senderUserId)
             val receiver = User.justId(connectionAccepted.receiverUserId)
