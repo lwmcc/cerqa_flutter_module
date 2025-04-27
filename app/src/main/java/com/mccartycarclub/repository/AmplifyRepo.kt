@@ -11,21 +11,27 @@ import com.amplifyframework.core.model.ModelReference
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
+import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation
 import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 
 import com.amplifyframework.kotlin.api.KotlinApiFacade
-import com.amplifyframework.kotlin.core.Amplify
 import com.mccartycarclub.ui.components.ConnectionAccepted
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import java.util.Date
 import javax.inject.Inject
+import javax.inject.Named
 import com.amplifyframework.datastore.generated.model.Contact as AmplifyContact
 
-class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) : RemoteRepo {
+class AmplifyRepo @Inject constructor(
+    private val amplifyApi: KotlinApiFacade,
+    @Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
+) : RemoteRepo {
 
     sealed class ContactType() {
         data class Received(val type: String) : ContactType()
@@ -40,7 +46,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         val filter = UserContact.USER.eq(senderUserId)
             .and(UserContact.CONTACT.eq(receiverUserId))
 
-        val response = Amplify.API.query(ModelQuery.list(UserContact::class.java, filter))
+        val response = amplifyApi.query(ModelQuery.list(UserContact::class.java, filter))
         val count = response.data.items.count()
         emit(count > 0)
     }
@@ -53,7 +59,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         val filter = Invite.SENDER.eq(senderUserId)
             .and(Invite.RECEIVER.eq(receiverUserId))
 
-        val response = Amplify.API.query(ModelQuery.list(Invite::class.java, filter))
+        val response = amplifyApi.query(ModelQuery.list(Invite::class.java, filter))
         if (response.hasData()) {
             val count = response.data.items.count()
             emit(count > 0)
@@ -63,18 +69,18 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
     }
 
     override fun fetchUserByUserName(userName: String): Flow<NetSearchResult<User?>> = flow {
-            try {
-                val response =
-                    Amplify.API.query(ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)))
-                if (response.hasData() && response.data.firstOrNull() != null) {
-                    emit(NetSearchResult.Success(response.data.first()))
-                } else {
-                    emit(NetSearchResult.Error(ResponseException("No User Name Found")))
-                }
-            } catch (e: ApiException) {
-                emit(NetSearchResult.Error(e))
+        try {
+            val response =
+                amplifyApi.query(ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)))
+            if (response.hasData() && response.data.firstOrNull() != null) {
+                emit(NetSearchResult.Success(response.data.first()))
+            } else {
+                emit(NetSearchResult.Error(ResponseException("No User Name Found")))
             }
+        } catch (e: ApiException) {
+            emit(NetSearchResult.Error(e))
         }
+    }
 
     override suspend fun sendInviteToConnect(
         senderUserId: String?,
@@ -99,7 +105,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
             .build()
 
         return try {
-            val result = Amplify.API.mutate(ModelMutation.create(invite))
+            val result = amplifyApi.mutate(ModelMutation.create(invite))
             if (result.hasData()) {
                 println("AmplifyRepo ***** ${result.data}")
             } else {
@@ -158,22 +164,25 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
     }
 
     override suspend fun createContact(user: User) {
-        val response = Amplify.API.mutate(ModelMutation.create(user))
+        val response =amplifyApi.mutate(ModelMutation.create(user))
     }
 
     override fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
         flow {
-            val senderResponse = sentInvites(loggedInUserId)
+            val senderResponse = sentInvites(Invite.SENDER.eq(loggedInUserId))
             emit(fetchInvites(senderResponse))
-        }
+        }.flowOn(ioDispatcher)
 
     override fun fetchReceivedInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
         flow {
-            val receiverResponse = receivedInvites(loggedInUserId)
+            val receiverResponse =
+                receivedInvites(Invite.RECEIVER.eq(loggedInUserId))
             emit(fetchInvites(receiverResponse))
-        }
+        }.flowOn(ioDispatcher)
 
-    override fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetResult<String>> = flow {
+    // TODO: change and use flowOn
+    override fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetResult<String>> =
+        flow {
             emit(NetResult.Pending)
             val sender = User.justId(connectionAccepted.senderUserId)
             val receiver = User.justId(connectionAccepted.receiverUserId)
@@ -245,12 +254,12 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
             }
         }
 
-    private suspend fun sentInvites(loggedInUserId: String): List<String> {
+    private suspend fun sentInvites(query: QueryPredicateOperation<Any>): List<String> {
         val invites = mutableSetOf<String>()
         val senderResponse = amplifyApi.query(
             ModelQuery.list(
                 Invite::class.java,
-                Invite.SENDER.eq(loggedInUserId)
+                query,
             )
         )
 
@@ -263,7 +272,9 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         return invites.toList()
     }
 
-    private suspend fun receivedInvites(loggedInUserId: String): List<String> {
+    private suspend fun receivedInvites(
+        query: QueryPredicateOperation<Any>,
+    ): List<String> {
 
         val invites = mutableSetOf<String>()
 
@@ -272,7 +283,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
             val receiverResponse = amplifyApi.query(
                 ModelQuery.list(
                     Invite::class.java,
-                    Invite.RECEIVER.eq(loggedInUserId)
+                    query,
                 )
             )
             receiverResponse.data.items.forEach { item ->
@@ -295,7 +306,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         val filter = Invite.SENDER.eq(senderUserId)
             .and(Invite.RECEIVER.eq(receiverUserId))
 
-        val invites = Amplify.API.query(
+        val invites = amplifyApi.query(
             ModelQuery.list(Invite::class.java, filter)
         ).data
 
@@ -369,8 +380,8 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
         predicate: QueryPredicateGroup,
     ) = amplifyApi.query(ModelQuery.list(modelClass, predicate)).data.items.firstOrNull()
 
-    override suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>> = flow {
-
+    override suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>> =
+        flow {
             val contacts = mutableListOf<Contact>()
             try {
                 val response = amplifyApi.query(
@@ -407,7 +418,7 @@ class AmplifyRepo @Inject constructor(private val amplifyApi: KotlinApiFacade) :
             } catch (e: ApiException) {
                 println("AmplifyRepo ***** ERROR ${e.message}")
             }
-        }
+        }.flowOn(ioDispatcher)
 
     companion object {
         const val DUMMY = "dummy"
