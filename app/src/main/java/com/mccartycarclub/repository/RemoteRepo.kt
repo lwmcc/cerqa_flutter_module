@@ -33,6 +33,8 @@ interface RemoteRepo {
 
     fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>>
 
+    suspend fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>>
+
     fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetResult<String>>
 
     suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>>

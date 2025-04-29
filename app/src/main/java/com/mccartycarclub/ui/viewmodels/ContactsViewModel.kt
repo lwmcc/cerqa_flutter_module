@@ -8,6 +8,7 @@ import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.NetResult
 import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.NetWorkResult
+import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.ui.callbacks.connectionclicks.ConnectionEvent
 import com.mccartycarclub.ui.components.ContactCardEvent
@@ -242,6 +243,25 @@ class ContactsViewModel @Inject constructor(
             allContacts.addAll(sentInvitesDeferred.await())
             allContacts.addAll(currentContactsDeferred.await())
             _contacts.value = UserContacts.Success(allContacts)
+
+            // TODO: testing
+
+            when (val data = repo.fetchAllContacts(loggedInUserId).first()) {
+                is NetworkResponse.Error -> {
+                    println("ContactsViewModel ***** ${data.exception.message}")
+                }
+
+                is NetworkResponse.NoInternet -> {
+                    println("ContactsViewModel ***** ${data.message}")
+                }
+
+                is NetworkResponse.Success -> {
+                    data.data?.forEach { result ->
+                        println("ContactsViewModel ***** ${result.name}")
+                        println("ContactsViewModel ***** ${result.userName}")
+                    }
+                }
+            }
         }
     }
 

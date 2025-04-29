@@ -2,6 +2,8 @@ package com.mccartycarclub.repository
 
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
+import com.amplifyframework.api.graphql.GraphQLResponse
+import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.core.model.LazyModelReference
@@ -20,6 +22,8 @@ import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.mccartycarclub.ui.components.ConnectionAccepted
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -125,7 +129,7 @@ class AmplifyRepo @Inject constructor(
         receiverUserId: String
     ): Boolean {
 
-/*        val sender = getInviteSender(receiverUserId)
+        /*        val sender = getInviteSender(receiverUserId)
         val receiver = getInviteReceiver(receiverUserId)
 
         if (sender == null && receiver == null) {
@@ -164,19 +168,19 @@ class AmplifyRepo @Inject constructor(
     }
 
     override suspend fun createContact(user: User) {
-        val response =amplifyApi.mutate(ModelMutation.create(user))
+        val response = amplifyApi.mutate(ModelMutation.create(user))
     }
 
     override fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
         flow {
-            val senderResponse = sentInvites(Invite.SENDER.eq(loggedInUserId))
+            val senderResponse = fetchSentInvites(Invite.SENDER.eq(loggedInUserId))
             emit(fetchInvites(senderResponse))
         }.flowOn(ioDispatcher)
 
     override fun fetchReceivedInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
         flow {
             val receiverResponse =
-                receivedInvites(Invite.RECEIVER.eq(loggedInUserId))
+                fetchReceivedInvites(Invite.RECEIVER.eq(loggedInUserId))
             emit(fetchInvites(receiverResponse))
         }.flowOn(ioDispatcher)
 
@@ -254,32 +258,72 @@ class AmplifyRepo @Inject constructor(
             }
         }
 
-    private suspend fun sentInvites(query: QueryPredicateOperation<Any>): List<String> {
-        val invites = mutableSetOf<String>()
-        val senderResponse = amplifyApi.query(
-            ModelQuery.list(
-                Invite::class.java,
-                query,
-            )
-        )
+    override suspend fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>> =
+        flow<NetworkResponse<List<Contact>>> {
+            coroutineScope {
+                try {
+                    val receivedInvites = async {
+                        val receiverResponse =
+                            fetchReceivedInvites(Invite.RECEIVER.eq(loggedInUserId))
+                        fetchAllInvites(receiverResponse)
+                    }
 
-        if (senderResponse.hasData()) {
-            senderResponse.data.items.forEach { item ->
-                invites.add(item.receiver)
+                    val sentInvites = async {
+                        val senderResponse = fetchSentInvites(Invite.SENDER.eq(loggedInUserId))
+                        fetchAllInvites(senderResponse)
+                    }
+
+                    val contacts = async {
+                        val contactsResponse = fetchContacts(UserContact.CONTACT.eq(loggedInUserId))
+                        createContacts(contactsResponse)
+                    }
+
+                    emit(NetworkResponse.Success(receivedInvites.await() + sentInvites.await() + contacts.await()))
+                } catch (no: NoInternetException) {
+                    emit(NetworkResponse.NoInternet(no.message ?: "no net"))
+                } catch (re: ResponseException) {
+                    emit(NetworkResponse.Error(re))
+                }
             }
-        }
+        }.flowOn(ioDispatcher)
 
-        return invites.toList()
+    private fun handleResponse(response: () -> List<Contact>) {
+
     }
 
-    private suspend fun receivedInvites(
+    private suspend fun fetchSentInvites(query: QueryPredicateOperation<Any>): List<String> {
+        val invites = mutableSetOf<String>()
+        try {
+            val senderResponse = amplifyApi.query(
+                ModelQuery.list(
+                    Invite::class.java,
+                    query,
+                )
+            )
+
+            if (senderResponse.hasData()) {
+                senderResponse.data.items.forEach { item ->
+                    invites.add(item.receiver)
+                }
+            }
+
+            return invites.toList()
+        } catch (e: ApiException) {
+            if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
+                throw NoInternetException("Cannot read proto.")
+            } else {
+                throw ResponseException("Cannot read proto.")
+            }
+        }
+    }
+
+    private suspend fun fetchReceivedInvites(
         query: QueryPredicateOperation<Any>,
     ): List<String> {
 
-        val invites = mutableSetOf<String>()
+        val invites = mutableSetOf<String>() // TODO: string or contact?
 
-        return try {
-
+        try {
             val receiverResponse = amplifyApi.query(
                 ModelQuery.list(
                     Invite::class.java,
@@ -289,11 +333,63 @@ class AmplifyRepo @Inject constructor(
             receiverResponse.data.items.forEach { item ->
                 invites.add(item.sender)
             }
-            invites.toList()
+            return invites.toList()
         } catch (e: ApiException) {
-            emptyList()
+            if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
+                throw NoInternetException("Cannot read proto.")
+            } else {
+                throw ResponseException("Cannot read proto.")
+            }
         }
     }
+
+    private suspend fun fetchContacts(query: QueryPredicateOperation<Any>): GraphQLResponse<PaginatedResult<UserContact>> {
+
+        try {
+            val response = amplifyApi.query(
+                ModelQuery.list(
+                    UserContact::class.java,
+                    query,
+                )
+            )
+            return response
+        } catch (e: ApiException) {
+            if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
+                throw NoInternetException("Cannot read proto.")
+            } else {
+                throw ResponseException("Cannot read proto.")
+            }
+        }
+    }
+
+    private suspend fun createContacts(response: GraphQLResponse<PaginatedResult<UserContact>>): List<Contact> {
+        val contacts = mutableListOf<Contact>()
+
+        response.data.items.forEach {
+            when (val user: ModelReference<User> = it.user) {
+                is LazyModelReference -> {
+
+                    val contact = user.fetchModel()
+
+                    contacts.add(
+                        CurrentContact(
+                            senderUserId = contact?.userId ?: "",
+                            avatarUri = contact?.avatarUri ?: "",
+                            name = contact?.name ?: "",
+                            rowId = contact?.id ?: "",
+                            userName = contact?.userName ?: "",
+                            userId = "",
+                            createdAt = contact?.createdAt!!, // TODO: fix this
+                        )
+                    )
+                }
+
+                else -> Unit
+            }
+        }
+        return contacts
+    }
+
 
     private suspend fun fetchRowId(
         senderUserId: String?,
@@ -336,6 +432,55 @@ class AmplifyRepo @Inject constructor(
             return NetWorkResult.Error(e)
         }
     }
+/*
+    private suspend fun fetchAllInvites(connectionInvites: List<String>): Flow<NetworkResponse<List<Contact>>> =
+        flow {
+
+            if (connectionInvites.isEmpty()) {
+                emit(NetworkResponse.Success(emptyList()))
+                return@flow
+            }
+
+            val invites = mutableListOf<Contact>()
+
+            try {
+                val predicate = createQueryPredicate(connectionInvites)
+                val response = amplifyApi.query(ModelQuery.list(User::class.java, predicate))
+
+                invites.addAll(UserMapper.toUserList(response))
+
+                emit(NetworkResponse.Success(invites))
+            } catch (e: ApiException) {
+                if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
+                    emit(NetworkResponse.NoInternet("No Internet"))
+                } else {
+                    emit(NetworkResponse.Error(e))
+                }
+            }
+        }*/
+
+    private suspend fun fetchAllInvites(connectionInvites: List<String>): List<Contact> {
+        if (connectionInvites.isEmpty()) {
+            return emptyList()
+        }
+
+        val invites = mutableListOf<Contact>()
+
+        try {
+            val predicate = createQueryPredicate(connectionInvites)
+            val response = amplifyApi.query(ModelQuery.list(User::class.java, predicate))
+
+            invites.addAll(UserMapper.toUserList(response))
+            return invites
+        } catch (e: ApiException) {
+            if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
+                throw NoInternetException("Cannot read proto.")
+            } else {
+                throw ResponseException("Cannot read proto.")
+            }
+        }
+    }
+
 
     private fun createQueryPredicate(ids: List<String>) = ids
         .map { User.USER_ID.eq(it) as QueryPredicate }
@@ -379,6 +524,29 @@ class AmplifyRepo @Inject constructor(
         modelClass: Class<T>,
         predicate: QueryPredicateGroup,
     ) = amplifyApi.query(ModelQuery.list(modelClass, predicate)).data.items.firstOrNull()
+
+    private fun combineLists(
+        receivedInvites: List<Contact>,
+        sentInvited: List<Contact>,
+        contacts: List<Contact>
+    ): List<Contact> {
+
+        val allContacts = mutableListOf<Contact>()
+
+        if (receivedInvites.isNotEmpty()) {
+            allContacts.addAll(receivedInvites)
+        }
+
+        if (sentInvited.isNotEmpty()) {
+            allContacts.addAll(sentInvited)
+        }
+
+        if (contacts.isNotEmpty()) {
+            allContacts.addAll(contacts)
+        }
+
+        return allContacts
+    }
 
     override suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>> =
         flow {
@@ -428,6 +596,13 @@ class AmplifyRepo @Inject constructor(
 }
 
 class ResponseException(message: String) : Exception(message)
+class NoInternetException(message: String) : Exception(message)
+
+sealed class NetworkResponse<out T> {
+    data class NoInternet<out T>(val message: String) : NetworkResponse<T>()
+    data class Success<out T>(val data: T?) : NetworkResponse<T>()
+    data class Error(val exception: Throwable) : NetworkResponse<Nothing>()
+}
 
 open class Contact(
     val rowId: String,
