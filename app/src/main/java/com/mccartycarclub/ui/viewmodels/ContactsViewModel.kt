@@ -1,13 +1,16 @@
 package com.mccartycarclub.ui.viewmodels
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.repository.Contact
+import com.mccartycarclub.repository.NetDeleteResult
 import com.mccartycarclub.repository.NetResult
 import com.mccartycarclub.repository.NetSearchResult
-import com.mccartycarclub.repository.NetWorkResult
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.ui.callbacks.connectionclicks.ConnectionEvent
@@ -22,7 +25,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -44,6 +46,7 @@ class ContactsViewModel @Inject constructor(
     sealed class UserContacts {
         data object Pending : UserContacts()
         data class Error(val message: String) : UserContacts()
+        data object NoInternet : UserContacts()
         data class Success(val data: List<Contact>) : UserContacts()
     }
 
@@ -62,8 +65,15 @@ class ContactsViewModel @Inject constructor(
     private val _isSendingInvite = MutableStateFlow(false)
     val isSendingInvite = _isSendingInvite.asStateFlow()
 
-    private val _contacts = MutableStateFlow<UserContacts>(UserContacts.Pending)
-    val contacts = _contacts.asStateFlow()
+    private val _contactsState = MutableStateFlow<UserContacts>(UserContacts.Pending)
+    val contactsState = _contactsState.asStateFlow()
+
+    private val _contacts = mutableStateListOf<Contact>() // TODO: make sure type is correct
+    val contacts: SnapshotStateList<Contact> get() = _contacts
+
+    private var _loggedInUserId: String? = null
+    val loggedInUserId: String?
+        get() = _loggedInUserId
 
     private val _query = MutableStateFlow<String?>(null)
     val searchResults: StateFlow<NetSearchResult<User?>> = _query
@@ -156,14 +166,32 @@ class ContactsViewModel @Inject constructor(
         when (connectionEvent) {
             is ConnectionEvent.CancelEvent -> {
                 viewModelScope.launch {
-                    val userID = fetchUserId()
                     _isCancellingInvite.value = true
-                    resetButtonToConnect(
-                        repo.cancelInviteToConnect(
-                            senderUserId = userID/*connectionEvent.senderUserId*/,
-                            receiverUserId = connectionEvent.receiverUserId,
-                        )
-                    )
+
+                    val resetButton = repo.cancelInviteToConnect(
+                        Invite.SENDER.eq(_loggedInUserId!!) // TODO: remove !!
+                            .and(Invite.RECEIVER.eq(connectionEvent.receiverUserId))
+                    ).first()
+
+                    when (resetButton) {
+                        is NetDeleteResult.Error -> {
+                            // TODO: show error message
+                            resetButtonToDeleteInvite(false)
+                        }
+
+                        NetDeleteResult.NoInternet -> {
+                            // TODO: show no internet message
+                            resetButtonToDeleteInvite(false)
+                        }
+
+                        NetDeleteResult.Success -> {
+                            loggedInUserId?.let { user ->
+                                fetchReceivedInvites(user)
+                            }
+
+                           // resetButtonToDeleteInvite(true)
+                        }
+                    }
                 }
             }
 
@@ -188,77 +216,26 @@ class ContactsViewModel @Inject constructor(
 
     // TODO: rename this function
     fun fetchReceivedInvites(loggedInUserId: String) {
+        _contactsState.value = UserContacts.Pending
         viewModelScope.launch {
-            val allContacts = mutableListOf<Contact>()
-            val contactsDeferred = async {
-                when (val items = repo.fetchReceivedInvites(loggedInUserId).catch {
-                    println("ContactsViewModel ***** ${it.message}")
-                    // TODO: log this
-                }.first()) {
-                    is NetWorkResult.Error -> {
-                        emptyList()
-                    }
-
-                    is NetWorkResult.Success -> {
-                        items.data ?: emptyList()
-                    }
-                }
-            }
-
-            val sentInvitesDeferred = async {
-                when (val items = repo.fetchSentInvites(loggedInUserId).catch {
-                    // TODO: log this
-                }.first()) {  // TODO: change from first
-                    is NetWorkResult.Error -> {
-                        emptyList()
-                    }
-
-                    is NetWorkResult.Success -> {
-                        items.data ?: emptyList()
-                    }
-                }
-            }
-
-
-            // TODO: move the function
-            val currentContactsDeferred: Deferred<List<Contact>> = async {
-                when (val items = repo.fetchContacts(loggedInUserId).catch {
-                    // TODO: log this
-                }.first()) {  // TODO: change from first
-                    is NetResult.Error -> {
-                        emptyList()
-                    }
-
-                    NetResult.Pending -> {
-                        emptyList()
-                    }
-
-                    is NetResult.Success -> {
-                        items.data!! // TODO:
-                    }
-                }
-            }
-
-            allContacts.addAll(contactsDeferred.await())
-            allContacts.addAll(sentInvitesDeferred.await())
-            allContacts.addAll(currentContactsDeferred.await())
-            _contacts.value = UserContacts.Success(allContacts)
-
-            // TODO: testing
-
             when (val data = repo.fetchAllContacts(loggedInUserId).first()) {
                 is NetworkResponse.Error -> {
-                    println("ContactsViewModel ***** ${data.exception.message}")
+                    _contactsState.value =
+                            // TODO: remove message will use string
+                        UserContacts.Error(data.exception.message ?: "some message here")
                 }
 
                 is NetworkResponse.NoInternet -> {
-                    println("ContactsViewModel ***** ${data.message}")
+                    // TODO: remove message will use string
+                    _contactsState.value = UserContacts.NoInternet
                 }
 
                 is NetworkResponse.Success -> {
-                    data.data?.forEach { result ->
-                        println("ContactsViewModel ***** ${result.name}")
-                        println("ContactsViewModel ***** ${result.userName}")
+                    if (data.data != null) {
+                        _contactsState.value = UserContacts.Success(data.data)
+
+                        _contacts.clear()
+                        _contacts.addAll(data.data)
                     }
                 }
             }
@@ -292,7 +269,7 @@ class ContactsViewModel @Inject constructor(
             }
 
             is ContactCardEvent.CancelSentInvite -> {
-
+                println("ContactsViewModel ***** LOGGED IN ${_loggedInUserId} RECEIVER ${event.receiverUserId}")
             }
 
             is ContactCardEvent.DeleteContact -> {
@@ -308,6 +285,10 @@ class ContactsViewModel @Inject constructor(
         repo.contactExists(senderUserId, receiverUserId).collect { hasConnection ->
             hasConnection
         }
+    }
+
+    fun setLoggedInUserId(loggedInUserId: String) {
+        _loggedInUserId = loggedInUserId
     }
 
     private fun resetButtonsToPendingOnSuccess(success: Boolean) {
@@ -333,6 +314,14 @@ class ContactsViewModel @Inject constructor(
             _isSendingInvite.value = false
         } else {
             _isCancellingInvite.value = false
+        }
+    }
+
+    private fun resetButtonToDeleteInvite(success: Boolean) {
+        if (success) {
+
+        } else {
+
         }
     }
 

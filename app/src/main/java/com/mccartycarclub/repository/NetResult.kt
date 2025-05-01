@@ -17,3 +17,9 @@ sealed class NetSearchResult<out T> {
     data class Success<out T>(val data: T?) : NetSearchResult<T>()
     data class Error(val exception: Throwable) : NetSearchResult<Nothing>()
 }
+
+sealed class NetDeleteResult {
+    data object Success : NetDeleteResult()
+    data object NoInternet : NetDeleteResult()
+    data class Error(val exception: Throwable) : NetDeleteResult()
+}

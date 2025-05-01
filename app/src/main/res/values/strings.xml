@@ -13,4 +13,12 @@
     <!-- Contacts -->
     <string name="connect_to_user">Connect</string>
     <string name="connect_cancel">Cancel</string>
+    <string name="connect_remove">Remove</string>
+    <string name="connect_no_users_found">No users were found.</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_button_dismiss">Dismiss</string>
+    <string name="dialog_button_delete">Delete</string>
+    <string name="dialog_delete_invite_title">Delete Invitation</string>
+    <string name="dialog_delete_invite_description">Are you sure you want to delete the invitation to connect?</string>
 </resources>

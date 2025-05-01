@@ -18,7 +18,6 @@ import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
-
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.mccartycarclub.ui.components.ConnectionAccepted
 import kotlinx.coroutines.CoroutineDispatcher
@@ -30,6 +29,7 @@ import kotlinx.coroutines.flow.flowOn
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.reflect.KClass
 import com.amplifyframework.datastore.generated.model.Contact as AmplifyContact
 
 class AmplifyRepo @Inject constructor(
@@ -124,34 +124,44 @@ class AmplifyRepo @Inject constructor(
         }
     }
 
-    override suspend fun cancelInviteToConnect(
-        senderUserId: String?,
-        receiverUserId: String
-    ): Boolean {
+    override fun cancelInviteToConnect(filter: QueryPredicateGroup): Flow<NetDeleteResult> =
+        flow {
+            try {
+                val response = amplifyApi.query(ModelQuery.list(Invite::class.java, filter))
 
-        /*        val sender = getInviteSender(receiverUserId)
-        val receiver = getInviteReceiver(receiverUserId)
+                val items = response.data.items.toList()
+                if (items.isEmpty()) {
+                    throw ResponseException("Send message")
+                }
+                amplifyApi.mutate(ModelMutation.delete(items.first()))
+                emit(NetDeleteResult.Success)
+            } catch (e: ApiException) {
 
-        if (sender == null && receiver == null) {
-            return false
+                when (e.cause) {
+                    is java.net.UnknownHostException, is java.io.IOException -> {
+                        emit(NetDeleteResult.NoInternet)
+                    }
+
+                    else -> {
+                        emit(NetDeleteResult.Error(e))
+                    }
+                }
+
+            } catch (re: ResponseException) {
+                emit(NetDeleteResult.Error(re))
+            }
         }
 
-        return try {
-            val response = Amplify.API.mutate(
-                ModelMutation.delete(
-                    Invite
-                        .builder()
-                        .sender(sender)
-                        .id(fetchInviteId(senderUserId, receiverUserId))
-                        .receiver(receiver)
-                        .build()
-                )
-            )
-            response.data.id != null
-        } catch (e: ApiException) {
-            false
-        }*/
-        return false
+    private fun throwsApiExceptions(e: ApiException, message: String? = "An Error Occurred") {
+        when (e.cause) {
+            is java.net.UnknownHostException, is java.io.IOException-> {
+                throw NoInternetException("Send message") // TODO: no message needed
+            }
+
+            else -> {
+                throw ResponseException("Send message")
+            }
+        }
     }
 
     private suspend fun fetchInviteId(senderUserId: String?, receiverUserId: String): String? {
@@ -174,14 +184,14 @@ class AmplifyRepo @Inject constructor(
     override fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
         flow {
             val senderResponse = fetchSentInvites(Invite.SENDER.eq(loggedInUserId))
-            emit(fetchInvites(senderResponse))
+            emit(fetchInvites(senderResponse, SentContactInvite::class))
         }.flowOn(ioDispatcher)
 
     override fun fetchReceivedInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
         flow {
             val receiverResponse =
                 fetchReceivedInvites(Invite.RECEIVER.eq(loggedInUserId))
-            emit(fetchInvites(receiverResponse))
+            emit(fetchInvites(receiverResponse, ReceivedContactInvite::class))
         }.flowOn(ioDispatcher)
 
     // TODO: change and use flowOn
@@ -259,18 +269,18 @@ class AmplifyRepo @Inject constructor(
         }
 
     override suspend fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>> =
-        flow<NetworkResponse<List<Contact>>> {
+        flow {
             coroutineScope {
                 try {
                     val receivedInvites = async {
                         val receiverResponse =
                             fetchReceivedInvites(Invite.RECEIVER.eq(loggedInUserId))
-                        fetchAllInvites(receiverResponse)
+                        fetchAllInvites(receiverResponse, ReceivedContactInvite::class)
                     }
 
                     val sentInvites = async {
                         val senderResponse = fetchSentInvites(Invite.SENDER.eq(loggedInUserId))
-                        fetchAllInvites(senderResponse)
+                        fetchAllInvites(senderResponse, SentContactInvite::class)
                     }
 
                     val contacts = async {
@@ -280,8 +290,10 @@ class AmplifyRepo @Inject constructor(
 
                     emit(NetworkResponse.Success(receivedInvites.await() + sentInvites.await() + contacts.await()))
                 } catch (no: NoInternetException) {
-                    emit(NetworkResponse.NoInternet(no.message ?: "no net"))
+                    // TODO: log
+                    emit(NetworkResponse.NoInternet)
                 } catch (re: ResponseException) {
+                    // TODO: log
                     emit(NetworkResponse.Error(re))
                 }
             }
@@ -310,9 +322,9 @@ class AmplifyRepo @Inject constructor(
             return invites.toList()
         } catch (e: ApiException) {
             if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
-                throw NoInternetException("Cannot read proto.")
+                throw NoInternetException("Send message") // TODO: no message needed
             } else {
-                throw ResponseException("Cannot read proto.")
+                throw ResponseException("Send message")
             }
         }
     }
@@ -413,7 +425,10 @@ class AmplifyRepo @Inject constructor(
     }
 
     // TODO: change param, change function name
-    private suspend fun fetchInvites(connectionInvites: List<String>): NetWorkResult<List<Contact>> {
+    private suspend fun <T : Contact> fetchInvites(
+        connectionInvites: List<String>,
+        inviteType: KClass<T>
+    ): NetWorkResult<List<Contact>> {
 
         if (connectionInvites.isEmpty()) {
             return NetWorkResult.Success(emptyList())
@@ -425,41 +440,18 @@ class AmplifyRepo @Inject constructor(
             val predicate = createQueryPredicate(connectionInvites)
             val response = amplifyApi.query(ModelQuery.list(User::class.java, predicate))
 
-            invites.addAll(UserMapper.toUserList(response))
+            invites.addAll(UserMapper.toUserList(response, inviteType))
 
             return NetWorkResult.Success(invites)
         } catch (e: ApiException) {
             return NetWorkResult.Error(e)
         }
     }
-/*
-    private suspend fun fetchAllInvites(connectionInvites: List<String>): Flow<NetworkResponse<List<Contact>>> =
-        flow {
 
-            if (connectionInvites.isEmpty()) {
-                emit(NetworkResponse.Success(emptyList()))
-                return@flow
-            }
-
-            val invites = mutableListOf<Contact>()
-
-            try {
-                val predicate = createQueryPredicate(connectionInvites)
-                val response = amplifyApi.query(ModelQuery.list(User::class.java, predicate))
-
-                invites.addAll(UserMapper.toUserList(response))
-
-                emit(NetworkResponse.Success(invites))
-            } catch (e: ApiException) {
-                if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
-                    emit(NetworkResponse.NoInternet("No Internet"))
-                } else {
-                    emit(NetworkResponse.Error(e))
-                }
-            }
-        }*/
-
-    private suspend fun fetchAllInvites(connectionInvites: List<String>): List<Contact> {
+    private suspend fun <T : Contact> fetchAllInvites(
+        connectionInvites: List<String>,
+        inviteType: KClass<T>
+    ): List<Contact> {
         if (connectionInvites.isEmpty()) {
             return emptyList()
         }
@@ -470,7 +462,7 @@ class AmplifyRepo @Inject constructor(
             val predicate = createQueryPredicate(connectionInvites)
             val response = amplifyApi.query(ModelQuery.list(User::class.java, predicate))
 
-            invites.addAll(UserMapper.toUserList(response))
+            invites.addAll(UserMapper.toUserList(response, inviteType))
             return invites
         } catch (e: ApiException) {
             if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
@@ -599,7 +591,7 @@ class ResponseException(message: String) : Exception(message)
 class NoInternetException(message: String) : Exception(message)
 
 sealed class NetworkResponse<out T> {
-    data class NoInternet<out T>(val message: String) : NetworkResponse<T>()
+    data object NoInternet : NetworkResponse<Nothing>()
     data class Success<out T>(val data: T?) : NetworkResponse<T>()
     data class Error(val exception: Throwable) : NetworkResponse<Nothing>()
 }

@@ -1,5 +1,6 @@
 package com.mccartycarclub.repository
 
+import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.ui.components.ConnectionAccepted
 import kotlinx.coroutines.flow.Flow
@@ -22,10 +23,11 @@ interface RemoteRepo {
         receiverUserId: String,
     ): Boolean
 
-    suspend fun cancelInviteToConnect(
-        senderUserId: String?,
-        receiverUserId: String,
-    ): Boolean
+    fun cancelInviteToConnect(
+        //senderUserId: String,
+        //receiverUserId: String,
+        filter: QueryPredicateGroup,
+    ): Flow<NetDeleteResult>
 
     suspend fun createContact(user: User)
 

@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -26,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -36,10 +38,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -60,7 +65,6 @@ import com.mccartycarclub.R
 import com.mccartycarclub.navigation.AppNavigationActions
 import com.mccartycarclub.navigation.ClickNavigation
 import com.mccartycarclub.repository.CurrentContact
-import com.mccartycarclub.repository.NetResult
 import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.SentContactInvite
@@ -360,13 +364,43 @@ fun Contacts(
     topBarClick: (ClickNavigation) -> Unit,
 ) {
 
-    val contacts = contactsViewModel.contacts.collectAsStateWithLifecycle().value
+    val contacts = contactsViewModel.contactsState.collectAsStateWithLifecycle().value
+    val allContacts = contactsViewModel.contacts
+    var openAlertDialog by remember { mutableStateOf(false) }
+    var selectedUserId by remember { mutableStateOf<String?>(null) }
+
+    when {
+        openAlertDialog -> {
+            ConfirmationDialog(
+                dialogTitle = stringResource(id = R.string.dialog_delete_invite_title),
+                dialogText = stringResource(id = R.string.dialog_delete_invite_description),
+                dismissText = stringResource(id = R.string.dialog_button_dismiss),
+                confirmText = stringResource(id = R.string.dialog_button_delete),
+                icon = ImageVector.vectorResource(id = R.drawable.ic_alert),
+                onDismissRequest = {
+                    openAlertDialog = false
+                },
+                onConfirmation = {
+                    openAlertDialog = false
+                    selectedUserId?.let { userId ->
+                        contactsViewModel.userConnectionEvent(
+                            ConnectionEvent.CancelEvent(
+                                "",
+                                userId,
+                            )
+                        )
+                    }
+                },
+            )
+        }
+    }
 
     LaunchedEffect(Unit) {
         fetchUserId {
             if (it.userId != null) {
                 // contactsViewModel.fetchContacts(loggedInUserId)
                 contactsViewModel.fetchReceivedInvites(it.userId)
+                contactsViewModel.setLoggedInUserId(it.userId)
             }
         }
     }
@@ -388,80 +422,87 @@ fun Contacts(
                 .padding(innerPadding),
         ) {
             when (contacts) {
-                is ContactsViewModel.UserContacts.Error -> {
-                    println("Shared ***** ERROR")
-                }
-
                 ContactsViewModel.UserContacts.Pending -> {
                     PendingCard(dimensionResource(id = R.dimen.card_pending_spinner))
                 }
 
-                is ContactsViewModel.UserContacts.Success -> {
-                    contacts.data.forEach { contact ->
+                is ContactsViewModel.UserContacts.NoInternet -> {
+                    println("Shared ***** NO INTERNET")
+                }
 
-                        when (contact) {
-                            is ReceivedContactInvite -> {
-                                ContactCard(
-                                    firstLine = contact.userName,
-                                    secondLine = "${contact.name} RECEIVED TEST",
-                                    thirdLine = contact.createdAt.toDate().toString(), // TODO: change,
-                                    hasButtonPair = true,
-                                    primaryButtonText = stringResource(id = R.string.connect_cancel),
-                                    secondaryButtonText = stringResource(id = R.string.connect_to_user),
-                                    avatar = R.drawable.ic_dashboard_black_24dp,
-                                    onClick = { event ->
-                                        if (event == ContactCardEvent.ConnectClick) {
-                                            fetchUserId { loggedInUser ->
-                                                // TODO: store userId in cache
-                                                if (loggedInUser.userId != null) {
-                                                    contactsViewModel.contactButtonClickAction(
-                                                        ContactCardEvent.Connect(
-                                                            ConnectionAccepted(
-                                                                userName = contact.userName,
-                                                                name = contact.name,
-                                                                avatarUri = contact.avatarUri,
-                                                                rowId = contact.rowId,
-                                                                senderUserId = contact.userId,
-                                                                receiverUserId = loggedInUser.userId,
+                is ContactsViewModel.UserContacts.Error -> {
+                    println("Shared ***** ERROR")
+                }
+
+                is ContactsViewModel.UserContacts.Success -> {
+                    if (allContacts.isEmpty()) {
+                        NoDataFound(message = stringResource(id = R.string.connect_no_users_found))
+                    } else {
+                        allContacts.forEach { contact ->
+                            when (contact) {
+                                is ReceivedContactInvite -> {
+                                    ContactCard(
+                                        firstLine = contact.userName,
+                                        secondLine = "Received Invite " + contact.createdAt.toDate()
+                                            .toString(), // TODO: change
+                                        hasButtonPair = true,
+                                        primaryButtonText = stringResource(id = R.string.connect_remove),
+                                        secondaryButtonText = stringResource(id = R.string.connect_to_user),
+                                        avatar = R.drawable.ic_dashboard_black_24dp,
+                                        onClick = { event ->
+                                            if (event == ContactCardEvent.ConnectClick) {
+                                                fetchUserId { loggedInUser ->
+                                                    // TODO: store userId in cache
+                                                    if (loggedInUser.userId != null) {
+                                                        contactsViewModel.contactButtonClickAction(
+                                                            ContactCardEvent.Connect(
+                                                                ConnectionAccepted(
+                                                                    userName = contact.userName,
+                                                                    name = contact.name,
+                                                                    avatarUri = contact.avatarUri,
+                                                                    rowId = contact.rowId,
+                                                                    senderUserId = contact.userId,
+                                                                    receiverUserId = loggedInUser.userId,
+                                                                )
                                                             )
                                                         )
-                                                    )
+                                                    }
                                                 }
                                             }
-                                        }
-                                    },
-                                )
-                            }
+                                        },
+                                    )
+                                }
 
-                            is SentContactInvite -> {
-                                ContactCard(
-                                    firstLine = contact.userName,
-                                    secondLine = "${contact.name} SENT TEST",
-                                    thirdLine = contact.createdAt.toDate().toString(), // TODO: change
-                                    hasButtonPair = false,
-                                    primaryButtonText = stringResource(id = R.string.connect_cancel),
-                                    secondaryButtonText = stringResource(id = R.string.connect_to_user),
-                                    avatar = R.drawable.ic_dashboard_black_24dp,
-                                    onClick = { event ->
+                                is SentContactInvite -> {
+                                    ContactCard(
+                                        firstLine = contact.userName,
+                                        secondLine = "Sent Invite " + contact.createdAt.toDate()
+                                            .toString(), // TODO: change
+                                        hasButtonPair = false,
+                                        primaryButtonText = stringResource(id = R.string.connect_cancel),
+                                        secondaryButtonText = stringResource(id = R.string.connect_to_user),
+                                        avatar = R.drawable.ic_dashboard_black_24dp,
+                                        onClick = {
+                                            openAlertDialog = true
+                                            selectedUserId = contact.userId
+                                        },
+                                    )
+                                }
 
-                                    },
-                                )
-                            }
+                                is CurrentContact -> {
+                                    ContactCard(
+                                        firstLine = contact.userName,
+                                        secondLine = "Connection date " + contact.createdAt.toDate()
+                                            .toString(), // TODO: change
+                                        hasButtonPair = false,
+                                        primaryButtonText = stringResource(id = R.string.connect_remove),
+                                        secondaryButtonText = stringResource(id = R.string.connect_to_user),
+                                        avatar = R.drawable.ic_dashboard_black_24dp,
+                                        onClick = { event ->
 
-                            is CurrentContact -> {
-                                ContactCard(
-                                    firstLine = contact.userName,
-                                    secondLine = "${contact.name} CURRENT TEST",
-                                    thirdLine = contact.createdAt.toDate()
-                                        .toString(), // TODO: change
-                                    hasButtonPair = false,
-                                    primaryButtonText = stringResource(id = R.string.connect_cancel),
-                                    secondaryButtonText = stringResource(id = R.string.connect_to_user),
-                                    avatar = R.drawable.ic_dashboard_black_24dp,
-                                    onClick = { event ->
-
-                                    },
-                                )
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
@@ -511,7 +552,8 @@ fun Search(
 
         val searchQuery = contactsViewModel.searchResults.collectAsStateWithLifecycle().value
         val hasConnection = contactsViewModel.hasConnection.collectAsStateWithLifecycle().value
-        val hasPendingInvite = contactsViewModel.hasPendingInvite.collectAsStateWithLifecycle().value
+        val hasPendingInvite =
+            contactsViewModel.hasPendingInvite.collectAsStateWithLifecycle().value
         val isSendingInvite = contactsViewModel.isSendingInvite.collectAsStateWithLifecycle().value
         val isCancellingInvite =
             contactsViewModel.isCancellingInvite.collectAsStateWithLifecycle().value
@@ -545,7 +587,9 @@ fun Search(
                 }
 
                 is NetSearchResult.Success -> {
+
                     val user = (searchQuery as? NetSearchResult.Success)?.data
+
                     UserCard(
                         user,
                         hasConnection = hasConnection,
@@ -703,12 +747,14 @@ fun UserCard(
                             OutlinedButton(
                                 onClick = {
                                     user?.userId?.let { receiverUserId ->
-                                        connectionEvent(
+
+
+   /*                                     connectionEvent(
                                             ConnectionEvent.CancelEvent(
                                                 user.userId, // TODO: receiver id
                                                 receiverUserId,
                                             )
-                                        )
+                                        )*/
                                     }
                                 },
                                 shape = RoundedCornerShape(4.dp),
@@ -734,6 +780,74 @@ fun UserCard(
             }
         }
     }
+}
+
+@Composable
+fun NoDataFound(message: String) {
+    Column(modifier = Modifier.padding(dimensionResource(id = R.dimen.card_padding))) {
+        Text(text = message)
+    }
+}
+
+@Composable
+fun ConfirmationDialog(
+    dialogTitle: String,
+    dialogText: String,
+    dismissText: String,
+    confirmText: String,
+    icon: ImageVector,
+    onDismissRequest: () -> Unit,
+    onConfirmation: () -> Unit,
+) {
+
+    AlertDialog(
+        icon = {
+            Icon(icon, contentDescription = "Example Icon")
+        },
+        title = {
+            Text(text = dialogTitle)
+        },
+        text = {
+            Text(text = dialogText)
+        },
+        onDismissRequest = { onDismissRequest },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    onDismissRequest()
+                }
+            ) {
+                Text(dismissText)
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onConfirmation()
+                }
+            ) {
+                Text(confirmText)
+            }
+        },
+    )
+}
+
+@Preview
+@Composable
+fun ConfirmationDialogPreview() {
+    ConfirmationDialog(
+        icon = ImageVector.vectorResource(id = android.R.drawable.ic_dialog_alert),
+        dialogTitle = stringResource(id = R.string.dialog_delete_invite_title),
+        dialogText = stringResource(id = R.string.dialog_delete_invite_description),
+        dismissText = stringResource(id = R.string.dialog_button_dismiss),
+        confirmText = stringResource(id = R.string.dialog_button_delete),
+        onDismissRequest = {
+
+        },
+        onConfirmation = {
+
+        },
+    )
 }
 
 // TODO: remove just to test

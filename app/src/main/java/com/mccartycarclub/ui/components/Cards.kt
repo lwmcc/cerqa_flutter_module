@@ -26,7 +26,6 @@ fun ContactCard(
     // TODO: reduce number of params with data class
     firstLine: String,
     secondLine: String,
-    thirdLine: String,
     hasButtonPair: Boolean,
     primaryButtonText: String,
     secondaryButtonText: String,
@@ -53,7 +52,6 @@ fun ContactCard(
             Column {
                 Text(text = firstLine)
                 Text(text = secondLine)
-                Text(text = thirdLine)
             }
         }
 
@@ -63,18 +61,13 @@ fun ContactCard(
                 .padding(5.dp),
             horizontalArrangement = Arrangement.Center,
         ) {
+            ContactCardButton(primaryButtonText, onClick = {
+                onClick(ContactCardEvent.DeleteReceivedInvite(""))
+            })
 
             if (hasButtonPair) {
-                ContactCardButton(primaryButtonText, onClick = {
-                    onClick(ContactCardEvent.DeleteReceivedInvite(""))
-                })
-
                 ContactCardButton(secondaryButtonText, onClick = {
                     onClick(ContactCardEvent.ConnectClick)
-                })
-            } else {
-                ContactCardButton(secondaryButtonText, onClick = {
-                    //  onClick(ContactCardEvent.Connect(""))
                 })
             }
         }
@@ -87,7 +80,6 @@ fun ContactCardPreview() {
     ContactCard(
         firstLine = "LM",
         secondLine = "Larry",
-        thirdLine = "4-21-2025",
         hasButtonPair = true,
         primaryButtonText = "Cancel",
         secondaryButtonText = "Connect",
@@ -108,7 +100,8 @@ fun ContactCardButton(
             onClick()
         },
         shape = RoundedCornerShape(4.dp),
-        modifier = Modifier.padding(start = 8.dp)
+        modifier = Modifier
+            .padding(start = 8.dp)
     ) {
         Text(text)
     }
