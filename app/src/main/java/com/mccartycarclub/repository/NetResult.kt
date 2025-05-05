@@ -19,6 +19,7 @@ sealed class NetSearchResult<out T> {
 }
 
 sealed class NetDeleteResult {
+    data object Pending : NetResult<Nothing>()
     data object Success : NetDeleteResult()
     data object NoInternet : NetDeleteResult()
     data class Error(val exception: Throwable) : NetDeleteResult()

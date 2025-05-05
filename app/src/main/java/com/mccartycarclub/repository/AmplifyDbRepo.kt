@@ -15,7 +15,6 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.ModelReference
 import com.amplifyframework.core.model.includes
-import com.amplifyframework.datastore.generated.model.Contact
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.datastore.generated.model.UserGroup

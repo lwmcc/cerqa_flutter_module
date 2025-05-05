@@ -10,6 +10,7 @@ fun getUuid() = UUID.randomUUID().toString()
 
 fun fetchUserId(loggedIn: (LoggedIn) -> Unit) {
     println("Shared ***** attributes CALL")
+    // TODO: inject Amplify
     Amplify.Auth.fetchUserAttributes({ attributes ->
         println("Shared ***** attributes ${attributes}")
         loggedIn(

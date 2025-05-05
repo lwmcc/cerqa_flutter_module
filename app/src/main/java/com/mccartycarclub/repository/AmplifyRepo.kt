@@ -30,8 +30,8 @@ import java.util.Date
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.reflect.KClass
-import com.amplifyframework.datastore.generated.model.Contact as AmplifyContact
 
+// TODO: split this class up
 class AmplifyRepo @Inject constructor(
     private val amplifyApi: KotlinApiFacade,
     @Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
@@ -152,6 +152,40 @@ class AmplifyRepo @Inject constructor(
             }
         }
 
+    override suspend fun deleteContact(
+        loggedInUserId: String,
+        contactId: String,
+    ): Flow<NetDeleteResult> = flow {
+        coroutineScope {
+            val sender = User.justId(loggedInUserId)
+            val receiver = User.justId(contactId)
+
+            val senderContact = UserContact.builder()
+                .user(sender)
+                .id(loggedInUserId)
+                .contact(receiver)
+                .build()
+
+            val receiverContact = UserContact.builder()
+                .user(receiver)
+                .id(contactId)
+                .contact(sender)
+                .build()
+
+            try {
+                amplifyApi.mutate(ModelMutation.delete(senderContact))
+                amplifyApi.mutate(ModelMutation.delete(receiverContact))
+                emit(NetDeleteResult.Success)
+            } catch (e: ApiException) {
+                if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
+                    emit(NetDeleteResult.NoInternet)
+                } else {
+                    emit(NetDeleteResult.Error(e))
+                }
+            }
+        }
+    }.flowOn(ioDispatcher)
+
     private fun throwsApiExceptions(e: ApiException, message: String? = "An Error Occurred") {
         when (e.cause) {
             is java.net.UnknownHostException, is java.io.IOException-> {
@@ -194,79 +228,67 @@ class AmplifyRepo @Inject constructor(
             emit(fetchInvites(receiverResponse, ReceivedContactInvite::class))
         }.flowOn(ioDispatcher)
 
-    // TODO: change and use flowOn
-    override fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetResult<String>> =
+    // TODO: change and use flowOn this needs to be refactored
+    override fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetDeleteResult> =
         flow {
-            emit(NetResult.Pending)
-            val sender = User.justId(connectionAccepted.senderUserId)
-            val receiver = User.justId(connectionAccepted.receiverUserId)
+            coroutineScope {
 
-            val senderContact = AmplifyContact.builder()
-                .contactId(connectionAccepted.receiverUserId)
-                .id(connectionAccepted.senderUserId)
-                .firstName(connectionAccepted.name) // TODO: decide first name or name
-                .userName(connectionAccepted.userName)
-                .avatarUri(connectionAccepted.avatarUri)
-                .build()
+                val invite = Invite.builder()
+                    .sender(connectionAccepted.senderUserId).receiver(connectionAccepted.receiverUserId).build()
 
-            val receiverContact = AmplifyContact.builder()
-                .contactId(connectionAccepted.senderUserId)
-                .id(connectionAccepted.receiverUserId)
-                .firstName(connectionAccepted.name) // TODO: decide first name or name
-                .userName(connectionAccepted.userName)
-                .avatarUri(connectionAccepted.avatarUri)
-                .build()
+               val userContact = UserContact.builder()
+                    .user(
+                        User.builder().userId(connectionAccepted.senderUserId).firstName(DUMMY)
+                            .lastName(DUMMY).build()
+                    )
+                    .contact(
+                        User.builder().userId(connectionAccepted.receiverUserId).firstName(DUMMY)
+                            .lastName(DUMMY).build()
+                    )
+                    .build()
+                try {
 
-            try {
-                val senderPutResult = putSenderContact(senderContact)
-                val receiverPutResult = putReceiverContact(receiverContact)
-                if (!senderPutResult.hasData() || !receiverPutResult.hasData()) {
-                    emit(NetResult.Error(ResponseException("")))
-                    return@flow
-                }
+                    //val senderPutResult = putSenderContact(senderContact)
+                    //val senderPutResult = amplifyApi.mutate(ModelMutation.create(senderContact))
+                    val senderPutResult = amplifyApi.mutate(ModelMutation.create(userContact))
 
-                val putSenderSuccess = putSenderUserContact(
-                    ModelMutation.create(
-                        buildSenderUserContact(
-                            receiver,
-                            senderContact
+                    val filter = Invite.SENDER.eq(connectionAccepted.senderUserId)
+                        .and(Invite.RECEIVER.eq(connectionAccepted.receiverUserId))
+
+                    val invites = amplifyApi.query(
+                        ModelQuery.list(
+                            Invite::class.java,
+                            filter
                         )
                     )
-                )
 
-                val putReceiverSuccess = putReceiverUserContact(
-                    ModelMutation.create(
-                        buildReceiverUserContact(
-                            sender,
-                            receiverContact
-                        )
-                    )
-                )
+                    println("AmplifyRepo ***** ${invites.data}")
 
-                if (!putSenderSuccess || !putReceiverSuccess) {
-                    emit(NetResult.Error(ResponseException("")))
-                    return@flow
+/*
+                    val filter = Invite.SENDER.eq(connectionAccepted.senderUserId)
+                        .and(Invite.RECEIVER.eq(connectionAccepted.receiverUserId))
+
+                    val invites = amplifyApi.query(ModelQuery.list(Invite::class.java, filter))
+
+                    println("AmplifyRepo ***** RESULT DEL ${invites.data}")*/
+
+/*                    if (invites == null) {
+                        emit(NetResult.Error(ResponseException("")))
+                        return@coroutineScope
+                    }*/
+
+                    // deleteInvite(invites)
+
+                    emit(NetDeleteResult.Success)
+                } catch (e: ApiException) {
+                    if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
+                        emit(NetDeleteResult.Error(e))
+                    } else {
+                        emit(NetDeleteResult.Error(e))
+                    }
                 }
-
-                val predicate = QueryField.field(SENDER).eq(connectionAccepted.senderUserId)
-                    .and(QueryField.field(RECEIVER).eq(connectionAccepted.receiverUserId))
-
-                val invites = fetchInviteList(Invite::class.java, predicate)
-
-                if (invites == null) {
-                    emit(NetResult.Error(ResponseException("")))
-                    return@flow
-                }
-
-                deleteInvite(invites)
-                emit(NetResult.Success("send message"))
-
-            } catch (e: ApiException) {
-                emit(NetResult.Error(e))
-            } catch (ex: Exception) {
-                emit(NetResult.Error(ex))
             }
-        }
+        }.flowOn(ioDispatcher)
 
     override suspend fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>> =
         flow {
@@ -275,12 +297,16 @@ class AmplifyRepo @Inject constructor(
                     val receivedInvites = async {
                         val receiverResponse =
                             fetchReceivedInvites(Invite.RECEIVER.eq(loggedInUserId))
-                        fetchAllInvites(receiverResponse, ReceivedContactInvite::class)
+                        fetchAllInvites(
+                            loggedInUserId,
+                            receiverResponse,
+                            ReceivedContactInvite::class
+                        )
                     }
 
                     val sentInvites = async {
                         val senderResponse = fetchSentInvites(Invite.SENDER.eq(loggedInUserId))
-                        fetchAllInvites(senderResponse, SentContactInvite::class)
+                        fetchAllInvites("", senderResponse, SentContactInvite::class)
                     }
 
                     val contacts = async {
@@ -299,8 +325,21 @@ class AmplifyRepo @Inject constructor(
             }
         }.flowOn(ioDispatcher)
 
-    private fun handleResponse(response: () -> List<Contact>) {
+/*    private fun handleResponse(response: () -> List<Contact>) {
 
+    }*/
+
+    private fun <T> handleResponse(response: GraphQLResponse<PaginatedResult<T>>): T {
+        if (response.hasData()) {
+            val items = response.data.items.toList()
+            if (items.isNotEmpty()) {
+                return items.first()
+            } else {
+                throw ResponseException("") // TODO: add message
+            }
+        } else {
+            throw ResponseException("") // TODO: add message
+        }
     }
 
     private suspend fun fetchSentInvites(query: QueryPredicateOperation<Any>): List<String> {
@@ -385,10 +424,10 @@ class AmplifyRepo @Inject constructor(
 
                     contacts.add(
                         CurrentContact(
+                            contactId = contact?.userId!!, // TODO
                             senderUserId = contact?.userId ?: "",
                             avatarUri = contact?.avatarUri ?: "",
                             name = contact?.name ?: "",
-                            rowId = contact?.id ?: "",
                             userName = contact?.userName ?: "",
                             userId = "",
                             createdAt = contact?.createdAt!!, // TODO: fix this
@@ -440,7 +479,7 @@ class AmplifyRepo @Inject constructor(
             val predicate = createQueryPredicate(connectionInvites)
             val response = amplifyApi.query(ModelQuery.list(User::class.java, predicate))
 
-            invites.addAll(UserMapper.toUserList(response, inviteType))
+            invites.addAll(UserMapper.toUserList("", response, inviteType))
 
             return NetWorkResult.Success(invites)
         } catch (e: ApiException) {
@@ -449,6 +488,7 @@ class AmplifyRepo @Inject constructor(
     }
 
     private suspend fun <T : Contact> fetchAllInvites(
+        inviteReceiver: String,
         connectionInvites: List<String>,
         inviteType: KClass<T>
     ): List<Contact> {
@@ -462,7 +502,7 @@ class AmplifyRepo @Inject constructor(
             val predicate = createQueryPredicate(connectionInvites)
             val response = amplifyApi.query(ModelQuery.list(User::class.java, predicate))
 
-            invites.addAll(UserMapper.toUserList(response, inviteType))
+            invites.addAll(UserMapper.toUserList(inviteReceiver, response, inviteType))
             return invites
         } catch (e: ApiException) {
             if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
@@ -472,7 +512,6 @@ class AmplifyRepo @Inject constructor(
             }
         }
     }
-
 
     private fun createQueryPredicate(ids: List<String>) = ids
         .map { User.USER_ID.eq(it) as QueryPredicate }
@@ -485,22 +524,22 @@ class AmplifyRepo @Inject constructor(
         .id(inviteRowId)
         .build()
 
-    private fun buildSenderUserContact(receiver: User, senderContact: AmplifyContact) =
+    private fun buildSenderUserContact(receiver: User, senderContact: User) =
         UserContact.builder()
             .user(receiver)
             .contact(senderContact)
             .build()
 
-    private fun buildReceiverUserContact(sender: User, receiverContact: AmplifyContact) =
+    private fun buildReceiverUserContact(sender: User, receiverContact: User) =
         UserContact.builder()
             .user(sender)
             .contact(receiverContact)
             .build()
 
-    private suspend fun putSenderContact(senderContact: AmplifyContact) =
+    private suspend fun putSenderContact(senderContact: UserContact) =
         amplifyApi.mutate(ModelMutation.create(senderContact))
 
-    private suspend fun putReceiverContact(receiverContact: AmplifyContact) =
+    private suspend fun putReceiverContact(receiverContact: UserContact) =
         amplifyApi.mutate(ModelMutation.create(receiverContact))
 
     private suspend fun deleteInvite(inviteRowId: Invite) =
@@ -558,10 +597,10 @@ class AmplifyRepo @Inject constructor(
 
                             contacts.add(
                                 CurrentContact(
+                                    contactId = contact?.id!!, // TODO: fix
                                     senderUserId = contact?.userId ?: "",
                                     avatarUri = contact?.avatarUri ?: "",
                                     name = contact?.name ?: "",
-                                    rowId = contact?.id ?: "",
                                     userName = contact?.userName ?: "",
                                     userId = "",
                                     createdAt = contact?.createdAt!!, // TODO: fix this
@@ -597,42 +636,42 @@ sealed class NetworkResponse<out T> {
 }
 
 open class Contact(
-    val rowId: String,
+    val contactId: String, // to id the contact in viewmodel list
     val userId: String,
     val userName: String,
     val name: String,
     val avatarUri: String,
-    val createdAt: Temporal.DateTime,
+    val createdAt: Temporal.DateTime?, // TODO: fix this
 )
 
 class ReceivedContactInvite(
     val receiverUserId: String,
     val receivedDate: Date, // TODO: use correct type
-    rowId: String,
+    contactId: String,
     userId: String,
     userName: String,
     name: String,
     avatarUri: String,
     createdAt: Temporal.DateTime,
-) : Contact(rowId, userId, userName, name, avatarUri, createdAt)
+) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
 class SentContactInvite(
     val senderUserId: String,
     val sentDate: Date,
-    rowId: String,
+    contactId: String,
     userId: String,
     userName: String,
     name: String,
     avatarUri: String,
     createdAt: Temporal.DateTime,
-) : Contact(rowId, userId, userName, name, avatarUri, createdAt)
+) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
 class CurrentContact(
     val senderUserId: String,
-    rowId: String,
+    contactId: String,
     userId: String,
     userName: String,
     name: String,
     avatarUri: String,
     createdAt: Temporal.DateTime,
-) : Contact(rowId, userId, userName, name, avatarUri, createdAt)
+) : Contact(contactId, userId, userName, name, avatarUri, createdAt)

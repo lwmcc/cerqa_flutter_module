@@ -169,7 +169,7 @@ class ContactsViewModel @Inject constructor(
                     _isCancellingInvite.value = true
 
                     val resetButton = repo.cancelInviteToConnect(
-                        Invite.SENDER.eq(_loggedInUserId!!) // TODO: remove !!
+                        Invite.SENDER.eq(_loggedInUserId!!) // TODO: remove !! save userId to cache
                             .and(Invite.RECEIVER.eq(connectionEvent.receiverUserId))
                     ).first()
 
@@ -185,11 +185,9 @@ class ContactsViewModel @Inject constructor(
                         }
 
                         NetDeleteResult.Success -> {
-                            loggedInUserId?.let { user ->
-                                fetchReceivedInvites(user)
+                            connectionEvent.contactId?.let { id ->
+                                removeContact(id)
                             }
-
-                           // resetButtonToDeleteInvite(true)
                         }
                     }
                 }
@@ -232,6 +230,7 @@ class ContactsViewModel @Inject constructor(
 
                 is NetworkResponse.Success -> {
                     if (data.data != null) {
+                        // TODO: remove this
                         _contactsState.value = UserContacts.Success(data.data)
 
                         _contacts.clear()
@@ -249,20 +248,22 @@ class ContactsViewModel @Inject constructor(
             }
 
             is ContactCardEvent.Connect -> {
+                println("ContactsViewModel ***** BUTTON CLICK")
                 viewModelScope.launch {
-                    repo.createContact(event.connectionAccepted).collect { data ->
-                        when (data) {
-                            NetResult.Pending -> {
-                                println("ContactsViewModel ***** PENDING")
-                            }
+                    when (val result = repo.createContact(event.connectionAccepted).first()) {
 
-                            is NetResult.Error -> {
-                                println("ContactsViewModel ***** ERROR ")
-                            }
 
-                            is NetResult.Success -> {
-                                println("ContactsViewModel ***** SUCCESS")
-                            }
+                        is NetDeleteResult.Error -> {
+                            println("ContactsViewModel ***** ERROR ${result.exception.message}")
+                        }
+
+                        NetDeleteResult.Success -> {
+                            println("ContactsViewModel ***** SUCCESS")
+                            // TODO: reset list
+                        }
+
+                        NetDeleteResult.NoInternet -> {
+                            println("ContactsViewModel ***** No internet")
                         }
                     }
                 }
@@ -273,7 +274,23 @@ class ContactsViewModel @Inject constructor(
             }
 
             is ContactCardEvent.DeleteContact -> {
+                viewModelScope.launch {
+                    when (val result =
+                        repo.deleteContact(_loggedInUserId!!, event.contactId).first()) {
+                        is NetDeleteResult.Error -> {
+                            println("ContactsViewModel ***** ERROR ${result.exception.message}")
+                        }
 
+                        NetDeleteResult.NoInternet -> {
+                            println("ContactsViewModel ***** NO INTERNET")
+                        }
+
+                        NetDeleteResult.Success -> {
+
+                            println("ContactsViewModel ***** SUCCESS")
+                        }
+                    }
+                }
             }
         }
     }
@@ -290,6 +307,8 @@ class ContactsViewModel @Inject constructor(
     fun setLoggedInUserId(loggedInUserId: String) {
         _loggedInUserId = loggedInUserId
     }
+
+    private fun removeContact(id: String) = _contacts.removeAll { it.contactId == id }
 
     private fun resetButtonsToPendingOnSuccess(success: Boolean) {
         if (success) {

@@ -19,13 +19,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.mccartycarclub.R
+import com.mccartycarclub.repository.Contact
+import com.mccartycarclub.repository.ReceivedContactInvite
 
 
 @Composable
 fun ContactCard(
     // TODO: reduce number of params with data class
-    firstLine: String,
-    secondLine: String,
+    contact: Contact,
     hasButtonPair: Boolean,
     primaryButtonText: String,
     secondaryButtonText: String,
@@ -50,8 +51,8 @@ fun ContactCard(
             )
 
             Column {
-                Text(text = firstLine)
-                Text(text = secondLine)
+                Text(text = contact.userName)
+                Text(text = contact.createdAt?.toDate().toString()) // TODO: fix this
             }
         }
 
@@ -61,15 +62,132 @@ fun ContactCard(
                 .padding(5.dp),
             horizontalArrangement = Arrangement.Center,
         ) {
-            ContactCardButton(primaryButtonText, onClick = {
-                onClick(ContactCardEvent.DeleteReceivedInvite(""))
+            CardListButton(primaryButtonText, onClick = {
+                //println("Shared ***** USER ${contact.userId}  CONTACT ${contact.contactId}")
+                onClick(ContactCardEvent.DeleteReceivedInvite(contact.contactId))
             })
 
             if (hasButtonPair) {
-                ContactCardButton(secondaryButtonText, onClick = {
-                    onClick(ContactCardEvent.ConnectClick)
+                CardListButton(secondaryButtonText, onClick = {
+                    onClick(
+                        ContactCardEvent.Connect(
+                            ConnectionAccepted(
+                                name = contact.name,
+                                userName = contact.userName,
+                                receiverUserId = "",
+                                senderUserId = contact.userId,
+                                avatarUri = contact.avatarUri,
+                            )
+                        )
+                    )
                 })
             }
+        }
+    }
+}
+
+@Composable
+fun CurrentContactCard(
+    // TODO: reduce number of params with data class
+    contact: Contact,
+    hasButtonPair: Boolean,
+    primaryButtonText: String,
+    secondaryButtonText: String,
+    @DrawableRes avatar: Int,
+    onClick: (ContactCardEvent) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AsyncImage(
+                model = avatar,// "https://example.com/image.jpg",
+                // TODO: add an image user.avatarUri
+                contentDescription = stringResource(id = R.string.user_avatar),
+                modifier = Modifier
+                    .width(60.dp)
+                    .padding(
+                        dimensionResource(id = R.dimen.card_padding_start),
+                        dimensionResource(id = R.dimen.card_padding_top),
+                    )
+            )
+
+            Column {
+                Text(text = contact.userName)
+                Text(text = contact.createdAt?.toDate().toString()) // TODO: fix this
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(5.dp),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            CardListButton(primaryButtonText, onClick = {
+                onClick(ContactCardEvent.DeleteContact(contact.contactId))
+            })
+        }
+    }
+}
+
+@Composable
+fun ReceivedInviteContactCard(
+    // TODO: reduce number of params with data class
+    contact: ReceivedContactInvite, // TODO: replace superclass with subclass sent, received, contact
+    hasButtonPair: Boolean,
+    primaryButtonText: String,
+    secondaryButtonText: String,
+    @DrawableRes avatar: Int,
+    onClick: (ContactCardEvent) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AsyncImage(
+                model = avatar,// "https://example.com/image.jpg",
+                // TODO: add an image user.avatarUri
+                contentDescription = stringResource(id = R.string.user_avatar),
+                modifier = Modifier
+                    .width(60.dp)
+                    .padding(
+                        dimensionResource(id = R.dimen.card_padding_start),
+                        dimensionResource(id = R.dimen.card_padding_top),
+                    )
+            )
+
+            Column {
+                Text(text = contact.userName)
+                Text(text = contact.createdAt?.toDate().toString()) // TODO: fix this
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(5.dp),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            CardListButton(primaryButtonText, onClick = {
+                onClick(ContactCardEvent.DeleteReceivedInvite(contact.contactId))
+            })
+
+            CardListButton(secondaryButtonText, onClick = {
+                onClick(
+                    ContactCardEvent.Connect(
+                        ConnectionAccepted(
+                            name = contact.name,
+                            userName = contact.userName,
+                            receiverUserId = contact.receiverUserId,
+                            senderUserId = contact.userId,
+                            avatarUri = contact.avatarUri,
+                        )
+                    )
+                )
+            })
         }
     }
 }
@@ -78,8 +196,15 @@ fun ContactCard(
 @Composable
 fun ContactCardPreview() {
     ContactCard(
-        firstLine = "LM",
-        secondLine = "Larry",
+
+        contact = Contact(
+            avatarUri = "",
+            contactId = "",
+            createdAt = null,
+            name = "",
+            userId = "",
+            userName = ","
+        ),
         hasButtonPair = true,
         primaryButtonText = "Cancel",
         secondaryButtonText = "Connect",
@@ -91,7 +216,7 @@ fun ContactCardPreview() {
 }
 
 @Composable
-fun ContactCardButton(
+fun CardListButton(
     text: String,
     onClick: () -> Unit,
 ) {

@@ -35,7 +35,7 @@ public final class UserContact implements Model {
   public static final QueryField CONTACT = field("UserContact", "contactId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="User") @BelongsTo(targetName = "userId", targetNames = {"userId"}, type = User.class) ModelReference<User> user;
-  private final @ModelField(targetType="Contact") @BelongsTo(targetName = "contactId", targetNames = {"contactId"}, type = Contact.class) ModelReference<Contact> contact;
+  private final @ModelField(targetType="User") @BelongsTo(targetName = "contactId", targetNames = {"contactId"}, type = User.class) ModelReference<User> contact;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -52,7 +52,7 @@ public final class UserContact implements Model {
       return user;
   }
   
-  public ModelReference<Contact> getContact() {
+  public ModelReference<User> getContact() {
       return contact;
   }
   
@@ -64,7 +64,7 @@ public final class UserContact implements Model {
       return updatedAt;
   }
   
-  private UserContact(String id, ModelReference<User> user, ModelReference<Contact> contact) {
+  private UserContact(String id, ModelReference<User> user, ModelReference<User> contact) {
     this.id = id;
     this.user = user;
     this.contact = contact;
@@ -140,19 +140,19 @@ public final class UserContact implements Model {
     UserContact build();
     BuildStep id(String id);
     BuildStep user(User user);
-    BuildStep contact(Contact contact);
+    BuildStep contact(User contact);
   }
   
 
   public static class Builder implements BuildStep {
     private String id;
     private ModelReference<User> user;
-    private ModelReference<Contact> contact;
+    private ModelReference<User> contact;
     public Builder() {
       
     }
     
-    private Builder(String id, ModelReference<User> user, ModelReference<Contact> contact) {
+    private Builder(String id, ModelReference<User> user, ModelReference<User> contact) {
       this.id = id;
       this.user = user;
       this.contact = contact;
@@ -175,7 +175,7 @@ public final class UserContact implements Model {
     }
     
     @Override
-     public BuildStep contact(Contact contact) {
+     public BuildStep contact(User contact) {
         this.contact = new LoadedModelReferenceImpl<>(contact);
         return this;
     }
@@ -192,7 +192,7 @@ public final class UserContact implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, ModelReference<User> user, ModelReference<Contact> contact) {
+    private CopyOfBuilder(String id, ModelReference<User> user, ModelReference<User> contact) {
       super(id, user, contact);
       
     }
@@ -203,7 +203,7 @@ public final class UserContact implements Model {
     }
     
     @Override
-     public CopyOfBuilder contact(Contact contact) {
+     public CopyOfBuilder contact(User contact) {
       return (CopyOfBuilder) super.contact(contact);
     }
   }

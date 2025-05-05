@@ -9,7 +9,7 @@ import com.amplifyframework.core.model.PropertyPath;
 /** This is an auto generated class representing the ModelPath for the UserContact type in your schema. */
 public final class UserContactPath extends ModelPath<UserContact> {
   private UserPath user;
-  private ContactPath contact;
+  private UserPath contact;
   UserContactPath(@NonNull String name, @NonNull Boolean isCollection, @Nullable PropertyPath parent) {
     super(name, isCollection, parent, UserContact.class);
   }
@@ -21,9 +21,9 @@ public final class UserContactPath extends ModelPath<UserContact> {
     return user;
   }
   
-  public synchronized ContactPath getContact() {
+  public synchronized UserPath getContact() {
     if (contact == null) {
-      contact = new ContactPath("contact", false, this);
+      contact = new UserPath("contact", false, this);
     }
     return contact;
   }

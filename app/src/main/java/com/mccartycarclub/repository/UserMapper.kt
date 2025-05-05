@@ -2,12 +2,18 @@ package com.mccartycarclub.repository
 
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
+import com.amplifyframework.core.model.LazyModelList
+import com.amplifyframework.core.model.LoadedModelList
+import com.amplifyframework.core.model.ModelList
+import com.amplifyframework.core.model.ModelReference
+import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import kotlin.reflect.KClass
 
 object UserMapper {
 
-    fun <T : Contact> toUserList(
+    suspend fun <T : Contact> toUserList(
+        inviteReceiver: String,
         response: GraphQLResponse<PaginatedResult<User>>,
         inviteType: KClass<T>,
     ): List<Contact> {
@@ -20,12 +26,13 @@ object UserMapper {
                 response.data.items.forEach { item ->
                     invites.add(
                         SentContactInvite(
+                            contactId = item.id,
                             avatarUri = item.avatarUri,
                             name = item.name,
                             userId = item.userId,
                             userName = item.userName,
                             createdAt = item.createdAt,
-                            rowId = item.id,
+                            //rowId = item.id, // TODO: this is acutally the user id for receiver
                             senderUserId = item.userId,
                             sentDate = item.createdAt.toDate(), // TODO: format date for display
                         )
@@ -34,17 +41,17 @@ object UserMapper {
             }
 
             ReceivedContactInvite::class -> {
-                response.data.items.forEach { item ->
+                response.data.items.forEach { user ->
                     invites.add(
                         ReceivedContactInvite(
-                            avatarUri = item.avatarUri,
-                            name = item.name,
-                            receivedDate = item.createdAt.toDate(), // TODO: format date for display
-                            receiverUserId = "",
-                            userId = item.userId,
-                            userName = item.userName,
-                            createdAt = item.createdAt,
-                            rowId = item.id,
+                            contactId = user.id,
+                            avatarUri = user.avatarUri,
+                            name = user.name,
+                            receivedDate = user.createdAt.toDate(), // TODO: format date for display
+                            receiverUserId = inviteReceiver,
+                            userId = user.userId,
+                            userName = user.userName,
+                            createdAt = user.createdAt,
                         )
                     )
                 }
@@ -54,12 +61,12 @@ object UserMapper {
                 response.data.items.forEach { item ->
                     invites.add(
                         CurrentContact(
+                            contactId = item.id,
                             avatarUri = item.avatarUri,
                             name = item.name,
                             userId = item.userId,
                             userName = item.userName,
                             createdAt = item.createdAt,
-                            rowId = item.id,
                             senderUserId = item.userId
                         )
                     )

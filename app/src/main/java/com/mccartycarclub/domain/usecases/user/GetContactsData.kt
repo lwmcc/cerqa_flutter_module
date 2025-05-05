@@ -1,7 +1,7 @@
 package com.mccartycarclub.domain.usecases.user
 
-import com.amplifyframework.datastore.generated.model.Contact
 import com.amplifyframework.datastore.generated.model.User
+import com.amplifyframework.datastore.generated.model.UserContact
 import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.repository.DbRepo
 import com.mccartycarclub.repository.LocalRepo
@@ -11,10 +11,10 @@ class GetContactsData @Inject constructor(
     private val dbRepo: DbRepo,
     private val localRepo: LocalRepo,
     ) : GetContacts {
-    override fun fetchContacts(userId: String, userContacts: (List<Contact>) -> Unit) {
+    override fun fetchContacts(userId: String, userContacts: (List<UserContact>) -> Unit) {
         dbRepo.fetchUserContacts(
             userId, userContacts = {
-                userContacts(it)
+                //userContacts(it)
             }
         )
     }

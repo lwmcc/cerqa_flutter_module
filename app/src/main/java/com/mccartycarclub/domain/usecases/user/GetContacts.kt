@@ -1,11 +1,11 @@
 package com.mccartycarclub.domain.usecases.user
 
-import com.amplifyframework.datastore.generated.model.Contact
 import com.amplifyframework.datastore.generated.model.User
+import com.amplifyframework.datastore.generated.model.UserContact
 import com.mccartycarclub.domain.model.LocalContact
 
 interface GetContacts {
-    fun fetchContacts(userId: String, userContacts: (List<Contact>) -> Unit)
+    fun fetchContacts(userId: String, userContacts: (List<UserContact>) -> Unit)
 
     // TODO: move to own interface
     fun createContact(user: User)

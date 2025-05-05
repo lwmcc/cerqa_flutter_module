@@ -368,6 +368,7 @@ fun Contacts(
     val allContacts = contactsViewModel.contacts
     var openAlertDialog by remember { mutableStateOf(false) }
     var selectedUserId by remember { mutableStateOf<String?>(null) }
+    var selectedContactId by remember { mutableStateOf<String?>(null) }
 
     when {
         openAlertDialog -> {
@@ -385,8 +386,9 @@ fun Contacts(
                     selectedUserId?.let { userId ->
                         contactsViewModel.userConnectionEvent(
                             ConnectionEvent.CancelEvent(
-                                "",
+                                "", // TODO: add id
                                 userId,
+                                selectedContactId,
                             )
                         )
                     }
@@ -398,7 +400,6 @@ fun Contacts(
     LaunchedEffect(Unit) {
         fetchUserId {
             if (it.userId != null) {
-                // contactsViewModel.fetchContacts(loggedInUserId)
                 contactsViewModel.fetchReceivedInvites(it.userId)
                 contactsViewModel.setLoggedInUserId(it.userId)
             }
@@ -441,43 +442,21 @@ fun Contacts(
                         allContacts.forEach { contact ->
                             when (contact) {
                                 is ReceivedContactInvite -> {
-                                    ContactCard(
-                                        firstLine = contact.userName,
-                                        secondLine = "Received Invite " + contact.createdAt.toDate()
-                                            .toString(), // TODO: change
+                                    ReceivedInviteContactCard(
+                                        contact = contact,
                                         hasButtonPair = true,
                                         primaryButtonText = stringResource(id = R.string.connect_remove),
                                         secondaryButtonText = stringResource(id = R.string.connect_to_user),
                                         avatar = R.drawable.ic_dashboard_black_24dp,
                                         onClick = { event ->
-                                            if (event == ContactCardEvent.ConnectClick) {
-                                                fetchUserId { loggedInUser ->
-                                                    // TODO: store userId in cache
-                                                    if (loggedInUser.userId != null) {
-                                                        contactsViewModel.contactButtonClickAction(
-                                                            ContactCardEvent.Connect(
-                                                                ConnectionAccepted(
-                                                                    userName = contact.userName,
-                                                                    name = contact.name,
-                                                                    avatarUri = contact.avatarUri,
-                                                                    rowId = contact.rowId,
-                                                                    senderUserId = contact.userId,
-                                                                    receiverUserId = loggedInUser.userId,
-                                                                )
-                                                            )
-                                                        )
-                                                    }
-                                                }
-                                            }
+                                            contactsViewModel.contactButtonClickAction(event)
                                         },
                                     )
                                 }
 
                                 is SentContactInvite -> {
                                     ContactCard(
-                                        firstLine = contact.userName,
-                                        secondLine = "Sent Invite " + contact.createdAt.toDate()
-                                            .toString(), // TODO: change
+                                        contact = contact,
                                         hasButtonPair = false,
                                         primaryButtonText = stringResource(id = R.string.connect_cancel),
                                         secondaryButtonText = stringResource(id = R.string.connect_to_user),
@@ -485,21 +464,22 @@ fun Contacts(
                                         onClick = {
                                             openAlertDialog = true
                                             selectedUserId = contact.userId
+                                            selectedContactId = contact.contactId
                                         },
                                     )
                                 }
 
                                 is CurrentContact -> {
-                                    ContactCard(
-                                        firstLine = contact.userName,
-                                        secondLine = "Connection date " + contact.createdAt.toDate()
-                                            .toString(), // TODO: change
+                                    CurrentContactCard(
+                                        contact = contact,
                                         hasButtonPair = false,
                                         primaryButtonText = stringResource(id = R.string.connect_remove),
                                         secondaryButtonText = stringResource(id = R.string.connect_to_user),
                                         avatar = R.drawable.ic_dashboard_black_24dp,
                                         onClick = { event ->
-
+                                            contactsViewModel.contactButtonClickAction(
+                                                event
+                                            )
                                         },
                                     )
                                 }
@@ -613,7 +593,6 @@ fun Search(
 
                 }
             }
-
         }
     }
 }
@@ -748,13 +727,6 @@ fun UserCard(
                                 onClick = {
                                     user?.userId?.let { receiverUserId ->
 
-
-   /*                                     connectionEvent(
-                                            ConnectionEvent.CancelEvent(
-                                                user.userId, // TODO: receiver id
-                                                receiverUserId,
-                                            )
-                                        )*/
                                     }
                                 },
                                 shape = RoundedCornerShape(4.dp),
@@ -901,7 +873,7 @@ data class ConnectionAccepted(
     val userName: String,
     val name: String?,
     val avatarUri: String,
-    val rowId: String,
+    //val rowId: String,
     val senderUserId: String,
     val receiverUserId: String,
 )
