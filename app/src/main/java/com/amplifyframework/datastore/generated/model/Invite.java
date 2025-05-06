@@ -31,10 +31,14 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 public final class Invite implements Model {
   public static final InvitePath rootPath = new InvitePath("root", false, null);
   public static final QueryField ID = field("Invite", "id");
+  public static final QueryField SENDER_ID = field("Invite", "senderId");
+  public static final QueryField RECEIVER_ID = field("Invite", "receiverId");
   public static final QueryField SENDER = field("Invite", "sender");
   public static final QueryField RECEIVER = field("Invite", "receiver");
   public static final QueryField USER = field("Invite", "inviteId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
+  private final @ModelField(targetType="String", isRequired = true) String senderId;
+  private final @ModelField(targetType="String", isRequired = true) String receiverId;
   private final @ModelField(targetType="String", isRequired = true) String sender;
   private final @ModelField(targetType="String", isRequired = true) String receiver;
   private final @ModelField(targetType="User") @BelongsTo(targetName = "inviteId", targetNames = {"inviteId"}, type = User.class) ModelReference<User> user;
@@ -48,6 +52,14 @@ public final class Invite implements Model {
   
   public String getId() {
       return id;
+  }
+  
+  public String getSenderId() {
+      return senderId;
+  }
+  
+  public String getReceiverId() {
+      return receiverId;
   }
   
   public String getSender() {
@@ -70,8 +82,10 @@ public final class Invite implements Model {
       return updatedAt;
   }
   
-  private Invite(String id, String sender, String receiver, ModelReference<User> user) {
+  private Invite(String id, String senderId, String receiverId, String sender, String receiver, ModelReference<User> user) {
     this.id = id;
+    this.senderId = senderId;
+    this.receiverId = receiverId;
     this.sender = sender;
     this.receiver = receiver;
     this.user = user;
@@ -86,6 +100,8 @@ public final class Invite implements Model {
       } else {
       Invite invite = (Invite) obj;
       return ObjectsCompat.equals(getId(), invite.getId()) &&
+              ObjectsCompat.equals(getSenderId(), invite.getSenderId()) &&
+              ObjectsCompat.equals(getReceiverId(), invite.getReceiverId()) &&
               ObjectsCompat.equals(getSender(), invite.getSender()) &&
               ObjectsCompat.equals(getReceiver(), invite.getReceiver()) &&
               ObjectsCompat.equals(getUser(), invite.getUser()) &&
@@ -98,6 +114,8 @@ public final class Invite implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
+      .append(getSenderId())
+      .append(getReceiverId())
       .append(getSender())
       .append(getReceiver())
       .append(getUser())
@@ -112,6 +130,8 @@ public final class Invite implements Model {
     return new StringBuilder()
       .append("Invite {")
       .append("id=" + String.valueOf(getId()) + ", ")
+      .append("senderId=" + String.valueOf(getSenderId()) + ", ")
+      .append("receiverId=" + String.valueOf(getReceiverId()) + ", ")
       .append("sender=" + String.valueOf(getSender()) + ", ")
       .append("receiver=" + String.valueOf(getReceiver()) + ", ")
       .append("user=" + String.valueOf(getUser()) + ", ")
@@ -121,7 +141,7 @@ public final class Invite implements Model {
       .toString();
   }
   
-  public static SenderStep builder() {
+  public static SenderIdStep builder() {
       return new Builder();
   }
   
@@ -138,16 +158,30 @@ public final class Invite implements Model {
       id,
       null,
       null,
+      null,
+      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
+      senderId,
+      receiverId,
       sender,
       receiver,
       user);
   }
+  public interface SenderIdStep {
+    ReceiverIdStep senderId(String senderId);
+  }
+  
+
+  public interface ReceiverIdStep {
+    SenderStep receiverId(String receiverId);
+  }
+  
+
   public interface SenderStep {
     ReceiverStep sender(String sender);
   }
@@ -165,8 +199,10 @@ public final class Invite implements Model {
   }
   
 
-  public static class Builder implements SenderStep, ReceiverStep, BuildStep {
+  public static class Builder implements SenderIdStep, ReceiverIdStep, SenderStep, ReceiverStep, BuildStep {
     private String id;
+    private String senderId;
+    private String receiverId;
     private String sender;
     private String receiver;
     private ModelReference<User> user;
@@ -174,8 +210,10 @@ public final class Invite implements Model {
       
     }
     
-    private Builder(String id, String sender, String receiver, ModelReference<User> user) {
+    private Builder(String id, String senderId, String receiverId, String sender, String receiver, ModelReference<User> user) {
       this.id = id;
+      this.senderId = senderId;
+      this.receiverId = receiverId;
       this.sender = sender;
       this.receiver = receiver;
       this.user = user;
@@ -187,9 +225,25 @@ public final class Invite implements Model {
         
         return new Invite(
           id,
+          senderId,
+          receiverId,
           sender,
           receiver,
           user);
+    }
+    
+    @Override
+     public ReceiverIdStep senderId(String senderId) {
+        Objects.requireNonNull(senderId);
+        this.senderId = senderId;
+        return this;
+    }
+    
+    @Override
+     public SenderStep receiverId(String receiverId) {
+        Objects.requireNonNull(receiverId);
+        this.receiverId = receiverId;
+        return this;
     }
     
     @Override
@@ -224,10 +278,22 @@ public final class Invite implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String sender, String receiver, ModelReference<User> user) {
-      super(id, sender, receiver, user);
+    private CopyOfBuilder(String id, String senderId, String receiverId, String sender, String receiver, ModelReference<User> user) {
+      super(id, senderId, receiverId, sender, receiver, user);
+      Objects.requireNonNull(senderId);
+      Objects.requireNonNull(receiverId);
       Objects.requireNonNull(sender);
       Objects.requireNonNull(receiver);
+    }
+    
+    @Override
+     public CopyOfBuilder senderId(String senderId) {
+      return (CopyOfBuilder) super.senderId(senderId);
+    }
+    
+    @Override
+     public CopyOfBuilder receiverId(String receiverId) {
+      return (CopyOfBuilder) super.receiverId(receiverId);
     }
     
     @Override

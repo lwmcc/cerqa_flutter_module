@@ -103,9 +103,10 @@ class AmplifyRepo @Inject constructor(
 
         val invite = Invite
             .builder()
-            .sender(senderUserId)
-            .receiver(receiverUserId)
-            .user(sender)
+            .senderId(senderUserId)
+            .receiverId(receiverUserId)
+            .sender("to-remove") // TODO: remove these
+            .receiver("to-remove")
             .build()
 
         return try {
@@ -120,6 +121,7 @@ class AmplifyRepo @Inject constructor(
             false
         } catch (e: ApiException) {
             // TODO: to log
+            println("AmplifyRepo ***** ${e.message}")
             false
         }
     }
@@ -224,7 +226,7 @@ class AmplifyRepo @Inject constructor(
     override fun fetchReceivedInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
         flow {
             val receiverResponse =
-                fetchReceivedInvites(Invite.RECEIVER.eq(loggedInUserId))
+                fetchReceivedInvites(Invite.RECEIVER_ID.eq(loggedInUserId))
             emit(fetchInvites(receiverResponse, ReceivedContactInvite::class))
         }.flowOn(ioDispatcher)
 
@@ -234,7 +236,13 @@ class AmplifyRepo @Inject constructor(
             coroutineScope {
 
                 val invite = Invite.builder()
-                    .sender(connectionAccepted.senderUserId).receiver(connectionAccepted.receiverUserId).build()
+                    .senderId(connectionAccepted.senderUserId)
+                    .receiverId(connectionAccepted.receiverUserId)
+                    .sender("to-remove")
+                    .receiver("to-remove")
+                    .build()
+                    //.sender(connectionAccepted.senderUserId)
+                    //.receiver(connectionAccepted.receiverUserId).build()
 
                val userContact = UserContact.builder()
                     .user(
@@ -295,18 +303,38 @@ class AmplifyRepo @Inject constructor(
             coroutineScope {
                 try {
                     val receivedInvites = async {
-                        val receiverResponse =
-                            fetchReceivedInvites(Invite.RECEIVER.eq(loggedInUserId))
-                        fetchAllInvites(
-                            loggedInUserId,
-                            receiverResponse,
-                            ReceivedContactInvite::class
-                        )
+                        val invites =
+                            fetchReceivedInvites(Invite.RECEIVER_ID.eq(loggedInUserId))
+
+                        if (invites.isNotEmpty()) {
+                            val predicate = createReceivedQueryPredicate(invites)
+
+                            fetchAllInvites(
+                                inviteReceiver = loggedInUserId,
+                                connectionInvites = invites,
+                                predicate = predicate,
+                                inviteType = ReceivedContactInvite::class,
+                            )
+                        } else {
+                            emptyList()
+                        }
                     }
 
                     val sentInvites = async {
-                        val senderResponse = fetchSentInvites(Invite.SENDER.eq(loggedInUserId))
-                        fetchAllInvites("", senderResponse, SentContactInvite::class)
+                        val invites = fetchSentInvites(Invite.SENDER_ID.eq(loggedInUserId))
+
+                        if (invites.isNotEmpty()) {
+                            val predicate = createSentQueryPredicate(invites)
+
+                            fetchAllInvites(
+                                inviteReceiver = loggedInUserId,
+                                connectionInvites = invites,
+                                predicate = predicate,
+                                inviteType = SentContactInvite::class,
+                            )
+                        } else {
+                            emptyList()
+                        }
                     }
 
                     val contacts = async {
@@ -342,8 +370,8 @@ class AmplifyRepo @Inject constructor(
         }
     }
 
-    private suspend fun fetchSentInvites(query: QueryPredicateOperation<Any>): List<String> {
-        val invites = mutableSetOf<String>()
+    private suspend fun fetchSentInvites(query: QueryPredicateOperation<Any>): List<Invite> {
+        val invites = mutableListOf<Invite>()
         try {
             val senderResponse = amplifyApi.query(
                 ModelQuery.list(
@@ -354,11 +382,11 @@ class AmplifyRepo @Inject constructor(
 
             if (senderResponse.hasData()) {
                 senderResponse.data.items.forEach { item ->
-                    invites.add(item.receiver)
+                    invites.add(item)
                 }
             }
 
-            return invites.toList()
+            return invites
         } catch (e: ApiException) {
             if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
                 throw NoInternetException("Send message") // TODO: no message needed
@@ -370,9 +398,9 @@ class AmplifyRepo @Inject constructor(
 
     private suspend fun fetchReceivedInvites(
         query: QueryPredicateOperation<Any>,
-    ): List<String> {
+    ): List<Invite> {
 
-        val invites = mutableSetOf<String>() // TODO: string or contact?
+        val invites = mutableListOf<Invite>()
 
         try {
             val receiverResponse = amplifyApi.query(
@@ -382,9 +410,9 @@ class AmplifyRepo @Inject constructor(
                 )
             )
             receiverResponse.data.items.forEach { item ->
-                invites.add(item.sender)
+                invites.add(item)
             }
-            return invites.toList()
+            return invites
         } catch (e: ApiException) {
             if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
                 throw NoInternetException("Cannot read proto.")
@@ -465,7 +493,7 @@ class AmplifyRepo @Inject constructor(
 
     // TODO: change param, change function name
     private suspend fun <T : Contact> fetchInvites(
-        connectionInvites: List<String>,
+        connectionInvites: List<Invite>,
         inviteType: KClass<T>
     ): NetWorkResult<List<Contact>> {
 
@@ -476,7 +504,7 @@ class AmplifyRepo @Inject constructor(
         val invites = mutableListOf<Contact>()
 
         try {
-            val predicate = createQueryPredicate(connectionInvites)
+            val predicate = createReceivedQueryPredicate(connectionInvites) // TODO:
             val response = amplifyApi.query(ModelQuery.list(User::class.java, predicate))
 
             invites.addAll(UserMapper.toUserList("", response, inviteType))
@@ -489,8 +517,9 @@ class AmplifyRepo @Inject constructor(
 
     private suspend fun <T : Contact> fetchAllInvites(
         inviteReceiver: String,
-        connectionInvites: List<String>,
-        inviteType: KClass<T>
+        connectionInvites: List<Invite>,
+        predicate: QueryPredicate,
+        inviteType: KClass<T>,
     ): List<Contact> {
         if (connectionInvites.isEmpty()) {
             return emptyList()
@@ -499,7 +528,8 @@ class AmplifyRepo @Inject constructor(
         val invites = mutableListOf<Contact>()
 
         try {
-            val predicate = createQueryPredicate(connectionInvites)
+            //val predicate = createQueryPredicate(connectionInvites) // TODO: user 1
+
             val response = amplifyApi.query(ModelQuery.list(User::class.java, predicate))
 
             invites.addAll(UserMapper.toUserList(inviteReceiver, response, inviteType))
@@ -513,15 +543,20 @@ class AmplifyRepo @Inject constructor(
         }
     }
 
-    private fun createQueryPredicate(ids: List<String>) = ids
-        .map { User.USER_ID.eq(it) as QueryPredicate }
+    private fun createSentQueryPredicate(invites: List<Invite>) = invites
+        .map { User.USER_ID.eq(it.receiverId) as QueryPredicate }
+        .reduce { acc, value -> acc.or(value) }
+
+    private fun createReceivedQueryPredicate(invites: List<Invite>) = invites
+        .map { User.USER_ID.eq(it.senderId) as QueryPredicate }
         .reduce { acc, value -> acc.or(value) }
 
     private fun createInvite(inviteRowId: String) = Invite
         .builder()
-        .sender(DUMMY)
-        .receiver(DUMMY)
-        .id(inviteRowId)
+        .senderId(DUMMY)
+        .receiverId(DUMMY)
+        .sender("to-remove")
+        .receiver("to-remove")
         .build()
 
     private fun buildSenderUserContact(receiver: User, senderContact: User) =

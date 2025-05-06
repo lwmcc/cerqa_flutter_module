@@ -2,17 +2,12 @@ package com.mccartycarclub.repository
 
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
-import com.amplifyframework.core.model.LazyModelList
-import com.amplifyframework.core.model.LoadedModelList
-import com.amplifyframework.core.model.ModelList
-import com.amplifyframework.core.model.ModelReference
-import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import kotlin.reflect.KClass
 
 object UserMapper {
 
-    suspend fun <T : Contact> toUserList(
+    fun <T : Contact> toUserList(
         inviteReceiver: String,
         response: GraphQLResponse<PaginatedResult<User>>,
         inviteType: KClass<T>,
