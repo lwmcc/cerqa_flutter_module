@@ -369,6 +369,7 @@ fun Contacts(
     var openAlertDialog by remember { mutableStateOf(false) }
     var selectedUserId by remember { mutableStateOf<String?>(null) }
     var selectedContactId by remember { mutableStateOf<String?>(null) }
+    var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
 
     when {
         openAlertDialog -> {
@@ -383,14 +384,8 @@ fun Contacts(
                 },
                 onConfirmation = {
                     openAlertDialog = false
-                    selectedUserId?.let { userId ->
-                        contactsViewModel.userConnectionEvent(
-                            ConnectionEvent.CancelEvent(
-                                "", // TODO: add id
-                                userId,
-                                selectedContactId,
-                            )
-                        )
+                    connectionEvent?.let { event ->
+                        contactsViewModel.userConnectionEvent(event)
                     }
                 },
             )
@@ -444,27 +439,26 @@ fun Contacts(
                                 is ReceivedContactInvite -> {
                                     ReceivedInviteContactCard(
                                         contact = contact,
-                                        hasButtonPair = true,
                                         primaryButtonText = stringResource(id = R.string.connect_remove),
                                         secondaryButtonText = stringResource(id = R.string.connect_to_user),
                                         avatar = R.drawable.ic_dashboard_black_24dp,
                                         onClick = { event ->
-                                            contactsViewModel.contactButtonClickAction(event)
+                                            connectionEvent = event
+                                            openAlertDialog = true
                                         },
                                     )
                                 }
 
                                 is SentContactInvite -> {
-                                    ContactCard(
+                                    SentContactCard(
                                         contact = contact,
-                                        hasButtonPair = false,
                                         primaryButtonText = stringResource(id = R.string.connect_cancel),
-                                        secondaryButtonText = stringResource(id = R.string.connect_to_user),
                                         avatar = R.drawable.ic_dashboard_black_24dp,
-                                        onClick = {
-                                            openAlertDialog = true
+                                        onClick = { event ->
                                             selectedUserId = contact.userId
                                             selectedContactId = contact.contactId
+                                            connectionEvent = event
+                                            openAlertDialog = true
                                         },
                                     )
                                 }
@@ -642,7 +636,7 @@ fun UserCard(
     isSendingInvite: Boolean,
     isCancellingInvite: Boolean,
     receiverQueryPending: Boolean,
-    connectionEvent: (ConnectionEvent) -> Unit,
+    connectionEvent: (ContactCardEvent) -> Unit,
     onButtonClick: (String?) -> Unit,
 ) {
     Card(
@@ -708,7 +702,7 @@ fun UserCard(
                         OutlinedButton(
                             onClick = {
                                 onButtonClick(user?.userName) // TODO: moving this
-                                connectionEvent(ConnectionEvent.DisconnectEvent)
+                                connectionEvent(ContactCardEvent.DisconnectEvent)
                             },
                             shape = RoundedCornerShape(4.dp),
                         ) {
@@ -739,7 +733,9 @@ fun UserCard(
                         OutlinedButton(
                             onClick = {
                                 user?.userId?.let { receiverUserId ->
-                                    connectionEvent(ConnectionEvent.ConnectEvent(receiverUserId))
+                                    connectionEvent(
+                                        ContactCardEvent.ConnectEvent(receiverUserId)
+                                    )
                                 }
                             },
                             shape = RoundedCornerShape(4.dp),
@@ -808,11 +804,11 @@ fun ConfirmationDialog(
 @Composable
 fun ConfirmationDialogPreview() {
     ConfirmationDialog(
-        icon = ImageVector.vectorResource(id = android.R.drawable.ic_dialog_alert),
         dialogTitle = stringResource(id = R.string.dialog_delete_invite_title),
         dialogText = stringResource(id = R.string.dialog_delete_invite_description),
         dismissText = stringResource(id = R.string.dialog_button_dismiss),
         confirmText = stringResource(id = R.string.dialog_button_delete),
+        icon = ImageVector.vectorResource(id = android.R.drawable.ic_dialog_alert),
         onDismissRequest = {
 
         },
@@ -873,7 +869,6 @@ data class ConnectionAccepted(
     val userName: String,
     val name: String?,
     val avatarUri: String,
-    //val rowId: String,
     val senderUserId: String,
     val receiverUserId: String,
 )

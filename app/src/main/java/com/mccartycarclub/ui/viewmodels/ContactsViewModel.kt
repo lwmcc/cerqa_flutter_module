@@ -98,7 +98,6 @@ class ContactsViewModel @Inject constructor(
                             }
 
                             is NetSearchResult.Success -> {
-                                println("ContactsViewModel ***** SEARCH")
                                 trySend(data)
                                 fetchUserId { loggedIn ->
                                     if (loggedIn.loggedIn) {
@@ -162,15 +161,16 @@ class ContactsViewModel @Inject constructor(
         userContacts.acceptContactInvite()
     }
 
-    fun userConnectionEvent(connectionEvent: ConnectionEvent) {
+    // TODO: move contact card click events to this function
+    fun userConnectionEvent(connectionEvent: ContactCardEvent) {
         when (connectionEvent) {
-            is ConnectionEvent.CancelEvent -> {
+            is ContactCardEvent.CancelEvent -> {
                 viewModelScope.launch {
                     _isCancellingInvite.value = true
 
                     val resetButton = repo.cancelInviteToConnect(
                         Invite.SENDER.eq(_loggedInUserId!!) // TODO: remove !! save userId to cache
-                            .and(Invite.RECEIVER.eq(connectionEvent.receiverUserId))
+                            .and(Invite.RECEIVER.eq(connectionEvent.receiverUserId)) // TODO: move this predicate
                     ).first()
 
                     when (resetButton) {
@@ -193,7 +193,7 @@ class ContactsViewModel @Inject constructor(
                 }
             }
 
-            is ConnectionEvent.ConnectEvent -> {
+            is ContactCardEvent.ConnectEvent -> {
                 viewModelScope.launch {
                     val userID = fetchUserId()
                     _isSendingInvite.value = true
@@ -206,7 +206,26 @@ class ContactsViewModel @Inject constructor(
                 }
             }
 
-            ConnectionEvent.DisconnectEvent -> {
+            // TODO: will be moved to cache
+            is ContactCardEvent.DeleteReceivedInvite -> {
+                viewModelScope.launch {
+                    when(val result = repo.deleteReceivedInviteToContact(loggedInUserId!!, connectionEvent.userId).first()) {
+                        is NetDeleteResult.Error -> {
+
+                        }
+
+                        NetDeleteResult.NoInternet -> {
+
+                        }
+
+                        NetDeleteResult.Success -> {
+                            println("ContactsViewModel ***** DELETE REC INVITE")
+                        }
+                    }
+                }
+            }
+
+            is ContactCardEvent.DeleteContact -> {
 
             }
         }
@@ -230,7 +249,6 @@ class ContactsViewModel @Inject constructor(
 
                 is NetworkResponse.Success -> {
                     if (data.data != null) {
-                        // TODO: remove this
                         _contactsState.value = UserContacts.Success(data.data)
 
                         _contacts.clear()
@@ -244,22 +262,34 @@ class ContactsViewModel @Inject constructor(
     fun contactButtonClickAction(event: ContactCardEvent) {
         when (event) {
             is ContactCardEvent.DeleteReceivedInvite -> {
-                println("ContactsViewModel ***** DeleteReceivedInvite")
+                viewModelScope.launch {
+                    when (val result =
+                        repo.deleteReceivedInviteToContact(_loggedInUserId!!, event.userId)
+                            .first()) {
+                        is NetDeleteResult.Error -> {
+                            result.exception.message
+                        }
+
+                        NetDeleteResult.NoInternet -> {
+
+                        }
+
+                        NetDeleteResult.Success -> {
+                            fetchReceivedInvites(_loggedInUserId!!) // TODO: will cache this
+                        }
+                    }
+                }
             }
 
             is ContactCardEvent.Connect -> {
-                println("ContactsViewModel ***** BUTTON CLICK")
                 viewModelScope.launch {
                     when (val result = repo.createContact(event.connectionAccepted).first()) {
-
-
                         is NetDeleteResult.Error -> {
                             println("ContactsViewModel ***** ERROR ${result.exception.message}")
                         }
 
                         NetDeleteResult.Success -> {
-                            println("ContactsViewModel ***** SUCCESS")
-                            // TODO: reset list
+                            fetchReceivedInvites(_loggedInUserId!!) // TODO: will cache this
                         }
 
                         NetDeleteResult.NoInternet -> {
@@ -286,7 +316,6 @@ class ContactsViewModel @Inject constructor(
                         }
 
                         NetDeleteResult.Success -> {
-
                             println("ContactsViewModel ***** SUCCESS")
                         }
                     }

@@ -4,8 +4,10 @@ import com.mccartycarclub.domain.usecases.user.GetUser
 import com.mccartycarclub.domain.usecases.user.GetUserData
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.AmplifyRepo
+import com.mccartycarclub.repository.ContactsQueryBuilder
 import com.mccartycarclub.repository.DbRepo
 import com.mccartycarclub.repository.LocalRepo
+import com.mccartycarclub.repository.QueryBuilder
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.Repo
 import dagger.Binds
@@ -26,4 +28,7 @@ abstract class RepoModule {
 
     @Binds
     abstract fun bindRepo(repo: Repo): LocalRepo
+
+    @Binds
+    abstract fun bindQueryBuilder(contactsQueryBuilder: ContactsQueryBuilder): QueryBuilder
 }

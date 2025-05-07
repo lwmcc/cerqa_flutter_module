@@ -31,6 +31,11 @@ interface RemoteRepo {
 
     suspend fun deleteContact(loggedInUserId: String, contactId: String): Flow<NetDeleteResult>
 
+    fun deleteReceivedInviteToContact(
+        loggedInUserId: String,
+        contactId: String,
+    ): Flow<NetDeleteResult>
+
     suspend fun createContact(user: User)
 
     fun fetchReceivedInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>>

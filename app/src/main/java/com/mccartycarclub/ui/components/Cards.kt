@@ -67,24 +67,23 @@ fun ContactCard(
                 onClick(ContactCardEvent.DeleteReceivedInvite(contact.contactId))
             })
 
-            if (hasButtonPair) {
-                CardListButton(secondaryButtonText, onClick = {
-                    onClick(
-                        ContactCardEvent.Connect(
-                            ConnectionAccepted(
-                                name = contact.name,
-                                userName = contact.userName,
-                                receiverUserId = "",
-                                senderUserId = contact.userId,
-                                avatarUri = contact.avatarUri,
-                            )
+            CardListButton(secondaryButtonText, onClick = {
+                onClick(
+                    ContactCardEvent.Connect(
+                        ConnectionAccepted(
+                            name = contact.name,
+                            userName = contact.userName,
+                            receiverUserId = "",
+                            senderUserId = contact.userId,
+                            avatarUri = contact.avatarUri,
                         )
                     )
-                })
-            }
+                )
+            })
         }
     }
 }
+
 
 @Composable
 fun CurrentContactCard(
@@ -133,10 +132,52 @@ fun CurrentContactCard(
 }
 
 @Composable
+fun SentContactCard(
+    contact: Contact,
+    primaryButtonText: String,
+    @DrawableRes avatar: Int,
+    onClick: (ContactCardEvent) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AsyncImage(
+                model = avatar,// "https://example.com/image.jpg",
+                // TODO: add an image user.avatarUri
+                contentDescription = stringResource(id = R.string.user_avatar),
+                modifier = Modifier
+                    .width(60.dp)
+                    .padding(
+                        dimensionResource(id = R.dimen.card_padding_start),
+                        dimensionResource(id = R.dimen.card_padding_top),
+                    )
+            )
+
+            Column {
+                Text(text = contact.userName)
+                Text(text = contact.createdAt?.toDate().toString()) // TODO: fix this
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(5.dp),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            CardListButton(primaryButtonText, onClick = {
+                onClick(ContactCardEvent.CancelSentInvite(contact.contactId))
+            })
+        }
+    }
+}
+
+@Composable
 fun ReceivedInviteContactCard(
     // TODO: reduce number of params with data class
     contact: ReceivedContactInvite, // TODO: replace superclass with subclass sent, received, contact
-    hasButtonPair: Boolean,
     primaryButtonText: String,
     secondaryButtonText: String,
     @DrawableRes avatar: Int,

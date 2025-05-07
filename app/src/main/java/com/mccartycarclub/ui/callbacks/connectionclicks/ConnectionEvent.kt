@@ -7,6 +7,5 @@ sealed class ConnectionEvent {
         val senderUserId: String?,
         val receiverUserId: String,
         val contactId: String?,
-    ) :
-        ConnectionEvent()
+    ) : ConnectionEvent()
 }
