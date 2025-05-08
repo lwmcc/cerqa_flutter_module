@@ -5,9 +5,12 @@ import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
+import com.amplifyframework.core.model.LazyModelList
 import com.amplifyframework.core.model.LazyModelReference
+import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.Model
+import com.amplifyframework.core.model.ModelList
 import com.amplifyframework.core.model.ModelReference
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
@@ -18,7 +21,6 @@ import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.kotlin.api.KotlinApiFacade
-import com.mccartycarclub.ui.components.ConnectionAccepted
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -123,11 +125,16 @@ class AmplifyRepo @Inject constructor(
         }
     }
 
-    override fun cancelInviteToConnect(filter: QueryPredicateGroup): Flow<NetDeleteResult> =
+    override fun cancelInviteToConnect(
+        senderUserId: String,
+        receiverUserId: String,
+    ): Flow<NetDeleteResult> =
         flow {
             coroutineScope {
+                val predicate =
+                    contactsQueryBuilder.buildInviteQueryPredicate(senderUserId, receiverUserId)
                 try {
-                    val response = amplifyApi.query(ModelQuery.list(Invite::class.java, filter))
+                    val response = amplifyApi.query(ModelQuery.list(Invite::class.java, predicate))
 
                     val items = response.data.items.toList()
                     if (items.isEmpty()) {
@@ -158,24 +165,31 @@ class AmplifyRepo @Inject constructor(
         contactId: String,
     ): Flow<NetDeleteResult> = flow {
         coroutineScope {
-            val sender = User.justId(loggedInUserId)
-            val receiver = User.justId(contactId)
+            val senderContactQuery = amplifyApi.query(
+                ModelQuery.list(
+                    UserContact::class.java,
+                    UserContact.USER.eq(loggedInUserId).and(UserContact.CONTACT.eq(contactId))
+                )
+            )
 
-            val senderContact = UserContact.builder()
-                .user(sender)
-                .id(loggedInUserId)
-                .contact(receiver)
-                .build()
-
-            val receiverContact = UserContact.builder()
-                .user(receiver)
-                .id(contactId)
-                .contact(sender)
-                .build()
+            val receiverContactQuery = amplifyApi.query(
+                ModelQuery.list(
+                    UserContact::class.java,
+                    UserContact.USER.eq(contactId).and(UserContact.CONTACT.eq(loggedInUserId))
+                )
+            )
 
             try {
-                amplifyApi.mutate(ModelMutation.delete(senderContact))
-                amplifyApi.mutate(ModelMutation.delete(receiverContact))
+                val sender = senderContactQuery.data.items.firstOrNull()
+                val receiver = receiverContactQuery.data.items.firstOrNull()
+
+                if (sender != null && receiver != null) {
+                    amplifyApi.mutate(ModelMutation.delete(sender))
+                    amplifyApi.mutate(ModelMutation.delete(receiver))
+                } else {
+                    throw ResponseException("Unable to delete UserContact")
+                }
+
                 emit(NetDeleteResult.Success)
             } catch (e: ApiException) {
                 if (e.cause is IOException || e.cause is UnknownHostException) {
@@ -183,6 +197,8 @@ class AmplifyRepo @Inject constructor(
                 } else {
                     emit(NetDeleteResult.Error(e))
                 }
+            } catch (re: ResponseException) {
+                emit(NetDeleteResult.Error(re))
             }
         }
     }.flowOn(ioDispatcher)
@@ -239,13 +255,16 @@ class AmplifyRepo @Inject constructor(
         }.flowOn(ioDispatcher)
 
     // TODO: change and use flowOn this needs to be refactored
-    override fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetDeleteResult> =
+    override fun createContact(
+        senderUserId: String,
+        receiverUserId: String
+    ): Flow<NetDeleteResult> =
         flow {
             coroutineScope {
                 try {
                     val predicate = contactsQueryBuilder.buildInviteQueryPredicate(
-                        senderUserId = connectionAccepted.senderUserId,
-                        receiverUserId = connectionAccepted.receiverUserId,
+                        senderUserId = senderUserId,
+                        receiverUserId = receiverUserId,
                     )
 
                     val invites = amplifyApi.query(
@@ -257,8 +276,8 @@ class AmplifyRepo @Inject constructor(
 
                     if (invites.data.items.firstOrNull() != null) {
                         val sender =
-                            User.justId(connectionAccepted.senderUserId)
-                        val receiver = User.justId(connectionAccepted.receiverUserId)
+                            User.justId(senderUserId)
+                        val receiver = User.justId(receiverUserId)
 
                         val senderContact =
                             UserContact.builder()
@@ -415,13 +434,31 @@ class AmplifyRepo @Inject constructor(
         }
     }
 
+    // TODO: we are mapping here
     private suspend fun createContacts(response: GraphQLResponse<PaginatedResult<UserContact>>): List<Contact> {
         val contacts = mutableListOf<Contact>()
 
+        when(val items = response.data.items) {
+            is LoadedModelList<*> -> {
+
+                println("AmplifyRepo ***** ${items.items}")
+                items.items.forEach {
+
+                }
+            }
+            is LazyModelList<*> -> {
+
+                val page = items.fetchPage()
+
+                println("AmplifyRepo ***** ${page.items}")
+            }
+        }
+
+
         response.data.items.forEach {
             when (val user: ModelReference<User> = it.user) {
-                is LazyModelReference -> {
 
+                is LazyModelReference -> {
                     val contact = user.fetchModel()
 
                     contacts.add(
@@ -437,7 +474,14 @@ class AmplifyRepo @Inject constructor(
                     )
                 }
 
-                else -> Unit
+                is LoadedModelReference -> {
+
+                    println("AmplifyRepo ***** LOADED REFERENCE ${it.id}")
+                }
+
+                else -> {
+                    println("AmplifyRepo ***** LAZY  ELSE ")
+                }
             }
         }
         return contacts

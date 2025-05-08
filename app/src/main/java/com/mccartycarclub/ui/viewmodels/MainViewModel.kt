@@ -11,7 +11,6 @@ import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.NetResult
 import com.mccartycarclub.repository.NetWorkResult
 import com.mccartycarclub.repository.RemoteRepo
-import com.mccartycarclub.ui.callbacks.connectionclicks.ConnectionEvent
 import com.mccartycarclub.ui.components.ContactCardEvent
 import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.lifecycle.HiltViewModel

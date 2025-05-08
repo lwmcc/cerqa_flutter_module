@@ -24,9 +24,8 @@ interface RemoteRepo {
     ): Boolean
 
     fun cancelInviteToConnect(
-        //senderUserId: String,
-        //receiverUserId: String,
-        filter: QueryPredicateGroup,
+        senderUserId: String,
+        receiverUserId: String,
     ): Flow<NetDeleteResult>
 
     suspend fun deleteContact(loggedInUserId: String, contactId: String): Flow<NetDeleteResult>
@@ -44,7 +43,7 @@ interface RemoteRepo {
 
     suspend fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>>
 
-    fun createContact(connectionAccepted: ConnectionAccepted): Flow<NetDeleteResult>
+    fun createContact(senderUserId: String, receiverUserId: String): Flow<NetDeleteResult>
 
     suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>>
 }

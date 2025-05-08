@@ -13,7 +13,6 @@ import com.mccartycarclub.repository.NetResult
 import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
-import com.mccartycarclub.ui.callbacks.connectionclicks.ConnectionEvent
 import com.mccartycarclub.ui.components.ContactCardEvent
 import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -68,7 +67,7 @@ class ContactsViewModel @Inject constructor(
     private val _contactsState = MutableStateFlow<UserContacts>(UserContacts.Pending)
     val contactsState = _contactsState.asStateFlow()
 
-    private val _contacts = mutableStateListOf<Contact>() // TODO: make sure type is correct
+    private val _contacts = mutableStateListOf<Contact>()
     val contacts: SnapshotStateList<Contact> get() = _contacts
 
     private var _loggedInUserId: String? = null
@@ -169,8 +168,8 @@ class ContactsViewModel @Inject constructor(
                     _isCancellingInvite.value = true
 
                     val resetButton = repo.cancelInviteToConnect(
-                        Invite.SENDER.eq(_loggedInUserId!!) // TODO: remove !! save userId to cache
-                            .and(Invite.RECEIVER.eq(connectionEvent.receiverUserId)) // TODO: move this predicate
+                        _loggedInUserId!!,
+                        connectionEvent.receiverUserId,
                     ).first()
 
                     when (resetButton) {
@@ -193,23 +192,23 @@ class ContactsViewModel @Inject constructor(
                 }
             }
 
-            is ContactCardEvent.ConnectEvent -> {
+            is ContactCardEvent.InviteConnectEvent -> {
                 viewModelScope.launch {
                     val userID = fetchUserId()
                     _isSendingInvite.value = true
-                    resetButtonsToPendingOnSuccess(
-                        repo.sendInviteToConnect(
-                            senderUserId = userID,
-                            receiverUserId = connectionEvent.receiverUserId,
-                        )
-                    )
-                }
-            }
 
-            // TODO: will be moved to cache
-            is ContactCardEvent.DeleteReceivedInvite -> {
-                viewModelScope.launch {
-                    when(val result = repo.deleteReceivedInviteToContact(loggedInUserId!!, connectionEvent.userId).first()) {
+                    val inviteSuccess =
+                        repo.sendInviteToConnect(_loggedInUserId!!, connectionEvent.receiverUserId)
+
+                    if (inviteSuccess) {
+                        fetchReceivedInvites(_loggedInUserId!!)
+                    } else {
+                        println("ContactsViewModel ***** INVITE ERROR")
+                    }
+/*
+                    when (val result =
+                        repo.sendInviteToConnect(_loggedInUserId!!, connectionEvent.receiverUserId)
+                            .first()) {
                         is NetDeleteResult.Error -> {
 
                         }
@@ -219,14 +218,122 @@ class ContactsViewModel @Inject constructor(
                         }
 
                         NetDeleteResult.Success -> {
-                            println("ContactsViewModel ***** DELETE REC INVITE")
+                            fetchReceivedInvites(_loggedInUserId!!)
+                        }
+                    }*/
+
+                  //  resetButtonsToPendingOnSuccess( // TODO: refactor this function
+                  //      repo.createContact(connectionEvent.connectionAccepted)
+                        /*repo.sendInviteToConnect(
+                            senderUserId = userID,
+                            receiverUserId = connectionEvent.connectionAccepted.receiverUserId,
+                        )*/
+                   // )
+                }
+            }
+
+/*            is ContactCardEvent.ConnectEvent -> {
+                viewModelScope.launch {
+                    val userID = fetchUserId()
+                    _isSendingInvite.value = true
+                    resetButtonsToPendingOnSuccess( // TODO: refactor this function
+                        repo.sendInviteToConnect(
+                            senderUserId = userID,
+                            receiverUserId = connectionEvent.receiverUserId,
+                        )
+                    )
+                }
+            }*/
+
+            // TODO: will be moved to cache
+            is ContactCardEvent.DeleteReceivedInvite -> {
+                viewModelScope.launch {
+                    when (val result =
+                        repo.deleteReceivedInviteToContact(loggedInUserId!!, connectionEvent.userId)
+                            .first()) {
+                        is NetDeleteResult.Error -> {
+
+                        }
+
+                        NetDeleteResult.NoInternet -> {
+
+                        }
+
+                        NetDeleteResult.Success -> {
+                            fetchReceivedInvites(_loggedInUserId!!) // TODO: cache this id
+                        }
+                    }
+                }
+            }
+
+            is ContactCardEvent.Connect -> {
+                viewModelScope.launch {
+                    when (val result = repo.createContact(
+                        connectionEvent.connectionAccepted.senderUserId,
+                        loggedInUserId!!,
+                    ).first()) {
+                        is NetDeleteResult.Error -> {
+                            println("ContactsViewModel ***** ERROR ${result.exception.message}")
+                        }
+
+                        NetDeleteResult.Success -> {
+                            fetchReceivedInvites(_loggedInUserId!!) // TODO: will cache this
+                        }
+
+                        NetDeleteResult.NoInternet -> {
+                            println("ContactsViewModel ***** No internet")
                         }
                     }
                 }
             }
 
             is ContactCardEvent.DeleteContact -> {
+                viewModelScope.launch {
+                    when (val result = repo.deleteContact(
+                        _loggedInUserId!!,
+                        connectionEvent.contactId,
+                    ).first()) {
+                        is NetDeleteResult.Error -> {
+                            // TODO: log this
+                            result.exception.message ?: ""
+                        }
 
+                        NetDeleteResult.NoInternet -> {
+
+                        }
+
+                        NetDeleteResult.Success -> {
+                            removeContact(connectionEvent.contactId)
+                        }
+                    }
+                }
+            }
+
+            is ContactCardEvent.CancelSentInvite -> {
+                viewModelScope.launch {
+                    _isCancellingInvite.value = true
+
+                    val resetButton = repo.cancelInviteToConnect(
+                        _loggedInUserId!!,
+                        connectionEvent.receiverUserId,
+                    ).first()
+
+                    when (resetButton) {
+                        is NetDeleteResult.Error -> {
+                            // TODO: show error message
+                            //resetButtonToDeleteInvite(false)
+                        }
+
+                        NetDeleteResult.NoInternet -> {
+                            // TODO: show no internet message
+                            // resetButtonToDeleteInvite(false)
+                        }
+
+                        NetDeleteResult.Success -> {
+                            removeContact(connectionEvent.receiverUserId)
+                        }
+                    }
+                }
             }
         }
     }
@@ -259,7 +366,7 @@ class ContactsViewModel @Inject constructor(
         }
     }
 
-    fun contactButtonClickAction(event: ContactCardEvent) {
+/*    fun contactButtonClickAction(event: ContactCardEvent) {
         when (event) {
             is ContactCardEvent.DeleteReceivedInvite -> {
                 viewModelScope.launch {
@@ -283,7 +390,7 @@ class ContactsViewModel @Inject constructor(
 
             is ContactCardEvent.Connect -> {
                 viewModelScope.launch {
-                    when (val result = repo.createContact(event.connectionAccepted).first()) {
+                    when (val result = repo.createContact(loggedInUserId!!, "").first()) {
                         is NetDeleteResult.Error -> {
                             println("ContactsViewModel ***** ERROR ${result.exception.message}")
                         }
@@ -322,7 +429,7 @@ class ContactsViewModel @Inject constructor(
                 }
             }
         }
-    }
+    }*/
 
     suspend fun usersHaveExistingConnection(
         senderUserId: String,
@@ -347,6 +454,7 @@ class ContactsViewModel @Inject constructor(
 
             // Re-enable cancel invite button
             _isCancellingInvite.value = false
+            fetchReceivedInvites(_loggedInUserId!!)
         } else {
             _isSendingInvite.value = false
         }

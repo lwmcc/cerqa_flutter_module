@@ -68,7 +68,6 @@ import com.mccartycarclub.repository.CurrentContact
 import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.SentContactInvite
-import com.mccartycarclub.ui.callbacks.connectionclicks.ConnectionEvent
 import com.mccartycarclub.ui.viewmodels.ContactsViewModel
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 import com.mccartycarclub.utils.fetchUserId
@@ -466,14 +465,11 @@ fun Contacts(
                                 is CurrentContact -> {
                                     CurrentContactCard(
                                         contact = contact,
-                                        hasButtonPair = false,
                                         primaryButtonText = stringResource(id = R.string.connect_remove),
-                                        secondaryButtonText = stringResource(id = R.string.connect_to_user),
                                         avatar = R.drawable.ic_dashboard_black_24dp,
                                         onClick = { event ->
-                                            contactsViewModel.contactButtonClickAction(
-                                                event
-                                            )
+                                            connectionEvent = event
+                                            openAlertDialog = true
                                         },
                                     )
                                 }
@@ -535,6 +531,38 @@ fun Search(
             contactsViewModel.receiverQueryPending.collectAsStateWithLifecycle().value
 
         var input by remember { mutableStateOf("") }
+        var openAlertDialog by remember { mutableStateOf(false) }
+        var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
+
+        // TODO: set id in cache
+        LaunchedEffect(Unit) {
+            fetchUserId {
+                if (it.userId != null) {
+                    contactsViewModel.setLoggedInUserId(it.userId)
+                }
+            }
+        }
+
+        when {
+            openAlertDialog -> {
+                ConfirmationDialog(
+                    dialogTitle = stringResource(id = R.string.dialog_delete_invite_title),
+                    dialogText = stringResource(id = R.string.dialog_delete_invite_description),
+                    dismissText = stringResource(id = R.string.dialog_button_dismiss),
+                    confirmText = stringResource(id = R.string.dialog_button_delete),
+                    icon = ImageVector.vectorResource(id = R.drawable.ic_alert),
+                    onDismissRequest = {
+                        openAlertDialog = false
+                    },
+                    onConfirmation = {
+                        openAlertDialog = false
+                        connectionEvent?.let { event ->
+                            contactsViewModel.userConnectionEvent(event)
+                        }
+                    },
+                )
+            }
+        }
 
         Column(
             modifier = Modifier
@@ -561,9 +589,7 @@ fun Search(
                 }
 
                 is NetSearchResult.Success -> {
-
                     val user = (searchQuery as? NetSearchResult.Success)?.data
-
                     UserCard(
                         user,
                         hasConnection = hasConnection,
@@ -571,10 +597,11 @@ fun Search(
                         receiverQueryPending = receiverQueryPending,
                         isSendingInvite = isSendingInvite,
                         isCancellingInvite = isCancellingInvite,
-                        connectionEvent = { connectionEvent ->
-                            contactsViewModel.userConnectionEvent(connectionEvent)
+                        connectionEvent = { event ->
+                            openAlertDialog = true
+                            connectionEvent = event
                         },
-                        onButtonClick = { receiverUserId ->
+                        onButtonClick = { receiverUserId -> // TODO: why is this here?
                             // contactsViewModel.createConnectInvite(receiverUserId)
                         })
                 }
@@ -629,7 +656,7 @@ fun Error() {
 }
 
 @Composable
-fun UserCard(
+fun UserCard( // TODO: give this a better name, more descriptive
     user: User?,
     hasConnection: Boolean,
     hasPendingInvite: Boolean,
@@ -734,7 +761,7 @@ fun UserCard(
                             onClick = {
                                 user?.userId?.let { receiverUserId ->
                                     connectionEvent(
-                                        ContactCardEvent.ConnectEvent(receiverUserId)
+                                        ContactCardEvent.InviteConnectEvent(receiverUserId)
                                     )
                                 }
                             },
@@ -839,7 +866,6 @@ fun testUser2(userId: String): User {
         .firstName("Lebron")
         .lastName("James")
         .userName("KingJames")
-        //.userId(userId)
         .email("lmccarty@outlook.com")
         .phone("+14805554545")
         .name("Bron")
@@ -869,6 +895,11 @@ data class ConnectionAccepted(
     val userName: String,
     val name: String?,
     val avatarUri: String,
+    val senderUserId: String,
+    val receiverUserId: String,
+)
+
+data class ConnectionRequest(
     val senderUserId: String,
     val receiverUserId: String,
 )

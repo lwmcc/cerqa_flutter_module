@@ -89,9 +89,7 @@ fun ContactCard(
 fun CurrentContactCard(
     // TODO: reduce number of params with data class
     contact: Contact,
-    hasButtonPair: Boolean,
     primaryButtonText: String,
-    secondaryButtonText: String,
     @DrawableRes avatar: Int,
     onClick: (ContactCardEvent) -> Unit,
 ) {
