@@ -604,8 +604,8 @@ class AmplifyRepo @Inject constructor(
                             )
                         }
 
-                        is LoadedModelReference -> {
-
+                        else -> {
+                            // TODO: log this not needed
                         }
                     }
                 }

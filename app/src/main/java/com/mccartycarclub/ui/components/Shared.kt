@@ -878,6 +878,7 @@ fun testUser3(userId: String): User {
         .userId(userId)
         .firstName("Luka")
         .lastName("Doncic")
+        .id(userId)
         .userName("Luka")
         .email("luka@gmail.com")
         .phone("+14805553211")
