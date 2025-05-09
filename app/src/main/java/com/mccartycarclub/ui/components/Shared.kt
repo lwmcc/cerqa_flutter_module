@@ -1,7 +1,15 @@
 package com.mccartycarclub.ui.components
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -33,12 +42,14 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -54,8 +65,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
-import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.MainActivity.Companion.CONTACTS_SCREEN
 import com.mccartycarclub.MainActivity.Companion.GROUPS_SCREEN
@@ -67,11 +78,10 @@ import com.mccartycarclub.navigation.ClickNavigation
 import com.mccartycarclub.repository.CurrentContact
 import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.ReceivedContactInvite
-import com.mccartycarclub.repository.SentContactInvite
+import com.mccartycarclub.repository.SentInviteContactInvite
 import com.mccartycarclub.ui.viewmodels.ContactsViewModel
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 import com.mccartycarclub.utils.fetchUserId
-
 
 @Composable
 fun StartScreen(
@@ -194,7 +204,7 @@ fun AppAuthenticator(
                                 // TODO: create test users
                                 // testUser1  testUser2
 
-                                Amplify.API.mutate(
+/*                                Amplify.API.mutate(
                                     ModelMutation.create(testUser3(userId!!)),
                                     { response ->
                                         Log.i("MainActivity", "User created: ${response.data}")
@@ -204,7 +214,7 @@ fun AppAuthenticator(
                                     { error ->
                                         Log.e("MainActivity", "User creation failed", error)
                                     }
-                                )
+                                )*/
                             }, { error ->
                                 Log.e(
                                     "MainActivity *****", "Failed to fetch user attributes", error
@@ -241,7 +251,6 @@ fun AppAuthenticator(
                 }
             }
         }
-
     }
 }
 
@@ -363,12 +372,15 @@ fun Contacts(
     topBarClick: (ClickNavigation) -> Unit,
 ) {
 
-    val contacts = contactsViewModel.contactsState.collectAsStateWithLifecycle().value
+    val contacts by contactsViewModel.contactsState.collectAsStateWithLifecycle()
+    val dataPending by contactsViewModel.dataPending.collectAsStateWithLifecycle()
     val allContacts = contactsViewModel.contacts
     var openAlertDialog by remember { mutableStateOf(false) }
     var selectedUserId by remember { mutableStateOf<String?>(null) }
     var selectedContactId by remember { mutableStateOf<String?>(null) }
     var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
+    var listIndex by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
 
     when {
         openAlertDialog -> {
@@ -384,7 +396,7 @@ fun Contacts(
                 onConfirmation = {
                     openAlertDialog = false
                     connectionEvent?.let { event ->
-                        contactsViewModel.userConnectionEvent(event)
+                        contactsViewModel.userConnectionEvent(listIndex, event)
                     }
                 },
             )
@@ -416,11 +428,23 @@ fun Contacts(
                 .fillMaxWidth()
                 .padding(innerPadding),
         ) {
-            when (contacts) {
-                ContactsViewModel.UserContacts.Pending -> {
+            AnimatedVisibility(
+                visible = dataPending,
+                enter = slideInVertically {
+                    with(density) { -20.dp.roundToPx() }
+                } + expandVertically(
+                    expandFrom = Alignment.Top
+                ) + fadeIn(
+                    initialAlpha = 0.3f
+                ),
+                exit = slideOutVertically() + shrinkVertically() + fadeOut()
+            ) {
+                Box {
                     PendingCard(dimensionResource(id = R.dimen.card_pending_spinner))
                 }
+            }
 
+            when (contacts) {
                 is ContactsViewModel.UserContacts.NoInternet -> {
                     println("Shared ***** NO INTERNET")
                 }
@@ -431,51 +455,64 @@ fun Contacts(
 
                 is ContactsViewModel.UserContacts.Success -> {
                     if (allContacts.isEmpty()) {
-                        NoDataFound(message = stringResource(id = R.string.connect_no_users_found))
+                        NoDataFound(message = stringResource(id = R.string.connect_invite_users))
                     } else {
-                        allContacts.forEach { contact ->
-                            when (contact) {
-                                is ReceivedContactInvite -> {
-                                    ReceivedInviteContactCard(
-                                        contact = contact,
-                                        primaryButtonText = stringResource(id = R.string.connect_remove),
-                                        secondaryButtonText = stringResource(id = R.string.connect_to_user),
-                                        avatar = R.drawable.ic_dashboard_black_24dp,
-                                        onClick = { event ->
-                                            connectionEvent = event
-                                            openAlertDialog = true
-                                        },
-                                    )
-                                }
+                        LazyColumn {
+                            allContacts.forEachIndexed { index, contact ->
+                                when (contact) {
+                                    is ReceivedContactInvite -> {
+                                        item {
+                                            ReceivedInviteContactCard(
+                                                contact = contact,
+                                                primaryButtonText = stringResource(id = R.string.connect_remove),
+                                                secondaryButtonText = stringResource(id = R.string.connect_to_user),
+                                                avatar = R.drawable.ic_dashboard_black_24dp,
+                                                onClick = { event ->
+                                                    listIndex = index
+                                                    connectionEvent = event
+                                                    openAlertDialog = true
+                                                },
+                                            )
+                                        }
+                                    }
 
-                                is SentContactInvite -> {
-                                    SentContactCard(
-                                        contact = contact,
-                                        primaryButtonText = stringResource(id = R.string.connect_cancel),
-                                        avatar = R.drawable.ic_dashboard_black_24dp,
-                                        onClick = { event ->
-                                            selectedUserId = contact.userId
-                                            selectedContactId = contact.contactId
-                                            connectionEvent = event
-                                            openAlertDialog = true
-                                        },
-                                    )
-                                }
+                                    is SentInviteContactInvite -> {
+                                        item {
+                                            SentContactCard(
+                                                contact = contact,
+                                                primaryButtonText = stringResource(id = R.string.connect_cancel),
+                                                avatar = R.drawable.ic_dashboard_black_24dp,
+                                                onClick = { event ->
+                                                    selectedUserId = contact.userId
+                                                    selectedContactId = contact.contactId
+                                                    connectionEvent = event
+                                                    openAlertDialog = true
+                                                },
+                                            )
+                                        }
+                                    }
 
-                                is CurrentContact -> {
-                                    CurrentContactCard(
-                                        contact = contact,
-                                        primaryButtonText = stringResource(id = R.string.connect_remove),
-                                        avatar = R.drawable.ic_dashboard_black_24dp,
-                                        onClick = { event ->
-                                            connectionEvent = event
-                                            openAlertDialog = true
-                                        },
-                                    )
+                                    is CurrentContact -> {
+                                        item {
+                                            CurrentContactCard(
+                                                contact = contact,
+                                                primaryButtonText = stringResource(id = R.string.connect_remove),
+                                                avatar = R.drawable.ic_dashboard_black_24dp,
+                                                onClick = { event ->
+                                                    connectionEvent = event
+                                                    openAlertDialog = true
+                                                },
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
+                }
+
+                ContactsViewModel.UserContacts.Idle -> {
+                    // No action needed
                 }
             }
         }
@@ -557,7 +594,7 @@ fun Search(
                     onConfirmation = {
                         openAlertDialog = false
                         connectionEvent?.let { event ->
-                            contactsViewModel.userConnectionEvent(event)
+                            contactsViewModel.userConnectionEvent(connectionEvent = event)
                         }
                     },
                 )
@@ -897,7 +934,8 @@ data class ConnectionAccepted(
     val name: String?,
     val avatarUri: String,
     val senderUserId: String,
-    val receiverUserId: String,
+    val userId: String,
+    val createdAt: Temporal.DateTime?,
 )
 
 data class ConnectionRequest(

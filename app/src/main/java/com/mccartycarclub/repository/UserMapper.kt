@@ -2,7 +2,9 @@ package com.mccartycarclub.repository
 
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
+import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.User
+import com.mccartycarclub.ui.components.ConnectionAccepted
 import kotlin.reflect.KClass
 
 object UserMapper {
@@ -16,11 +18,11 @@ object UserMapper {
         val invites = mutableListOf<Contact>()
 
         when (inviteType) {
-            SentContactInvite::class -> {
+            SentInviteContactInvite::class -> {
 
                 response.data.items.forEach { item ->
                     invites.add(
-                        SentContactInvite(
+                        SentInviteContactInvite(
                             contactId = item.id,
                             avatarUri = item.avatarUri,
                             name = item.name,
@@ -55,14 +57,13 @@ object UserMapper {
             CurrentContact::class -> {
                 response.data.items.forEach { item ->
                     invites.add(
-                        CurrentContact(
+                        currentContactFrom(
                             contactId = item.id,
                             avatarUri = item.avatarUri,
                             name = item.name,
                             userId = item.userId,
                             userName = item.userName,
                             createdAt = item.createdAt,
-                            senderUserId = item.userId
                         )
                     )
                 }
@@ -70,5 +71,31 @@ object UserMapper {
         }
 
         return invites
+    }
+
+    // TODO: should I keep this?
+    private fun currentContactFrom(
+        userId: String, contactId: String, userName: String,
+        name: String, avatarUri: String, createdAt: Temporal.DateTime,
+    ): CurrentContact {
+        return CurrentContact(
+            contactId = contactId,
+            avatarUri = avatarUri,
+            name = name,
+            userId = userId,
+            userName = userName,
+            createdAt = createdAt,
+        )
+    }
+
+    fun currentContactFrom(connectionAccepted: ConnectionAccepted): CurrentContact {
+        return CurrentContact(
+            contactId = connectionAccepted.userId,
+            avatarUri = connectionAccepted.avatarUri,
+            name = connectionAccepted.name ?: "",
+            userId = connectionAccepted.userId,
+            userName = connectionAccepted.userName,
+            createdAt = connectionAccepted.createdAt ?: Temporal.DateTime(""),
+        )
     }
 }

@@ -14,7 +14,7 @@
     <string name="connect_to_user">Connect</string>
     <string name="connect_cancel">Cancel</string>
     <string name="connect_remove">Remove</string>
-    <string name="connect_no_users_found">No users were found.</string>
+    <string name="connect_invite_users">Invite someone to connect</string>
 
     <!-- Dialogs -->
     <string name="dialog_button_dismiss">Dismiss</string>

@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.mccartycarclub.R
@@ -23,7 +22,7 @@ import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.ReceivedContactInvite
 
 
-@Composable
+/*@Composable
 fun ContactCard(
     // TODO: reduce number of params with data class
     contact: Contact,
@@ -63,7 +62,6 @@ fun ContactCard(
             horizontalArrangement = Arrangement.Center,
         ) {
             CardListButton(primaryButtonText, onClick = {
-                //println("Shared ***** USER ${contact.userId}  CONTACT ${contact.contactId}")
                 onClick(ContactCardEvent.DeleteReceivedInvite(contact.contactId))
             })
 
@@ -73,16 +71,18 @@ fun ContactCard(
                         ConnectionAccepted(
                             name = contact.name,
                             userName = contact.userName,
-                            receiverUserId = "",
+                            // receiverUserId = "",
                             senderUserId = contact.userId,
                             avatarUri = contact.avatarUri,
+                            userId = contact.contactId,
+                            createdAt = contact.createdAt,
                         )
                     )
                 )
             })
         }
     }
-}
+}*/
 
 
 @Composable
@@ -216,13 +216,15 @@ fun ReceivedInviteContactCard(
 
             CardListButton(secondaryButtonText, onClick = {
                 onClick(
-                    ContactCardEvent.Connect(
+                    ContactCardEvent.AcceptConnection(
                         ConnectionAccepted(
                             name = contact.name,
                             userName = contact.userName,
-                            receiverUserId = contact.receiverUserId,
+                            // receiverUserId = contact.receiverUserId,
                             senderUserId = contact.userId,
                             avatarUri = contact.avatarUri,
+                            userId = contact.contactId,
+                            createdAt = contact.createdAt
                         )
                     )
                 )
@@ -231,11 +233,10 @@ fun ReceivedInviteContactCard(
     }
 }
 
-@Preview
+/*@Preview
 @Composable
 fun ContactCardPreview() {
     ContactCard(
-
         contact = Contact(
             avatarUri = "",
             contactId = "",
@@ -252,7 +253,7 @@ fun ContactCardPreview() {
 
         }
     )
-}
+}*/
 
 @Composable
 fun CardListButton(

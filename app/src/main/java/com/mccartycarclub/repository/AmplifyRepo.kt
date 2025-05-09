@@ -10,7 +10,6 @@ import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.Model
-import com.amplifyframework.core.model.ModelList
 import com.amplifyframework.core.model.ModelReference
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
@@ -244,7 +243,7 @@ class AmplifyRepo @Inject constructor(
     override fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
         flow {
             val senderResponse = fetchSentInvites(Invite.SENDER.eq(loggedInUserId))
-            emit(fetchInvites(senderResponse, SentContactInvite::class))
+            emit(fetchInvites(senderResponse, SentInviteContactInvite::class))
         }.flowOn(ioDispatcher)
 
     override fun fetchReceivedInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
@@ -342,7 +341,7 @@ class AmplifyRepo @Inject constructor(
                                 inviteReceiver = loggedInUserId,
                                 connectionInvites = invites,
                                 predicate = predicate,
-                                inviteType = SentContactInvite::class,
+                                inviteType = SentInviteContactInvite::class,
                             )
                         } else {
                             emptyList()
@@ -354,7 +353,9 @@ class AmplifyRepo @Inject constructor(
                         createContacts(contactsResponse)
                     }
 
+                    // TODO: testing
                     emit(NetworkResponse.Success(receivedInvites.await() + sentInvites.await() + contacts.await()))
+                    //emit(NetworkResponse.Success(MockContacts.loadMockSentInvites()))
                 } catch (no: NoInternetException) {
                     emit(NetworkResponse.NoInternet)
                 } catch (re: ResponseException) {
@@ -464,11 +465,11 @@ class AmplifyRepo @Inject constructor(
                     contacts.add(
                         CurrentContact(
                             contactId = contact?.userId!!, // TODO
-                            senderUserId = contact?.userId ?: "",
+                            //senderUserId = contact?.userId ?: "",
                             avatarUri = contact?.avatarUri ?: "",
                             name = contact?.name ?: "",
                             userName = contact?.userName ?: "",
-                            userId = "",
+                            userId = contact?.userId!!, // TODO
                             createdAt = contact?.createdAt!!, // TODO: fix this
                         )
                     )
@@ -591,14 +592,15 @@ class AmplifyRepo @Inject constructor(
                         is LazyModelReference -> {
                             val contact = user.fetchModel()
 
+                            // TODO: needs to be in mapper
                             contacts.add(
                                 CurrentContact(
                                     contactId = contact?.id!!, // TODO: fix
-                                    senderUserId = contact?.userId ?: "",
+                                    // senderUserId = contact?.userId ?: "",
                                     avatarUri = contact?.avatarUri ?: "",
                                     name = contact?.name ?: "",
                                     userName = contact?.userName ?: "",
-                                    userId = "",
+                                    userId = contact?.id!!, // TODO: fix !!
                                     createdAt = contact?.createdAt!!, // TODO: fix this
                                 )
                             )
@@ -617,8 +619,6 @@ class AmplifyRepo @Inject constructor(
 
     companion object {
         const val DUMMY = "dummy"
-        const val SENDER = "sender"
-        const val RECEIVER = "receiver"
     }
 }
 
@@ -651,7 +651,7 @@ class ReceivedContactInvite(
     createdAt: Temporal.DateTime,
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
-class SentContactInvite(
+class SentInviteContactInvite(
     val senderUserId: String,
     val sentDate: Date,
     contactId: String,
@@ -663,7 +663,7 @@ class SentContactInvite(
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
 class CurrentContact(
-    val senderUserId: String,
+    //val senderUserId: String,
     contactId: String,
     userId: String,
     userName: String,
@@ -671,3 +671,6 @@ class CurrentContact(
     avatarUri: String,
     createdAt: Temporal.DateTime,
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
+
+
+
