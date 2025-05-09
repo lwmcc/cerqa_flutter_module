@@ -1,6 +1,7 @@
 package com.mccartycarclub.ui.components
 
 import android.util.Log
+import androidx.annotation.IntegerRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -56,6 +57,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -428,21 +430,13 @@ fun Contacts(
                 .fillMaxWidth()
                 .padding(innerPadding),
         ) {
-            AnimatedVisibility(
-                visible = dataPending,
-                enter = slideInVertically {
-                    with(density) { -20.dp.roundToPx() }
-                } + expandVertically(
-                    expandFrom = Alignment.Top
-                ) + fadeIn(
-                    initialAlpha = 0.3f
-                ),
-                exit = slideOutVertically() + shrinkVertically() + fadeOut()
-            ) {
-                Box {
-                    PendingCard(dimensionResource(id = R.dimen.card_pending_spinner))
-                }
-            }
+
+            AnimatedLoadingSpinner(
+                density = density,
+                dataPending = dataPending,
+                spinnerSize = R.dimen.card_pending_spinner,
+                slideIn = (-20).dp,
+            )
 
             when (contacts) {
                 is ContactsViewModel.UserContacts.NoInternet -> {
@@ -682,6 +676,30 @@ fun PendingCard(spinnerSize: Dp) {
             color = MaterialTheme.colorScheme.secondary,
             trackColor = MaterialTheme.colorScheme.surfaceVariant,
         )
+    }
+}
+
+@Composable
+fun AnimatedLoadingSpinner(
+    density: Density,
+    dataPending: Boolean,
+    @IntegerRes spinnerSize: Int,
+    slideIn: Dp,
+) {
+    AnimatedVisibility(
+        visible = dataPending,
+        enter = slideInVertically {
+            with(density) { slideIn.roundToPx() }
+        } + expandVertically(
+            expandFrom = Alignment.Top
+        ) + fadeIn(
+            initialAlpha = 0.3f
+        ),
+        exit = slideOutVertically() + shrinkVertically() + fadeOut()
+    ) {
+        Box {
+            PendingCard(dimensionResource(id = spinnerSize))
+        }
     }
 }
 
