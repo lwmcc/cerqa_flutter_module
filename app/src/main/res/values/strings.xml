@@ -17,8 +17,19 @@
     <string name="connect_invite_users">Invite someone to connect</string>
 
     <!-- Dialogs -->
+    <string name="dialog_button_connect">Connect</string>
     <string name="dialog_button_dismiss">Dismiss</string>
     <string name="dialog_button_delete">Delete</string>
+    <string name="dialog_button_accept">Accept</string>
     <string name="dialog_delete_invite_title">Delete Invitation</string>
     <string name="dialog_delete_invite_description">Are you sure you want to delete the invitation to connect?</string>
+    <string name="dialog_invite_to_connect_title">Send Invite</string>
+    <string name="dialog_cancel_invite_to_connect_title">Cancel Invite</string>
+    <string name="dialog_remove_invite_to_connect_title">Remove Invite</string>
+    <string name="dialog_accept_invite_to_connect_title">Accept Invite</string>
+    <string name="dialog_invite_to_connect_description">Send user an invitation to connect</string>
+    <string name="dialog_cancel_invite_to_connect_description">Cancel the invitation to connect</string>
+    <string name="dialog_remove_invite_to_connect_description">Remove the invitation to connect</string>
+    <string name="dialog_accept_invite_to_connect_description">Accept the invitation to connect</string>
+    <string name="dialog_icon_description">Icon for invite user to connect dialog</string>
 </resources>

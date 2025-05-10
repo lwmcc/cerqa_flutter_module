@@ -179,7 +179,8 @@ fun ReceivedInviteContactCard(
     primaryButtonText: String,
     secondaryButtonText: String,
     @DrawableRes avatar: Int,
-    onClick: (ContactCardEvent) -> Unit,
+    onDismissClick: (ContactCardEvent) -> Unit,
+    onConfirmClick: (ContactCardEvent) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -211,20 +212,19 @@ fun ReceivedInviteContactCard(
             horizontalArrangement = Arrangement.Center,
         ) {
             CardListButton(primaryButtonText, onClick = {
-                onClick(ContactCardEvent.DeleteReceivedInvite(contact.contactId))
+                onDismissClick(ContactCardEvent.DeleteReceivedInvite(contact.contactId))
             })
 
             CardListButton(secondaryButtonText, onClick = {
-                onClick(
+                onConfirmClick(
                     ContactCardEvent.AcceptConnection(
                         ConnectionAccepted(
                             name = contact.name,
                             userName = contact.userName,
-                            // receiverUserId = contact.receiverUserId,
                             senderUserId = contact.userId,
                             avatarUri = contact.avatarUri,
                             userId = contact.contactId,
-                            createdAt = contact.createdAt
+                            createdAt = contact.createdAt,
                         )
                     )
                 )

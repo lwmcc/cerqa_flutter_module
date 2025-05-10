@@ -56,7 +56,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -382,16 +381,13 @@ fun Contacts(
     var selectedContactId by remember { mutableStateOf<String?>(null) }
     var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
     var listIndex by remember { mutableIntStateOf(0) }
+    var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
     val density = LocalDensity.current
 
     when {
         openAlertDialog -> {
             ConfirmationDialog(
-                dialogTitle = stringResource(id = R.string.dialog_delete_invite_title),
-                dialogText = stringResource(id = R.string.dialog_delete_invite_description),
-                dismissText = stringResource(id = R.string.dialog_button_dismiss),
-                confirmText = stringResource(id = R.string.dialog_button_delete),
-                icon = ImageVector.vectorResource(id = R.drawable.ic_alert),
+                alertDialogData = alertDialogData,
                 onDismissRequest = {
                     openAlertDialog = false
                 },
@@ -461,11 +457,32 @@ fun Contacts(
                                                 primaryButtonText = stringResource(id = R.string.connect_remove),
                                                 secondaryButtonText = stringResource(id = R.string.connect_to_user),
                                                 avatar = R.drawable.ic_dashboard_black_24dp,
-                                                onClick = { event ->
+                                                onDismissClick = { event ->
                                                     listIndex = index
                                                     connectionEvent = event
                                                     openAlertDialog = true
+                                                    alertDialogData = AlertDialogData(
+                                                        icon = R.drawable.baseline_person_off_24,
+                                                        title = R.string.dialog_remove_invite_to_connect_title,
+                                                        description = R.string.dialog_remove_invite_to_connect_description,
+                                                        dialogIconDescription = R.string.dialog_icon_description,
+                                                        dismiss = R.string.dialog_button_dismiss,
+                                                        confirm = R.string.connect_remove,
+                                                    )
                                                 },
+                                                onConfirmClick = { event ->
+                                                    listIndex = index
+                                                    connectionEvent = event
+                                                    openAlertDialog = true
+                                                    alertDialogData = AlertDialogData(
+                                                        icon = R.drawable.baseline_person_add_24,
+                                                        title = R.string.dialog_accept_invite_to_connect_title,
+                                                        description = R.string.dialog_accept_invite_to_connect_description,
+                                                        dialogIconDescription = R.string.dialog_icon_description,
+                                                        dismiss = R.string.dialog_button_dismiss,
+                                                        confirm = R.string.dialog_button_accept,
+                                                    )
+                                                }
                                             )
                                         }
                                     }
@@ -481,6 +498,14 @@ fun Contacts(
                                                     selectedContactId = contact.contactId
                                                     connectionEvent = event
                                                     openAlertDialog = true
+                                                    alertDialogData = AlertDialogData(
+                                                        icon = R.drawable.baseline_person_off_24,
+                                                        title = R.string.dialog_cancel_invite_to_connect_title,
+                                                        description = R.string.dialog_cancel_invite_to_connect_description,
+                                                        dialogIconDescription = R.string.dialog_icon_description,
+                                                        dismiss = R.string.dialog_button_dismiss,
+                                                        confirm = R.string.connect_cancel,
+                                                    )
                                                 },
                                             )
                                         }
@@ -564,6 +589,7 @@ fun Search(
         var input by remember { mutableStateOf("") }
         var openAlertDialog by remember { mutableStateOf(false) }
         var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
+        var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
 
         // TODO: set id in cache
         LaunchedEffect(Unit) {
@@ -577,11 +603,7 @@ fun Search(
         when {
             openAlertDialog -> {
                 ConfirmationDialog(
-                    dialogTitle = stringResource(id = R.string.dialog_delete_invite_title),
-                    dialogText = stringResource(id = R.string.dialog_delete_invite_description),
-                    dismissText = stringResource(id = R.string.dialog_button_dismiss),
-                    confirmText = stringResource(id = R.string.dialog_button_delete),
-                    icon = ImageVector.vectorResource(id = R.drawable.ic_alert),
+                    alertDialogData = alertDialogData,
                     onDismissRequest = {
                         openAlertDialog = false
                     },
@@ -619,6 +641,7 @@ fun Search(
                     //  Pending()
                 }
 
+                // TODO: make a builder for user and for AlertDialog
                 is NetSearchResult.Success -> {
                     val user = (searchQuery as? NetSearchResult.Success)?.data
                     UserCard(
@@ -631,10 +654,16 @@ fun Search(
                         connectionEvent = { event ->
                             openAlertDialog = true
                             connectionEvent = event
+                            alertDialogData = AlertDialogData(
+                                icon = R.drawable.sharp_contacts_24,
+                                title = R.string.dialog_invite_to_connect_title,
+                                description = R.string.dialog_invite_to_connect_description,
+                                dialogIconDescription = R.string.dialog_icon_description,
+                                dismiss = R.string.dialog_button_dismiss,
+                                confirm = R.string.dialog_button_connect,
+                            )
                         },
-                        onButtonClick = { receiverUserId -> // TODO: why is this here?
-                            // contactsViewModel.createConnectInvite(receiverUserId)
-                        })
+                    )
                 }
 
                 is NetSearchResult.Error -> {
@@ -719,7 +748,6 @@ fun UserCard( // TODO: give this a better name, more descriptive
     isCancellingInvite: Boolean,
     receiverQueryPending: Boolean,
     connectionEvent: (ContactCardEvent) -> Unit,
-    onButtonClick: (String?) -> Unit,
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -783,7 +811,6 @@ fun UserCard( // TODO: give this a better name, more descriptive
                         Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.spacer_width)))
                         OutlinedButton(
                             onClick = {
-                                onButtonClick(user?.userName) // TODO: moving this
                                 connectionEvent(ContactCardEvent.DisconnectEvent)
                             },
                             shape = RoundedCornerShape(4.dp),
@@ -841,47 +868,47 @@ fun NoDataFound(message: String) {
 
 @Composable
 fun ConfirmationDialog(
-    dialogTitle: String,
-    dialogText: String,
-    dismissText: String,
-    confirmText: String,
-    icon: ImageVector,
+    alertDialogData: AlertDialogData?,
     onDismissRequest: () -> Unit,
     onConfirmation: () -> Unit,
 ) {
-
-    AlertDialog(
-        icon = {
-            Icon(icon, contentDescription = "Example Icon")
-        },
-        title = {
-            Text(text = dialogTitle)
-        },
-        text = {
-            Text(text = dialogText)
-        },
-        onDismissRequest = { onDismissRequest },
-        dismissButton = {
-            TextButton(
-                onClick = {
-                    onDismissRequest()
+    if (alertDialogData != null) {
+        AlertDialog(
+            icon = {
+                Icon(
+                    ImageVector.vectorResource(alertDialogData.icon),
+                    contentDescription = stringResource(alertDialogData.dialogIconDescription)
+                )
+            },
+            title = {
+                Text(text = stringResource(id = alertDialogData.title))
+            },
+            text = {
+                Text(text = stringResource(id = alertDialogData.description))
+            },
+            onDismissRequest = { onDismissRequest },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        onDismissRequest()
+                    }
+                ) {
+                    Text(stringResource(id = alertDialogData.dismiss))
                 }
-            ) {
-                Text(dismissText)
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onConfirmation()
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onConfirmation()
+                    }
+                ) {
+                    Text(stringResource(id = alertDialogData.confirm))
                 }
-            ) {
-                Text(confirmText)
-            }
-        },
-    )
+            },
+        )
+    }
 }
-
+/*
 @Preview
 @Composable
 fun ConfirmationDialogPreview() {
@@ -897,8 +924,9 @@ fun ConfirmationDialogPreview() {
         onConfirmation = {
 
         },
+        alertDialogData = alertDialogData,
     )
-}
+}*/
 
 // TODO: remove just to test
 fun testUser1(userId: String): User {
@@ -956,7 +984,11 @@ data class ConnectionAccepted(
     val createdAt: Temporal.DateTime?,
 )
 
-data class ConnectionRequest(
-    val senderUserId: String,
-    val receiverUserId: String,
+data class AlertDialogData(
+    val icon: Int,
+    val title: Int,
+    val description: Int,
+    val dialogIconDescription: Int,
+    val dismiss: Int,
+    val confirm: Int,
 )
