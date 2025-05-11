@@ -520,6 +520,14 @@ fun Contacts(
                                                 onClick = { event ->
                                                     connectionEvent = event
                                                     openAlertDialog = true
+                                                    alertDialogData = AlertDialogData(
+                                                        icon = R.drawable.baseline_person_remove_24,
+                                                        title = R.string.dialog_remove_connection_to_user_title,
+                                                        description = R.string.dialog_remove_connection_to_user_description,
+                                                        dialogIconDescription = R.string.dialog_icon_description,
+                                                        dismiss = R.string.dialog_button_dismiss,
+                                                        confirm = R.string.connect_remove,
+                                                    )
                                                 },
                                             )
                                         }

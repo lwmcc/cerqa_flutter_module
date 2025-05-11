@@ -27,8 +27,10 @@
     <string name="dialog_cancel_invite_to_connect_title">Cancel Invite</string>
     <string name="dialog_remove_invite_to_connect_title">Remove Invite</string>
     <string name="dialog_accept_invite_to_connect_title">Accept Invite</string>
+    <string name="dialog_remove_connection_to_user_title">Remove Connection</string>
     <string name="dialog_invite_to_connect_description">Send user an invitation to connect</string>
     <string name="dialog_cancel_invite_to_connect_description">Cancel the invitation to connect</string>
+    <string name="dialog_remove_connection_to_user_description">Remove the connection that you have with this user</string>
     <string name="dialog_remove_invite_to_connect_description">Remove the invitation to connect</string>
     <string name="dialog_accept_invite_to_connect_description">Accept the invitation to connect</string>
     <string name="dialog_icon_description">Icon for invite user to connect dialog</string>
