@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.repository.Contact
@@ -148,9 +149,11 @@ class ContactsViewModel @Inject constructor(
         )
 
     // TODO: testing
-/*    init {
-        realtimeSubscribeRepo.createUserChannel("larry")
-    }*/
+    init {
+        viewModelScope.launch {
+            realtimeSubscribeRepo.createUserChannel("larry")
+        }
+    }
 
     fun onQueryChange(searchQuery: String) {
         println("ContactsViewModel ***** ${searchQuery}")

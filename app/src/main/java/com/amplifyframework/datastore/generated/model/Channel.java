@@ -1,5 +1,10 @@
 package com.amplifyframework.datastore.generated.model;
 
+import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.ModelReference;
+import com.amplifyframework.core.model.LoadedModelReferenceImpl;
+import com.amplifyframework.core.model.annotations.HasMany;
+import com.amplifyframework.core.model.ModelList;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.ModelIdentifier;
 
@@ -29,8 +34,11 @@ public final class Channel implements Model {
   public static final ChannelPath rootPath = new ChannelPath("root", false, null);
   public static final QueryField ID = field("Channel", "id");
   public static final QueryField NAME = field("Channel", "name");
+  public static final QueryField USER = field("Channel", "userId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
+  private final @ModelField(targetType="User") @BelongsTo(targetName = "userId", targetNames = {"userId"}, type = User.class) ModelReference<User> user;
+  private final @ModelField(targetType="Message") @HasMany(associatedWith = "channel", type = Message.class) ModelList<Message> messages = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -47,6 +55,14 @@ public final class Channel implements Model {
       return name;
   }
   
+  public ModelReference<User> getUser() {
+      return user;
+  }
+  
+  public ModelList<Message> getMessages() {
+      return messages;
+  }
+  
   public Temporal.DateTime getCreatedAt() {
       return createdAt;
   }
@@ -55,9 +71,10 @@ public final class Channel implements Model {
       return updatedAt;
   }
   
-  private Channel(String id, String name) {
+  private Channel(String id, String name, ModelReference<User> user) {
     this.id = id;
     this.name = name;
+    this.user = user;
   }
   
   @Override
@@ -70,6 +87,7 @@ public final class Channel implements Model {
       Channel channel = (Channel) obj;
       return ObjectsCompat.equals(getId(), channel.getId()) &&
               ObjectsCompat.equals(getName(), channel.getName()) &&
+              ObjectsCompat.equals(getUser(), channel.getUser()) &&
               ObjectsCompat.equals(getCreatedAt(), channel.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), channel.getUpdatedAt());
       }
@@ -80,6 +98,7 @@ public final class Channel implements Model {
     return new StringBuilder()
       .append(getId())
       .append(getName())
+      .append(getUser())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -92,6 +111,7 @@ public final class Channel implements Model {
       .append("Channel {")
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
+      .append("user=" + String.valueOf(getUser()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
@@ -113,31 +133,36 @@ public final class Channel implements Model {
   public static Channel justId(String id) {
     return new Channel(
       id,
+      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      name);
+      name,
+      user);
   }
   public interface BuildStep {
     Channel build();
     BuildStep id(String id);
     BuildStep name(String name);
+    BuildStep user(User user);
   }
   
 
   public static class Builder implements BuildStep {
     private String id;
     private String name;
+    private ModelReference<User> user;
     public Builder() {
       
     }
     
-    private Builder(String id, String name) {
+    private Builder(String id, String name, ModelReference<User> user) {
       this.id = id;
       this.name = name;
+      this.user = user;
     }
     
     @Override
@@ -146,12 +171,19 @@ public final class Channel implements Model {
         
         return new Channel(
           id,
-          name);
+          name,
+          user);
     }
     
     @Override
      public BuildStep name(String name) {
         this.name = name;
+        return this;
+    }
+    
+    @Override
+     public BuildStep user(User user) {
+        this.user = new LoadedModelReferenceImpl<>(user);
         return this;
     }
     
@@ -167,14 +199,19 @@ public final class Channel implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name) {
-      super(id, name);
+    private CopyOfBuilder(String id, String name, ModelReference<User> user) {
+      super(id, name, user);
       
     }
     
     @Override
      public CopyOfBuilder name(String name) {
       return (CopyOfBuilder) super.name(name);
+    }
+    
+    @Override
+     public CopyOfBuilder user(User user) {
+      return (CopyOfBuilder) super.user(user);
     }
   }
   
