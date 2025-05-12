@@ -81,6 +81,9 @@ dependencies {
     implementation(libs.core)
     implementation(libs.core.kotlin)
 
+    // AWS AppSync
+    implementation("com.amazonaws:aws-android-sdk-appsync:3.4.1")
+
     // Moshi
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)

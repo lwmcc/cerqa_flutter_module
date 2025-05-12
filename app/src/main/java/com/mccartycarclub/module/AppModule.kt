@@ -1,6 +1,8 @@
 package com.mccartycarclub.module
 
 import android.content.Context
+import com.amazonaws.mobile.config.AWSConfiguration
+import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
 import com.amplifyframework.api.ApiCategory
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.kotlin.api.KotlinApiFacade
@@ -24,10 +26,10 @@ object AppModule {
     @Singleton
     fun provideContext(@ApplicationContext context: Context): Context = context.applicationContext
 
-
     @Provides
     @Singleton
-    fun provideContactsHelper(@ApplicationContext context: Context): ContactsHelper = ContactsHelper(context)
+    fun provideContactsHelper(@ApplicationContext context: Context): ContactsHelper =
+        ContactsHelper(context)
 
     @Provides
     @Singleton

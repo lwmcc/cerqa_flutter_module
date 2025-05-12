@@ -12,6 +12,7 @@ import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.UserMapper
+import com.mccartycarclub.repository.realtime.RealtimeSubscribeRepo
 import com.mccartycarclub.ui.components.ContactCardEvent
 import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,6 +40,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class ContactsViewModel @Inject constructor(
     private val userContacts: GetContacts,
     private val repo: RemoteRepo,
+    private val realtimeSubscribeRepo: RealtimeSubscribeRepo,
 ) : ViewModel() {
 
     sealed class UserContacts {
@@ -144,6 +146,11 @@ class ContactsViewModel @Inject constructor(
             SharingStarted.WhileSubscribed(5000),
             NetSearchResult.Idle
         )
+
+    // TODO: testing
+/*    init {
+        realtimeSubscribeRepo.createUserChannel("larry")
+    }*/
 
     fun onQueryChange(searchQuery: String) {
         println("ContactsViewModel ***** ${searchQuery}")

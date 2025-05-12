@@ -10,6 +10,8 @@ import com.mccartycarclub.repository.LocalRepo
 import com.mccartycarclub.repository.QueryBuilder
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.Repo
+import com.mccartycarclub.repository.realtime.RealtimeSubscribeRepo
+import com.mccartycarclub.repository.realtime.SubscribeRepo
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -31,4 +33,7 @@ abstract class RepoModule {
 
     @Binds
     abstract fun bindQueryBuilder(contactsQueryBuilder: ContactsQueryBuilder): QueryBuilder
+
+    @Binds
+    abstract fun bindRealtimeSubscribeRepo(subscribeRepo: SubscribeRepo): RealtimeSubscribeRepo
 }
