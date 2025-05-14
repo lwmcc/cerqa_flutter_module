@@ -38,12 +38,12 @@ object AppModule {
     @Named("IoDispatcher")
     fun provideIoContext(): CoroutineDispatcher = Dispatchers.IO
 
-    @Provides
+/*    @Provides
     @Singleton
     fun provideAbly(context: Context): AblyRealtime {
         // TODO: ABLY_TESTING_KEY is only for testing
         val options = ClientOptions(context.applicationContext.getString(R.string.ABLY_TESTING_KEY))
         return AblyRealtime(options)
-    }
+    }*/
 
 }
