@@ -1,4 +1,5 @@
 [versions]
+ablyAndroid = "1.2.40"
 activityCompose = "1.10.0"
 agp = "8.5.1"
 amplifyframeworkCore = "2.9.0"
@@ -6,9 +7,11 @@ api = "2.9.0"
 auth = "1.28.0"
 authenticator = "1.4.0"
 authenticatorVersion = "ANDROID_AUTHENTICATOR_VERSION"
+awsAndroidSdkAppsync = "3.4.1"
 awsApi = "2.24.0"
 awsApiVersion = "1.28.0"
 awsDatastore = "2.21.1"
+awsDatastoreVersion = "2.11.0"
 coilCompose = "3.1.0"
 coilNetworkOkhttp = "3.1.0"
 core = "2.24.0"
@@ -37,6 +40,7 @@ navigationUiKtx = "2.6.0"
 uiToolingPreviewAndroid = "1.7.8"
 
 [libraries]
+ably-android = { module = "io.ably:ably-android", version.ref = "ablyAndroid" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
@@ -46,9 +50,11 @@ api = { module = "com.amplifyframework.kotlin:api", version.ref = "api" }
 auth = { module = "com.amplifyframework:auth", version.ref = "auth" }
 authenticator = { module = "com.amplifyframework.ui:authenticator", version.ref = "authenticator" }
 authenticator-vandroidauthenticatorversion = { module = "com.amplifyframework.ui:authenticator", version.ref = "authenticatorVersion" }
+aws-android-sdk-appsync = { module = "com.amazonaws:aws-android-sdk-appsync", version.ref = "awsAndroidSdkAppsync" }
 aws-api = { module = "com.amplifyframework:aws-api", version.ref = "awsApi" }
 aws-api-v1280 = { module = "com.amplifyframework:aws-api", version.ref = "awsApiVersion" }
 aws-datastore = { module = "com.amplifyframework:aws-datastore", version.ref = "awsDatastore" }
+aws-datastore-v2110 = { module = "com.amplifyframework:aws-datastore", version.ref = "awsDatastoreVersion" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilNetworkOkhttp" }
 core = { module = "com.amplifyframework:core", version.ref = "core" }

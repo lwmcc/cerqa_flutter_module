@@ -80,9 +80,11 @@ dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(libs.core)
     implementation(libs.core.kotlin)
+    implementation(libs.aws.datastore)
+
 
     // AWS AppSync
-    implementation("com.amazonaws:aws-android-sdk-appsync:3.4.1")
+    implementation(libs.aws.android.sdk.appsync)
 
     // Moshi
     implementation(libs.moshi)
@@ -96,6 +98,9 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    // Ably
+    implementation(libs.ably.android)
 }
 
 kapt {

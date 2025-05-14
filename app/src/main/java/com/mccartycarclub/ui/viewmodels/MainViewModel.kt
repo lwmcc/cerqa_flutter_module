@@ -11,6 +11,7 @@ import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.NetResult
 import com.mccartycarclub.repository.NetWorkResult
 import com.mccartycarclub.repository.RemoteRepo
+import com.mccartycarclub.repository.realtime.RealtimeSubscribeRepo
 import com.mccartycarclub.ui.components.ContactCardEvent
 import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,10 +37,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val user: GetUser,  // TODO: edit these names to use usecase
     private val userContacts: GetContacts,
-    private val dbRepo: AmplifyDbRepo,
-    private val repo: RemoteRepo,
+    private val realtimeSubscribeRepo: RealtimeSubscribeRepo,
 ) : ViewModel() {
 
 
@@ -64,12 +63,6 @@ class MainViewModel @Inject constructor(
 
     fun setLoggedInUserId(loggedInUserId: String) {
         _loggedUserId = loggedInUserId
-    }
-
-    fun fetchUserIdFromSentInvite(rowId: String) {
-        user.fetchUserIdFromSentInvite(rowId, userId = {
-            println("MainViewModel ***** USER ID $it")
-        })
     }
 
     fun acceptContactInvite() {

@@ -1,7 +1,9 @@
 package com.mccartycarclub.module
 
+import com.mccartycarclub.data.websocket.RealTimeMessaging
 import com.mccartycarclub.domain.usecases.user.GetUser
 import com.mccartycarclub.domain.usecases.user.GetUserData
+import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.AmplifyRepo
 import com.mccartycarclub.repository.ContactsQueryBuilder
@@ -36,4 +38,7 @@ abstract class RepoModule {
 
     @Binds
     abstract fun bindRealtimeSubscribeRepo(subscribeRepo: SubscribeRepo): RealtimeSubscribeRepo
+
+    @Binds
+    abstract fun bindRealTimeMessaging(realTimeMessaging: RealTimeMessaging): RealTime
 }

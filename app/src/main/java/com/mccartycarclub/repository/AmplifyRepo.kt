@@ -427,7 +427,7 @@ class AmplifyRepo @Inject constructor(
             )
             return response
         } catch (e: ApiException) {
-            if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
+            if (e.cause is IOException || e.cause is UnknownHostException) {
                 throw NoInternetException("Cannot read proto.")
             } else {
                 throw ResponseException("Cannot read proto.")

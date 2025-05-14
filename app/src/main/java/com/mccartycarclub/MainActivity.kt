@@ -44,6 +44,9 @@ class MainActivity : ComponentActivity() {
             checkPermissions()
         }
         handleIncomingIntentS(intent)
+
+        // TODO: testing messaging
+        mainViewModel
     }
 
     private val requestPermissionLauncher = registerForActivityResult(

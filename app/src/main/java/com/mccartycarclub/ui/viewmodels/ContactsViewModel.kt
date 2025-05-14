@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.usecases.user.GetContacts
+import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.NetDeleteResult
 import com.mccartycarclub.repository.NetSearchResult
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -42,6 +44,7 @@ class ContactsViewModel @Inject constructor(
     private val userContacts: GetContacts,
     private val repo: RemoteRepo,
     private val realtimeSubscribeRepo: RealtimeSubscribeRepo,
+    private val realTime: RealTime,
 ) : ViewModel() {
 
     sealed class UserContacts {
@@ -76,7 +79,7 @@ class ContactsViewModel @Inject constructor(
     val contacts: SnapshotStateList<Contact> get() = _contacts
 
     private var _loggedInUserId: String? = null
-    val loggedInUserId: String?
+    private val loggedInUserId: String?
         get() = _loggedInUserId
 
     private val _query = MutableStateFlow<String?>(null)
@@ -148,11 +151,9 @@ class ContactsViewModel @Inject constructor(
             NetSearchResult.Idle
         )
 
-    // TODO: testing
+    // TODO: for testing only
     init {
-        viewModelScope.launch {
-            realtimeSubscribeRepo.createUserChannel("larry")
-        }
+        realTime.publish()
     }
 
     fun onQueryChange(searchQuery: String) {
