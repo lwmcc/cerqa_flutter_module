@@ -16,7 +16,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation
 import com.amplifyframework.core.model.temporal.Temporal
-import com.amplifyframework.datastore.generated.model.Invite
+//import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.kotlin.api.KotlinApiFacade
@@ -106,8 +106,6 @@ class AmplifyRepo @Inject constructor(
             .builder()
             .senderId(senderUserId)
             .receiverId(receiverUserId)
-            .sender("to-remove") // TODO: remove these
-            .receiver("to-remove")
             .build()
 
         return try {
