@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,7 +26,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -66,14 +70,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.MainActivity.Companion.CONTACTS_SCREEN
 import com.mccartycarclub.MainActivity.Companion.GROUPS_SCREEN
 import com.mccartycarclub.MainActivity.Companion.MAIN_SCREEN
+import com.mccartycarclub.MainActivity.Companion.NOTIFICATIONS_SCREEN
 import com.mccartycarclub.MainActivity.Companion.SEARCH_SCREEN
 import com.mccartycarclub.R
+import com.mccartycarclub.domain.ChannelModel
 import com.mccartycarclub.navigation.AppNavigationActions
 import com.mccartycarclub.navigation.ClickNavigation
 import com.mccartycarclub.repository.CurrentContact
@@ -121,6 +128,12 @@ fun StartScreen(
                 navToScreen(it, navActions)
             })
         }
+
+        composable(NOTIFICATIONS_SCREEN) { backStackEntry ->
+            Notifications(topBarClick = {
+                navToScreen(it, navActions)
+            })
+        }
     }
 }
 
@@ -139,6 +152,10 @@ private fun navToScreen(
 
         ClickNavigation.NavToSearch -> {
             navActions.navigateToSearch()
+        }
+
+        ClickNavigation.NavToNotifications -> {
+            navActions.navigateToNotifications()
         }
 
         ClickNavigation.PopBackstack -> {
@@ -285,6 +302,21 @@ fun TopBar(
                     painter = painterResource(id = R.drawable.ic_action_contacts), // Use your drawable resource
                     contentDescription = "Localized description"
                 )
+            }
+
+            Box(modifier = Modifier.clickable {
+                topBarClick(ClickNavigation.NavToNotifications)
+            }) {
+                BadgedBox(
+                    badge = {
+                        Badge()
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Notifications,
+                        contentDescription = "Email",
+                    )
+                }
             }
         }
     )
@@ -618,7 +650,8 @@ fun Search(
                     onConfirmation = {
                         openAlertDialog = false
                         connectionEvent?.let { event ->
-                            contactsViewModel.userConnectionEvent(connectionEvent = event)
+                             contactsViewModel.userConnectionEvent(connectionEvent = event)
+                            // TODO: send notification
                         }
                     },
                 )
@@ -682,6 +715,31 @@ fun Search(
 
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun Notifications(
+    contactsViewModel: ContactsViewModel = hiltViewModel(),
+    topBarClick: (ClickNavigation) -> Unit,
+) {
+    Scaffold(
+        topBar = {
+            TopBarSearch(
+                stringResource(id = R.string.app_name),
+                topBarClick = {
+                    topBarClick(it)
+                }
+            )
+        },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(innerPadding),
+        ) {
+            Text(text = "Notifications")
         }
     }
 }

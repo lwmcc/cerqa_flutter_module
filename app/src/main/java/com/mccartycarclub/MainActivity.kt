@@ -10,8 +10,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.mccartycarclub.domain.ChannelModel
 import com.mccartycarclub.ui.components.StartScreen
 import com.mccartycarclub.ui.viewmodels.MainViewModel
+import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -45,8 +47,13 @@ class MainActivity : ComponentActivity() {
         }
         handleIncomingIntentS(intent)
 
-        // TODO: testing messaging
-        mainViewModel
+        // TODO: cache instead of using this
+        fetchUserId {
+            if (it.userId != null) {
+                val channelName = ChannelModel.NotificationsInvitations.getName(it.userId)
+                mainViewModel.subscribeToNotifications(channelName)
+            }
+        }
     }
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -129,11 +136,13 @@ class MainActivity : ComponentActivity() {
         ACTION_VIEW("android.intent.action.VIEW")
     }
 
+    // TODO: move to enum
     companion object {
         const val CAR_CLUB_URL = "https://carclub.app"
         const val MAIN_SCREEN = "main_screen"
         const val CONTACTS_SCREEN = "contacts_screen"
         const val GROUPS_SCREEN = "groups_screen"
         const val SEARCH_SCREEN = "search_screen"
+        const val NOTIFICATIONS_SCREEN = "notifications_screen"
     }
 }

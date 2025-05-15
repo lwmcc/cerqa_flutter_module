@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.amplifyframework.datastore.generated.model.User
+import com.mccartycarclub.domain.ChannelModel
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.repository.Contact
@@ -43,7 +44,6 @@ import kotlin.time.Duration.Companion.milliseconds
 class ContactsViewModel @Inject constructor(
     private val userContacts: GetContacts,
     private val repo: RemoteRepo,
-    private val realtimeSubscribeRepo: RealtimeSubscribeRepo,
     private val realTime: RealTime,
 ) : ViewModel() {
 
@@ -153,7 +153,7 @@ class ContactsViewModel @Inject constructor(
 
     // TODO: for testing only
     init {
-        realTime.publish()
+        //realTime.publish()
     }
 
     fun onQueryChange(searchQuery: String) {
@@ -173,6 +173,7 @@ class ContactsViewModel @Inject constructor(
         userContacts.acceptContactInvite()
     }
 
+    // TODO: use id instead of listIndex
     fun userConnectionEvent(listIndex: Int = 0, connectionEvent: ContactCardEvent) {
         _dataPending.value = true
         when (connectionEvent) {
@@ -181,14 +182,18 @@ class ContactsViewModel @Inject constructor(
                     val userID = fetchUserId()
                     _isSendingInvite.value = true
 
-                    val inviteSuccess =
+                    val channel =
+                        ChannelModel.NotificationsInvitations.getName(connectionEvent.receiverUserId)
+                    realTime.createReceiverInviteSubscription(_loggedInUserId!!, channel)
+                    println("ContactsViewModel ***** CHANNEL $channel")
+                    /*                    val inviteSuccess =
                         repo.sendInviteToConnect(_loggedInUserId!!, connectionEvent.receiverUserId)
 
                     if (inviteSuccess) {
                         fetchReceivedInvites(_loggedInUserId!!)
                     } else {
                         println("ContactsViewModel ***** INVITE ERROR")
-                    }
+                    }*/
                 }
             }
 

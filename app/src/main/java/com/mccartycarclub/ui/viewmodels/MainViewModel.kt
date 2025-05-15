@@ -6,6 +6,7 @@ import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.usecases.user.GetUser
+import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.NetResult
@@ -38,7 +39,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val userContacts: GetContacts,
-    private val realtimeSubscribeRepo: RealtimeSubscribeRepo,
+    private val realTime: RealTime,
 ) : ViewModel() {
 
 
@@ -67,5 +68,17 @@ class MainViewModel @Inject constructor(
 
     fun acceptContactInvite() {
         userContacts.acceptContactInvite()
+    }
+
+    fun subscribeToNotifications(channelName: String) {
+        viewModelScope.launch {
+            realTime.subscribeToInviteNotifications(channelName).catch { error ->
+                // TODO: log this
+            }.collect { message ->
+                message.name
+                message.data
+                println("MainViewModel ***** NAME ${message.name} DATA ${message.data}")
+            }
+        }
     }
 }
