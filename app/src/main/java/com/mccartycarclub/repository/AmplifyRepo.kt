@@ -629,14 +629,11 @@ class AmplifyRepo @Inject constructor(
 
     // TODO: aws function test
     override fun awsFunction() {
-        val document = """
-            query SayHelloQuery(${'$'}name: String!) {
-                sayHello(name: ${'$'}name) {
-                    name
-                    executionDuration
+        val document = """            
+                query SayHelloQuery(${'$'}name: String!) {
+                    sayHello(name: ${'$'}name) 
                 }
-            }
-        """.trimIndent()
+            """.trimIndent()
         val sayHelloQuery = SimpleGraphQLRequest<String>(
             document,
             mapOf("name" to "Amplify"),
