@@ -1,10 +1,16 @@
 package com.mccartycarclub.module
 
+import android.content.BroadcastReceiver
 import android.content.Context
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.amplifyframework.kotlin.core.Amplify
 import com.mccartycarclub.R
+import com.mccartycarclub.data.websocket.AblyRealtimeProvider
+import com.mccartycarclub.data.websocket.AblyService
 import com.mccartycarclub.domain.helpers.ContactsHelper
+import com.mccartycarclub.domain.websocket.AblyProvider
+import com.mccartycarclub.domain.websocket.RealtimeService
+import com.mccartycarclub.receiver.AblyBroadcastReceiver
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,6 +50,24 @@ object AppModule {
         // TODO: ABLY_TESTING_KEY is only for testing
         val options = ClientOptions(context.applicationContext.getString(R.string.ABLY_TESTING_KEY))
         return AblyRealtime(options)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAblyRealtimeProvider(@ApplicationContext context: Context): AblyProvider {
+        return AblyRealtimeProvider(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAblyService(ablyProvider: AblyProvider): RealtimeService {
+        return AblyService(ablyProvider)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAblyBroadcastReceiver(ablyService: AblyService): BroadcastReceiver {
+        return AblyBroadcastReceiver(ablyService)
     }
 
 }

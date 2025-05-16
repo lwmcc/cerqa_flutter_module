@@ -19,6 +19,8 @@ coreKotlin = "2.24.0"
 coreVersion = "1.43.2"
 desugar_jdk_libs = "2.1.4"
 desugar_jdk_libsVersion = "2.0.3"
+firebaseCore = "21.1.1"
+firebaseMessaging = "24.1.1"
 hiltAndroid = "2.51.1"
 hiltNavigationCompose = "1.2.0"
 kotlin = "2.0.0"
@@ -38,6 +40,7 @@ navigationCompose = "2.8.9"
 navigationFragmentKtx = "2.6.0"
 navigationUiKtx = "2.6.0"
 uiToolingPreviewAndroid = "1.7.8"
+firebaseMessagingKtx = "24.1.1"
 
 [libraries]
 ably-android = { module = "io.ably:ably-android", version.ref = "ablyAndroid" }
@@ -62,6 +65,8 @@ core-kotlin = { module = "com.amplifyframework:core-kotlin", version.ref = "core
 core-v1432 = { module = "com.amplifyframework:core", version.ref = "coreVersion" }
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 desugar_jdk_libs-v203 = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libsVersion" }
+firebase-core = { module = "com.google.firebase:firebase-core", version.ref = "firebaseCore" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebaseMessaging" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -79,6 +84,7 @@ moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 moshi-adapters = { module = "com.squareup.moshi:moshi-adapters", version.ref = "moshiAdapters" }
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshiKotlin" }
 androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" }
+firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -1,8 +1,11 @@
 package com.mccartycarclub
 
+import android.content.BroadcastReceiver
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,16 +13,27 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.mccartycarclub.data.websocket.AblyPushMessagingService
+import com.mccartycarclub.data.websocket.AblyService
 import com.mccartycarclub.domain.ChannelModel
+import com.mccartycarclub.receiver.AblyBroadcastReceiver
 import com.mccartycarclub.ui.components.StartScreen
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
+
+    @Inject
+    lateinit var ablyService: AblyService
+
+    @Inject
+    lateinit var pushReceiver: BroadcastReceiver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +58,11 @@ class MainActivity : ComponentActivity() {
                 }
             )
             checkPermissions()
+
+            registerReceiver()
+
+            ablyService.connect()
+            ablyService.activatePush()
         }
         handleIncomingIntentS(intent)
 
@@ -54,6 +73,16 @@ class MainActivity : ComponentActivity() {
                 mainViewModel.subscribeToNotifications(channelName)
             }
         }
+    }
+
+    private fun registerReceiver() {
+        LocalBroadcastManager.getInstance(this)
+            .registerReceiver(pushReceiver, IntentFilter("io.ably.broadcast.PUSH_ACTIVATE"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            pushReceiver, IntentFilter(
+                AblyPushMessagingService.PUSH_NOTIFICATION_ACTION
+            )
+        )
     }
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -94,6 +123,27 @@ class MainActivity : ComponentActivity() {
                     android.Manifest.permission.READ_CONTACTS
                 )
                 println("MainActivity ***** ASK FOR PERMISSION")
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                println("MainActivity *** CAN POST NOTIFICATIONS")
+            } else if (shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)) {
+                println("MainActivity *** SHOW REASONS FOR REQUEST")
+
+                // TODO: display an educational UI explaining to the user the features that will be enabled
+                //       by them granting the POST_NOTIFICATION permission. This UI should provide the user
+                //       "OK" and "No thanks" buttons. If the user selects "OK," directly request the permission.
+                //       If the user selects "No thanks," allow the user to continue without notifications.
+            } else {
+                println("MainActivity *** REQUST PERMISSION LAUNCHER")
+                requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }

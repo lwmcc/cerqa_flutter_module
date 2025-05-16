@@ -4,7 +4,8 @@ plugins {
 
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
-    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0" // this version matches your Kotlin version
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -51,6 +52,7 @@ android {
 dependencies {
 
     implementation(libs.androidx.ui.tooling.preview.android)
+    implementation(libs.firebase.messaging.ktx)
     val composeBom = platform("androidx.compose:compose-bom:2025.01.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -101,6 +103,14 @@ dependencies {
 
     // Ably
     implementation(libs.ably.android)
+
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.core)
 }
 
 kapt {

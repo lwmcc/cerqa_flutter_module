@@ -10,6 +10,8 @@ import com.amplifyframework.datastore.generated.model.Channel
 import com.amplifyframework.datastore.generated.model.Message
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.kotlin.api.KotlinApiFacade
+import com.mccartycarclub.domain.websocket.AblyProvider
+import com.mccartycarclub.domain.websocket.RealtimeService
 import com.mccartycarclub.repository.AmplifyRepo.Companion.DUMMY
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,6 +27,7 @@ import javax.inject.Named
 
 class SubscribeRepo @Inject constructor(
     private val amplifyApi: KotlinApiFacade,
+    private val ablyProvider: AblyProvider,
     @Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
 ) : RealtimeSubscribeRepo {
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
