@@ -46,4 +46,6 @@ interface RemoteRepo {
     fun createContact(senderUserId: String, receiverUserId: String): Flow<NetDeleteResult>
 
     suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>>
+
+    fun awsFunction()
 }

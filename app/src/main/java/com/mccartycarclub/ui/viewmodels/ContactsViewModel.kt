@@ -339,6 +339,10 @@ class ContactsViewModel @Inject constructor(
         _dataPending.value = dataPending
     }
 
+    fun callFunctionTest() {
+        repo.awsFunction()
+    }
+
     private fun removeContact(id: String, pending: Boolean) {
         _dataPending.value = pending
         _contacts.removeAll { it.contactId == id }

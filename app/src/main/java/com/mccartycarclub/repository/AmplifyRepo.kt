@@ -1,10 +1,14 @@
 package com.mccartycarclub.repository
 
 import com.amplifyframework.api.ApiException
+import com.amplifyframework.api.aws.GsonVariablesSerializer
+import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
+import com.amplifyframework.api.graphql.SimpleGraphQLRequest
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
+import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.LazyModelList
 import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.LoadedModelList
@@ -20,12 +24,14 @@ import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.kotlin.api.KotlinApiFacade
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import org.json.JSONObject
 import java.io.IOException
 import java.net.UnknownHostException
 import java.util.Date
@@ -620,7 +626,39 @@ class AmplifyRepo @Inject constructor(
     companion object {
         const val DUMMY = "dummy"
     }
+
+    // TODO: aws function test
+    override fun awsFunction() {
+        val document = """
+            query SayHelloQuery(${'$'}name: String!) {
+                sayHello(name: ${'$'}name) {
+                    name
+                    executionDuration
+                }
+            }
+        """.trimIndent()
+        val sayHelloQuery = SimpleGraphQLRequest<String>(
+            document,
+            mapOf("name" to "Amplify"),
+            String::class.java,
+            GsonVariablesSerializer()
+        )
+
+        // TODO: amplify framework core
+        Amplify.API.query(
+            sayHelloQuery,
+            {
+                //var gson = Gson()
+                //val response = gson.fromJson(it.data, SayHelloResponse::class.java)
+                //println("AmplifyRepo ***** FUNCTION ${response.sayHello.name}")
+                println("AmplifyRepo ***** FUNCTION ${it.data}")
+            },
+            { println("AmplifyRepo ***** FUNCTION ERROR ${it}") }
+        )
+
+    }
 }
+
 
 class ResponseException(message: String) : Exception(message)
 class NoInternetException(message: String) : Exception(message)
@@ -672,5 +710,11 @@ class CurrentContact(
     createdAt: Temporal.DateTime,
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
+// TODO: testing function
+data class SayHelloDetails(
+    val name: String,
+)
 
-
+data class SayHelloResponse(
+    val sayHello: SayHelloDetails
+)
