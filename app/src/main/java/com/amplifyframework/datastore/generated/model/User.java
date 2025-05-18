@@ -27,6 +27,7 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @ModelConfig(pluralName = "Users", type = Model.Type.USER, version = 1, authRules = {
   @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 }, hasLazySupport = true)
+@Index(name = "undefined", fields = {"id"})
 public final class User implements Model {
   public static final UserPath rootPath = new UserPath("root", false, null);
   public static final QueryField ID = field("User", "id");
@@ -48,8 +49,10 @@ public final class User implements Model {
   private final @ModelField(targetType="AWSEmail") String email;
   private final @ModelField(targetType="AWSURL") String avatarUri;
   private final @ModelField(targetType="UserContact") @HasMany(associatedWith = "user", type = UserContact.class) ModelList<UserContact> contacts = null;
+  private final @ModelField(targetType="UserContact") @HasMany(associatedWith = "contact", type = UserContact.class) ModelList<UserContact> asContact = null;
   private final @ModelField(targetType="UserGroup") @HasMany(associatedWith = "user", type = UserGroup.class) ModelList<UserGroup> groups = null;
   private final @ModelField(targetType="Invite") @HasMany(associatedWith = "user", type = Invite.class) ModelList<Invite> invites = null;
+  private final @ModelField(targetType="Channel") @HasMany(associatedWith = "user", type = Channel.class) ModelList<Channel> channels = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -98,12 +101,20 @@ public final class User implements Model {
       return contacts;
   }
   
+  public ModelList<UserContact> getAsContact() {
+      return asContact;
+  }
+  
   public ModelList<UserGroup> getGroups() {
       return groups;
   }
   
   public ModelList<Invite> getInvites() {
       return invites;
+  }
+  
+  public ModelList<Channel> getChannels() {
+      return channels;
   }
   
   public Temporal.DateTime getCreatedAt() {

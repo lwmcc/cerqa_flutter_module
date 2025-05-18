@@ -340,7 +340,9 @@ class ContactsViewModel @Inject constructor(
     }
 
     fun callFunctionTest() {
-        repo.awsFunction()
+        //repo.awsFunction()
+
+        repo.awsRestTest()
     }
 
     private fun removeContact(id: String, pending: Boolean) {
@@ -372,14 +374,6 @@ class ContactsViewModel @Inject constructor(
             _isSendingInvite.value = false
         } else {
             _isCancellingInvite.value = false
-        }
-    }
-
-    private fun resetButtonToDeleteInvite(success: Boolean) {
-        if (success) {
-
-        } else {
-
         }
     }
 

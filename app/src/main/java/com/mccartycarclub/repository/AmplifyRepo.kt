@@ -8,6 +8,7 @@ import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
+import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.LazyModelList
 import com.amplifyframework.core.model.LazyModelReference
@@ -641,6 +642,31 @@ class AmplifyRepo @Inject constructor(
             GsonVariablesSerializer()
         )
 
+        val clientId = "4ccdbc39-15b2-4df8-914a-4dbfb0a46e7f"
+        val queryParams = mapOf("clientId" to clientId)
+        val restOptions = RestOptions.builder()
+            .addPath("/fetchAblyJwt")
+            .addQueryParameters(queryParams)
+            .build()
+
+/*        Amplify.API.get(
+            "fetchAblyJwt",
+            restOptions,
+            { response ->
+                try {
+                    val responseBody = response.data.asString()
+                    val jsonObject = JSONObject(responseBody)
+                    val ablyJwt = jsonObject.getString("token")
+                    println("AmplifyRepo ***** ABLY JWT ${ablyJwt}")
+                } catch (e: Exception) {
+                    println("AmplifyRepo ***** E MESSAGE ${e.message}")
+                }
+            },
+            { error ->
+                println("AmplifyRepo ***** ERROR ${error.message}")
+            }
+        )*/
+
         // TODO: amplify framework core
         Amplify.API.query(
             sayHelloQuery,
@@ -653,6 +679,42 @@ class AmplifyRepo @Inject constructor(
             { println("AmplifyRepo ***** FUNCTION ERROR ${it}") }
         )
 
+    }
+
+    override fun awsRestTest() {
+        val request = RestOptions.builder()
+            .addPath("/fetchAblyJwt")
+            .addQueryParameters(mapOf("deviceId" to "test-device-id"))
+            .build()
+
+        Amplify.API.get(request,
+            { response -> println("AmplifyRepo ***** Ably JWT: ${response.data.asString()}") },
+            { error -> println("AmplifyRepo ***** Error calling fetchAblyJwt: $error") }
+        )
+
+
+        /*val clientId = "4ccdbc39-15b2-4df8-914a-4dbfb0a46e7f"
+        val queryParams = mapOf("clientId" to clientId)
+        val restOptions = RestOptions.builder()
+            .addPath("/fetchAblyJwt")
+            .addQueryParameters(queryParams)
+            .build()
+
+        Amplify.API.get(
+            "fetchAblyJwt",
+            restOptions,
+            { response ->
+                try {
+
+                    println("AmplifyRepo ***** ABLY JWT ${response}")
+                } catch (e: Exception) {
+                    println("AmplifyRepo ***** E MESSAGE ${e.message}")
+                }
+            },
+            { error ->
+                println("AmplifyRepo ***** ERROR ${error.message}")
+            }
+        )*/
     }
 }
 

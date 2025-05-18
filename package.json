@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@aws-amplify/api": "^6.3.0",
-    "aws-amplify": "^6.13.3"
+    "aws-amplify": "^6.13.3",
+    "jsonwebtoken": "^9.0.2"
   }
 }
