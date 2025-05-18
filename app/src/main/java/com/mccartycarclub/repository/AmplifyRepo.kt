@@ -683,17 +683,29 @@ class AmplifyRepo @Inject constructor(
 
     override fun awsRestTest() {
         val request = RestOptions.builder()
-            .addPath("/fetchAblyJwt")
+            .addPath("/sayHello")
             .addQueryParameters(mapOf("deviceId" to "test-device-id"))
             .build()
 
+/*        Amplify.API.post(
+            "sayHello",
+            RestOptions.builder()
+                .addPath("/sayHello")
+                .addBody("""{ "deviceId": "4ccdbc39-15b2-4df8-914a-4dbfb0a46e7f" }""".toByteArray())
+                .build(),
+            { response -> println("AmplifyRepo ***** JWT: ${response.data.asString()}") },
+            { error -> println("AmplifyRepo ***** Error: $error") }
+        )*/
+
+/*
         Amplify.API.get(request,
             { response -> println("AmplifyRepo ***** Ably JWT: ${response.data.asString()}") },
             { error -> println("AmplifyRepo ***** Error calling fetchAblyJwt: $error") }
         )
+*/
 
 
-        /*val clientId = "4ccdbc39-15b2-4df8-914a-4dbfb0a46e7f"
+        val clientId = "4ccdbc39-15b2-4df8-914a-4dbfb0a46e7f"
         val queryParams = mapOf("clientId" to clientId)
         val restOptions = RestOptions.builder()
             .addPath("/fetchAblyJwt")
@@ -714,7 +726,7 @@ class AmplifyRepo @Inject constructor(
             { error ->
                 println("AmplifyRepo ***** ERROR ${error.message}")
             }
-        )*/
+        )
     }
 }
 
