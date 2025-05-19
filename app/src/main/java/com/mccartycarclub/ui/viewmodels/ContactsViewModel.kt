@@ -340,9 +340,12 @@ class ContactsViewModel @Inject constructor(
     }
 
     fun callFunctionTest() {
-        repo.awsFunction()
+        viewModelScope.launch {
+            repo.awsFunction()
 
-        //repo.awsRestTest()
+            //repo.awsRestTest()
+        }
+
     }
 
     private fun removeContact(id: String, pending: Boolean) {

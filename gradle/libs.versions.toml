@@ -1,5 +1,6 @@
 [versions]
 ablyAndroid = "1.2.40"
+ablyAndroidVersion = "1.2.20"
 activityCompose = "1.10.0"
 agp = "8.5.1"
 amplifyframeworkCore = "2.9.0"
@@ -41,9 +42,11 @@ navigationFragmentKtx = "2.6.0"
 navigationUiKtx = "2.6.0"
 uiToolingPreviewAndroid = "1.7.8"
 firebaseMessagingKtx = "24.1.1"
+playServicesAuth = "21.3.0"
 
 [libraries]
 ably-android = { module = "io.ably:ably-android", version.ref = "ablyAndroid" }
+ably-android-v1220 = { module = "io.ably:ably-android", version.ref = "ablyAndroidVersion" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
@@ -85,6 +88,7 @@ moshi-adapters = { module = "com.squareup.moshi:moshi-adapters", version.ref = "
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshiKotlin" }
 androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" }
 firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

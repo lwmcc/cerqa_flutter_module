@@ -53,6 +53,7 @@ dependencies {
 
     implementation(libs.androidx.ui.tooling.preview.android)
     implementation(libs.firebase.messaging.ktx)
+    implementation(libs.play.services.auth)
     val composeBom = platform("androidx.compose:compose-bom:2025.01.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -103,6 +104,7 @@ dependencies {
 
     // Ably
     implementation(libs.ably.android)
+    implementation("io.ably:ably-android:1.2.20")
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))

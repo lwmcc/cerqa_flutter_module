@@ -26,6 +26,7 @@ import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.google.gson.Gson
+import io.ably.lib.rest.Auth
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -38,6 +39,9 @@ import java.net.UnknownHostException
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlin.reflect.KClass
 
 // TODO: split this class up
@@ -629,8 +633,8 @@ class AmplifyRepo @Inject constructor(
     }
 
     // TODO: aws function test
-    override fun awsFunction() {
-        val document = """            
+    override suspend fun awsFunction() {
+        val document = """
                 query SayHelloQuery(${'$'}name: String!) {
                     sayHello(name: ${'$'}name) 
                 }
@@ -649,7 +653,7 @@ class AmplifyRepo @Inject constructor(
             .addQueryParameters(queryParams)
             .build()
 
-/*        Amplify.API.get(
+        Amplify.API.get(
             "fetchAblyJwt",
             restOptions,
             { response ->
@@ -665,7 +669,7 @@ class AmplifyRepo @Inject constructor(
             { error ->
                 println("AmplifyRepo ***** ERROR ${error.message}")
             }
-        )*/
+        )
 
         // TODO: amplify framework core
         Amplify.API.query(
@@ -678,14 +682,13 @@ class AmplifyRepo @Inject constructor(
             },
             { println("AmplifyRepo ***** FUNCTION ERROR ${it}") }
         )
-
     }
 
     override fun awsRestTest() {
-        val request = RestOptions.builder()
+/*        val request = RestOptions.builder()
             .addPath("/sayHello")
             .addQueryParameters(mapOf("deviceId" to "test-device-id"))
-            .build()
+            .build()*/
 
 /*        Amplify.API.post(
             "sayHello",
@@ -697,12 +700,12 @@ class AmplifyRepo @Inject constructor(
             { error -> println("AmplifyRepo ***** Error: $error") }
         )*/
 
-/*
-        Amplify.API.get(request,
+
+/*        Amplify.API.get(request,
             { response -> println("AmplifyRepo ***** Ably JWT: ${response.data.asString()}") },
             { error -> println("AmplifyRepo ***** Error calling fetchAblyJwt: $error") }
-        )
-*/
+        )*/
+
 
 
         val clientId = "4ccdbc39-15b2-4df8-914a-4dbfb0a46e7f"

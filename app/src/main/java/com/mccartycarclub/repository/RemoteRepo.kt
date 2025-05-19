@@ -47,7 +47,7 @@ interface RemoteRepo {
 
     suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>>
 
-    fun awsFunction()
+    suspend fun awsFunction()
 
     fun awsRestTest()
 }
