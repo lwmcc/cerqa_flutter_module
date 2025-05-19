@@ -661,13 +661,13 @@ class AmplifyRepo @Inject constructor(
                     val responseBody = response.data.asString()
                     val jsonObject = JSONObject(responseBody)
                     val ablyJwt = jsonObject.getString("token")
-                    println("AmplifyRepo ***** ABLY JWT ${ablyJwt}")
+                    println("AmplifyRepo ***** TEST ABLY JWT ${ablyJwt}")
                 } catch (e: Exception) {
-                    println("AmplifyRepo ***** E MESSAGE ${e.message}")
+                    println("AmplifyRepo ***** TEST E MESSAGE ${e.message}")
                 }
             },
             { error ->
-                println("AmplifyRepo ***** ERROR ${error.message}")
+                println("AmplifyRepo ***** TEST ERROR ${error.message}")
             }
         )
 
