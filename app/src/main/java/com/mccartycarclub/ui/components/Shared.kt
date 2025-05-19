@@ -1,6 +1,7 @@
 package com.mccartycarclub.ui.components
 
 import android.util.Log
+import androidx.annotation.DimenRes
 import androidx.annotation.IntegerRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -70,7 +71,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
-import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.User
@@ -80,7 +80,6 @@ import com.mccartycarclub.MainActivity.Companion.MAIN_SCREEN
 import com.mccartycarclub.MainActivity.Companion.NOTIFICATIONS_SCREEN
 import com.mccartycarclub.MainActivity.Companion.SEARCH_SCREEN
 import com.mccartycarclub.R
-import com.mccartycarclub.domain.ChannelModel
 import com.mccartycarclub.navigation.AppNavigationActions
 import com.mccartycarclub.navigation.ClickNavigation
 import com.mccartycarclub.repository.CurrentContact
@@ -781,7 +780,7 @@ fun PendingCard(spinnerSize: Dp) {
 fun AnimatedLoadingSpinner(
     density: Density,
     dataPending: Boolean,
-    @IntegerRes spinnerSize: Int,
+    @DimenRes spinnerSize: Int,
     slideIn: Dp,
 ) {
     AnimatedVisibility(
