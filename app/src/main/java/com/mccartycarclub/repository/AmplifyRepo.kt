@@ -652,7 +652,7 @@ class AmplifyRepo @Inject constructor(
         Amplify.API.query(
             fetchAblyJwtQuery,
             {
-                var gson = Gson()
+                //var gson = Gson()
                 //val response = gson.fromJson(it.data, FetchAblyJwtResponse::class.java)
                 //println("AmplifyRepo ***** FUNCTION GSON ${response.body}")
                 //println("AmplifyRepo ***** FUNCTION GSON ${response.statusCode}")
