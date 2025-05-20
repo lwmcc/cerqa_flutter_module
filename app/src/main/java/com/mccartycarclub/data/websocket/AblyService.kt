@@ -41,4 +41,8 @@ class AblyService @Inject constructor(val provider: AblyProvider) : RealtimeServ
 
         }
     }
+
+    private fun setDeviceId() {
+        ably.device().id
+    }
 }

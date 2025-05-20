@@ -635,7 +635,7 @@ class AmplifyRepo @Inject constructor(
     }
 
     // TODO: aws function test
-    override suspend fun awsFunction() {
+    override suspend fun awsFunction(clientId: String) {
 
         val document = """
                 query FetchAblyJwt {
@@ -644,7 +644,7 @@ class AmplifyRepo @Inject constructor(
                 """.trimIndent()
         val fetchAblyJwtQuery = SimpleGraphQLRequest<String>(
             document,
-            mapOf("name" to "Amplify"),
+            mapOf("body" to "Amplify"),
             String::class.java,
             GsonVariablesSerializer()
         )
@@ -652,9 +652,10 @@ class AmplifyRepo @Inject constructor(
         Amplify.API.query(
             fetchAblyJwtQuery,
             {
-                //var gson = Gson()
-                //val response = gson.fromJson(it.data, SayHelloResponse::class.java)
-                //println("AmplifyRepo ***** FUNCTION GSON ${response.sayHello}")
+                var gson = Gson()
+                //val response = gson.fromJson(it.data, FetchAblyJwtResponse::class.java)
+                //println("AmplifyRepo ***** FUNCTION GSON ${response.body}")
+                //println("AmplifyRepo ***** FUNCTION GSON ${response.statusCode}")
                 println("AmplifyRepo ***** FUNCTION fetchAblyJwtQuery ${it.data}")
             },
             { println("AmplifyRepo ***** FUNCTION fetchAblyJwtQuery ERROR ${it}") }
@@ -713,11 +714,6 @@ class CurrentContact(
     createdAt: Temporal.DateTime,
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
-// TODO: testing function
-data class SayHelloDetails(
-    val name: String,
-)
 
-data class AblyToken(val token: String)
-
-
+data class FetchAblyJwtBody(val token: String)
+data class FetchAblyJwtResponse(val statusCode: Int, val body: FetchAblyJwtBody)
