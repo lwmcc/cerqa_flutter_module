@@ -341,9 +341,8 @@ class ContactsViewModel @Inject constructor(
 
     fun callFunctionTest() {
         viewModelScope.launch {
+            // TODO: testing
             repo.awsFunction()
-
-            //repo.awsRestTest()
         }
 
     }

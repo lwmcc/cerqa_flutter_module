@@ -646,30 +646,8 @@ class AmplifyRepo @Inject constructor(
             GsonVariablesSerializer()
         )
 
-        val clientId = "4ccdbc39-15b2-4df8-914a-4dbfb0a46e7f"
-        val queryParams = mapOf("clientId" to clientId)
-        val restOptions = RestOptions.builder()
-            .addPath("/fetchAblyJwt")
-            .addQueryParameters(queryParams)
-            .build()
-
-        Amplify.API.get(
-            "fetchAblyJwt",
-            restOptions,
-            { response ->
-                try {
-                    val responseBody = response.data.asString()
-                    val jsonObject = JSONObject(responseBody)
-                    val ablyJwt = jsonObject.getString("token")
-                    println("AmplifyRepo ***** TEST ABLY JWT ${ablyJwt}")
-                } catch (e: Exception) {
-                    println("AmplifyRepo ***** TEST E MESSAGE ${e.message}")
-                }
-            },
-            { error ->
-                println("AmplifyRepo ***** TEST ERROR ${error.message}")
-            }
-        )
+        // val clientId = "4ccdbc39-15b2-4df8-914a-4dbfb0a46e7f"
+        // val queryParams = mapOf("clientId" to clientId)
 
         // TODO: amplify framework core
         Amplify.API.query(
@@ -677,58 +655,34 @@ class AmplifyRepo @Inject constructor(
             {
                 //var gson = Gson()
                 //val response = gson.fromJson(it.data, SayHelloResponse::class.java)
-                //println("AmplifyRepo ***** FUNCTION ${response.sayHello.name}")
+                //println("AmplifyRepo ***** FUNCTION GSON ${response.sayHello}")
                 println("AmplifyRepo ***** FUNCTION ${it.data}")
             },
             { println("AmplifyRepo ***** FUNCTION ERROR ${it}") }
         )
-    }
 
-    override fun awsRestTest() {
-/*        val request = RestOptions.builder()
-            .addPath("/sayHello")
-            .addQueryParameters(mapOf("deviceId" to "test-device-id"))
-            .build()*/
-
-/*        Amplify.API.post(
-            "sayHello",
-            RestOptions.builder()
-                .addPath("/sayHello")
-                .addBody("""{ "deviceId": "4ccdbc39-15b2-4df8-914a-4dbfb0a46e7f" }""".toByteArray())
-                .build(),
-            { response -> println("AmplifyRepo ***** JWT: ${response.data.asString()}") },
-            { error -> println("AmplifyRepo ***** Error: $error") }
-        )*/
-
-
-/*        Amplify.API.get(request,
-            { response -> println("AmplifyRepo ***** Ably JWT: ${response.data.asString()}") },
-            { error -> println("AmplifyRepo ***** Error calling fetchAblyJwt: $error") }
-        )*/
-
-
-
-        val clientId = "4ccdbc39-15b2-4df8-914a-4dbfb0a46e7f"
-        val queryParams = mapOf("clientId" to clientId)
-        val restOptions = RestOptions.builder()
-            .addPath("/fetchAblyJwt")
-            .addQueryParameters(queryParams)
-            .build()
-
-        Amplify.API.get(
-            "fetchAblyJwt",
-            restOptions,
-            { response ->
-                try {
-
-                    println("AmplifyRepo ***** ABLY JWT ${response}")
-                } catch (e: Exception) {
-                    println("AmplifyRepo ***** E MESSAGE ${e.message}")
+        // TODO: rename
+        val document2 = """
+                query SayHelloQuery(${'$'}name: String!) {
+                    sayHello(name: ${'$'}name) 
                 }
+            """.trimIndent()
+        val fetchAblyJwtQuery = SimpleGraphQLRequest<String>(
+            document,
+            mapOf("name" to "Amplify"),
+            String::class.java,
+            GsonVariablesSerializer()
+        )
+
+        Amplify.API.query(
+            fetchAblyJwtQuery,
+            {
+                //var gson = Gson()
+                //val response = gson.fromJson(it.data, SayHelloResponse::class.java)
+                //println("AmplifyRepo ***** FUNCTION GSON ${response.sayHello}")
+                println("AmplifyRepo ***** FUNCTION fetchAblyJwtQuery ${it.data}")
             },
-            { error ->
-                println("AmplifyRepo ***** ERROR ${error.message}")
-            }
+            { println("AmplifyRepo ***** FUNCTION fetchAblyJwtQuery ERROR ${it}") }
         )
     }
 }
