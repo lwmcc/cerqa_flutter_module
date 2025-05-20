@@ -652,7 +652,7 @@ class AmplifyRepo @Inject constructor(
             .addPath("/fetchAblyJwt")
             .addQueryParameters(queryParams)
             .build()
-/*
+
         Amplify.API.get(
             "fetchAblyJwt",
             restOptions,
@@ -669,7 +669,7 @@ class AmplifyRepo @Inject constructor(
             { error ->
                 println("AmplifyRepo ***** TEST ERROR ${error.message}")
             }
-        )*/
+        )
 
         // TODO: amplify framework core
         Amplify.API.query(
