@@ -26,6 +26,8 @@ import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.google.gson.Gson
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.ably.lib.rest.Auth
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
@@ -634,39 +636,12 @@ class AmplifyRepo @Inject constructor(
 
     // TODO: aws function test
     override suspend fun awsFunction() {
+
         val document = """
-                query SayHelloQuery(${'$'}name: String!) {
-                    sayHello(name: ${'$'}name) 
+                query FetchAblyJwt {
+                    fetchAblyJwt
                 }
-            """.trimIndent()
-        val sayHelloQuery = SimpleGraphQLRequest<String>(
-            document,
-            mapOf("name" to "Amplify"),
-            String::class.java,
-            GsonVariablesSerializer()
-        )
-
-        // val clientId = "4ccdbc39-15b2-4df8-914a-4dbfb0a46e7f"
-        // val queryParams = mapOf("clientId" to clientId)
-
-        // TODO: amplify framework core
-        Amplify.API.query(
-            sayHelloQuery,
-            {
-                //var gson = Gson()
-                //val response = gson.fromJson(it.data, SayHelloResponse::class.java)
-                //println("AmplifyRepo ***** FUNCTION GSON ${response.sayHello}")
-                println("AmplifyRepo ***** FUNCTION ${it.data}")
-            },
-            { println("AmplifyRepo ***** FUNCTION ERROR ${it}") }
-        )
-
-        // TODO: rename
-        val document2 = """
-                query SayHelloQuery(${'$'}name: String!) {
-                    sayHello(name: ${'$'}name) 
-                }
-            """.trimIndent()
+                """.trimIndent()
         val fetchAblyJwtQuery = SimpleGraphQLRequest<String>(
             document,
             mapOf("name" to "Amplify"),
@@ -743,6 +718,6 @@ data class SayHelloDetails(
     val name: String,
 )
 
-data class SayHelloResponse(
-    val sayHello: SayHelloDetails
-)
+data class AblyToken(val token: String)
+
+

@@ -37,6 +37,8 @@ lifecycleViewmodelKtx = "2.8.3"
 moshi = "1.15.2"
 moshiAdapters = "1.14.0"
 moshiKotlin = "1.14.0"
+moshiKotlinVersion = "1.15.0"
+moshiVersion = "1.15.0"
 navigationCompose = "2.8.9"
 navigationFragmentKtx = "2.6.0"
 navigationUiKtx = "2.6.0"
@@ -88,6 +90,8 @@ moshi-adapters = { module = "com.squareup.moshi:moshi-adapters", version.ref = "
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshiKotlin" }
 androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" }
 firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
+moshi-kotlin-v1150 = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshiKotlinVersion" }
+moshi-v1150 = { module = "com.squareup.moshi:moshi", version.ref = "moshiVersion" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 
 [plugins]
