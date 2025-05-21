@@ -634,49 +634,45 @@ class AmplifyRepo @Inject constructor(
     /**
      * Emits a token and completes
      */
-    override fun fetchAblyToken(userId: String): Flow<AblyJwt> = callbackFlow {
+    override fun fetchAblyToken(userId: String): Flow<String> = callbackFlow {
         val document = """
-                query FetchAblyJwt(${'$'}userId: String!) {
-                    fetchAblyJwt(${'$'}userId) {
-                        token
-                        clientId
-                    }
+                query FetchAblyJwt {
+                    fetchAblyJwt
                 }
                 """.trimIndent()
-        val fetchAblyJwtQuery = SimpleGraphQLRequest<FetchAblyJwtResponse>(
+        val fetchAblyJwtQuery = SimpleGraphQLRequest<String>(
             document,
-            mapOf("userId" to userId),
-            FetchAblyJwtResponse::class.java,
+            String::class.java,
             GsonVariablesSerializer()
         )
 
-        try {
-            Amplify.API.query(
-                fetchAblyJwtQuery,
-                { response ->
-                    println("AmplifyRepo ***** FETCH ${response}")
-                    val ablyJwt = response.data?.fetchAblyJwt
+        Amplify.API.query(
+            fetchAblyJwtQuery,
+            {
+                // TODO: refactor this
+                val moshi = Moshi.Builder()
+                    .add(KotlinJsonAdapterFactory())  // <-- add this
+                    .build()
+                val adapter = moshi.adapter(FetchAblyJw::class.java)
 
-                    try {
-                        if (ablyJwt != null) {
-                            trySend(ablyJwt).onFailure {
-                                // TODO: log
-                            }
-                            close()
+                try {
+                    val response = adapter.fromJson(it.data)
+
+                    if (response != null) {
+                        val token = response.fetchAblyJwt
+                        trySend(token).onFailure {
+                            // TODO: log
                         }
-                    } catch (jde: JsonDataException) {
-                        close(jde)
-                    } catch (ae: AmplifyException) {
-                        close(ae)
+                        close()
                     }
-                },
-                { close(it) }
-            )
-        } catch (e: Exception) {
-            println("AmplifyRepo ***** FETCH ERROR ${e}")
-            close(e)
-        }
-
+                } catch (jde: JsonDataException) {
+                    close(jde)
+                } catch (ae: AmplifyException) {
+                    close(ae)
+                }
+            },
+            { close(it) }
+        )
         awaitClose { /* no-op */ }
     }.flowOn(ioDispatcher)
 }
@@ -732,9 +728,5 @@ class CurrentContact(
     createdAt: Temporal.DateTime,
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
-data class AblyJwt(
-    val token: String,
-    val clientId: String,
-)
 
-data class FetchAblyJwtResponse(val fetchAblyJwt: AblyJwt)
+data class FetchAblyJw(val fetchAblyJwt: String)

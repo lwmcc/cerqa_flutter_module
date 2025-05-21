@@ -47,5 +47,5 @@ interface RemoteRepo {
 
     suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>>
 
-    fun fetchAblyToken(userId: String): Flow<AblyJwt>
+    fun fetchAblyToken(userId: String): Flow<String>
 }
