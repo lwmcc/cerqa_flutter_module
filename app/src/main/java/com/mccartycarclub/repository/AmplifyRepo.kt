@@ -641,15 +641,6 @@ class AmplifyRepo @Inject constructor(
             }
             """.trimIndent()
 
-        /*
-                        query FetchAblyJwt(${'$'}userId: String!) {
-                    fetchAblyJwt(${'$'}userId) {
-                        token
-                        clientId
-                    }
-                }
-                """.trimIndent()
-         */
         val fetchAblyJwtQuery = SimpleGraphQLRequest<String>(
             document,
             mapOf("userId" to userId),

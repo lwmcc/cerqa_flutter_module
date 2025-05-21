@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
             // TODO: find all instances of this and move to one locations
             // Just for testing
 
-            //val token = mainViewModel.token.collectAsStateWithLifecycle().value
+            val token = mainViewModel.token.collectAsStateWithLifecycle().value
 
             Amplify.Auth.fetchUserAttributes({ attributes ->
                 val userId =
@@ -74,8 +74,8 @@ class MainActivity : ComponentActivity() {
 
                 if (userId != null) {
                     mainViewModel.fetchAblyToken(userId)
-                  //  ablyService.init(token)
-                  //  ablyService.activatePush()
+                    ablyService.init(token)
+                    ablyService.activatePush()
                 }
 
             }, { error ->

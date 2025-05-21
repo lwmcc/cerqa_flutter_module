@@ -43,6 +43,7 @@ class AblyRealtimeProvider(private val context: Context) : AblyProvider {
                     ConnectionState.connected -> {
                         ably?.push?.activate()
                         println("AblyRealtimeProvider ***** connected")
+                        println("AblyRealtimeProvider ***** CLIENT ID ${ably?.auth?.clientId}")
                     }
 
                     ConnectionState.disconnected -> {
