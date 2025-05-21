@@ -634,7 +634,7 @@ class AmplifyRepo @Inject constructor(
     /**
      * Emits a token and completes
      */
-    override fun fetchAblyToken(userId: String): Flow<FetchAblyJwt> = callbackFlow {
+    override fun fetchAblyToken(userId: String): Flow<AblyJwt> = callbackFlow {
         val document = """
                 query FetchAblyJwt(${'$'}userId: String!) {
                     fetchAblyJwt(${'$'}userId) {
@@ -643,27 +643,21 @@ class AmplifyRepo @Inject constructor(
                     }
                 }
                 """.trimIndent()
-        val fetchAblyJwtQuery = SimpleGraphQLRequest<String>(
+        val fetchAblyJwtQuery = SimpleGraphQLRequest<FetchAblyJwtResponse>(
             document,
-            String::class.java,
+            mapOf("userId" to userId),
+            FetchAblyJwtResponse::class.java,
             GsonVariablesSerializer()
         )
 
         Amplify.API.query(
             fetchAblyJwtQuery,
             {
-                // TODO: refactor this
-                val moshi = Moshi.Builder()
-                    .add(KotlinJsonAdapterFactory())  // <-- add this
-                    .build()
-                val adapter = moshi.adapter(FetchAblyJwtResponse::class.java)
+                val ablyJwt = it.data?.fetchAblyJwt
 
                 try {
-                    val response = adapter.fromJson(it.data)
-
-                    if (response != null) {
-                        val token = response.fetchAblyJwt
-                        trySend(token).onFailure {
+                    if (ablyJwt != null) {
+                        trySend(ablyJwt).onFailure {
                             // TODO: log
                         }
                         close()
@@ -731,9 +725,9 @@ class CurrentContact(
     createdAt: Temporal.DateTime,
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
-data class FetchAblyJwt(
-    val fetchAblyJwt: String,
+data class AblyJwt(
+    val token: String,
     val clientId: String,
 )
 
-data class FetchAblyJwtResponse(val fetchAblyJwt: FetchAblyJwt)
+data class FetchAblyJwtResponse(val fetchAblyJwt: AblyJwt)

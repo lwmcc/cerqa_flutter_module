@@ -8,9 +8,9 @@ import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.usecases.user.GetUser
 import com.mccartycarclub.domain.websocket.RealTime
+import com.mccartycarclub.repository.AblyJwt
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.Contact
-import com.mccartycarclub.repository.FetchAblyJwt
 import com.mccartycarclub.repository.NetResult
 import com.mccartycarclub.repository.NetWorkResult
 import com.mccartycarclub.repository.RemoteRepo
@@ -45,8 +45,8 @@ class MainViewModel @Inject constructor(
     private val repo: RemoteRepo,
 ) : ViewModel() {
 
-    private val _token = MutableStateFlow<FetchAblyJwt?>(null)
-    val token: StateFlow<FetchAblyJwt?> = _token
+    private val _token = MutableStateFlow<AblyJwt?>(null)
+    val token: StateFlow<AblyJwt?> = _token
 
     private val _localContacts = MutableStateFlow(emptyList<LocalContact>())
     val localContacts = _localContacts.asStateFlow()
