@@ -12,10 +12,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 
-class RealTimeMessaging @Inject constructor(private val ably: AblyRealtime) : RealTime {
+class RealTimeMessaging @Inject constructor() : RealTime {
 
     override fun subscribeToInviteNotifications(channelName: String): Flow<Message> = callbackFlow {
-        val channel = ably.channels.get(channelName)
+/*        val channel = ably.channels.get(channelName)
         val listener = MessageListener { message ->
             if (message != null) {
                 trySend(message).onFailure {
@@ -27,7 +27,7 @@ class RealTimeMessaging @Inject constructor(private val ably: AblyRealtime) : Re
         channel.subscribe(listener)
         awaitClose {
             channel.unsubscribe(listener)
-        }
+        }*/
     }
 
     /**
@@ -36,8 +36,8 @@ class RealTimeMessaging @Inject constructor(private val ably: AblyRealtime) : Re
      */
     override fun createReceiverInviteSubscription(senderId: String, channelName: String) {
 
-        val channel = ably.channels.get(channelName)
-        channel.publish("Invite From Larry", "You have an invite to connect")
+        //val channel = ably.channels.get(channelName)
+        //channel.publish("Invite From Larry", "You have an invite to connect")
 
 /*        channel.subscribe(object : MessageListener {
             override fun onMessage(message: Message?) {

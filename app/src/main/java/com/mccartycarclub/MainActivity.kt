@@ -13,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.mccartycarclub.data.websocket.AblyPushMessagingService
 import com.mccartycarclub.data.websocket.AblyService
@@ -60,7 +61,8 @@ class MainActivity : ComponentActivity() {
 
             registerReceiver()
 
-            ablyService.connect()
+            val token = mainViewModel.token.collectAsStateWithLifecycle().value
+            ablyService.init(token)
             ablyService.activatePush()
         }
         handleIncomingIntentS(intent)

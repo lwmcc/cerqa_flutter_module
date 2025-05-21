@@ -40,8 +40,11 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val userContacts: GetContacts,
     private val realTime: RealTime,
+    private val repo: RemoteRepo,
 ) : ViewModel() {
 
+    private val _token = MutableStateFlow<String?>(null)
+    val token: StateFlow<String?> = _token
 
     private val _localContacts = MutableStateFlow(emptyList<LocalContact>())
     val localContacts = _localContacts.asStateFlow()
@@ -49,6 +52,14 @@ class MainViewModel @Inject constructor(
     private var _loggedUserId: String? = null
     val loggedUserId: String?
         get() = _loggedUserId
+
+    init {
+        viewModelScope.launch {
+            repo.fetchAblyToken().collect {
+                _token.value = it
+            }
+        }
+    }
 
     fun getDeviceContacts() = userContacts.getDeviceContacts(localContacts = { contacts ->
         _localContacts.update { contacts }

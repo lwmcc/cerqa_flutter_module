@@ -29,7 +29,7 @@ class AblyBroadcastReceiver @Inject constructor(private val ablyService: AblySer
             try {
                 subscribeChannels()
                 println("AblyBroadcastReceiver ***** NOTIFICATION ${intent.extras}")
-                println("AblyBroadcastReceiver ***** Device is now registered for push with ${deviceId()}")
+                //println("AblyBroadcastReceiver ***** Device is now registered for push with ${deviceId()}")
             } catch (e: AblyException) {
                 println("AblyBroadcastReceiver ***** AblyException getting deviceId: $e")
             }
@@ -41,13 +41,13 @@ class AblyBroadcastReceiver @Inject constructor(private val ablyService: AblySer
         }
     }
 
-    @Throws(AblyException::class)
-    private fun deviceId(): String {
-        return ablyService.provider.getInstance().device().id
-    }
+    //@Throws(AblyException::class)
+    //private fun deviceId(): String {
+        //return ablyService.provider.getInstance().device().id
+    //}
 
     private fun subscribeChannels() {
-        ablyService.provider.getInstance().channels.get("push:test_push_channel").push.subscribeClientAsync(
+/*        ablyService.provider.getInstance().channels.get("push:test_push_channel").push.subscribeClientAsync(
             object :
                 CompletionListener {
                 override fun onSuccess() {
@@ -58,6 +58,6 @@ class AblyBroadcastReceiver @Inject constructor(private val ablyService: AblySer
                     println("AblyBroadcastReceiver ***** Error subscribing to push channel " + reason.message)
                     println("AblyBroadcastReceiver ***** Visit link for more details: " + reason.href)
                 }
-            })
+            })*/
     }
 }

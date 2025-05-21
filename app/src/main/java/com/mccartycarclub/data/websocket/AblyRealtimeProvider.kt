@@ -19,100 +19,56 @@ import org.json.JSONObject
 class AblyRealtimeProvider(private val context: Context) : AblyProvider {
 
     private var ably: AblyRealtime? = null
+    private var token: String? = null
 
-    override fun getInstance(): AblyRealtime {
+    override fun getInstance(token: String?): AblyRealtime {
         val ably = AblyRealtime(
             ClientOptions().apply {
-                clientId = "your-client-id" // optional if using clientId in token
-                authCallback = object : Auth.TokenCallback {
-                    override fun getTokenRequest(params: Auth.TokenParams?): Any {
-                        return try {
-                            val rawJson = runBlocking { fetchAblyToken() }
-
-                            // Parse TokenRequest directly from raw JSON string
-                            Auth.TokenRequest.fromJson(rawJson.toString())
-                        } catch (e: Exception) {
-                           // TODO: throw?????
-                        }
-                    }
-                }
+                this.token = token
             }
         ).apply {
             setAndroidContext(context)
             connect()
-            connection.on { stateChange ->
-                println("Connection state: ${stateChange?.current?.name}")
-            }
-        }
+            connection.on(ConnectionStateListener { state ->
 
+                println("AblyRealtimeProvider ***** Connection state changed to : ${state!!.current.name}")
 
-        // TODO: move to try catch
-/*        return if (ably == null) {
+                when (state.current) {
+                    ConnectionState.initialized -> {
 
-            val options = ClientOptions().apply {
-                clientId = "your-client-id"
-                authCallback = object : Auth.TokenCallback {
-                    @Throws(AblyException::class)
-                    override fun getTokenRequest(params: Auth.TokenParams?): Any {
-                        return try {
-                            // runBlocking blocks this thread until fetchAblyToken completes
-                            runBlocking {
-                                fetchAblyToken()
-                            }
-                        } catch (e: Exception) {
-                            // Throw an error
-                        }
+                    }
+
+                    ConnectionState.connecting -> {
+
+                    }
+
+                    ConnectionState.connected -> {
+                        println("AblyRealtimeProvider ***** CONNECTED")
+                    }
+
+                    ConnectionState.disconnected -> {
+
+                    }
+
+                    ConnectionState.suspended -> {
+
+                    }
+
+                    ConnectionState.closing -> {
+
+                    }
+
+                    ConnectionState.closed -> {
+
+                    }
+
+                    ConnectionState.failed -> {
+                        println("AblyRealtimeProvider ***** CONNECTED")
                     }
                 }
-            }
-
-            AblyRealtime(options).apply {
-                setAndroidContext(context)
-                connect()
-                connection.on(ConnectionStateListener { state ->
-
-                    println("AblyRealtimeProvider ***** Connection state changed to : ${state!!.current.name}")
-
-                    when (state.current) {
-                        ConnectionState.initialized -> {
-
-                        }
-
-                        ConnectionState.connecting -> {
-
-                        }
-
-                        ConnectionState.connected -> {
-                            println("AblyRealtimeProvider ***** CONNECTED")
-
-                        }
-
-                        ConnectionState.disconnected -> {
-
-                        }
-
-                        ConnectionState.suspended -> {
-
-                        }
-
-                        ConnectionState.closing -> {
-
-                        }
-
-                        ConnectionState.closed -> {
-
-                        }
-
-                        ConnectionState.failed -> {
-
-                        }
-                    }
-                })
-            }
-        } else {
-            ably!!
-        }*/
-        return ably
+            })
+        }
+        return ably!!
     }
 
     suspend fun fetchAblyToken(): Token = withContext(Dispatchers.IO) {

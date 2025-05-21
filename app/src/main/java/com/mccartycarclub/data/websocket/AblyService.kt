@@ -6,12 +6,21 @@ import io.ably.lib.realtime.AblyRealtime
 import io.ably.lib.types.AblyException
 
 import javax.inject.Inject
+import javax.inject.Named
 
 class AblyService @Inject constructor(val provider: AblyProvider) : RealtimeService {
 
-    private val ably: AblyRealtime by lazy { provider.getInstance() }
-    override fun connect() {
-        ably.connect()
+    private var ably: AblyRealtime? = null
+
+    override fun init(token: String?) {
+        if (token != null) {
+            ably = provider.getInstance(token)
+            ably?.connect()
+        }
+    }
+
+    override fun connect(token: String?) {
+        ably?.connect()
     }
 
     override fun subscribe() {
@@ -28,7 +37,7 @@ class AblyService @Inject constructor(val provider: AblyProvider) : RealtimeServ
 
     override fun activatePush() {
         try {
-            ably.push.activate()
+            ably?.push?.activate()
         } catch (ae: AblyException) {
             // TODO: log this
         }
@@ -36,13 +45,13 @@ class AblyService @Inject constructor(val provider: AblyProvider) : RealtimeServ
 
     override fun deactivatePush() {
         try {
-            ably.push.deactivate();
+            ably?.push?.deactivate();
         } catch (ae: AblyException) {
 
         }
     }
 
     private fun setDeviceId() {
-        ably.device().id
+        ably?.device()?.id
     }
 }

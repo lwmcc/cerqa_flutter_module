@@ -1,14 +1,13 @@
 package com.mccartycarclub.repository
 
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.aws.GsonVariablesSerializer
-import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
-import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.LazyModelList
 import com.amplifyframework.core.model.LazyModelReference
@@ -25,25 +24,23 @@ import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.kotlin.api.KotlinApiFacade
-import com.google.gson.Gson
+import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import io.ably.lib.rest.Auth
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import org.json.JSONObject
 import java.io.IOException
 import java.net.UnknownHostException
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Named
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlin.reflect.KClass
 
 // TODO: split this class up
@@ -452,7 +449,7 @@ class AmplifyRepo @Inject constructor(
     private suspend fun createContacts(response: GraphQLResponse<PaginatedResult<UserContact>>): List<Contact> {
         val contacts = mutableListOf<Contact>()
 
-        when(val items = response.data.items) {
+        when (val items = response.data.items) {
             is LoadedModelList<*> -> {
 
                 println("AmplifyRepo ***** ${items.items}")
@@ -634,9 +631,10 @@ class AmplifyRepo @Inject constructor(
         const val DUMMY = "dummy"
     }
 
-    // TODO: aws function test
-    override suspend fun awsFunction(clientId: String) {
-
+    /**
+     * Emits a token and completes
+     */
+    override fun fetchAblyToken(): Flow<String> = callbackFlow {
         val document = """
                 query FetchAblyJwt {
                     fetchAblyJwt
@@ -644,7 +642,6 @@ class AmplifyRepo @Inject constructor(
                 """.trimIndent()
         val fetchAblyJwtQuery = SimpleGraphQLRequest<String>(
             document,
-            mapOf("body" to "Amplify"),
             String::class.java,
             GsonVariablesSerializer()
         )
@@ -652,15 +649,32 @@ class AmplifyRepo @Inject constructor(
         Amplify.API.query(
             fetchAblyJwtQuery,
             {
-                //var gson = Gson()
-                //val response = gson.fromJson(it.data, FetchAblyJwtResponse::class.java)
-                //println("AmplifyRepo ***** FUNCTION GSON ${response.body}")
-                //println("AmplifyRepo ***** FUNCTION GSON ${response.statusCode}")
-                println("AmplifyRepo ***** FUNCTION fetchAblyJwtQuery ${it.data}")
+                // TODO: refactor this
+                val moshi = Moshi.Builder()
+                    .add(KotlinJsonAdapterFactory())  // <-- add this
+                    .build()
+                val adapter = moshi.adapter(FetchAblyJw::class.java)
+
+                try {
+                    val response = adapter.fromJson(it.data)
+
+                    if (response != null) {
+                        val token = response.fetchAblyJwt
+                        trySend(token).onFailure {
+                            // TODO: log
+                        }
+                        close()
+                    }
+                } catch (jde: JsonDataException) {
+                    close(jde)
+                } catch (ae: AmplifyException) {
+                    close(ae)
+                }
             },
-            { println("AmplifyRepo ***** FUNCTION fetchAblyJwtQuery ERROR ${it}") }
+            { close(it) }
         )
-    }
+        awaitClose { /* no-op */ }
+    }.flowOn(ioDispatcher)
 }
 
 
@@ -715,5 +729,4 @@ class CurrentContact(
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
 
-data class FetchAblyJwtBody(val token: String)
-data class FetchAblyJwtResponse(val statusCode: Int, val body: FetchAblyJwtBody)
+data class FetchAblyJw(val fetchAblyJwt: String)

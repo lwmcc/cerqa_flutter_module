@@ -46,14 +46,6 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAbly(context: Context): AblyRealtime {
-        // TODO: ABLY_TESTING_KEY is only for testing
-        val options = ClientOptions(context.applicationContext.getString(R.string.ABLY_TESTING_KEY))
-        return AblyRealtime(options)
-    }
-
-    @Provides
-    @Singleton
     fun provideAblyRealtimeProvider(@ApplicationContext context: Context): AblyProvider {
         return AblyRealtimeProvider(context)
     }

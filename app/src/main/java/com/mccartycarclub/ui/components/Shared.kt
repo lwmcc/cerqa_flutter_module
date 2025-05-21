@@ -415,9 +415,6 @@ fun Contacts(
     var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
     val density = LocalDensity.current
 
-    // TODO: testing
-    contactsViewModel.callFunctionTest()
-
     when {
         openAlertDialog -> {
             ConfirmationDialog(

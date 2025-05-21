@@ -4,7 +4,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.ChannelModel
 import com.mccartycarclub.domain.usecases.user.GetContacts
@@ -15,7 +14,6 @@ import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.UserMapper
-import com.mccartycarclub.repository.realtime.RealtimeSubscribeRepo
 import com.mccartycarclub.ui.components.ContactCardEvent
 import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,7 +25,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -337,14 +334,6 @@ class ContactsViewModel @Inject constructor(
 
     fun isDataPending(dataPending: Boolean) {
         _dataPending.value = dataPending
-    }
-
-    fun callFunctionTest() {
-        viewModelScope.launch {
-            // TODO: testing
-            repo.awsFunction("")
-        }
-
     }
 
     private fun removeContact(id: String, pending: Boolean) {
