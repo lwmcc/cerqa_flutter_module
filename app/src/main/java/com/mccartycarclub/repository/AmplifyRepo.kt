@@ -634,10 +634,13 @@ class AmplifyRepo @Inject constructor(
     /**
      * Emits a token and completes
      */
-    override fun fetchAblyToken(): Flow<String> = callbackFlow {
+    override fun fetchAblyToken(userId: String): Flow<FetchAblyJwt> = callbackFlow {
         val document = """
-                query FetchAblyJwt {
-                    fetchAblyJwt
+                query FetchAblyJwt(${'$'}userId: String!) {
+                    fetchAblyJwt(${'$'}userId) {
+                        token
+                        clientId
+                    }
                 }
                 """.trimIndent()
         val fetchAblyJwtQuery = SimpleGraphQLRequest<String>(
@@ -653,7 +656,7 @@ class AmplifyRepo @Inject constructor(
                 val moshi = Moshi.Builder()
                     .add(KotlinJsonAdapterFactory())  // <-- add this
                     .build()
-                val adapter = moshi.adapter(FetchAblyJw::class.java)
+                val adapter = moshi.adapter(FetchAblyJwtResponse::class.java)
 
                 try {
                     val response = adapter.fromJson(it.data)
@@ -728,5 +731,9 @@ class CurrentContact(
     createdAt: Temporal.DateTime,
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
+data class FetchAblyJwt(
+    val fetchAblyJwt: String,
+    val clientId: String,
+)
 
-data class FetchAblyJw(val fetchAblyJwt: String)
+data class FetchAblyJwtResponse(val fetchAblyJwt: FetchAblyJwt)

@@ -2,6 +2,7 @@ package com.mccartycarclub.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.domain.usecases.user.GetContacts
@@ -9,6 +10,7 @@ import com.mccartycarclub.domain.usecases.user.GetUser
 import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.Contact
+import com.mccartycarclub.repository.FetchAblyJwt
 import com.mccartycarclub.repository.NetResult
 import com.mccartycarclub.repository.NetWorkResult
 import com.mccartycarclub.repository.RemoteRepo
@@ -43,8 +45,8 @@ class MainViewModel @Inject constructor(
     private val repo: RemoteRepo,
 ) : ViewModel() {
 
-    private val _token = MutableStateFlow<String?>(null)
-    val token: StateFlow<String?> = _token
+    private val _token = MutableStateFlow<FetchAblyJwt?>(null)
+    val token: StateFlow<FetchAblyJwt?> = _token
 
     private val _localContacts = MutableStateFlow(emptyList<LocalContact>())
     val localContacts = _localContacts.asStateFlow()
@@ -53,13 +55,17 @@ class MainViewModel @Inject constructor(
     val loggedUserId: String?
         get() = _loggedUserId
 
-    init {
+/*    init {
+
+
+
         viewModelScope.launch {
+
             repo.fetchAblyToken().collect {
                 _token.value = it
             }
         }
-    }
+    }*/
 
     fun getDeviceContacts() = userContacts.getDeviceContacts(localContacts = { contacts ->
         _localContacts.update { contacts }
@@ -89,6 +95,14 @@ class MainViewModel @Inject constructor(
                 message.name
                 message.data
                 println("MainViewModel ***** NAME ${message.name} DATA ${message.data}")
+            }
+        }
+    }
+
+    fun fetchAblyToken(userId: String) {
+        viewModelScope.launch {
+            repo.fetchAblyToken(userId).collect {
+                _token.value = it
             }
         }
     }

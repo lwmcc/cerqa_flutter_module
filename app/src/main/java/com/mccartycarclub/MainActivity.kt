@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.amplifyframework.core.Amplify
 import com.mccartycarclub.data.websocket.AblyPushMessagingService
 import com.mccartycarclub.data.websocket.AblyService
 import com.mccartycarclub.domain.ChannelModel
@@ -61,9 +63,28 @@ class MainActivity : ComponentActivity() {
 
             registerReceiver()
 
-            val token = mainViewModel.token.collectAsStateWithLifecycle().value
-            ablyService.init(token)
-            ablyService.activatePush()
+            // TODO: find all instances of this and move to one locations
+            // Just for testing
+
+            //val token = mainViewModel.token.collectAsStateWithLifecycle().value
+
+            Amplify.Auth.fetchUserAttributes({ attributes ->
+                val userId =
+                    attributes.firstOrNull { it.key.keyString == "sub" }?.value
+
+                if (userId != null) {
+                    mainViewModel.fetchAblyToken(userId)
+                  //  ablyService.init(token)
+                  //  ablyService.activatePush()
+                }
+
+            }, { error ->
+                Log.e(
+                    "MainActivity *****", "Failed to fetch user attributes", error
+                )
+            })
+
+
         }
         handleIncomingIntentS(intent)
 

@@ -29,10 +29,8 @@ class AblyRealtimeProvider(private val context: Context) : AblyProvider {
         ).apply {
             setAndroidContext(context)
             connect()
+
             connection.on(ConnectionStateListener { state ->
-
-                println("AblyRealtimeProvider ***** Connection state changed to : ${state!!.current.name}")
-
                 when (state.current) {
                     ConnectionState.initialized -> {
 
@@ -43,7 +41,8 @@ class AblyRealtimeProvider(private val context: Context) : AblyProvider {
                     }
 
                     ConnectionState.connected -> {
-                        println("AblyRealtimeProvider ***** CONNECTED")
+                        ably?.push?.activate()
+                        println("AblyRealtimeProvider ***** connected")
                     }
 
                     ConnectionState.disconnected -> {
@@ -63,7 +62,7 @@ class AblyRealtimeProvider(private val context: Context) : AblyProvider {
                     }
 
                     ConnectionState.failed -> {
-                        println("AblyRealtimeProvider ***** CONNECTED")
+                        println("AblyRealtimeProvider ***** failed")
                     }
                 }
             })
