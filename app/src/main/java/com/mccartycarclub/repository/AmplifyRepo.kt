@@ -650,26 +650,33 @@ class AmplifyRepo @Inject constructor(
             GsonVariablesSerializer()
         )
 
-        Amplify.API.query(
-            fetchAblyJwtQuery,
-            {
-                val ablyJwt = it.data?.fetchAblyJwt
+        try {
+            Amplify.API.query(
+                fetchAblyJwtQuery,
+                { response ->
+                    println("AmplifyRepo ***** FETCH ${response}")
+                    val ablyJwt = response.data?.fetchAblyJwt
 
-                try {
-                    if (ablyJwt != null) {
-                        trySend(ablyJwt).onFailure {
-                            // TODO: log
+                    try {
+                        if (ablyJwt != null) {
+                            trySend(ablyJwt).onFailure {
+                                // TODO: log
+                            }
+                            close()
                         }
-                        close()
+                    } catch (jde: JsonDataException) {
+                        close(jde)
+                    } catch (ae: AmplifyException) {
+                        close(ae)
                     }
-                } catch (jde: JsonDataException) {
-                    close(jde)
-                } catch (ae: AmplifyException) {
-                    close(ae)
-                }
-            },
-            { close(it) }
-        )
+                },
+                { close(it) }
+            )
+        } catch (e: Exception) {
+            println("AmplifyRepo ***** FETCH ERROR ${e}")
+            close(e)
+        }
+
         awaitClose { /* no-op */ }
     }.flowOn(ioDispatcher)
 }
