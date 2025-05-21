@@ -7,10 +7,12 @@ import com.amplifyframework.kotlin.core.Amplify
 import com.mccartycarclub.R
 import com.mccartycarclub.data.websocket.AblyRealtimeProvider
 import com.mccartycarclub.data.websocket.AblyService
+import com.mccartycarclub.domain.UserPreferencesManager
 import com.mccartycarclub.domain.helpers.ContactsHelper
 import com.mccartycarclub.domain.websocket.AblyProvider
 import com.mccartycarclub.domain.websocket.RealtimeService
 import com.mccartycarclub.receiver.AblyBroadcastReceiver
+import com.mccartycarclub.repository.datastore.UserPreferences
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -61,5 +63,13 @@ object AppModule {
     fun provideAblyBroadcastReceiver(ablyService: AblyService): BroadcastReceiver {
         return AblyBroadcastReceiver(ablyService)
     }
+
+    @Provides
+    @Singleton
+    fun provideUserPreferences(@ApplicationContext context: Context): UserPreferencesManager {
+        return UserPreferences(context)
+    }
+
+
 
 }

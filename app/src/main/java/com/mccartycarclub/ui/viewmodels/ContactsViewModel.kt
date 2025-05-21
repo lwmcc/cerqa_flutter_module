@@ -9,13 +9,13 @@ import com.mccartycarclub.domain.ChannelModel
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.repository.Contact
+import com.mccartycarclub.repository.LocalRepo
 import com.mccartycarclub.repository.NetDeleteResult
 import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.UserMapper
 import com.mccartycarclub.ui.components.ContactCardEvent
-import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -41,6 +41,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class ContactsViewModel @Inject constructor(
     private val userContacts: GetContacts,
     private val repo: RemoteRepo,
+    private val localRepo: LocalRepo,
     private val realTime: RealTime,
 ) : ViewModel() {
 
@@ -75,6 +76,9 @@ class ContactsViewModel @Inject constructor(
     private val _contacts = mutableStateListOf<Contact>()
     val contacts: SnapshotStateList<Contact> get() = _contacts
 
+    private val _userId = MutableStateFlow<String?>(null)
+    val userId: StateFlow<String?> = _userId
+
     private var _loggedInUserId: String? = null
     private val loggedInUserId: String?
         get() = _loggedInUserId
@@ -103,33 +107,30 @@ class ContactsViewModel @Inject constructor(
 
                             is NetSearchResult.Success -> {
                                 trySend(data)
-                                fetchUserId { loggedIn ->
-                                    if (loggedIn.loggedIn) {
-                                        loggedIn.userId?.let { userId ->
-                                            _receiverQueryPending.value = true
-                                            viewModelScope.launch {
-                                                val hasConnection: Deferred<Boolean> = async {
-                                                    repo.contactExists(
-                                                        userId,
-                                                        data.data?.userId.toString(),
-                                                    ).firstOrNull() ?: false
-                                                }
-
-                                                val hasExistingInvite = async {
-                                                    repo.hasExistingInvite(
-                                                        userId,
-                                                        data.data?.userId.toString()
-                                                    ).firstOrNull() ?: false
-                                                }
-
-                                                val connection = hasConnection.await()
-                                                val invite = hasExistingInvite.await()
-
-                                                _receiverQueryPending.value = false
-                                                _hasPendingInvite.value = invite
-                                                _hasConnection.value = connection
-                                            }
+                                val id = _userId.value
+                                if (id != null) {
+                                    _receiverQueryPending.value = true
+                                    viewModelScope.launch {
+                                        val hasConnection: Deferred<Boolean> = async {
+                                            repo.contactExists(
+                                                id,
+                                                data.data?.userId.toString(),
+                                            ).firstOrNull() ?: false
                                         }
+
+                                        val hasExistingInvite = async {
+                                            repo.hasExistingInvite(
+                                                id,
+                                                data.data?.userId.toString()
+                                            ).firstOrNull() ?: false
+                                        }
+
+                                        val connection = hasConnection.await()
+                                        val invite = hasExistingInvite.await()
+
+                                        _receiverQueryPending.value = false
+                                        _hasPendingInvite.value = invite
+                                        _hasConnection.value = connection
                                     }
                                 }
                             }
@@ -148,9 +149,10 @@ class ContactsViewModel @Inject constructor(
             NetSearchResult.Idle
         )
 
-    // TODO: for testing only
     init {
-        //realTime.publish()
+        viewModelScope.launch {
+            _userId.value = localRepo.getUserId().first()
+        }
     }
 
     fun onQueryChange(searchQuery: String) {
@@ -176,7 +178,6 @@ class ContactsViewModel @Inject constructor(
         when (connectionEvent) {
             is ContactCardEvent.InviteConnectEvent -> {
                 viewModelScope.launch {
-                    val userID = fetchUserId()
                     _isSendingInvite.value = true
 
                     val channel =
@@ -290,33 +291,35 @@ class ContactsViewModel @Inject constructor(
     }
 
     // TODO: rename this function
-    fun fetchReceivedInvites(loggedInUserId: String) {
-        _dataPending.value = true
-        viewModelScope.launch {
-            when (val data = repo.fetchAllContacts(loggedInUserId).first()) {
-                is NetworkResponse.Error -> {
-                    _contactsState.value =
-                            // TODO: remove message will use string
-                        UserContacts.Error(data.exception.message ?: "some message here")
-                }
+    fun fetchReceivedInvites(loggedInUserId: String?) {
+        if (loggedInUserId != null) {
+            _dataPending.value = true
+            viewModelScope.launch {
+                when (val data = repo.fetchAllContacts(loggedInUserId).first()) {
+                    is NetworkResponse.Error -> {
+                        _contactsState.value =
+                                // TODO: remove message will use string
+                            UserContacts.Error(data.exception.message ?: "some message here")
+                    }
 
-                is NetworkResponse.NoInternet -> {
-                    // TODO: remove message will use string
-                    _contactsState.value = UserContacts.NoInternet
-                }
+                    is NetworkResponse.NoInternet -> {
+                        // TODO: remove message will use string
+                        _contactsState.value = UserContacts.NoInternet
+                    }
 
-                is NetworkResponse.Success -> {
-                    if (data.data != null) {
-                        // TODO: don't need to pass data to Succes have it in _contacts
-                        _contactsState.value = UserContacts.Success(data.data)
+                    is NetworkResponse.Success -> {
+                        if (data.data != null) {
+                            // TODO: don't need to pass data to Succes have it in _contacts
+                            _contactsState.value = UserContacts.Success(data.data)
 
-                        _contacts.clear()
-                        _contacts.addAll(data.data)
+                            _contacts.clear()
+                            _contacts.addAll(data.data)
+                        }
                     }
                 }
             }
+            _dataPending.value = false
         }
-        _dataPending.value = false
     }
 
     suspend fun usersHaveExistingConnection(

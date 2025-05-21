@@ -2,37 +2,17 @@ package com.mccartycarclub.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.domain.usecases.user.GetContacts
-import com.mccartycarclub.domain.usecases.user.GetUser
 import com.mccartycarclub.domain.websocket.RealTime
-import com.mccartycarclub.repository.AmplifyDbRepo
-import com.mccartycarclub.repository.Contact
-import com.mccartycarclub.repository.NetResult
-import com.mccartycarclub.repository.NetWorkResult
+import com.mccartycarclub.repository.LocalRepo
 import com.mccartycarclub.repository.RemoteRepo
-import com.mccartycarclub.repository.realtime.RealtimeSubscribeRepo
-import com.mccartycarclub.ui.components.ContactCardEvent
-import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -42,6 +22,7 @@ class MainViewModel @Inject constructor(
     private val userContacts: GetContacts,
     private val realTime: RealTime,
     private val repo: RemoteRepo,
+    private val localRepo: LocalRepo,
 ) : ViewModel() {
 
     private val _token = MutableStateFlow<String?>(null)
@@ -50,21 +31,18 @@ class MainViewModel @Inject constructor(
     private val _localContacts = MutableStateFlow(emptyList<LocalContact>())
     val localContacts = _localContacts.asStateFlow()
 
+    private val _userId = MutableStateFlow<String?>(null)
+    val userId: StateFlow<String?> = _userId
+
     private var _loggedUserId: String? = null
     val loggedUserId: String?
         get() = _loggedUserId
 
-/*    init {
-
-
-
+    init {
         viewModelScope.launch {
-
-            repo.fetchAblyToken().collect {
-                _token.value = it
-            }
+            _userId.value = localRepo.getUserId().first()
         }
-    }*/
+    }
 
     fun getDeviceContacts() = userContacts.getDeviceContacts(localContacts = { contacts ->
         _localContacts.update { contacts }
@@ -80,6 +58,12 @@ class MainViewModel @Inject constructor(
 
     fun setLoggedInUserId(loggedInUserId: String) {
         _loggedUserId = loggedInUserId
+    }
+
+    fun setUserId(userId: String) {
+        viewModelScope.launch {
+            localRepo.setUserId(userId)
+        }
     }
 
     fun acceptContactInvite() {

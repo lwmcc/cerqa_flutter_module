@@ -44,6 +44,11 @@ class AblyRealtimeProvider(private val context: Context) : AblyProvider {
                         ably?.push?.activate()
                         println("AblyRealtimeProvider ***** connected")
                         println("AblyRealtimeProvider ***** CLIENT ID ${ably?.auth?.clientId}")
+
+                        Thread {
+                            Thread.sleep(5000) // delay 500 ms
+                            println("AblyRealtimeProvider ***** Delayed CLIENT ID: ${ably?.auth?.clientId}")
+                        }.start()
                     }
 
                     ConnectionState.disconnected -> {

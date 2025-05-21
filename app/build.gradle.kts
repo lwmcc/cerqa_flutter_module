@@ -113,6 +113,11 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.core)
+
+    // DataStore
+    //implementation(libs.androidx.datastore.preferences.core)
+    //implementation(libs.androidx.datastore)
+    implementation(libs.androidx.datastore.preferences)
 }
 
 kapt {

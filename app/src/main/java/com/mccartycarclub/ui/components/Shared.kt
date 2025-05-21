@@ -2,7 +2,6 @@ package com.mccartycarclub.ui.components
 
 import android.util.Log
 import androidx.annotation.DimenRes
-import androidx.annotation.IntegerRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -46,7 +45,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -71,6 +69,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.User
@@ -88,7 +87,6 @@ import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.SentInviteContactInvite
 import com.mccartycarclub.ui.viewmodels.ContactsViewModel
 import com.mccartycarclub.ui.viewmodels.MainViewModel
-import com.mccartycarclub.utils.fetchUserId
 
 @Composable
 fun StartScreen(
@@ -208,8 +206,7 @@ fun AppAuthenticator(
                     Button(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
-
-                            Amplify.Auth.fetchUserAttributes({ attributes ->
+/*                            Amplify.Auth.fetchUserAttributes({ attributes ->
                                 val userId =
                                     attributes.firstOrNull { it.key.keyString == "sub" }?.value
 
@@ -217,26 +214,20 @@ fun AppAuthenticator(
                                     mainViewModel.setLoggedInUserId(userId)
                                 }
 
-                                println("MainActivity ***** USER ID $userId")
-                                // TODO: create test users
-                                // testUser1  testUser2
-
-/*                                Amplify.API.mutate(
-                                    ModelMutation.create(testUser3(userId!!)),
+                                Amplify.API.mutate(
+                                    ModelMutation.create(testUser1(userId!!)),
                                     { response ->
-                                        Log.i("MainActivity", "User created: ${response.data}")
-                                        println("MainActivity ***** ERROR ${response.hasErrors()}")
-                                        println("MainActivity ***** ERROR ${response.errors}")
+                                        mainViewModel.setUserId(userId)
                                     },
                                     { error ->
-                                        Log.e("MainActivity", "User creation failed", error)
+                                        Log.e("MainActivity *****", "User creation failed", error)
                                     }
-                                )*/
+                                )
                             }, { error ->
                                 Log.e(
                                     "MainActivity *****", "Failed to fetch user attributes", error
                                 )
-                            })
+                            })*/
                         }) {
                         Text(text = "Create User")
                     }
@@ -406,6 +397,7 @@ fun Contacts(
 
     val contacts by contactsViewModel.contactsState.collectAsStateWithLifecycle()
     val dataPending by contactsViewModel.dataPending.collectAsStateWithLifecycle()
+    val userId by contactsViewModel.userId.collectAsStateWithLifecycle()
     val allContacts = contactsViewModel.contacts
     var openAlertDialog by remember { mutableStateOf(false) }
     var selectedUserId by remember { mutableStateOf<String?>(null) }
@@ -432,14 +424,7 @@ fun Contacts(
         }
     }
 
-    LaunchedEffect(Unit) {
-        fetchUserId {
-            if (it.userId != null) {
-                contactsViewModel.fetchReceivedInvites(it.userId)
-                contactsViewModel.setLoggedInUserId(it.userId)
-            }
-        }
-    }
+    contactsViewModel.fetchReceivedInvites(userId)
 
     Scaffold(
         topBar = {
@@ -629,15 +614,6 @@ fun Search(
         var openAlertDialog by remember { mutableStateOf(false) }
         var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
         var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
-
-        // TODO: set id in cache
-        LaunchedEffect(Unit) {
-            fetchUserId {
-                if (it.userId != null) {
-                    contactsViewModel.setLoggedInUserId(it.userId)
-                }
-            }
-        }
 
         when {
             openAlertDialog -> {

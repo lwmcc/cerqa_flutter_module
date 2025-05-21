@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,13 +15,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.amplifyframework.core.Amplify
 import com.mccartycarclub.data.websocket.AblyPushMessagingService
 import com.mccartycarclub.data.websocket.AblyService
 import com.mccartycarclub.domain.ChannelModel
 import com.mccartycarclub.ui.components.StartScreen
 import com.mccartycarclub.ui.viewmodels.MainViewModel
-import com.mccartycarclub.utils.fetchUserId
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -41,6 +38,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
+            val userId = mainViewModel.userId.collectAsStateWithLifecycle().value
+            val token = mainViewModel.token.collectAsStateWithLifecycle().value
+
             StartScreen( // TODO: use a main compose screen change this
                 acceptInvite = { // TODO: rename
                     mainViewModel.acceptContactInvite()
@@ -59,42 +59,21 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             )
+
+            if (userId != null) {
+                mainViewModel.fetchAblyToken(userId)
+                ablyService.init(token)
+                ablyService.activatePush()
+
+                val channelName = ChannelModel.NotificationsInvitations.getName(userId)
+                mainViewModel.subscribeToNotifications(channelName)
+            }
+
             checkPermissions()
-
             registerReceiver()
-
-            // TODO: find all instances of this and move to one locations
-            // Just for testing
-
-            val token = mainViewModel.token.collectAsStateWithLifecycle().value
-
-            Amplify.Auth.fetchUserAttributes({ attributes ->
-                val userId =
-                    attributes.firstOrNull { it.key.keyString == "sub" }?.value
-
-                if (userId != null) {
-                    mainViewModel.fetchAblyToken(userId)
-                    ablyService.init(token)
-                    ablyService.activatePush()
-                }
-
-            }, { error ->
-                Log.e(
-                    "MainActivity *****", "Failed to fetch user attributes", error
-                )
-            })
-
-
         }
         handleIncomingIntentS(intent)
 
-        // TODO: cache instead of using this
-        fetchUserId {
-            if (it.userId != null) {
-                val channelName = ChannelModel.NotificationsInvitations.getName(it.userId)
-                mainViewModel.subscribeToNotifications(channelName)
-            }
-        }
     }
 
     private fun registerReceiver() {
