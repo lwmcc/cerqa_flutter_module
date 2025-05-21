@@ -636,8 +636,11 @@ class AmplifyRepo @Inject constructor(
      */
     override fun fetchAblyToken(userId: String): Flow<String> = callbackFlow {
         val document = """
-                query FetchAblyJwt {
-                    fetchAblyJwt
+                query FetchAblyJwt(${'$'}userId: String!) {
+                    fetchAblyJwt(${'$'}userId) {
+                        token
+                        clientId
+                    }
                 }
                 """.trimIndent()
         val fetchAblyJwtQuery = SimpleGraphQLRequest<String>(
