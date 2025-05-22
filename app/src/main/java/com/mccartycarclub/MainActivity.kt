@@ -11,6 +11,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.runtime.LaunchedEffect
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -38,7 +39,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val userId = mainViewModel.userId.collectAsStateWithLifecycle().value
+
+            val userId = mainViewModel.userId.collectAsStateWithLifecycle(null).value
             val token = mainViewModel.token.collectAsStateWithLifecycle().value
 
             StartScreen( // TODO: use a main compose screen change this
@@ -65,15 +67,15 @@ class MainActivity : ComponentActivity() {
                 ablyService.init(token)
                 ablyService.activatePush()
 
-                val channelName = ChannelModel.NotificationsInvitations.getName(userId)
-                mainViewModel.subscribeToNotifications(channelName)
+                val channelName = ChannelModel.NotificationsDirect.getName(userId)
+                mainViewModel.createPrivateChannel(channelName)
+                //mainViewModel.subscribeToNotifications(channelName)
             }
 
             checkPermissions()
             registerReceiver()
         }
         handleIncomingIntentS(intent)
-
     }
 
     private fun registerReceiver() {

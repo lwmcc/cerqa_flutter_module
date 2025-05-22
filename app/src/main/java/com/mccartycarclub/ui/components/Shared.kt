@@ -86,7 +86,6 @@ import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.SentInviteContactInvite
 import com.mccartycarclub.ui.viewmodels.ContactsViewModel
-import com.mccartycarclub.ui.viewmodels.MainViewModel
 
 @Composable
 fun StartScreen(
@@ -166,7 +165,6 @@ fun AppAuthenticator(
     acceptInvite: () -> Unit,
     inviteContact: (String) -> Unit,
     topBarClick: (ClickNavigation) -> Unit,
-    mainViewModel: MainViewModel = hiltViewModel(),
 ) {
     Scaffold(
         topBar = {
@@ -206,18 +204,14 @@ fun AppAuthenticator(
                     Button(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
-/*                            Amplify.Auth.fetchUserAttributes({ attributes ->
+                            Amplify.Auth.fetchUserAttributes({ attributes ->
                                 val userId =
                                     attributes.firstOrNull { it.key.keyString == "sub" }?.value
 
-                                if (userId != null) {
-                                    mainViewModel.setLoggedInUserId(userId)
-                                }
-
                                 Amplify.API.mutate(
-                                    ModelMutation.create(testUser1(userId!!)),
+                                    ModelMutation.create(testUser2(userId!!)),
                                     { response ->
-                                        mainViewModel.setUserId(userId)
+
                                     },
                                     { error ->
                                         Log.e("MainActivity *****", "User creation failed", error)
@@ -227,7 +221,7 @@ fun AppAuthenticator(
                                 Log.e(
                                     "MainActivity *****", "Failed to fetch user attributes", error
                                 )
-                            })*/
+                            })
                         }) {
                         Text(text = "Create User")
                     }
@@ -563,7 +557,7 @@ fun Contacts(
 }
 
 @Composable
-fun Groups(mainViewModel: MainViewModel = hiltViewModel(), topBarClick: (ClickNavigation) -> Unit) {
+fun Groups(topBarClick: (ClickNavigation) -> Unit) {
     Scaffold(
         topBar = {
             TopBarGroups(
@@ -625,8 +619,7 @@ fun Search(
                     onConfirmation = {
                         openAlertDialog = false
                         connectionEvent?.let { event ->
-                             contactsViewModel.userConnectionEvent(connectionEvent = event)
-                            // TODO: send notification
+                            contactsViewModel.userConnectionEvent(connectionEvent = event)
                         }
                     },
                 )
@@ -695,10 +688,7 @@ fun Search(
 }
 
 @Composable
-fun Notifications(
-    contactsViewModel: ContactsViewModel = hiltViewModel(),
-    topBarClick: (ClickNavigation) -> Unit,
-) {
+fun Notifications(topBarClick: (ClickNavigation) -> Unit) {
     Scaffold(
         topBar = {
             TopBarSearch(

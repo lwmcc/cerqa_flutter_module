@@ -12,6 +12,8 @@ import com.mccartycarclub.repository.LocalRepo
 import com.mccartycarclub.repository.QueryBuilder
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.Repo
+import com.mccartycarclub.repository.realtime.PublishRepo
+import com.mccartycarclub.repository.realtime.RealtimePublishRepo
 import com.mccartycarclub.repository.realtime.RealtimeSubscribeRepo
 import com.mccartycarclub.repository.realtime.SubscribeRepo
 import dagger.Binds
@@ -41,4 +43,8 @@ abstract class RepoModule {
 
     @Binds
     abstract fun bindRealTimeMessaging(realTimeMessaging: RealTimeMessaging): RealTime
+
+    @Binds
+    abstract fun bindPublishRepo(publishRepo: PublishRepo): RealtimePublishRepo
+
 }

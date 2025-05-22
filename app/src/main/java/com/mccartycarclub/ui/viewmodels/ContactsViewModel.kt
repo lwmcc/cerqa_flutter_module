@@ -15,6 +15,7 @@ import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.UserMapper
+import com.mccartycarclub.repository.realtime.RealtimePublishRepo
 import com.mccartycarclub.ui.components.ContactCardEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Deferred
@@ -42,7 +43,7 @@ class ContactsViewModel @Inject constructor(
     private val userContacts: GetContacts,
     private val repo: RemoteRepo,
     private val localRepo: LocalRepo,
-    private val realTime: RealTime,
+    private val realtimePublishRepo: RealtimePublishRepo,
 ) : ViewModel() {
 
     sealed class UserContacts {
@@ -180,18 +181,20 @@ class ContactsViewModel @Inject constructor(
                 viewModelScope.launch {
                     _isSendingInvite.value = true
 
-                    val channel =
-                        ChannelModel.NotificationsInvitations.getName(connectionEvent.receiverUserId)
-                    realTime.createReceiverInviteSubscription(_loggedInUserId!!, channel)
-                    println("ContactsViewModel ***** CHANNEL $channel")
-                    /*                    val inviteSuccess =
-                        repo.sendInviteToConnect(_loggedInUserId!!, connectionEvent.receiverUserId)
+                    _userId.value?.let { userId ->
+                        val channelName =
+                            ChannelModel.NotificationsDirect.getName(connectionEvent.receiverUserId)
 
-                    if (inviteSuccess) {
-                        fetchReceivedInvites(_loggedInUserId!!)
-                    } else {
-                        println("ContactsViewModel ***** INVITE ERROR")
-                    }*/
+                        realtimePublishRepo.publish(channelName)
+                        //realTime.createReceiverInviteSubscription(_userId.value.toString(), channel)
+                        //val inviteSuccess =
+                        //    repo.sendInviteToConnect(_userId.value, connectionEvent.receiverUserId)
+                        //if (inviteSuccess) {
+                        //    fetchReceivedInvites(_userId.value)
+                        //} else {
+                        //    println("ContactsViewModel ***** INVITE ERROR")
+                        // }
+                    }
                 }
             }
 
@@ -199,7 +202,10 @@ class ContactsViewModel @Inject constructor(
             is ContactCardEvent.DeleteReceivedInvite -> {
                 viewModelScope.launch {
                     when (val result =
-                        repo.deleteReceivedInviteToContact(loggedInUserId!!, connectionEvent.userId)
+                        repo.deleteReceivedInviteToContact(
+                            _userId.value.toString(),
+                            connectionEvent.userId,
+                        )
                             .first()) {
                         is NetDeleteResult.Error -> {
 
@@ -220,7 +226,7 @@ class ContactsViewModel @Inject constructor(
                 viewModelScope.launch {
                     when (val result = repo.createContact(
                         connectionEvent.connectionAccepted.senderUserId,
-                        loggedInUserId!!,
+                        _userId.value.toString(),
                     ).first()) {
                         is NetDeleteResult.Error -> {
                             println("ContactsViewModel ***** ERROR ${result.exception.message}")
@@ -242,7 +248,7 @@ class ContactsViewModel @Inject constructor(
             is ContactCardEvent.DeleteContact -> {
                 viewModelScope.launch {
                     when (val result = repo.deleteContact(
-                        _loggedInUserId!!,
+                        _userId.value.toString(),
                         connectionEvent.contactId,
                     ).first()) {
                         is NetDeleteResult.Error -> {
@@ -266,7 +272,7 @@ class ContactsViewModel @Inject constructor(
                     _isCancellingInvite.value = true
 
                     val resetButton = repo.cancelInviteToConnect(
-                        _loggedInUserId!!,
+                        _userId.value.toString(),
                         connectionEvent.receiverUserId,
                     ).first()
 

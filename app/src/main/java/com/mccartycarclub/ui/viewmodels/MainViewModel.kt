@@ -7,6 +7,7 @@ import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.repository.LocalRepo
 import com.mccartycarclub.repository.RemoteRepo
+import com.mccartycarclub.repository.realtime.RealtimePublishRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,7 @@ class MainViewModel @Inject constructor(
     private val realTime: RealTime,
     private val repo: RemoteRepo,
     private val localRepo: LocalRepo,
+    private val realtimePublishRepo: RealtimePublishRepo,
 ) : ViewModel() {
 
     private val _token = MutableStateFlow<String?>(null)
@@ -56,23 +58,13 @@ class MainViewModel @Inject constructor(
         })
     }
 
-    fun setLoggedInUserId(loggedInUserId: String) {
-        _loggedUserId = loggedInUserId
-    }
-
-    fun setUserId(userId: String) {
-        viewModelScope.launch {
-            localRepo.setUserId(userId)
-        }
-    }
-
     fun acceptContactInvite() {
         userContacts.acceptContactInvite()
     }
 
     fun subscribeToNotifications(channelName: String) {
         viewModelScope.launch {
-            realTime.subscribeToInviteNotifications(channelName).catch { error ->
+            realtimePublishRepo.subscribeToInviteNotifications(channelName).catch { error ->
                 // TODO: log this
             }.collect { message ->
                 message.name
@@ -82,11 +74,19 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun createReceiverInviteSubscription() {
+        realtimePublishRepo.createReceiverInviteSubscription("", "")
+    }
+
     fun fetchAblyToken(userId: String) {
         viewModelScope.launch {
             repo.fetchAblyToken(userId).collect {
                 _token.value = it
             }
         }
+    }
+
+    fun createPrivateChannel(channelName: String) {
+        realtimePublishRepo.createPrivateChannel(channelName)
     }
 }
