@@ -8,7 +8,7 @@ interface RealtimeService {
     fun connect(token: String?)
     fun createPrivateChannel(channelName: String?)
     fun subscribe()
-    fun publish(channel: String)
+    fun publish(channelName: String)
     fun disconnect()
     fun activatePush()
     fun deactivatePush()

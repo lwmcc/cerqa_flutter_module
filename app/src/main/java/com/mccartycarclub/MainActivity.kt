@@ -19,6 +19,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.mccartycarclub.data.websocket.AblyPushMessagingService
 import com.mccartycarclub.data.websocket.AblyService
 import com.mccartycarclub.domain.ChannelModel
+import com.mccartycarclub.domain.websocket.RealtimeService
 import com.mccartycarclub.ui.components.StartScreen
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -30,7 +31,7 @@ class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
 
     @Inject
-    lateinit var ablyService: AblyService
+    lateinit var ablyService: RealtimeService
 
     @Inject
     lateinit var pushReceiver: BroadcastReceiver
@@ -68,8 +69,9 @@ class MainActivity : ComponentActivity() {
                 ablyService.activatePush()
 
                 val channelName = ChannelModel.NotificationsDirect.getName(userId)
-                mainViewModel.createPrivateChannel(channelName)
-                //mainViewModel.subscribeToNotifications(channelName)
+
+                ablyService.createPrivateChannel(channelName)
+                ablyService.subscribeToInviteNotifications(channelName)
             }
 
             checkPermissions()

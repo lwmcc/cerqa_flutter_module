@@ -6,7 +6,6 @@ import io.ably.lib.realtime.AblyRealtime
 import io.ably.lib.realtime.Channel
 import io.ably.lib.realtime.CompletionListener
 import io.ably.lib.realtime.ConnectionState
-import io.ably.lib.realtime.ConnectionStateListener
 import io.ably.lib.types.AblyException
 import io.ably.lib.types.ErrorInfo
 import io.ably.lib.types.Message
@@ -97,7 +96,18 @@ class AblyService @Inject constructor(val provider: AblyProvider) : RealtimeServ
 
     override fun subscribeToInviteNotifications(channelName: String): Flow<Message> = callbackFlow {
         val channel = ably?.channels?.get(channelName)
-        val listener = Channel.MessageListener { message ->
+
+        channel?.subscribe(object : Channel.MessageListener {
+            override fun onMessage(message: Message?) {
+                if (message != null) {
+                    trySend(message).onFailure {
+                        // TODO: log
+                    }
+                }
+            }
+        })
+
+/*        val listener = Channel.MessageListener { message ->
             if (message != null) {
                 trySend(message).onFailure {
                     // TODO: log
@@ -108,7 +118,7 @@ class AblyService @Inject constructor(val provider: AblyProvider) : RealtimeServ
         channel?.subscribe(listener)
         awaitClose {
             channel?.unsubscribe(listener)
-        }
+        }*/
     }
 
     /**

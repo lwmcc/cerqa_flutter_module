@@ -89,4 +89,10 @@ class MainViewModel @Inject constructor(
     fun createPrivateChannel(channelName: String) {
         realtimePublishRepo.createPrivateChannel(channelName)
     }
+
+    fun setLocalUserId(userId: String) {
+        viewModelScope.launch {
+            localRepo.setLocalUserId(userId)
+        }
+    }
 }

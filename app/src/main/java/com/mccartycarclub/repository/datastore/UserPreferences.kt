@@ -20,7 +20,7 @@ class UserPreferences @Inject constructor(
 
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "preferences")
 
-    override suspend fun setUserId(userId: String) {
+    override suspend fun setLocalUserId(userId: String) {
         context.dataStore.edit { settings ->
             settings[PreferenceKeys.USER_ID] = userId
         }

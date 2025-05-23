@@ -16,8 +16,8 @@ class Repo @Inject constructor(
         })
     }
 
-    override suspend fun setUserId(userId: String) {
-        userPreferencesManager.setUserId(userId)
+    override suspend fun setLocalUserId(userId: String) {
+        userPreferencesManager.setLocalUserId(userId)
     }
 
     override fun getUserId(): Flow<String?> = userPreferencesManager.getUserId()

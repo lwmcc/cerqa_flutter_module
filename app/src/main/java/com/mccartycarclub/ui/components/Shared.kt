@@ -86,6 +86,7 @@ import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.SentInviteContactInvite
 import com.mccartycarclub.ui.viewmodels.ContactsViewModel
+import com.mccartycarclub.ui.viewmodels.MainViewModel
 
 @Composable
 fun StartScreen(
@@ -165,6 +166,7 @@ fun AppAuthenticator(
     acceptInvite: () -> Unit,
     inviteContact: (String) -> Unit,
     topBarClick: (ClickNavigation) -> Unit,
+    mainViewModel: MainViewModel = hiltViewModel(),
 ) {
     Scaffold(
         topBar = {
@@ -208,15 +210,15 @@ fun AppAuthenticator(
                                 val userId =
                                     attributes.firstOrNull { it.key.keyString == "sub" }?.value
 
-                                Amplify.API.mutate(
+    /*                            Amplify.API.mutate(
                                     ModelMutation.create(testUser2(userId!!)),
-                                    { response ->
-
+                                    { response -> // TODO: response?
+                                        mainViewModel.setLocalUserId(userId)
                                     },
                                     { error ->
                                         Log.e("MainActivity *****", "User creation failed", error)
                                     }
-                                )
+                                )*/
                             }, { error ->
                                 Log.e(
                                     "MainActivity *****", "Failed to fetch user attributes", error
