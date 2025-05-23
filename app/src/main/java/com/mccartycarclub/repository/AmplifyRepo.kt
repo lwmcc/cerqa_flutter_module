@@ -657,12 +657,31 @@ class AmplifyRepo @Inject constructor(
                     .build()
                 val adapter = moshi.adapter(FetchAblyJw::class.java)
 
+                //val adapter2 = moshi.adapter(FetchAblyJwtResponse::class.java)
+
                 try {
-                    val response = adapter.fromJson(it.data)
+                    val response = /*adapter.fromJson(it.data)*/ null
+
+                    println("AmplifyRepo: ***** ${it.data}")
+                  //  val response2 = adapter2.fromJson(it.data)
 
                     if (response != null) {
-                        val token = response.fetchAblyJwt
-                        trySend(token).onFailure {
+                       // val token = response.fetchAblyJwt
+
+                   /*     val token2 = response2?.fetchAblyJwt
+
+                        val tokenMap = mapOf(
+                            "keyName" to token2?.keyName,
+                            "clientId" to token2?.clientId,
+                            "ttl" to token2?.ttl,
+                            "capability" to token2?.capability,
+                            "timestamp" to token2?.timestamp,
+                            "nonce" to token2?.nonce,
+                            "mac" to token2?.mac
+                        )*/
+
+
+                        trySend(/*token*/"").onFailure {
                             // TODO: log
                         }
                         close()
@@ -732,3 +751,17 @@ class CurrentContact(
 
 
 data class FetchAblyJw(val fetchAblyJwt: String)
+
+data class AblyTokenRequest(
+    val keyName: String,
+    val clientId: String,
+    val ttl: Long,
+    val capability: String,
+    val timestamp: Long,
+    val nonce: String,
+    val mac: String
+)
+
+data class FetchAblyJwtResponse(
+    val fetchAblyJwt: AblyTokenRequest
+)
