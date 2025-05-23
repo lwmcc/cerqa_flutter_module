@@ -763,9 +763,9 @@ data class FetchAblyJw(val fetchAblyJwt: String)
 data class AblyTokenRequest(
     val keyName: String,
     val clientId: String,
-    val ttl: Long,
+    val ttl: Int,
     val capability: String,
-    val timestamp: Long,
+    val timestamp: Int,
     val nonce: String,
     val mac: String
 )
