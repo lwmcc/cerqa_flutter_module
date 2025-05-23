@@ -670,7 +670,7 @@ class AmplifyRepo @Inject constructor(
                 try {
                     val response = /*adapter.fromJson(it.data)*/ null
 
-                    println("AmplifyRepo: ***** ${it.data}")
+                    println("AmplifyRepo: ***** ${it}")
                   //  val response2 = adapter2.fromJson(it.data)
 
                     if (response != null) {
