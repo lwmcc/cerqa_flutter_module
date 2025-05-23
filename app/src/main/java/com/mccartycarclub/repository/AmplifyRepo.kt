@@ -631,13 +631,8 @@ class AmplifyRepo @Inject constructor(
         const val DUMMY = "dummy"
     }
 
-    /**
-     * Emits a token and completes
-     */
-    override fun fetchAblyToken(userId: String): Flow<String> = callbackFlow {
-        val document = """
-            query FetchAblyJwt(${'$'}userId: String!) {
-                fetchAblyJwt(userId: ${'$'}userId) {
+    /*
+     {
                     keyName
                     clientId
                     timestamp
@@ -646,13 +641,22 @@ class AmplifyRepo @Inject constructor(
                     capability
                     ttl
                 }
+     */
+
+    /**
+     * Emits a token and completes
+     */
+    override fun fetchAblyToken(userId: String): Flow<String> = callbackFlow {
+        val document = """
+            query FetchAblyJwt(${'$'}userId: String!) {
+                fetchAblyJwt(userId: ${'$'}userId)
             }
             """.trimIndent()
 
         val fetchAblyJwtQuery = SimpleGraphQLRequest<String>(
             document,
             mapOf("userId" to userId),
-            AblyTokenRequest::class.java,
+            String::class.java,
             GsonVariablesSerializer()
         )
 
@@ -660,10 +664,10 @@ class AmplifyRepo @Inject constructor(
             fetchAblyJwtQuery,
             {
                 // TODO: refactor this
-                val moshi = Moshi.Builder()
-                    .add(KotlinJsonAdapterFactory())  // <-- add this
-                    .build()
-                val adapter = moshi.adapter(FetchAblyJw::class.java)
+                //val moshi = Moshi.Builder()
+                //    .add(KotlinJsonAdapterFactory())  // <-- add this
+                //    .build()
+                //val adapter = moshi.adapter(FetchAblyJw::class.java)
 
                 //val adapter2 = moshi.adapter(FetchAblyJwtResponse::class.java)
 
