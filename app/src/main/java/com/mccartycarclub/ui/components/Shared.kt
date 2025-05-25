@@ -210,9 +210,13 @@ fun AppAuthenticator(
                                 val userId =
                                     attributes.firstOrNull { it.key.keyString == "sub" }?.value
 
+                                // TODO: testing
+                               // mainViewModel.setLocalUserId(userId!!)
+
     /*                            Amplify.API.mutate(
                                     ModelMutation.create(testUser2(userId!!)),
                                     { response -> // TODO: response?
+                                    // This is were userId is added to prefs
                                         mainViewModel.setLocalUserId(userId)
                                     },
                                     { error ->

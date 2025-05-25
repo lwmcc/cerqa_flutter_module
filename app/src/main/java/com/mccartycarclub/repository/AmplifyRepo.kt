@@ -24,9 +24,11 @@ import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.kotlin.api.KotlinApiFacade
+import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import io.ably.lib.rest.Auth.TokenRequest
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
@@ -631,25 +633,19 @@ class AmplifyRepo @Inject constructor(
         const val DUMMY = "dummy"
     }
 
-    /*
-     {
+    /**
+     * Emits a token and completes
+     */
+    override fun fetchAblyToken(userId: String): Flow<TokenRequest> = callbackFlow {
+        val document = """
+            query FetchAblyJwt(${'$'}userId: String!) {
+                fetchAblyJwt(userId: ${'$'}userId)  {
                     keyName
                     clientId
                     timestamp
                     nonce
                     mac
-                    capability
-                    ttl
-                }
-     */
-
-    /**
-     * Emits a token and completes
-     */
-    override fun fetchAblyToken(userId: String): Flow<String> = callbackFlow {
-        val document = """
-            query FetchAblyJwt(${'$'}userId: String!) {
-                fetchAblyJwt(userId: ${'$'}userId)
+                  }
             }
             """.trimIndent()
 
@@ -664,37 +660,30 @@ class AmplifyRepo @Inject constructor(
             fetchAblyJwtQuery,
             {
                 // TODO: refactor this
-                //val moshi = Moshi.Builder()
-                //    .add(KotlinJsonAdapterFactory())  // <-- add this
-                //    .build()
-                //val adapter = moshi.adapter(FetchAblyJw::class.java)
-
-                //val adapter2 = moshi.adapter(FetchAblyJwtResponse::class.java)
+                val moshi = Moshi.Builder()
+                    .add(KotlinJsonAdapterFactory())  // <-- add this
+                    .build()
+                val adapter = moshi.adapter(FetchAblyJwtResponse::class.java)
 
                 try {
-                    val response = /*adapter.fromJson(it.data)*/ null
+                    val response = adapter.fromJson(it.data)
 
-                    println("AmplifyRepo: ***** ${it}")
-                  //  val response2 = adapter2.fromJson(it.data)
-
+                    println("AmplifyRepo: ***** CID  ${response?.fetchAblyJwt?.clientId}")
+                    println("AmplifyRepo: ***** TOKEN  ${response?.fetchAblyJwt}")
                     if (response != null) {
-                       // val token = response.fetchAblyJwt
+                        val token = response.fetchAblyJwt
 
-                   /*     val token2 = response2?.fetchAblyJwt
+                        val tokenResponse = TokenRequest()
+                        tokenResponse.keyName = token.keyName
+                        tokenResponse.clientId = token.clientId
+                        tokenResponse.timestamp = token.timestamp?.toLong() ?: 0
+                        tokenResponse.nonce = token.nonce
+                        tokenResponse.mac = token.mac
+                        //tokenResponse.capability = "{\"*\":[\"*\"]}"
+                        //tokenResponse.ttl = 3_600_000
 
-                        val tokenMap = mapOf(
-                            "keyName" to token2?.keyName,
-                            "clientId" to token2?.clientId,
-                            "ttl" to token2?.ttl,
-                            "capability" to token2?.capability,
-                            "timestamp" to token2?.timestamp,
-                            "nonce" to token2?.nonce,
-                            "mac" to token2?.mac
-                        )*/
-
-
-                        trySend(/*token*/"").onFailure {
-                            // TODO: log
+                        trySend(tokenResponse).onFailure {
+                            println("AmplifyRepo ***** ERROR ${it?.message}")
                         }
                         close()
                     }
@@ -762,18 +751,16 @@ class CurrentContact(
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
 
-data class FetchAblyJw(val fetchAblyJwt: String)
-
-data class AblyTokenRequest(
-    val keyName: String,
-    val clientId: String,
-    val ttl: String,
-    val capability: String,
-    val timestamp: String,
-    val nonce: String,
-    val mac: String
+@JsonClass(generateAdapter = true)
+data class FetchAblyJwtResponse(
+    val fetchAblyJwt: AblyJwt
 )
 
-data class FetchAblyJwtResponse(
-    val fetchAblyJwt: AblyTokenRequest
+@JsonClass(generateAdapter = true)
+data class AblyJwt(
+    val keyName: String?,
+    val clientId: String?,
+    val timestamp: Double?,  // JSON timestamp is a double (scientific notation)
+    val nonce: String?,
+    val mac: String?
 )

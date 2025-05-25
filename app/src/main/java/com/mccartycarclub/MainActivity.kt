@@ -31,19 +31,12 @@ class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
 
     @Inject
-    lateinit var ablyService: RealtimeService
-
-    @Inject
     lateinit var pushReceiver: BroadcastReceiver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-
-            val userId = mainViewModel.userId.collectAsStateWithLifecycle(null).value
-            val token = mainViewModel.token.collectAsStateWithLifecycle().value
-
             StartScreen( // TODO: use a main compose screen change this
                 acceptInvite = { // TODO: rename
                     mainViewModel.acceptContactInvite()
@@ -62,22 +55,11 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             )
-
-            if (userId != null) {
-                mainViewModel.fetchAblyToken(userId)
-                ablyService.init(token)
-                ablyService.activatePush()
-
-                val channelName = ChannelModel.NotificationsDirect.getName(userId)
-
-                ablyService.createPrivateChannel(channelName)
-                ablyService.subscribeToInviteNotifications(channelName)
-            }
-
-            checkPermissions()
-            registerReceiver()
         }
+        checkPermissions()
+        registerReceiver()
         handleIncomingIntentS(intent)
+        mainViewModel.initAbly()
     }
 
     private fun registerReceiver() {

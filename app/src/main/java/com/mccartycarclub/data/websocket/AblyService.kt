@@ -6,6 +6,7 @@ import io.ably.lib.realtime.AblyRealtime
 import io.ably.lib.realtime.Channel
 import io.ably.lib.realtime.CompletionListener
 import io.ably.lib.realtime.ConnectionState
+import io.ably.lib.rest.Auth.TokenRequest
 import io.ably.lib.types.AblyException
 import io.ably.lib.types.ErrorInfo
 import io.ably.lib.types.Message
@@ -19,7 +20,7 @@ class AblyService @Inject constructor(val provider: AblyProvider) : RealtimeServ
 
     private var ably: AblyRealtime? = null
 
-    override fun init(token: String?) {
+    override fun init(token: TokenRequest?) {
         if (token != null) {
             ably = provider.getInstance(token)
             ably?.connect()

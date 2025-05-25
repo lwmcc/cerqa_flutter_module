@@ -3,6 +3,7 @@ package com.mccartycarclub.repository
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.ui.components.ConnectionAccepted
+import io.ably.lib.rest.Auth.TokenRequest
 import kotlinx.coroutines.flow.Flow
 
 interface RemoteRepo {
@@ -47,5 +48,5 @@ interface RemoteRepo {
 
     suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>>
 
-    fun fetchAblyToken(userId: String): Flow<String>
+    fun fetchAblyToken(userId: String): Flow<TokenRequest>
 }

@@ -1,10 +1,11 @@
 package com.mccartycarclub.domain.websocket
 
+import io.ably.lib.rest.Auth.TokenRequest
 import io.ably.lib.types.Message
 import kotlinx.coroutines.flow.Flow
 
 interface RealtimeService {
-    fun init(token: String?)
+    fun init(token: TokenRequest?)
     fun connect(token: String?)
     fun createPrivateChannel(channelName: String?)
     fun subscribe()

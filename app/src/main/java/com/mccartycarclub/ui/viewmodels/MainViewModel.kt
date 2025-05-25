@@ -2,18 +2,25 @@ package com.mccartycarclub.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mccartycarclub.domain.ChannelModel
 import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.websocket.RealTime
+import com.mccartycarclub.domain.websocket.RealtimeService
 import com.mccartycarclub.repository.LocalRepo
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.realtime.RealtimePublishRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.ably.lib.rest.Auth
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,10 +32,11 @@ class MainViewModel @Inject constructor(
     private val repo: RemoteRepo,
     private val localRepo: LocalRepo,
     private val realtimePublishRepo: RealtimePublishRepo,
+    private val realtimeService: RealtimeService,
 ) : ViewModel() {
 
-    private val _token = MutableStateFlow<String?>(null)
-    val token: StateFlow<String?> = _token
+    private val _token = MutableStateFlow<Auth.TokenRequest?>(null)
+    val token: StateFlow<Auth.TokenRequest?> = _token
 
     private val _localContacts = MutableStateFlow(emptyList<LocalContact>())
     val localContacts = _localContacts.asStateFlow()
@@ -39,12 +47,6 @@ class MainViewModel @Inject constructor(
     private var _loggedUserId: String? = null
     val loggedUserId: String?
         get() = _loggedUserId
-
-    init {
-        viewModelScope.launch {
-            _userId.value = localRepo.getUserId().first()
-        }
-    }
 
     fun getDeviceContacts() = userContacts.getDeviceContacts(localContacts = { contacts ->
         _localContacts.update { contacts }
@@ -78,11 +80,37 @@ class MainViewModel @Inject constructor(
         realtimePublishRepo.createReceiverInviteSubscription("", "")
     }
 
-    fun fetchAblyToken(userId: String) {
+    private fun fetchAblyToken(userId: String?) {
         viewModelScope.launch {
-            repo.fetchAblyToken(userId).collect {
-                _token.value = it
+            if (userId != null) {
+                val ablyRequestToken: Deferred<Auth.TokenRequest?> = async {
+                    repo.fetchAblyToken(userId).firstOrNull()
+                }
+
+                realTime.initAbly(
+                    userId = userId,
+                    channelName = channelName(userId),
+                    tokenRequest = ablyRequestToken.await(),
+                )
             }
+        }
+    }
+
+    fun initAbly() {
+        viewModelScope.launch {
+            // TODO: when logging in on a different device, userId is null
+            // because the app stores userId locally,
+            // think about pulling it from AWS
+            val id = localRepo.getUserId().first()
+            _userId.value = id
+            fetchAblyToken(id)
+        }
+    }
+
+    // TODO: done when hard coded user is created for testing
+    fun setLocalUserId(userId: String) {
+        viewModelScope.launch {
+            localRepo.setLocalUserId(userId)
         }
     }
 
@@ -90,9 +118,5 @@ class MainViewModel @Inject constructor(
         realtimePublishRepo.createPrivateChannel(channelName)
     }
 
-    fun setLocalUserId(userId: String) {
-        viewModelScope.launch {
-            localRepo.setLocalUserId(userId)
-        }
-    }
+    private fun channelName(userId: String) = ChannelModel.NotificationsDirect.getName(userId)
 }

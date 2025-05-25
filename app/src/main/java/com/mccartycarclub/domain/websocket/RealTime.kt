@@ -1,11 +1,8 @@
 package com.mccartycarclub.domain.websocket
 
-import io.ably.lib.types.Message
-import kotlinx.coroutines.flow.Flow
+import io.ably.lib.rest.Auth
+
 
 interface RealTime {
-
-    fun subscribeToInviteNotifications(channelName: String): Flow<Message>
-
-    fun createReceiverInviteSubscription(senderId: String, channelName: String)
+    fun initAbly(userId: String, channelName: String, tokenRequest: Auth.TokenRequest?)
 }

@@ -9,8 +9,11 @@ import io.ably.lib.realtime.AblyRealtime
 import io.ably.lib.realtime.ConnectionState
 import io.ably.lib.realtime.ConnectionStateListener
 import io.ably.lib.rest.Auth
+import io.ably.lib.rest.Auth.TokenDetails
 import io.ably.lib.types.AblyException
 import io.ably.lib.types.ClientOptions
+import io.ably.lib.types.Callback
+import io.ably.lib.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -21,15 +24,17 @@ class AblyRealtimeProvider(private val context: Context) : AblyProvider {
     private var ably: AblyRealtime? = null
     private var token: String? = null
 
-    override fun getInstance(token: String?): AblyRealtime {
+    override fun getInstance(token: Auth.TokenRequest?): AblyRealtime {
+
         val ably = AblyRealtime(
             ClientOptions().apply {
-                this.token = token
+                authCallback = Auth.TokenCallback { params ->
+                    token
+                }
             }
         ).apply {
             setAndroidContext(context)
             connect()
-
             connection.on(ConnectionStateListener { state ->
                 when (state.current) {
                     ConnectionState.initialized -> {
@@ -41,14 +46,7 @@ class AblyRealtimeProvider(private val context: Context) : AblyProvider {
                     }
 
                     ConnectionState.connected -> {
-                        ably?.push?.activate()
-                        println("AblyRealtimeProvider ***** connected")
-                        println("AblyRealtimeProvider ***** CLIENT ID ${ably?.auth?.clientId}")
-
-                        Thread {
-                            Thread.sleep(5000) // delay 500 ms
-                            println("AblyRealtimeProvider ***** Delayed CLIENT ID: ${ably?.auth?.clientId}")
-                        }.start()
+                        push.activate()
                     }
 
                     ConnectionState.disconnected -> {
@@ -73,7 +71,7 @@ class AblyRealtimeProvider(private val context: Context) : AblyProvider {
                 }
             })
         }
-        return ably!!
+        return ably
     }
 
     suspend fun fetchAblyToken(): Token = withContext(Dispatchers.IO) {
