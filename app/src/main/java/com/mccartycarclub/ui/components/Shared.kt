@@ -615,6 +615,8 @@ fun Search(
         var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
         var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
 
+        val density = LocalDensity.current
+
         when {
             openAlertDialog -> {
                 ConfirmationDialog(
@@ -650,43 +652,51 @@ fun Search(
                     .fillMaxWidth()
             )
 
-            when (searchQuery) {
-                NetSearchResult.Pending -> {
-                    // TODO: maybe remove this
-                    //  Pending()
-                }
+            if (receiverQueryPending) {
+                AnimatedLoadingSpinner(
+                    density = density,
+                    dataPending = receiverQueryPending,
+                    spinnerSize = R.dimen.card_pending_spinner,
+                    slideIn = (-20).dp,
+                )
+            } else {
+                when (searchQuery) {
+                    NetSearchResult.Pending -> {
+                        // TODO: maybe remove this
+                        //  Pending()
+                    }
 
-                // TODO: make a builder for user and for AlertDialog
-                is NetSearchResult.Success -> {
-                    val user = (searchQuery as? NetSearchResult.Success)?.data
-                    UserCard(
-                        user,
-                        hasConnection = hasConnection,
-                        hasPendingInvite = hasPendingInvite,
-                        receiverQueryPending = receiverQueryPending,
-                        isSendingInvite = isSendingInvite,
-                        isCancellingInvite = isCancellingInvite,
-                        connectionEvent = { event ->
-                            openAlertDialog = true
-                            connectionEvent = event
-                            alertDialogData = AlertDialogData(
-                                icon = R.drawable.sharp_contacts_24,
-                                title = R.string.dialog_invite_to_connect_title,
-                                description = R.string.dialog_invite_to_connect_description,
-                                dialogIconDescription = R.string.dialog_icon_description,
-                                dismiss = R.string.dialog_button_dismiss,
-                                confirm = R.string.dialog_button_connect,
-                            )
-                        },
-                    )
-                }
+                    // TODO: make a builder for user and for AlertDialog
+                    is NetSearchResult.Success -> {
+                        val user = (searchQuery as? NetSearchResult.Success)?.data
+                        UserCard(
+                            user,
+                            hasConnection = hasConnection,
+                            hasPendingInvite = hasPendingInvite,
+                            isSendingInvite = isSendingInvite,
+                            isCancellingInvite = isCancellingInvite,
+                            connectionEvent = { event ->
+                                openAlertDialog = true
+                                connectionEvent = event
+                                alertDialogData = AlertDialogData(
+                                    icon = R.drawable.sharp_contacts_24,
+                                    title = R.string.dialog_invite_to_connect_title,
+                                    description = R.string.dialog_invite_to_connect_description,
+                                    dialogIconDescription = R.string.dialog_icon_description,
+                                    dismiss = R.string.dialog_button_dismiss,
+                                    confirm = R.string.dialog_button_connect,
+                                )
+                            },
+                        )
+                    }
 
-                is NetSearchResult.Error -> {
+                    is NetSearchResult.Error -> {
 
-                }
+                    }
 
-                is NetSearchResult.Idle -> {
+                    is NetSearchResult.Idle -> {
 
+                    }
                 }
             }
         }
@@ -777,15 +787,16 @@ fun Error() {
 }
 
 @Composable
-fun UserCard( // TODO: give this a better name, more descriptive
+fun UserCard(
+    // TODO: give this a better name, more descriptive
     user: User?,
     hasConnection: Boolean,
     hasPendingInvite: Boolean,
     isSendingInvite: Boolean,
     isCancellingInvite: Boolean,
-    receiverQueryPending: Boolean,
     connectionEvent: (ContactCardEvent) -> Unit,
 ) {
+
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -803,92 +814,81 @@ fun UserCard( // TODO: give this a better name, more descriptive
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (receiverQueryPending) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                AsyncImage(
+                    model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
+                    // TODO: add an image user.avatarUri
+                    contentDescription = stringResource(id = R.string.user_avatar),
+                    modifier = Modifier
+                        .width(60.dp)
+                        .padding(
+                            dimensionResource(id = R.dimen.card_padding_start),
+                            dimensionResource(id = R.dimen.card_padding_top),
+                        )
+                )
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                        .padding(
+                            dimensionResource(id = R.dimen.card_padding_start),
+                            dimensionResource(id = R.dimen.card_padding_top),
+                        )
+                        .weight(1f)
                 ) {
-                    PendingCard(16.dp)
+                    user?.firstName?.let { Text(it) }
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.spacer_height)))
+                    user?.name?.let { Text(it) }
                 }
-            } else {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    AsyncImage(
-                        model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
-                        // TODO: add an image user.avatarUri
-                        contentDescription = stringResource(id = R.string.user_avatar),
-                        modifier = Modifier
-                            .width(60.dp)
-                            .padding(
-                                dimensionResource(id = R.dimen.card_padding_start),
-                                dimensionResource(id = R.dimen.card_padding_top),
-                            )
-                    )
-                    Column(
-                        modifier = Modifier
-                            .padding(
-                                dimensionResource(id = R.dimen.card_padding_start),
-                                dimensionResource(id = R.dimen.card_padding_top),
-                            )
-                            .weight(1f)
+            }
+
+            if (hasConnection) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(2.dp),
+                ) {
+                    Text("Connected")
+                    Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.spacer_width)))
+                    OutlinedButton(
+                        onClick = {
+                            connectionEvent(ContactCardEvent.DisconnectEvent)
+                        },
+                        shape = RoundedCornerShape(4.dp),
                     ) {
-                        user?.firstName?.let { Text(it) }
-                        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.spacer_height)))
-                        user?.name?.let { Text(it) }
+                        Text("Disconnect")
                     }
                 }
-
-                if (hasConnection) {
+            } else {
+                if (hasPendingInvite) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(2.dp),
                     ) {
-                        Text("Connected")
+                        Text("Pending")
                         Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.spacer_width)))
                         OutlinedButton(
                             onClick = {
-                                connectionEvent(ContactCardEvent.DisconnectEvent)
-                            },
-                            shape = RoundedCornerShape(4.dp),
-                        ) {
-                            Text("Disconnect")
-                        }
-                    }
-                } else {
-                    if (hasPendingInvite) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(2.dp),
-                        ) {
-                            Text("Pending")
-                            Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.spacer_width)))
-                            OutlinedButton(
-                                onClick = {
-                                    user?.userId?.let { receiverUserId ->
-
-                                    }
-                                },
-                                shape = RoundedCornerShape(4.dp),
-                                enabled = !isCancellingInvite,
-                            ) {
-                                Text(stringResource(id = R.string.connect_cancel))
-                            }
-                        }
-                    } else {
-                        OutlinedButton(
-                            onClick = {
                                 user?.userId?.let { receiverUserId ->
-                                    connectionEvent(
-                                        ContactCardEvent.InviteConnectEvent(receiverUserId)
-                                    )
+
                                 }
                             },
                             shape = RoundedCornerShape(4.dp),
-                            enabled = !isSendingInvite
+                            enabled = !isCancellingInvite,
                         ) {
-                            Text(stringResource(id = R.string.connect_to_user))
+                            Text(stringResource(id = R.string.connect_cancel))
                         }
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = {
+                            user?.userId?.let { receiverUserId ->
+                                connectionEvent(
+                                    ContactCardEvent.InviteConnectEvent(receiverUserId)
+                                )
+                            }
+                        },
+                        shape = RoundedCornerShape(4.dp),
+                        enabled = !isSendingInvite
+                    ) {
+                        Text(stringResource(id = R.string.connect_to_user))
                     }
                 }
             }

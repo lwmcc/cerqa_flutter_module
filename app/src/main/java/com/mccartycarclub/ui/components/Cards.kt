@@ -166,7 +166,7 @@ fun SentContactCard(
             horizontalArrangement = Arrangement.Center,
         ) {
             CardListButton(primaryButtonText, onClick = {
-                onClick(ContactCardEvent.CancelSentInvite(contact.contactId))
+                onClick(ContactCardEvent.CancelSentInvite(contact.userId))
             })
         }
     }

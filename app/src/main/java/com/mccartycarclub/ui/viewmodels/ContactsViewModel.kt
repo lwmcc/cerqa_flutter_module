@@ -53,7 +53,7 @@ class ContactsViewModel @Inject constructor(
         data class Success(val data: List<Contact>) : UserContacts()
     }
 
-    private val _receiverQueryPending = MutableStateFlow(true)
+    private val _receiverQueryPending = MutableStateFlow(false)
     val receiverQueryPending = _receiverQueryPending.asStateFlow()
 
     private val _hasPendingInvite = MutableStateFlow(false)
@@ -185,15 +185,21 @@ class ContactsViewModel @Inject constructor(
                         val channelName =
                             ChannelModel.NotificationsDirect.getName(connectionEvent.receiverUserId)
 
-                        realtimePublishRepo.publish(channelName)
+                        // TODO: will uncomment when ready
+                        //realtimePublishRepo.publish(channelName)
                         //realTime.createReceiverInviteSubscription(_userId.value.toString(), channel)
-                        //val inviteSuccess =
-                        //    repo.sendInviteToConnect(_userId.value, connectionEvent.receiverUserId)
-                        //if (inviteSuccess) {
-                        //    fetchReceivedInvites(_userId.value)
-                        //} else {
-                        //    println("ContactsViewModel ***** INVITE ERROR")
-                        // }
+
+                        val inviteSuccess =
+                            repo.sendInviteToConnect(_userId.value, connectionEvent.receiverUserId)
+
+                        if (inviteSuccess) {
+
+                            // TODO: to replace
+                            //fetchReceivedInvites(_userId.value)
+                            //_contacts.replaceAll { it.contactId == "" }
+                        } else {
+                            println("ContactsViewModel ***** INVITE ERROR")
+                        }
                     }
                 }
             }
@@ -233,6 +239,7 @@ class ContactsViewModel @Inject constructor(
                         }
 
                         NetDeleteResult.Success -> {
+                            // TODO: use id instead of index
                             _contacts[listIndex] =
                                 UserMapper.currentContactFrom(connectionEvent.connectionAccepted)
                         }

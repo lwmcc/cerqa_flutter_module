@@ -124,13 +124,7 @@ class AmplifyRepo @Inject constructor(
 
         return try {
             val result = amplifyApi.mutate(ModelMutation.create(invite))
-            if (result.hasData()) {
-                println("AmplifyRepo ***** ${result.data}")
-            } else {
-                println("AmplifyRepo ***** NO DATA")
-            }
-
-            false
+            result.hasData() && !result.data.id.isNullOrBlank()
         } catch (e: ApiException) {
             false
         }

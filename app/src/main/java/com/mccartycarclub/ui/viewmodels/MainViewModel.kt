@@ -82,7 +82,8 @@ class MainViewModel @Inject constructor(
 
     private fun fetchAblyToken(userId: String?) {
         viewModelScope.launch {
-            if (userId != null) {
+            // TODO: connections refused right now over limit from testing, will get back to this
+/*            if (userId != null) {
                 val ablyRequestToken: Deferred<Auth.TokenRequest?> = async {
                     repo.fetchAblyToken(userId).firstOrNull()
                 }
@@ -92,7 +93,7 @@ class MainViewModel @Inject constructor(
                     channelName = channelName(userId),
                     tokenRequest = ablyRequestToken.await(),
                 )
-            }
+            }*/
         }
     }
 
