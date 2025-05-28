@@ -37,10 +37,10 @@ public final class Invite implements Model {
   public static final QueryField RECEIVER = field("Invite", "receiver");
   public static final QueryField USER = field("Invite", "inviteId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="String", isRequired = true) String senderId;
-  private final @ModelField(targetType="String", isRequired = true) String receiverId;
-  private final @ModelField(targetType="String", isRequired = true) String sender;
-  private final @ModelField(targetType="String", isRequired = true) String receiver;
+  private final @ModelField(targetType="String") String senderId;
+  private final @ModelField(targetType="String") String receiverId;
+  private final @ModelField(targetType="String") String sender;
+  private final @ModelField(targetType="String") String receiver;
   private final @ModelField(targetType="User") @BelongsTo(targetName = "inviteId", targetNames = {"inviteId"}, type = User.class) ModelReference<User> user;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
@@ -141,7 +141,7 @@ public final class Invite implements Model {
       .toString();
   }
   
-  public static SenderIdStep builder() {
+  public static BuildStep builder() {
       return new Builder();
   }
   
@@ -172,34 +172,18 @@ public final class Invite implements Model {
       receiver,
       user);
   }
-  public interface SenderIdStep {
-    ReceiverIdStep senderId(String senderId);
-  }
-  
-
-  public interface ReceiverIdStep {
-    SenderStep receiverId(String receiverId);
-  }
-  
-
-  public interface SenderStep {
-    ReceiverStep sender(String sender);
-  }
-  
-
-  public interface ReceiverStep {
-    BuildStep receiver(String receiver);
-  }
-  
-
   public interface BuildStep {
     Invite build();
     BuildStep id(String id);
+    BuildStep senderId(String senderId);
+    BuildStep receiverId(String receiverId);
+    BuildStep sender(String sender);
+    BuildStep receiver(String receiver);
     BuildStep user(User user);
   }
   
 
-  public static class Builder implements SenderIdStep, ReceiverIdStep, SenderStep, ReceiverStep, BuildStep {
+  public static class Builder implements BuildStep {
     private String id;
     private String senderId;
     private String receiverId;
@@ -233,29 +217,25 @@ public final class Invite implements Model {
     }
     
     @Override
-     public ReceiverIdStep senderId(String senderId) {
-        Objects.requireNonNull(senderId);
+     public BuildStep senderId(String senderId) {
         this.senderId = senderId;
         return this;
     }
     
     @Override
-     public SenderStep receiverId(String receiverId) {
-        Objects.requireNonNull(receiverId);
+     public BuildStep receiverId(String receiverId) {
         this.receiverId = receiverId;
         return this;
     }
     
     @Override
-     public ReceiverStep sender(String sender) {
-        Objects.requireNonNull(sender);
+     public BuildStep sender(String sender) {
         this.sender = sender;
         return this;
     }
     
     @Override
      public BuildStep receiver(String receiver) {
-        Objects.requireNonNull(receiver);
         this.receiver = receiver;
         return this;
     }
@@ -280,10 +260,7 @@ public final class Invite implements Model {
   public final class CopyOfBuilder extends Builder {
     private CopyOfBuilder(String id, String senderId, String receiverId, String sender, String receiver, ModelReference<User> user) {
       super(id, senderId, receiverId, sender, receiver, user);
-      Objects.requireNonNull(senderId);
-      Objects.requireNonNull(receiverId);
-      Objects.requireNonNull(sender);
-      Objects.requireNonNull(receiver);
+      
     }
     
     @Override
