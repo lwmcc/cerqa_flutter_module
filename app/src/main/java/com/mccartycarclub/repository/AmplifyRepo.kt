@@ -15,6 +15,7 @@ import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelReference
+import com.amplifyframework.core.model.includes
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
@@ -23,6 +24,7 @@ import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
+import com.amplifyframework.datastore.generated.model.UserPath
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.google.gson.Gson
 import com.squareup.moshi.JsonClass
@@ -728,7 +730,10 @@ class AmplifyRepo @Inject constructor(
 
     // TODO: testing will add to interface
     override fun searchUsers(userName: String) {
-        val uid = ""
+        //val uid = "216ba520-5061-70e5-2bc0-3f14b15f800d"
+        //val rid = "210f6852-69c7-42a8-af46-9e34a2254f35"
+        // f5e611af-dc06-44fc-b853-c75f9abd766a KingJames
+        val rid = "f5e611af-dc06-44fc-b853-c75f9abd766a"
         val document = """
             query FetchUserWithContactInfoQuery(${'$'}userName: String!) {
                 fetchUserWithContactInfo(content: ${'$'}userName) {
@@ -744,7 +749,7 @@ class AmplifyRepo @Inject constructor(
             GsonVariablesSerializer()
         )
 
-        Amplify.API.query(
+/*        Amplify.API.query(
             query,
             {
                 // var gson = Gson()
@@ -752,6 +757,20 @@ class AmplifyRepo @Inject constructor(
                 println("AmplifyRepo ***** FETCH USER DATA TEST ${it.data}")
             },
             { println("AmplifyRepo ***** FETCH USER DATA TEST ERROR${it.message}") }
+        )*/
+
+        Amplify.API.query(
+            ModelQuery.get<User, UserPath>(
+                User::class.java,
+                User.UserIdentifier(rid)
+            ) { userPath -> includes(userPath.invites) },
+            {
+
+                val ud3 = (it.data.invites as? LoadedModelList<Invite>)?.items
+
+                println("AmplifyRepo ***** SEARCH CONTACTS TEST ${ud3.toString()}")
+            },
+            { println("AmplifyRepo ***** SEARCH ERROR ${it.message}") }
         )
     }
 }
