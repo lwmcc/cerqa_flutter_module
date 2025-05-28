@@ -728,6 +728,7 @@ class AmplifyRepo @Inject constructor(
 
     // TODO: testing will add to interface
     override fun searchUsers(userName: String) {
+        val uid = ""
         val document = """
             query FetchUserWithContactInfoQuery(${'$'}userName: String!) {
                 fetchUserWithContactInfo(content: ${'$'}userName) {
