@@ -110,8 +110,17 @@ class ContactsViewModel @Inject constructor(
                                 trySend(data)
                                 val id = _userId.value
                                 if (id != null) {
+                                    // TODO: use a lamdba function for figuring this out
                                     _receiverQueryPending.value = true
                                     viewModelScope.launch {
+
+                                        // TODO: testing
+                                        data.data?.userId
+                                        data.data?.userName
+                                        data.data?.firstName
+                                        data.data?.contacts
+                                        data.data?.invites
+
                                         val hasConnection: Deferred<Boolean> = async {
                                             repo.contactExists(
                                                 id,
@@ -189,7 +198,10 @@ class ContactsViewModel @Inject constructor(
                         //realtimePublishRepo.publish(channelName)
                         //realTime.createReceiverInviteSubscription(_userId.value.toString(), channel)
 
-                        val inviteSuccess =
+
+                        repo.searchUsers("KingJames")
+
+ /*                       val inviteSuccess =
                             repo.sendInviteToConnect(_userId.value, connectionEvent.receiverUserId)
 
                         if (inviteSuccess) {
@@ -199,7 +211,7 @@ class ContactsViewModel @Inject constructor(
                             //_contacts.replaceAll { it.contactId == "" }
                         } else {
                             println("ContactsViewModel ***** INVITE ERROR")
-                        }
+                        }*/
                     }
                 }
             }

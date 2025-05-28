@@ -24,6 +24,7 @@ import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.kotlin.api.KotlinApiFacade
+import com.google.gson.Gson
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
@@ -92,6 +93,39 @@ class AmplifyRepo @Inject constructor(
             val response =
                 amplifyApi.query(ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)))
             if (response.hasData() && response.data.firstOrNull() != null) {
+
+                // TODO: testing
+                val d = response.data.firstOrNull()
+                when (val items = d?.contacts) {
+                    is LazyModelList -> {
+                        val page = items.fetchPage()
+                        println("AmplifyRepo ***** CONTACTS ${page.items}")
+                    }
+
+                    is LoadedModelList -> {
+                        println("AmplifyRepo ***** LOADED")
+                    }
+
+                    null -> {
+
+                    }
+                }
+
+                when(val items = d?.invites) {
+                    is LazyModelList -> {
+                        val page = items.fetchPage()
+                        println("AmplifyRepo ***** INVITES ${page.items}")
+                    }
+
+                    is LoadedModelList -> {
+                        println("AmplifyRepo ***** LOADED")
+                    }
+
+                    null -> {
+
+                    }
+                }
+
                 emit(NetSearchResult.Success(response.data.first()))
             } else {
                 emit(NetSearchResult.Error(ResponseException("No User Name Found")))
@@ -691,8 +725,35 @@ class AmplifyRepo @Inject constructor(
         )
         awaitClose { /* no-op */ }
     }.flowOn(ioDispatcher)
-}
 
+    // TODO: testing will add to interface
+    override fun searchUsers(userName: String) {
+        val document = """
+            query FetchUserWithContactInfoQuery(${'$'}userName: String!) {
+                fetchUserWithContactInfo(content: ${'$'}userName) {
+                content
+                }
+            }
+            """.trimIndent()
+
+        val query = SimpleGraphQLRequest<String>(
+            document,
+            mapOf("userName" to userName),
+            String::class.java,
+            GsonVariablesSerializer()
+        )
+
+        Amplify.API.query(
+            query,
+            {
+                // var gson = Gson()
+                // val response = gson.fromJson(it.data, EchoResponse::class.java)
+                println("AmplifyRepo ***** FETCH USER DATA TEST ${it.data}")
+            },
+            { println("AmplifyRepo ***** FETCH USER DATA TEST ERROR${it.message}") }
+        )
+    }
+}
 
 class ResponseException(message: String) : Exception(message)
 class NoInternetException(message: String) : Exception(message)
