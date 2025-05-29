@@ -759,19 +759,19 @@ class AmplifyRepo @Inject constructor(
             { println("AmplifyRepo ***** FETCH USER DATA TEST ERROR${it.message}") }
         )*/
 
-        Amplify.API.query(
+/*        Amplify.API.query(
             ModelQuery.get<User, UserPath>(
                 User::class.java,
                 User.UserIdentifier(rid)
             ) { userPath -> includes(userPath.invites) },
             {
 
-                val ud3 = (it.data.invites as? LoadedModelList<Invite>)?.items
+             //   val ud3 = (it.data.invites as? LoadedModelList<Invite>)?.items
 
-                println("AmplifyRepo ***** SEARCH CONTACTS TEST ${ud3.toString()}")
+            //    println("AmplifyRepo ***** SEARCH CONTACTS TEST ${ud3.toString()}")
             },
             { println("AmplifyRepo ***** SEARCH ERROR ${it.message}") }
-        )
+        )*/
     }
 }
 
