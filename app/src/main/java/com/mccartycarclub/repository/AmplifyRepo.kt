@@ -733,7 +733,7 @@ class AmplifyRepo @Inject constructor(
         //val uid = "216ba520-5061-70e5-2bc0-3f14b15f800d"
         //val rid = "210f6852-69c7-42a8-af46-9e34a2254f35"
         // f5e611af-dc06-44fc-b853-c75f9abd766a KingJames
-        val rid = "f5e611af-dc06-44fc-b853-c75f9abd766a"
+        val rid = "3afa7b18-5555-4798-b482-6f76baab0a4b"
         val document = """
             query FetchUserWithContactInfoQuery(${'$'}userName: String!) {
                 fetchUserWithContactInfo(content: ${'$'}userName) {

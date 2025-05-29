@@ -201,10 +201,10 @@ class ContactsViewModel @Inject constructor(
 
                         repo.searchUsers("KingJames")
 
- /*                       val inviteSuccess =
-                            repo.sendInviteToConnect(_userId.value, connectionEvent.receiverUserId)
+                        //val inviteSuccess =
+                        //    repo.sendInviteToConnect(_userId.value, connectionEvent.receiverUserId)
 
-                        if (inviteSuccess) {
+ /*                       if (inviteSuccess) {
 
                             // TODO: to replace
                             //fetchReceivedInvites(_userId.value)
