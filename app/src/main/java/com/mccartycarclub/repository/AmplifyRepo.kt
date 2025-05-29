@@ -731,28 +731,48 @@ class AmplifyRepo @Inject constructor(
 
     // TODO: testing will add to interface
     override fun searchUsers(userName: String) {
-        val document = """
+/*        val document = """
             query fetchUserData($userName: String!) {
                 fetchUserData(userName: $userName) {
                     userName
                 }
             }
-            """.trimIndent()
+            """.trimIndent()*/
+        val document = """
+        query fetchUserData(\$userName: String!) {
+            fetchUserData(userName: \$userName) {
+                userName
+            }
+        }
+    """.trimIndent()
 
-        val query = SimpleGraphQLRequest<String>(
+/*        val query = SimpleGraphQLRequest<String>(
             document,
             mapOf("userName" to userName),
             String::class.java,
             GsonVariablesSerializer()
+        )*/
+
+        val query = SimpleGraphQLRequest<String>(
+            document,
+            mapOf("userName" to userName), // passing variables as a map
+            String::class.java,
+            GsonVariablesSerializer() // Serializer to convert variables
         )
 
         Amplify.API.query(
+            query,
+            { response -> println("AmplifyRepo ***** FETCH USER DATA TEST ${response.data}") },
+            { error -> println("AmplifyRepo ***** FETCH USER DATA TEST ERROR ${error.message}") }
+        )
+
+/*        Amplify.API.query(
             query,
             {
                 println("AmplifyRepo ***** FETCH USER DATA TEST ${it.data}")
             },
             { println("AmplifyRepo ***** FETCH USER DATA TEST ERROR ${it.message}") }
-        )
+        )*/
     }
 }
 
