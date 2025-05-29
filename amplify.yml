@@ -3,9 +3,9 @@ backend:
   phases:
     build:
       commands:
-        - echo "Installing Node.js version 20..."
-        - nvm install 20
-        - nvm use 20
+        - echo "Installing Node.js version 22.0.0..."
+        - nvm install 22.0.0
+        - nvm use 22.0.0
         - npm ci
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 frontend:
