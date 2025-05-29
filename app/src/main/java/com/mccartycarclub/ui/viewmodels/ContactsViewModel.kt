@@ -92,7 +92,12 @@ class ContactsViewModel @Inject constructor(
         .flatMapLatest { userName ->
             userName?.let { name ->
                 callbackFlow {
-                    repo.fetchUserByUserName(name).collect { data ->
+
+                    // TODO: call db test
+                    repo.searchUsers(name)
+
+
+/*                    repo.fetchUserByUserName(name).collect { data ->
                         when (data) {
                             NetSearchResult.Idle -> {
 
@@ -113,13 +118,6 @@ class ContactsViewModel @Inject constructor(
                                     // TODO: use a lamdba function for figuring this out
                                     _receiverQueryPending.value = true
                                     viewModelScope.launch {
-
-                                        // TODO: testing
-                                        data.data?.userId
-                                        data.data?.userName
-                                        data.data?.firstName
-                                        data.data?.contacts
-                                        data.data?.invites
 
                                         val hasConnection: Deferred<Boolean> = async {
                                             repo.contactExists(
@@ -145,7 +143,7 @@ class ContactsViewModel @Inject constructor(
                                 }
                             }
                         }
-                    }
+                    }*/
                     awaitClose {
                         // TODO: do I need this?
                         // YES, what should i put here?

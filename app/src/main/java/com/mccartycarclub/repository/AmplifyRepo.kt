@@ -3,6 +3,7 @@ package com.mccartycarclub.repository
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.aws.GsonVariablesSerializer
+import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
@@ -730,14 +731,10 @@ class AmplifyRepo @Inject constructor(
 
     // TODO: testing will add to interface
     override fun searchUsers(userName: String) {
-        //val uid = "216ba520-5061-70e5-2bc0-3f14b15f800d"
-        //val rid = "210f6852-69c7-42a8-af46-9e34a2254f35"
-        // f5e611af-dc06-44fc-b853-c75f9abd766a KingJames
-        val rid = "3afa7b18-5555-4798-b482-6f76baab0a4b"
         val document = """
-            query FetchUserWithContactInfoQuery(${'$'}userName: String!) {
-                fetchUserWithContactInfo(content: ${'$'}userName) {
-                content
+            query fetchUserData($userName: String!) {
+                fetchUserData(userName: $userName) {
+                    userName
                 }
             }
             """.trimIndent()
@@ -749,29 +746,13 @@ class AmplifyRepo @Inject constructor(
             GsonVariablesSerializer()
         )
 
-/*        Amplify.API.query(
+        Amplify.API.query(
             query,
             {
-                // var gson = Gson()
-                // val response = gson.fromJson(it.data, EchoResponse::class.java)
                 println("AmplifyRepo ***** FETCH USER DATA TEST ${it.data}")
             },
-            { println("AmplifyRepo ***** FETCH USER DATA TEST ERROR${it.message}") }
-        )*/
-
-/*        Amplify.API.query(
-            ModelQuery.get<User, UserPath>(
-                User::class.java,
-                User.UserIdentifier(rid)
-            ) { userPath -> includes(userPath.invites) },
-            {
-
-             //   val ud3 = (it.data.invites as? LoadedModelList<Invite>)?.items
-
-            //    println("AmplifyRepo ***** SEARCH CONTACTS TEST ${ud3.toString()}")
-            },
-            { println("AmplifyRepo ***** SEARCH ERROR ${it.message}") }
-        )*/
+            { println("AmplifyRepo ***** FETCH USER DATA TEST ERROR ${it.message}") }
+        )
     }
 }
 
