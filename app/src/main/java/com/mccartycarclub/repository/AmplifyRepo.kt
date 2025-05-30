@@ -733,7 +733,19 @@ class AmplifyRepo @Inject constructor(
     override fun searchUsers(userName: String) {
         val document = """
             query FetchUserWithContactInfoQuery(${'$'}userName: String!) {
-                fetchUserWithContactInfo(userName: ${'$'}userName)
+                fetchUserWithContactInfo(userName: ${'$'}userName) }
+                    id
+                    userName
+                    contacts {
+                      userId
+                      contactId
+                    }
+                    invites {
+                      userId
+                      receiverId
+                      senderId
+                    }
+                }
             }
             """.trimIndent()
 
