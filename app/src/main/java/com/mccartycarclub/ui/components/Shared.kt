@@ -213,8 +213,8 @@ fun AppAuthenticator(
                                 // TODO: testing
                                // mainViewModel.setLocalUserId(userId!!)
 
-    /*                            Amplify.API.mutate(
-                                    ModelMutation.create(testUser2(userId!!)),
+                                Amplify.API.mutate(
+                                    ModelMutation.create(testUser1(userId!!)),
                                     { response -> // TODO: response?
                                     // This is were userId is added to prefs
                                         mainViewModel.setLocalUserId(userId)
@@ -222,7 +222,7 @@ fun AppAuthenticator(
                                     { error ->
                                         Log.e("MainActivity *****", "User creation failed", error)
                                     }
-                                )*/
+                                )
                             }, { error ->
                                 Log.e(
                                     "MainActivity *****", "Failed to fetch user attributes", error

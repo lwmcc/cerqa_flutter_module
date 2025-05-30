@@ -146,25 +146,33 @@ class AmplifyRepo @Inject constructor(
         // but here we just need the id because we're creating an invite
         val sender =
             User.builder()
-                .userId(DUMMY)
+                .userId(senderUserId)
                 .firstName(DUMMY)
                 .lastName(DUMMY)
                 .build()
 
-        val invite = Invite
-            .builder()
-            .senderId(senderUserId)
-            .receiverId(receiverUserId)
-            .sender("to-remove") // TODO: remove these
-            .receiver("to-remove")
-            .build()
+        Amplify.API.mutate(ModelMutation.create(sender),
+            {
+                val invite = Invite
+                    .builder()
+                    .senderId(senderUserId)
+                    .receiverId(receiverUserId)
+                    .build()
 
-        return try {
-            val result = amplifyApi.mutate(ModelMutation.create(invite))
-            result.hasData() && !result.data.id.isNullOrBlank()
-        } catch (e: ApiException) {
-            false
-        }
+                Amplify.API.mutate(
+                    ModelMutation.create(invite),
+                    { println("AmplifyRepo ***** CREATED INVITE ${it.data.id}") },
+                    { println("AmplifyRepo ***** INVITE ERROR ${it.message}") },
+                )
+            }, { println("AmplifyRepo ***** ERROR MAKING INVITE") })
+
+        /*        return try {
+                    val result = amplifyApi.mutate(ModelMutation.create(invite))
+                    result.hasData() && !result.data.id.isNullOrBlank()
+                } catch (e: ApiException) {
+                    false
+                }*/
+        return false
     }
 
     override fun cancelInviteToConnect(
@@ -731,9 +739,9 @@ class AmplifyRepo @Inject constructor(
 
     // TODO: testing will add to interface
     override fun searchUsers(userName: String) {
-        val document = """
-            query FetchUserWithContactInfoQuery(${'$'}userName: String!) {
-              fetchUserWithContactInfo(userName: ${'$'}userName)
+  //      val document = """
+  //          query FetchUserWithContactInfoQuery(${'$'}userName: String!) {
+  //            fetchUserWithContactInfo(userName: ${'$'}userName)
 /*                fetchUserWithContactInfo(userName: ${'$'}userName) {
                     id
                     userName
@@ -747,9 +755,9 @@ class AmplifyRepo @Inject constructor(
                       senderId
                     }
                 }*/
-            }
-            """.trimIndent()
-
+   //         }
+    //        """.trimIndent()
+/*
         val query = SimpleGraphQLRequest<String>(
             document,
             mapOf("userName" to userName),
@@ -761,6 +769,25 @@ class AmplifyRepo @Inject constructor(
             query,
             { response -> println("AmplifyRepo ***** FETCH USER DATA TEST ${response.data}") },
             { error -> println("AmplifyRepo ***** FETCH USER DATA TEST ERROR ${error.message}") }
+        )*/
+
+        Amplify.API.query(
+            ModelQuery.get<User, UserPath>(
+                User::class.java,
+                User.UserIdentifier("bbc9e2a4-7cf4-41e3-bf49-a68bed176424")
+            ) { userPath ->
+                includes(userPath.contacts, userPath.invites)
+            },
+            { result ->
+                val user = result.data
+                val contacts = (user.contacts as? LoadedModelList<UserContact>)?.items
+                val invites = (user.invites as? LoadedModelList<Invite>)?.items
+
+                println("AmplifyRepo ***** FETCH USER CONTACTS ${contacts.toString()}")
+                println("AmplifyRepo ***** FETCH USER DATA ITEMS ${invites.toString()}")
+
+            },
+            { println("AmplifyRepo ***** FETCH USER DATA TEST ERROR ${it.message}") }
         )
     }
 }

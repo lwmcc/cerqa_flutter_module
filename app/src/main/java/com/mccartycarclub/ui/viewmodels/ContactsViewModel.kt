@@ -96,8 +96,7 @@ class ContactsViewModel @Inject constructor(
                     // TODO: call db test
                     repo.searchUsers(name)
 
-
-/*                    repo.fetchUserByUserName(name).collect { data ->
+                    repo.fetchUserByUserName(name).collect { data ->
                         when (data) {
                             NetSearchResult.Idle -> {
 
@@ -143,7 +142,7 @@ class ContactsViewModel @Inject constructor(
                                 }
                             }
                         }
-                    }*/
+                    }
                     awaitClose {
                         // TODO: do I need this?
                         // YES, what should i put here?
@@ -197,10 +196,8 @@ class ContactsViewModel @Inject constructor(
                         //realTime.createReceiverInviteSubscription(_userId.value.toString(), channel)
 
 
-                        repo.searchUsers("KingJames")
-
-                        //val inviteSuccess =
-                        //    repo.sendInviteToConnect(_userId.value, connectionEvent.receiverUserId)
+                        val inviteSuccess =
+                            repo.sendInviteToConnect(_userId.value, connectionEvent.receiverUserId)
 
  /*                       if (inviteSuccess) {
 
