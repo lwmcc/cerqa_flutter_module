@@ -33,15 +33,11 @@ public final class Invite implements Model {
   public static final QueryField ID = field("Invite", "id");
   public static final QueryField SENDER_ID = field("Invite", "senderId");
   public static final QueryField RECEIVER_ID = field("Invite", "receiverId");
-  public static final QueryField SENDER = field("Invite", "sender");
-  public static final QueryField RECEIVER = field("Invite", "receiver");
-  public static final QueryField USER = field("Invite", "inviteId");
+  public static final QueryField USER = field("Invite", "userId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String senderId;
   private final @ModelField(targetType="String") String receiverId;
-  private final @ModelField(targetType="String") String sender;
-  private final @ModelField(targetType="String") String receiver;
-  private final @ModelField(targetType="User") @BelongsTo(targetName = "inviteId", targetNames = {"inviteId"}, type = User.class) ModelReference<User> user;
+  private final @ModelField(targetType="User") @BelongsTo(targetName = "userId", targetNames = {"userId"}, type = User.class) ModelReference<User> user;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -62,14 +58,6 @@ public final class Invite implements Model {
       return receiverId;
   }
   
-  public String getSender() {
-      return sender;
-  }
-  
-  public String getReceiver() {
-      return receiver;
-  }
-  
   public ModelReference<User> getUser() {
       return user;
   }
@@ -82,12 +70,10 @@ public final class Invite implements Model {
       return updatedAt;
   }
   
-  private Invite(String id, String senderId, String receiverId, String sender, String receiver, ModelReference<User> user) {
+  private Invite(String id, String senderId, String receiverId, ModelReference<User> user) {
     this.id = id;
     this.senderId = senderId;
     this.receiverId = receiverId;
-    this.sender = sender;
-    this.receiver = receiver;
     this.user = user;
   }
   
@@ -102,8 +88,6 @@ public final class Invite implements Model {
       return ObjectsCompat.equals(getId(), invite.getId()) &&
               ObjectsCompat.equals(getSenderId(), invite.getSenderId()) &&
               ObjectsCompat.equals(getReceiverId(), invite.getReceiverId()) &&
-              ObjectsCompat.equals(getSender(), invite.getSender()) &&
-              ObjectsCompat.equals(getReceiver(), invite.getReceiver()) &&
               ObjectsCompat.equals(getUser(), invite.getUser()) &&
               ObjectsCompat.equals(getCreatedAt(), invite.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), invite.getUpdatedAt());
@@ -116,8 +100,6 @@ public final class Invite implements Model {
       .append(getId())
       .append(getSenderId())
       .append(getReceiverId())
-      .append(getSender())
-      .append(getReceiver())
       .append(getUser())
       .append(getCreatedAt())
       .append(getUpdatedAt())
@@ -132,8 +114,6 @@ public final class Invite implements Model {
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("senderId=" + String.valueOf(getSenderId()) + ", ")
       .append("receiverId=" + String.valueOf(getReceiverId()) + ", ")
-      .append("sender=" + String.valueOf(getSender()) + ", ")
-      .append("receiver=" + String.valueOf(getReceiver()) + ", ")
       .append("user=" + String.valueOf(getUser()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
@@ -158,8 +138,6 @@ public final class Invite implements Model {
       id,
       null,
       null,
-      null,
-      null,
       null
     );
   }
@@ -168,8 +146,6 @@ public final class Invite implements Model {
     return new CopyOfBuilder(id,
       senderId,
       receiverId,
-      sender,
-      receiver,
       user);
   }
   public interface BuildStep {
@@ -177,8 +153,6 @@ public final class Invite implements Model {
     BuildStep id(String id);
     BuildStep senderId(String senderId);
     BuildStep receiverId(String receiverId);
-    BuildStep sender(String sender);
-    BuildStep receiver(String receiver);
     BuildStep user(User user);
   }
   
@@ -187,19 +161,15 @@ public final class Invite implements Model {
     private String id;
     private String senderId;
     private String receiverId;
-    private String sender;
-    private String receiver;
     private ModelReference<User> user;
     public Builder() {
       
     }
     
-    private Builder(String id, String senderId, String receiverId, String sender, String receiver, ModelReference<User> user) {
+    private Builder(String id, String senderId, String receiverId, ModelReference<User> user) {
       this.id = id;
       this.senderId = senderId;
       this.receiverId = receiverId;
-      this.sender = sender;
-      this.receiver = receiver;
       this.user = user;
     }
     
@@ -211,8 +181,6 @@ public final class Invite implements Model {
           id,
           senderId,
           receiverId,
-          sender,
-          receiver,
           user);
     }
     
@@ -225,18 +193,6 @@ public final class Invite implements Model {
     @Override
      public BuildStep receiverId(String receiverId) {
         this.receiverId = receiverId;
-        return this;
-    }
-    
-    @Override
-     public BuildStep sender(String sender) {
-        this.sender = sender;
-        return this;
-    }
-    
-    @Override
-     public BuildStep receiver(String receiver) {
-        this.receiver = receiver;
         return this;
     }
     
@@ -258,8 +214,8 @@ public final class Invite implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String senderId, String receiverId, String sender, String receiver, ModelReference<User> user) {
-      super(id, senderId, receiverId, sender, receiver, user);
+    private CopyOfBuilder(String id, String senderId, String receiverId, ModelReference<User> user) {
+      super(id, senderId, receiverId, user);
       
     }
     
@@ -271,16 +227,6 @@ public final class Invite implements Model {
     @Override
      public CopyOfBuilder receiverId(String receiverId) {
       return (CopyOfBuilder) super.receiverId(receiverId);
-    }
-    
-    @Override
-     public CopyOfBuilder sender(String sender) {
-      return (CopyOfBuilder) super.sender(sender);
-    }
-    
-    @Override
-     public CopyOfBuilder receiver(String receiver) {
-      return (CopyOfBuilder) super.receiver(receiver);
     }
     
     @Override

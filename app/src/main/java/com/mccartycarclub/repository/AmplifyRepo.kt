@@ -28,6 +28,7 @@ import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.datastore.generated.model.UserPath
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.google.gson.Gson
+import com.mccartycarclub.domain.usecases.user.SearchResultBuilder.searchResultOf
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
@@ -42,8 +43,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import org.json.JSONObject
 import java.io.IOException
 import java.net.UnknownHostException
+import java.sql.RowId
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Named
@@ -79,8 +82,8 @@ class AmplifyRepo @Inject constructor(
         receiverUserId: String,
     ): Flow<Boolean> = flow {
 
-        val filter = Invite.SENDER.eq(senderUserId)
-            .and(Invite.RECEIVER.eq(receiverUserId))
+        val filter = Invite.SENDER_ID.eq(senderUserId)
+            .and(Invite.RECEIVER_ID.eq(receiverUserId))
 
         val response = amplifyApi.query(ModelQuery.list(Invite::class.java, filter))
         if (response.hasData()) {
@@ -116,8 +119,8 @@ class AmplifyRepo @Inject constructor(
 
                 when(val items = d?.invites) {
                     is LazyModelList -> {
-                        val page = items.fetchPage()
-                        println("AmplifyRepo ***** INVITES ${page.items}")
+                      //  val page = items.fetchPage()
+                       // println("AmplifyRepo ***** INVITES ${page.items}")
                     }
 
                     is LoadedModelList -> {
@@ -141,37 +144,22 @@ class AmplifyRepo @Inject constructor(
     override suspend fun sendInviteToConnect(
         senderUserId: String?,
         receiverUserId: String,
+        rowId: String,
     ): Boolean {
-        // firstName and lastName are required when creating a record,
-        // but here we just need the id because we're creating an invite
-        val sender =
-            User.builder()
-                .userId(senderUserId)
-                .firstName(DUMMY)
-                .lastName(DUMMY)
-                .build()
 
-        Amplify.API.mutate(ModelMutation.create(sender),
-            {
-                val invite = Invite
-                    .builder()
-                    .senderId(senderUserId)
-                    .receiverId(receiverUserId)
-                    .build()
+        val invite = Invite
+            .builder()
+            .senderId(senderUserId)
+            .receiverId(receiverUserId)
+            .user(
+                User
+                    .justId(rowId)
+            )
+            .build()
 
-                Amplify.API.mutate(
-                    ModelMutation.create(invite),
-                    { println("AmplifyRepo ***** CREATED INVITE ${it.data.id}") },
-                    { println("AmplifyRepo ***** INVITE ERROR ${it.message}") },
-                )
-            }, { println("AmplifyRepo ***** ERROR MAKING INVITE") })
+        val response = amplifyApi.mutate(ModelMutation.create(invite))
+        println("AmplifyRepo ***** INVATE ${response.data}")
 
-        /*        return try {
-                    val result = amplifyApi.mutate(ModelMutation.create(invite))
-                    result.hasData() && !result.data.id.isNullOrBlank()
-                } catch (e: ApiException) {
-                    false
-                }*/
         return false
     }
 
@@ -293,7 +281,7 @@ class AmplifyRepo @Inject constructor(
 
     override fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
         flow {
-            val senderResponse = fetchSentInvites(Invite.SENDER.eq(loggedInUserId))
+            val senderResponse = fetchSentInvites(Invite.SENDER_ID.eq(loggedInUserId))
             emit(fetchInvites(senderResponse, SentInviteContactInvite::class))
         }.flowOn(ioDispatcher)
 
@@ -454,9 +442,14 @@ class AmplifyRepo @Inject constructor(
                     query,
                 )
             )
-            receiverResponse.data.items.forEach { item ->
-                invites.add(item)
+            receiverResponse?.data.let {
+                it?.items?.forEach { item ->
+                    invites.add(item)
+                }
             }
+/*            receiverResponse.data.items.forEach { item ->
+                invites.add(item)
+            }*/
             invites
         } catch (e: ApiException) {
             if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
@@ -500,9 +493,9 @@ class AmplifyRepo @Inject constructor(
             }
             is LazyModelList<*> -> {
 
-                val page = items.fetchPage()
+               // val page = items.fetchPage()
 
-                println("AmplifyRepo ***** ${page.items}")
+               // println("AmplifyRepo ***** ${page.items}")
             }
         }
 
@@ -540,7 +533,7 @@ class AmplifyRepo @Inject constructor(
     }
 
 
-    private suspend fun fetchRowId(
+/*    private suspend fun fetchRowId(
         senderUserId: String?,
         receiverUserId: String,
     ): String? {
@@ -559,7 +552,7 @@ class AmplifyRepo @Inject constructor(
         println("AmplifyRepo ***** INVITES DATA ${invites.toString()}")
 
         return ""
-    }
+    }*/
 
     // TODO: change param, change function name
     private suspend fun <T : Contact> fetchInvites(
@@ -738,56 +731,47 @@ class AmplifyRepo @Inject constructor(
     }.flowOn(ioDispatcher)
 
     // TODO: testing will add to interface
-    override fun searchUsers(userName: String) {
-  //      val document = """
-  //          query FetchUserWithContactInfoQuery(${'$'}userName: String!) {
-  //            fetchUserWithContactInfo(userName: ${'$'}userName)
-/*                fetchUserWithContactInfo(userName: ${'$'}userName) {
-                    id
-                    userName
-                    contacts {
-                      userId
-                      contactId
+    override suspend fun searchUsers(userName: String) {
+
+        val document = """
+                query ListUsersWithInvites(${'$'}userName: String!) {
+                  listUsers(filter: { userName: { eq: ${'$'}userName } }) {
+                    items {
+                      id
+                      userName
+                      email
+                      invites {
+                        items {
+                          id
+                          senderId
+                          receiverId
+                        }
+                      }
+                      contacts {
+                        items {
+                          id
+                          userId
+                          contactId
+                        }
+                      }
                     }
-                    invites {
-                      userId
-                      receiverId
-                      senderId
-                    }
-                }*/
-   //         }
-    //        """.trimIndent()
-/*
+                  }
+                }
+            """.trimIndent()
+
         val query = SimpleGraphQLRequest<String>(
             document,
             mapOf("userName" to userName),
             String::class.java,
             GsonVariablesSerializer()
         )
-
         Amplify.API.query(
             query,
-            { response -> println("AmplifyRepo ***** FETCH USER DATA TEST ${response.data}") },
+            { response ->
+                searchResultOf(response)
+                println("AmplifyRepo ***** FETCH USER DATA DOCUMENT ${response.data}")
+            },
             { error -> println("AmplifyRepo ***** FETCH USER DATA TEST ERROR ${error.message}") }
-        )*/
-
-        Amplify.API.query(
-            ModelQuery.get<User, UserPath>(
-                User::class.java,
-                User.UserIdentifier("bbc9e2a4-7cf4-41e3-bf49-a68bed176424")
-            ) { userPath ->
-                includes(userPath.contacts, userPath.invites)
-            },
-            { result ->
-                val user = result.data
-                val contacts = (user.contacts as? LoadedModelList<UserContact>)?.items
-                val invites = (user.invites as? LoadedModelList<Invite>)?.items
-
-                println("AmplifyRepo ***** FETCH USER CONTACTS ${contacts.toString()}")
-                println("AmplifyRepo ***** FETCH USER DATA ITEMS ${invites.toString()}")
-
-            },
-            { println("AmplifyRepo ***** FETCH USER DATA TEST ERROR ${it.message}") }
         )
     }
 }
@@ -855,4 +839,20 @@ data class AblyJwt(
     val timestamp: Double?,  // JSON timestamp is a double (scientific notation)
     val nonce: String?,
     val mac: String?
+)
+
+data class ListUsersResponse(
+    val listUsers: ListUsers
+)
+
+data class ListUsers(
+    val items: List<User>
+)
+
+data class InviteList(
+    val items: List<Invite>
+)
+
+data class ContactList(
+    val items: List<Contact>
 )

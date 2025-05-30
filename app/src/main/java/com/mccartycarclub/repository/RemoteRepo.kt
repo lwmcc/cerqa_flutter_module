@@ -22,6 +22,7 @@ interface RemoteRepo {
     suspend fun sendInviteToConnect(
         senderUserId: String?,
         receiverUserId: String,
+        rowId: String,
     ): Boolean
 
     fun cancelInviteToConnect(
@@ -50,5 +51,5 @@ interface RemoteRepo {
 
     fun fetchAblyToken(userId: String): Flow<TokenRequest>
 
-    fun searchUsers(userName: String)
+    suspend fun searchUsers(userName: String)
 }

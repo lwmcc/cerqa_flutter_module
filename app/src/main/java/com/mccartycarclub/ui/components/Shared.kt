@@ -879,9 +879,9 @@ fun UserCard(
                 } else {
                     OutlinedButton(
                         onClick = {
-                            user?.userId?.let { receiverUserId ->
+                            user?.let { userId ->
                                 connectionEvent(
-                                    ContactCardEvent.InviteConnectEvent(receiverUserId)
+                                    ContactCardEvent.InviteConnectEvent(userId.userId, userId.id)
                                 )
                             }
                         },

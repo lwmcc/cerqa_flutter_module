@@ -197,7 +197,11 @@ class ContactsViewModel @Inject constructor(
 
 
                         val inviteSuccess =
-                            repo.sendInviteToConnect(_userId.value, connectionEvent.receiverUserId)
+                            repo.sendInviteToConnect(
+                                senderUserId = _userId.value,
+                                receiverUserId = connectionEvent.receiverUserId,
+                                rowId = connectionEvent.rowId,
+                            )
 
  /*                       if (inviteSuccess) {
 
