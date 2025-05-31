@@ -1,8 +1,7 @@
 package com.mccartycarclub.repository
 
-import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
 import com.amplifyframework.datastore.generated.model.User
-import com.mccartycarclub.ui.components.ConnectionAccepted
+import com.mccartycarclub.domain.model.ContactsSearchResult
 import io.ably.lib.rest.Auth.TokenRequest
 import kotlinx.coroutines.flow.Flow
 
@@ -14,6 +13,11 @@ interface RemoteRepo {
 
     fun hasExistingInvite(
         senderUserId: String,
+        receiverUserId: String,
+    ): Flow<Boolean>
+
+    fun hasExistingInviteToAcceptOrReject(
+        loggedInUserId: String,
         receiverUserId: String,
     ): Flow<Boolean>
 

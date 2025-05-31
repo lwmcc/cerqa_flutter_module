@@ -28,6 +28,7 @@ import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.datastore.generated.model.UserPath
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.google.gson.Gson
+import com.mccartycarclub.domain.model.ContactsSearchResult
 import com.mccartycarclub.domain.usecases.user.SearchResultBuilder.searchResultOf
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
@@ -94,44 +95,37 @@ class AmplifyRepo @Inject constructor(
         }
     }
 
+    override fun hasExistingInviteToAcceptOrReject(
+        loggedInUserId: String,
+        receiverUserId: String,
+    ): Flow<Boolean> = flow {
+
+        val filter = Invite.RECEIVER_ID.eq(loggedInUserId)
+            .and(Invite.SENDER_ID.eq(receiverUserId))
+
+        val response = amplifyApi.query(ModelQuery.list(Invite::class.java, filter))
+        if (response.hasData()) {
+            val sender = response.data?.firstOrNull()?.senderId
+            val receiver = response.data?.firstOrNull()?.receiverId
+            println("AmplifyRepo ***** S ${sender} R ${receiver}")
+            if (receiver.equals(receiverUserId) && sender.equals(receiverUserId)) {
+
+            }
+
+            emit(true)
+        } else { // TODO: need try catch
+            emit(false)
+        }
+    }
+
+    // TODO: flow not needed just return object
     override fun fetchUserByUserName(userName: String): Flow<NetSearchResult<User?>> = flow {
         try {
-            val response =
-                amplifyApi.query(ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)))
+                val response =
+                    amplifyApi.query(ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)))
+
+                // TODO: move to own class
             if (response.hasData() && response.data.firstOrNull() != null) {
-
-                // TODO: testing
-                val d = response.data.firstOrNull()
-                when (val items = d?.contacts) {
-                    is LazyModelList -> {
-                        val page = items.fetchPage()
-                        println("AmplifyRepo ***** CONTACTS ${page.items}")
-                    }
-
-                    is LoadedModelList -> {
-                        println("AmplifyRepo ***** LOADED")
-                    }
-
-                    null -> {
-
-                    }
-                }
-
-                when(val items = d?.invites) {
-                    is LazyModelList -> {
-                      //  val page = items.fetchPage()
-                       // println("AmplifyRepo ***** INVITES ${page.items}")
-                    }
-
-                    is LoadedModelList -> {
-                        println("AmplifyRepo ***** LOADED")
-                    }
-
-                    null -> {
-
-                    }
-                }
-
                 emit(NetSearchResult.Success(response.data.first()))
             } else {
                 emit(NetSearchResult.Error(ResponseException("No User Name Found")))
@@ -139,7 +133,7 @@ class AmplifyRepo @Inject constructor(
         } catch (e: ApiException) {
             emit(NetSearchResult.Error(e))
         }
-    }
+        }
 
     override suspend fun sendInviteToConnect(
         senderUserId: String?,
@@ -733,7 +727,24 @@ class AmplifyRepo @Inject constructor(
     // TODO: testing will add to interface
     override suspend fun searchUsers(userName: String) {
 
+        // TODO test the function
         val document = """
+                        query fetchPendingSentInviteStatus(${'$'}userName: String!) {
+                            fetchPendingSentInviteStatus(userName: ${'$'}userName)
+                        }
+                        """.trimIndent()
+
+        val request = SimpleGraphQLRequest<String>(
+            document,
+            mapOf("userName" to userName),
+            String::class.java,
+            GsonVariablesSerializer()
+        )
+
+        val response = amplifyApi.query(request)
+        println("AmplifyRepo ***** ${response.data}")
+
+/*        val document = """
                 query ListUsersWithInvites(${'$'}userName: String!) {
                   listUsers(filter: { userName: { eq: ${'$'}userName } }) {
                     items {
@@ -768,11 +779,12 @@ class AmplifyRepo @Inject constructor(
         Amplify.API.query(
             query,
             { response ->
-                searchResultOf(response)
-                println("AmplifyRepo ***** FETCH USER DATA DOCUMENT ${response.data}")
+
+                val userResponse = searchResultOf(response)
+
             },
             { error -> println("AmplifyRepo ***** FETCH USER DATA TEST ERROR ${error.message}") }
-        )
+        )*/
     }
 }
 

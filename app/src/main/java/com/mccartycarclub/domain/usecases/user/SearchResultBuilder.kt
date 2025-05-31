@@ -1,75 +1,61 @@
 package com.mccartycarclub.domain.usecases.user
 
 import com.amplifyframework.api.graphql.GraphQLResponse
-import com.mccartycarclub.repository.FetchAblyJwtResponse
-import com.mccartycarclub.repository.UserContact
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 object SearchResultBuilder {
-    fun searchResultOf(response: GraphQLResponse<String>) {
 
+    private val moshi: Moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
 
-        val moshi = Moshi.Builder()
-            .add(KotlinJsonAdapterFactory())  // <-- add this
-            .build()
-        val adapter = moshi.adapter(ListUsersResponse::class.java)
+    fun searchResultOf(response: GraphQLResponse<String>): UsersResponse? {
+        val adapter = moshi.adapter(UsersResponse::class.java)
 
-        val parsedResponse = adapter.fromJson(response.data)
+        val listUsers = adapter.fromJson(response.data)?.listUsers?.items?.first()
+        val hasContacts = listUsers?.contacts?.items?.isNotEmpty()
+        val hasInvites = listUsers?.invites?.items?.isNotEmpty()
 
-        parsedResponse?.listUsers?.items?.forEach { user ->
-            println("SearchResultBuilder: ${user.userName} (${user.email})")
-            user.invites?.items?.forEach { invite ->
-                println("SearchResultBuilder ID: ${invite.id}, Sender: ${invite.senderId}, Receiver: ${invite.receiverId}")
-            }
+        println("SearchResultBuilder ***** HAS CONTACTS ${hasContacts} C ${listUsers?.contacts?.items}")
+        println("SearchResultBuilder ***** HAS INVITES ${hasInvites} I ${listUsers?.invites?.items}")
 
-            user.contacts?.items?.forEach { contact ->
-                println("SearchResultBuilder Contact UID: ${contact.userId}, CID: ${contact.contactId}")
-            }
-        }
+        return adapter.fromJson(response.data)
     }
 }
 
-@JsonClass(generateAdapter = true)
-data class ListUsersResponse(
-    @Json(name = "listUsers") val listUsers: ListUsersContainer
+data class UsersResponse(
+    val listUsers: UsersWrapper
 )
 
-@JsonClass(generateAdapter = true)
-data class ListUsersContainer(
-    @Json(name = "items") val items: List<UserItem>
+data class UsersWrapper(
+    val items: List<UserItem> = emptyList()
 )
 
-@JsonClass(generateAdapter = true)
 data class UserItem(
     val id: String,
     val userName: String,
     val email: String,
-    val invites: InvitesContainer?,
-    val contacts: UserContactsContainer?,
+    val invites: InvitesContainer,
+    val contacts: UserContactsContainer,
 )
 
-@JsonClass(generateAdapter = true)
 data class InvitesContainer(
-    @Json(name = "items") val items: List<InviteItem>
+    val items: List<InviteItem> = emptyList()
 )
 
-@JsonClass(generateAdapter = true)
 data class UserContactsContainer(
-    @Json(name = "items") val items: List<UserContactItem>
+    val items: List<UserContactItem> = emptyList()
 )
 
-@JsonClass(generateAdapter = true)
 data class InviteItem(
     val id: String,
     val senderId: String,
     val receiverId: String
 )
 
-@JsonClass(generateAdapter = true)
 data class UserContactItem(
+    val id: String,
     val userId: String,
     val contactId: String,
 )

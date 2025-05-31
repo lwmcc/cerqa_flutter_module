@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.ChannelModel
+import com.mccartycarclub.domain.model.ContactsSearchResult
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.repository.Contact
@@ -19,6 +20,7 @@ import com.mccartycarclub.repository.realtime.RealtimePublishRepo
 import com.mccartycarclub.ui.components.ContactCardEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -120,20 +122,30 @@ class ContactsViewModel @Inject constructor(
 
                                         val hasConnection: Deferred<Boolean> = async {
                                             repo.contactExists(
-                                                id,
-                                                data.data?.userId.toString(),
+                                                senderUserId = id,
+                                                receiverUserId = data.data?.userId.toString(),
                                             ).firstOrNull() ?: false
                                         }
+
+
+                                        val hasPendingInvite: Deferred<Boolean?> = async {
+                                            repo.hasExistingInviteToAcceptOrReject(
+                                                loggedInUserId = id,
+                                                receiverUserId = data.data?.userId.toString()
+                                            ).firstOrNull()
+                                        }
+
+                                        println("ContactsViewModel ***** ${hasPendingInvite.await()}")
 
                                         val hasExistingInvite = async {
                                             repo.hasExistingInvite(
-                                                id,
-                                                data.data?.userId.toString()
+                                                senderUserId = id,
+                                                receiverUserId = data.data?.userId.toString()
                                             ).firstOrNull() ?: false
                                         }
 
-                                        val connection = hasConnection.await()
                                         val invite = hasExistingInvite.await()
+                                        val connection = hasConnection.await()
 
                                         _receiverQueryPending.value = false
                                         _hasPendingInvite.value = invite
@@ -203,14 +215,14 @@ class ContactsViewModel @Inject constructor(
                                 rowId = connectionEvent.rowId,
                             )
 
- /*                       if (inviteSuccess) {
+                        if (inviteSuccess) {
 
                             // TODO: to replace
                             //fetchReceivedInvites(_userId.value)
                             //_contacts.replaceAll { it.contactId == "" }
                         } else {
                             println("ContactsViewModel ***** INVITE ERROR")
-                        }*/
+                        }
                     }
                 }
             }
