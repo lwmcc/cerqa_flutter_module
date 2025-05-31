@@ -742,7 +742,7 @@ class AmplifyRepo @Inject constructor(
         )
 
         val response = amplifyApi.query(request)
-        println("AmplifyRepo ***** ${response.data}")
+        println("AmplifyRepo ***** RES ${response.data}")
 
 /*        val document = """
                 query ListUsersWithInvites(${'$'}userName: String!) {
