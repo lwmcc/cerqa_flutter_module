@@ -729,16 +729,14 @@ class AmplifyRepo @Inject constructor(
 
         val document = """
                         query fetchPendingSentInviteStatus(${'$'}userName: String!) {
-                            fetchPendingSentInviteStatus(userName: ${'$'}userName) {
-                                userName
-                            }
+                            fetchPendingSentInviteStatus(userName: ${'$'}userName)
                         }
                         """.trimIndent()
 
         val request = SimpleGraphQLRequest<FetchPendingSentInviteStatusQuery>(
             document,
             mapOf("userName" to userName),
-            FetchPendingSentInviteStatusQuery::class.java,
+            String::class.java,
             GsonVariablesSerializer()
         )
 
