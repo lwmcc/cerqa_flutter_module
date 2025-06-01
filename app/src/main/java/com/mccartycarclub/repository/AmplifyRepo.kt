@@ -726,11 +726,15 @@ class AmplifyRepo @Inject constructor(
 
     // TODO: testing will add to interface
     override suspend fun searchUsers(userName: String) {
-
         val document = """
-                       query FetchPendingSentInviteStatusQuery(${'$'}userName: String!) {
-                            fetchPendingSentInviteStatus(userName: ${'$'}userName)
-                        }
+                            query FetchInvitesForReceiver(${'$'}userName: String!) {
+                                fetchInvitesForReceiver(userName: ${'$'}userName) {
+                                    id
+                                    userId
+                                    senderId
+                                    receiverId
+                                }
+                            }
                         """.trimIndent()
 
         val request = SimpleGraphQLRequest<FetchPendingSentInviteStatusQuery>(
@@ -740,9 +744,34 @@ class AmplifyRepo @Inject constructor(
             GsonVariablesSerializer()
         )
 
+        Amplify.API.query(request,
+            { response ->
+                val invites = response.data
+                println("AmplifyRepo ***** FETCH USER DATA INVITES $invites}")
+            },
+            { error ->
+                println("AmplifyRepo ***** FETCH USER DATA TEST ERROR ${error.message}")
+            }
+        )
+
+    /*    val document = """
+                       query FetchPendingSentInviteStatusQuery(${'$'}userName: String!) {
+                           fetchPendingSentInviteStatus(userName: ${'$'}userName)
+                       }
+                    """.trimIndent()
+
+        val variables = mapOf("userName" to "LarryM")
+
+        val request = SimpleGraphQLRequest<FetchPendingSentInviteStatusQuery>(
+            document,
+            variables,
+            String::class.java,
+            GsonVariablesSerializer()
+        )
+
         val response = amplifyApi.query(request)
         println("AmplifyRepo ***** RES ${response}")
-
+*/
 /*        val document = """
                 query ListUsersWithInvites(${'$'}userName: String!) {
                   listUsers(filter: { userName: { eq: ${'$'}userName } }) {
