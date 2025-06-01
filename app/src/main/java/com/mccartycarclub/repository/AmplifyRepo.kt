@@ -727,22 +727,23 @@ class AmplifyRepo @Inject constructor(
     // TODO: testing will add to interface
     override suspend fun searchUsers(userName: String) {
 
-        // TODO test the function
         val document = """
                         query fetchPendingSentInviteStatus(${'$'}userName: String!) {
-                            fetchPendingSentInviteStatus(userName: ${'$'}userName)
+                            fetchPendingSentInviteStatus(userName: ${'$'}userName) {
+                                userName
+                            }
                         }
                         """.trimIndent()
 
-        val request = SimpleGraphQLRequest<String>(
+        val request = SimpleGraphQLRequest<FetchPendingSentInviteStatusQuery>(
             document,
             mapOf("userName" to userName),
-            String::class.java,
+            FetchPendingSentInviteStatusQuery::class.java,
             GsonVariablesSerializer()
         )
 
         val response = amplifyApi.query(request)
-        println("AmplifyRepo ***** RES ${response.data}")
+        println("AmplifyRepo ***** RES ${response.data?.fetchPendingSentInviteStatus?.userName}")
 
 /*        val document = """
                 query ListUsersWithInvites(${'$'}userName: String!) {
@@ -868,3 +869,6 @@ data class InviteList(
 data class ContactList(
     val items: List<Contact>
 )
+
+data class FetchPendingSentInviteStatusResponse(val userName: String)
+data class FetchPendingSentInviteStatusQuery(val fetchPendingSentInviteStatus: FetchPendingSentInviteStatusResponse)
