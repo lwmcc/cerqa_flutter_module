@@ -726,89 +726,51 @@ class AmplifyRepo @Inject constructor(
 
     // TODO: testing will add to interface
     override suspend fun searchUsers(userName: String) {
+        val userList = amplifyApi.query(
+            ModelQuery.list(User::class.java, User.USER_NAME.eq(userName))
+        ).data.items.firstOrNull()
+
+        val userId = userList?.id
+
+        val fullUser = amplifyApi.query(
+            ModelQuery.get<User, UserPath>(
+                User::class.java,
+                User.UserIdentifier(userId)
+            ) { includes(it.contacts, it.invites) }
+        ).data
+
+        val contacts = (fullUser.contacts as? LoadedModelList<UserContact>)?.items
+        val invites = (fullUser.invites as? LoadedModelList<Invite>)?.items
+
+        println("AmplifyRepo ***** CON $contacts")
+        println("AmplifyRepo ***** INV $invites")
+
+        // TODO: testing
         val document = """
-                        query FetchPendingSentInviteStatus(${'$'}userName: String!) {
-                            fetchPendingSentInviteStatus(userName: ${'$'}userName)
-                        }
-                    """.trimIndent()
-
-        val request = SimpleGraphQLRequest<FetchPendingSentInviteStatusQuery>(
-            document,
-            mapOf("userName" to userName),
-            String::class.java,
-            GsonVariablesSerializer()
-        )
-
-        Amplify.API.query(request,
-            { response ->
-                val invites = response.data
-                println("AmplifyRepo ***** FETCH USER DATA INVITES $invites}")
-            },
-            { error ->
-                println("AmplifyRepo ***** FETCH USER DATA TEST ERROR ${error.message}")
-            }
-        )
-
-    /*    val document = """
-                       query FetchPendingSentInviteStatusQuery(${'$'}userName: String!) {
-                           fetchPendingSentInviteStatus(userName: ${'$'}userName)
-                       }
-                    """.trimIndent()
-
-        val variables = mapOf("userName" to "LarryM")
-
-        val request = SimpleGraphQLRequest<FetchPendingSentInviteStatusQuery>(
-            document,
-            variables,
-            String::class.java,
-            GsonVariablesSerializer()
-        )
-
-        val response = amplifyApi.query(request)
-        println("AmplifyRepo ***** RES ${response}")
-*/
-/*        val document = """
-                query ListUsersWithInvites(${'$'}userName: String!) {
-                  listUsers(filter: { userName: { eq: ${'$'}userName } }) {
-                    items {
-                      id
-                      userName
-                      email
-                      invites {
-                        items {
-                          id
-                          senderId
-                          receiverId
-                        }
-                      }
-                      contacts {
-                        items {
-                          id
-                          userId
-                          contactId
-                        }
-                      }
-                    }
-                  }
+            query FetchPendingSentInviteStatusQuery(${'$'}userName: String!) {
+                fetchPendingSentInviteStatus(userId: ${'$'}userName)  {
+                    userName
                 }
+            }
             """.trimIndent()
 
-        val query = SimpleGraphQLRequest<String>(
+        val request = SimpleGraphQLRequest<String>(
             document,
             mapOf("userName" to userName),
             String::class.java,
             GsonVariablesSerializer()
         )
+
         Amplify.API.query(
-            query,
-            { response ->
+            request,
+            { response -> println("AmplifyRepo ***** R: ${response.data}") },
+            { error -> println("AmplifyRepo *****  ERROR ${error.message}") }
+        )
 
-                val userResponse = searchResultOf(response)
-
-            },
-            { error -> println("AmplifyRepo ***** FETCH USER DATA TEST ERROR ${error.message}") }
-        )*/
     }
+
+
+
 }
 
 class ResponseException(message: String) : Exception(message)
