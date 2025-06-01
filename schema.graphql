@@ -39,6 +39,11 @@ type UsersConnection {
   nextToken: String
 }
 
+type Query {
+  fetchPendingSentInviteStatus(userName: String!): User
+    @function(name: "fetchPendingSentInviteStatus-${env}")
+}
+
 input CreateUsersInput {
   avatar_uri: String
   contacts: AWSJSON
