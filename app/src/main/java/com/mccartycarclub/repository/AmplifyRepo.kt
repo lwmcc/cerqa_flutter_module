@@ -748,7 +748,7 @@ class AmplifyRepo @Inject constructor(
         // TODO: testing
         val document = """
             query FetchPendingSentInviteStatusQuery(${'$'}userName: String!) {
-                fetchPendingSentInviteStatus(userId: ${'$'}userName)  {
+                fetchPendingSentInviteStatus(userName: ${'$'}userName)  {
                     userName
                 }
             }
