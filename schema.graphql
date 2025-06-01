@@ -13,8 +13,6 @@ type Mutation {
 type Query {
   getUsers(user_id: String!): Users
   listUsers(filter: TableUsersFilterInput, limit: Int, nextToken: String): UsersConnection
-  fetchPendingSentInviteStatus(userName: String!): User
-  @function(name: "fetchPendingSentInviteStatus-${env}")
 }
 
 type Subscription {
