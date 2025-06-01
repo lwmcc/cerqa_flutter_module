@@ -727,15 +727,10 @@ class AmplifyRepo @Inject constructor(
     // TODO: testing will add to interface
     override suspend fun searchUsers(userName: String) {
         val document = """
-                            query FetchInvitesForReceiver(${'$'}userName: String!) {
-                                fetchInvitesForReceiver(userName: ${'$'}userName) {
-                                    id
-                                    userId
-                                    senderId
-                                    receiverId
-                                }
-                            }
-                        """.trimIndent()
+                        query FetchPendingSentInviteStatus(${'$'}userName: String!) {
+                            fetchPendingSentInviteStatus(userName: ${'$'}userName)
+                        }
+                    """.trimIndent()
 
         val request = SimpleGraphQLRequest<FetchPendingSentInviteStatusQuery>(
             document,
