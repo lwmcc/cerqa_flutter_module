@@ -750,6 +750,8 @@ class AmplifyRepo @Inject constructor(
             query FetchPendingSentInviteStatusQuery(${'$'}userName: String!) {
                 fetchPendingSentInviteStatus(userName: ${'$'}userName)  {
                     userName
+                    contacts
+                    invites
                 }
             }
             """.trimIndent()
@@ -757,7 +759,7 @@ class AmplifyRepo @Inject constructor(
         val request = SimpleGraphQLRequest<String>(
             document,
             mapOf("userName" to userName),
-            String::class.java,
+            PendingInviteStatus::class.java,
             GsonVariablesSerializer()
         )
 
@@ -854,5 +856,8 @@ data class ContactList(
     val items: List<Contact>
 )
 
-data class FetchPendingSentInviteStatusResponse(val userName: String)
-data class FetchPendingSentInviteStatusQuery(val fetchPendingSentInviteStatus: FetchPendingSentInviteStatusResponse)
+data class PendingInviteStatus(
+    val userName: String,
+    val contacts: List<UserContact> = emptyList(),
+    val invites: List<Invite> = emptyList()
+)
