@@ -728,7 +728,7 @@ class AmplifyRepo @Inject constructor(
     override suspend fun searchUsers(userName: String) {
 
         val document = """
-                        query fetchPendingSentInviteStatus(${'$'}userName: String!) {
+                       query FetchPendingSentInviteStatusQuery(${'$'}userName: String!) {
                             fetchPendingSentInviteStatus(userName: ${'$'}userName)
                         }
                         """.trimIndent()
@@ -741,7 +741,7 @@ class AmplifyRepo @Inject constructor(
         )
 
         val response = amplifyApi.query(request)
-        println("AmplifyRepo ***** RES ${response.data?.fetchPendingSentInviteStatus?.userName}")
+        println("AmplifyRepo ***** RES ${response}")
 
 /*        val document = """
                 query ListUsersWithInvites(${'$'}userName: String!) {
