@@ -134,8 +134,7 @@ class AmplifyRepo @Inject constructor(
         senderUserId: String?,
         receiverUserId: String,
         rowId: String,
-    ): Boolean {
-
+    ): Flow<NetworkResponse<String>> = flow {
         val invite = Invite
             .builder()
             .senderId(senderUserId)
@@ -145,12 +144,31 @@ class AmplifyRepo @Inject constructor(
                     .justId(rowId)
             )
             .build()
+        coroutineScope {
+            try {
+                val response = amplifyApi.mutate(ModelMutation.create(invite))
+                if (response.hasData()) {
+                    if (response.data.id != null) {
+                        emit(NetworkResponse.Success(response.data.id))
+                    } else {
+                        emit(NetworkResponse.Error(ResponseException(""))) // TODO: add messages
+                    }
+                } else {
+                    emit(NetworkResponse.Error(ResponseException("")))
+                }
+            } catch (ae: AmplifyException) {
+                when (ae.cause) {
+                    is UnknownHostException, is IOException -> {
+                        emit(NetworkResponse.NoInternet)
+                    }
 
-        val response = amplifyApi.mutate(ModelMutation.create(invite))
-        println("AmplifyRepo ***** INVATE ${response.data}")
-
-        return false
-    }
+                    else -> {
+                        emit(NetworkResponse.Error(ae))
+                    }
+                }
+            }
+        }
+    }.flowOn(ioDispatcher)
 
     override fun cancelInviteToConnect(
         senderUserId: String,
@@ -773,6 +791,7 @@ class AmplifyRepo @Inject constructor(
 class ResponseException(message: String) : Exception(message)
 class NoInternetException(message: String) : Exception(message)
 
+// TODO: consolidate all of these
 sealed class NetworkResponse<out T> {
     data object NoInternet : NetworkResponse<Nothing>()
     data class Success<out T>(val data: T?) : NetworkResponse<T>()
@@ -780,7 +799,7 @@ sealed class NetworkResponse<out T> {
 }
 
 open class Contact(
-    val contactId: String, // to id the contact in viewmodel list
+    val contactId: String, // to id the contact in viewmodel list, this is the rowId
     val userId: String,
     val userName: String,
     val name: String,

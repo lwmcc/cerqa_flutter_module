@@ -28,7 +28,7 @@ interface RemoteRepo {
         senderUserId: String?,
         receiverUserId: String,
         rowId: String,
-    ): Boolean
+    ): Flow<NetworkResponse<String>>
 
     fun cancelInviteToConnect(
         senderUserId: String,

@@ -9,6 +9,7 @@ sealed class NetResult<out T> {
 sealed class NetWorkResult<out T> {
     data class Success<out T>(val data: T?) : NetWorkResult<T>()
     data class Error(val exception: Throwable) : NetWorkResult<Nothing>()
+    data object NoInternet : NetWorkResult<Nothing>()
 }
 
 sealed class NetSearchResult<out T> {

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.ChannelModel
 import com.mccartycarclub.domain.model.ContactsSearchResult
+import com.mccartycarclub.domain.model.SentInviteToUser
 import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.websocket.RealTime
@@ -72,6 +73,9 @@ class ContactsViewModel @Inject constructor(
 
     private val _isSendingInvite = MutableStateFlow(false)
     val isSendingInvite = _isSendingInvite.asStateFlow()
+
+    private val _inviteSentSuccess = MutableStateFlow(false)
+    val inviteSentSuccess = _inviteSentSuccess.asStateFlow()
 
     private val _contactsState = MutableStateFlow<UserContacts>(UserContacts.Idle)
     val contactsState = _contactsState.asStateFlow()
@@ -143,7 +147,7 @@ class ContactsViewModel @Inject constructor(
                             }
 
                             is NetSearchResult.Error -> {
-                                println("ContactsViewModel ***** ${data.exception.message}")
+                                println("ContactsViewModel ***** ERROR ${data.exception.message}")
                             }
 
                             is NetSearchResult.Success -> {
@@ -169,7 +173,7 @@ class ContactsViewModel @Inject constructor(
                                             ).firstOrNull()
                                         }
 
-                                        println("ContactsViewModel ***** ${hasPendingInvite.await()}")
+                                        println("ContactsViewModel ***** PENDING ${hasPendingInvite.await()}")
 
                                         val hasExistingInvite = async {
                                             repo.hasExistingInvite(
@@ -246,20 +250,24 @@ class ContactsViewModel @Inject constructor(
                         //realTime.createReceiverInviteSubscription(_userId.value.toString(), channel)
 
 
-                        val inviteSuccess =
-                            repo.sendInviteToConnect(
-                                senderUserId = _userId.value,
-                                receiverUserId = connectionEvent.receiverUserId,
-                                rowId = connectionEvent.rowId,
-                            )
+                        val data = repo.sendInviteToConnect(
+                            senderUserId = _userId.value,
+                            receiverUserId = connectionEvent.receiverUserId,
+                            rowId = connectionEvent.rowId,
+                        ).first()
 
-                        if (inviteSuccess) {
+                        when (data) {
+                            is NetworkResponse.Error -> {
+                                // TODO: log update ui
+                            }
 
-                            // TODO: to replace
-                            //fetchReceivedInvites(_userId.value)
-                            //_contacts.replaceAll { it.contactId == "" }
-                        } else {
-                            println("ContactsViewModel ***** INVITE ERROR")
+                            NetworkResponse.NoInternet -> {
+                                // TODO: update ui
+                            }
+
+                            is NetworkResponse.Success -> {
+                                _inviteSentSuccess.value = true
+                            }
                         }
                     }
                 }
@@ -356,7 +364,7 @@ class ContactsViewModel @Inject constructor(
                         }
 
                         NetDeleteResult.Success -> {
-                            removeContact(connectionEvent.receiverUserId, false)
+                            _contacts.removeAll { it.userId == connectionEvent.receiverUserId }
                         }
                     }
                 }

@@ -24,6 +24,7 @@ object SearchResultBuilder {
 
         val userName = user?.userName ?: ""
         val userId = user?.userId ?: ""
+        val userRowId = user?.id ?: ""
         val avatarUri = user?.avatarUri ?: ""
         val contacts =
             (relatedUserData.contacts as? LoadedModelList<UserContact>)?.items ?: emptyList()
@@ -45,7 +46,7 @@ object SearchResultBuilder {
                     // TODO: sent to user
                     println("SearchResultBuilder ***** SENT AN INVITE")
                     searchUser = SentInviteToUser(
-                        rowId = "",
+                        rowId = userRowId,
                         userId = userId,
                         userName = userName,
                         avatarUri = avatarUri,
@@ -54,7 +55,7 @@ object SearchResultBuilder {
                     // TODO: received from user
                     println("SearchResultBuilder ***** RECEIVED AN INVITE")
                     searchUser = ReceivedInviteFromUser(
-                        rowId = "",
+                        rowId = userRowId,
                         userId = userId,
                         userName = userName,
                         avatarUri = avatarUri,
@@ -70,7 +71,7 @@ object SearchResultBuilder {
                 if (receivedInviteFromSearchedUser) {
                     println("SearchResultBuilder ***** RECEIVED AN INVITE FROM SEARCHED USER")
                     searchUser = ReceivedInviteFromUser(
-                        rowId = "",
+                        rowId = userRowId,
                         userId = userId,
                         userName = userName,
                         avatarUri = avatarUri,
@@ -78,7 +79,7 @@ object SearchResultBuilder {
                 } else {
                     println("SearchResultBuilder ***** REGULAR USER")
                     searchUser = UserSearchResult(
-                        rowId = "",
+                        rowId = userRowId,
                         userId = userId,
                         userName = userName,
                         avatarUri = avatarUri,

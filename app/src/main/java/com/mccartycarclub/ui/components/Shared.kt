@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -86,7 +85,6 @@ import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.navigation.AppNavigationActions
 import com.mccartycarclub.navigation.ClickNavigation
 import com.mccartycarclub.repository.CurrentContact
-import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.SentInviteContactInvite
 import com.mccartycarclub.repository.UiStateResult
@@ -606,6 +604,8 @@ fun Search(
     ) { innerPadding ->
 
         val searchQuery2 = contactsViewModel.searchResults2.collectAsStateWithLifecycle().value
+        val inviteSentSuccess =
+            contactsViewModel.inviteSentSuccess.collectAsStateWithLifecycle().value
         val searchQuery = contactsViewModel.searchResults.collectAsStateWithLifecycle().value
         val hasConnection = contactsViewModel.hasConnection.collectAsStateWithLifecycle().value
         val hasPendingInvite =
@@ -662,9 +662,11 @@ fun Search(
                 is UiStateResult.Error -> {
 
                 }
+
                 UiStateResult.Idle -> {
 
                 }
+
                 UiStateResult.NoInternet -> {
 
                 }
@@ -674,10 +676,11 @@ fun Search(
 
                 is UiStateResult.Success -> {
                     val user2 = (searchQuery2 as? UiStateResult.Success)?.data
-                    val user = (searchQuery as? NetSearchResult.Success)?.data
                     SearchResultUserCard(
                         user = user2,
-/*                        connectionEvent = { event ->
+                        isSendingInvite = isSendingInvite,
+                        inviteSentSuccess = inviteSentSuccess,
+                        connectionEvent = { event ->
                             openAlertDialog = true
                             connectionEvent = event
                             alertDialogData = AlertDialogData(
@@ -688,65 +691,10 @@ fun Search(
                                 dismiss = R.string.dialog_button_dismiss,
                                 confirm = R.string.dialog_button_connect,
                             )
-                        },*/
+                        },
                     )
                 }
             }
-/*
-            if (receiverQueryPending) {
-                AnimatedLoadingSpinner(
-                    density = density,
-                    dataPending = receiverQueryPending,
-                    spinnerSize = R.dimen.card_pending_spinner,
-                    slideIn = (-20).dp,
-                )
-            } else {
-                when (searchQuery2) {
-                    // TODO: make a builder for user and for AlertDialog
-                    is UiStateResult.Success -> {
-                        val user2 = (searchQuery2 as? UiStateResult.Success)?.data
-                        val user = (searchQuery as? NetSearchResult.Success)?.data
-                        UserCard( // TODO: change name maybe SearchCard
-                            user2 = user2,
-                            user = user,
-                            hasConnection = hasConnection,
-                            hasPendingInvite = hasPendingInvite,
-                            isSendingInvite = isSendingInvite,
-                            isCancellingInvite = isCancellingInvite,
-                            connectionEvent = { event ->
-                                openAlertDialog = true
-                                connectionEvent = event
-                                alertDialogData = AlertDialogData(
-                                    icon = R.drawable.sharp_contacts_24,
-                                    title = R.string.dialog_invite_to_connect_title,
-                                    description = R.string.dialog_invite_to_connect_description,
-                                    dialogIconDescription = R.string.dialog_icon_description,
-                                    dismiss = R.string.dialog_button_dismiss,
-                                    confirm = R.string.dialog_button_connect,
-                                )
-                            },
-                        )
-                    }
-
-                    is UiStateResult.Error -> {
-
-                    }
-
-                    is UiStateResult.Idle -> {
-
-                    }
-
-                    UiStateResult.NoInternet -> {
-
-
-                    }
-
-                    UiStateResult.Pending -> {
-
-                    }
-                }
-
-                }*/
         }
     }
 }
@@ -864,7 +812,7 @@ fun UserCard(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
 
-            Row(modifier = Modifier.fillMaxWidth()) {
+/*            Row(modifier = Modifier.fillMaxWidth()) {
                 AsyncImage(
                     model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
                     // TODO: add an image user.avatarUri
@@ -888,9 +836,9 @@ fun UserCard(
                     Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.spacer_height)))
                     user?.name?.let { Text(it) }
                 }
-            }
+            }*/
 
-/*            if (hasConnection) {
+            if (hasConnection) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(2.dp),
@@ -941,9 +889,7 @@ fun UserCard(
                         Text(stringResource(id = R.string.connect_to_user))
                     }
                 }
-            }*/
-
-
+            }
         }
     }
 }
@@ -951,6 +897,9 @@ fun UserCard(
 @Composable
 fun SearchResultUserCard(
     user: UserSearchResult?,
+    isSendingInvite: Boolean,
+    inviteSentSuccess: Boolean,
+    connectionEvent: (ContactCardEvent) -> Unit,
 ) {
 
     Card(
@@ -991,6 +940,7 @@ fun SearchResultUserCard(
                         )
                         .weight(1f)
                 ) {
+                    user?.userName?.let { Text(it) }
                     when (user) {
                         is SentInviteToUser -> {
                             Column {
@@ -1019,13 +969,25 @@ fun SearchResultUserCard(
                         }
 
                         else -> { // is UserSearchResult which needs to be last
-                            Column {
-                                user?.userName?.let { Text(it) }
-                                Text("Connect")
-                                Button(
-                                    onClick = { /*TODO*/ },
+                            if (!isSendingInvite) {
+                                OutlinedButton(
+                                    onClick = {
+                                        user?.let { user ->
+                                            connectionEvent(
+                                                ContactCardEvent.InviteConnectEvent(
+                                                    user.userId,
+                                                    user.rowId
+                                                )
+                                            )
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(4.dp),
                                 ) {
-                                    Text("Connect")
+                                    Text(stringResource(id = R.string.connect_to_user))
+                                }
+                            } else {
+                                if (inviteSentSuccess) {
+                                    Text("Invite Sent")
                                 }
                             }
                         }
