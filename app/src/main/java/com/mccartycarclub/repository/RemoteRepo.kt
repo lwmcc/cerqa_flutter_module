@@ -2,6 +2,7 @@ package com.mccartycarclub.repository
 
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.model.ContactsSearchResult
+import com.mccartycarclub.domain.model.UserSearchResult
 import io.ably.lib.rest.Auth.TokenRequest
 import kotlinx.coroutines.flow.Flow
 
@@ -55,5 +56,8 @@ interface RemoteRepo {
 
     fun fetchAblyToken(userId: String): Flow<TokenRequest>
 
-    suspend fun searchUsers(userName: String)
+    suspend fun searchUsers(
+        loggedInUserId: String?,
+        userName: String
+    ): Flow<NetworkResponse<UserSearchResult>>
 }

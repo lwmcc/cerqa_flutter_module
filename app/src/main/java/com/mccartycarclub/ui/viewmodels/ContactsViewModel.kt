@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.ChannelModel
 import com.mccartycarclub.domain.model.ContactsSearchResult
+import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.repository.Contact
@@ -15,6 +16,8 @@ import com.mccartycarclub.repository.NetDeleteResult
 import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
+import com.mccartycarclub.repository.ResponseException
+import com.mccartycarclub.repository.UiStateResult
 import com.mccartycarclub.repository.UserMapper
 import com.mccartycarclub.repository.realtime.RealtimePublishRepo
 import com.mccartycarclub.ui.components.ContactCardEvent
@@ -86,6 +89,37 @@ class ContactsViewModel @Inject constructor(
     private val loggedInUserId: String?
         get() = _loggedInUserId
 
+    private val _query2 = MutableStateFlow<String?>(null)
+    val searchResults2: StateFlow<UiStateResult<UserSearchResult>> = _query2
+        .debounce(SEARCH_DELAY.milliseconds)
+        .filter { !it.isNullOrBlank() }
+        .distinctUntilChanged()
+        .flatMapLatest { userName ->
+            flow {
+                repo.searchUsers(_userId.value, userName!!)
+                    .collect { response ->
+                        when (response) {
+                            is NetworkResponse.Success -> {
+                                emit(UiStateResult.Success(response.data))
+                            }
+
+                            is NetworkResponse.Error -> {
+                                emit(UiStateResult.Error(ResponseException("")))
+                            }
+
+                            NetworkResponse.NoInternet -> {
+                                emit(UiStateResult.NoInternet)
+                            }
+                        }
+                    }
+            }
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            UiStateResult.Idle
+        )
+
     private val _query = MutableStateFlow<String?>(null)
     val searchResults: StateFlow<NetSearchResult<User?>> = _query
         .debounce(SEARCH_DELAY.milliseconds)
@@ -96,7 +130,7 @@ class ContactsViewModel @Inject constructor(
                 callbackFlow {
 
                     // TODO: call db test
-                    repo.searchUsers(name)
+                   // repo.searchUsers(_userId.value, name)
 
                     repo.fetchUserByUserName(name).collect { data ->
                         when (data) {
@@ -153,6 +187,10 @@ class ContactsViewModel @Inject constructor(
                                     }
                                 }
                             }
+
+                            NetSearchResult.NoInternet -> {
+
+                            }
                         }
                     }
                     awaitClose {
@@ -175,8 +213,8 @@ class ContactsViewModel @Inject constructor(
     }
 
     fun onQueryChange(searchQuery: String) {
-        println("ContactsViewModel ***** ${searchQuery}")
         _query.value = searchQuery
+        _query2.value = searchQuery
     }
 
     fun inviteContact(userId: String, rowId: (String) -> Unit) {

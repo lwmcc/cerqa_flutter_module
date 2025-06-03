@@ -1,31 +1,29 @@
 package com.mccartycarclub.domain.model
 
-sealed class UserSearchResult() {
-    abstract val userId: String
-    abstract val userName: String
-    abstract val avatarUri: String
+open class UserSearchResult(
+    open val rowId: String,
+    open val userId: String,
+    open val userName: String,
+    open val avatarUri: String
+)
 
-    data class User(
-        override val userId: String,
-        override val userName: String,
-        override val avatarUri: String
-    ) : UserSearchResult()
+data class SentInviteToUser(
+    override val rowId: String,
+    override val userId: String,
+    override val userName: String,
+    override val avatarUri: String
+) : UserSearchResult(rowId, userId, userName, avatarUri)
 
-    data class SentUser(
-        override val userId: String,
-        override val userName: String,
-        override val avatarUri: String
-    ) : UserSearchResult()
+data class ReceivedInviteFromUser(
+    override val rowId: String,
+    override val userId: String,
+    override val userName: String,
+    override val avatarUri: String
+) : UserSearchResult(rowId, userId, userName, avatarUri)
 
-    data class ReceivedUser(
-        override val userId: String,
-        override val userName: String,
-        override val avatarUri: String
-    ) : UserSearchResult()
-
-    data class ConnectedSearch(
-        override val userId: String,
-        override val userName: String,
-        override val avatarUri: String
-    ) : UserSearchResult()
-}
+data class ConnectedSearch(
+    override val rowId: String,
+    override val userId: String,
+    override val userName: String,
+    override val avatarUri: String
+) : UserSearchResult(rowId, userId, userName, avatarUri)

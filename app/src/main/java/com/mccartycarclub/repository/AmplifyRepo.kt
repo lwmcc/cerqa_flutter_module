@@ -3,7 +3,6 @@ package com.mccartycarclub.repository
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.aws.GsonVariablesSerializer
-import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
@@ -17,7 +16,6 @@ import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelReference
 import com.amplifyframework.core.model.includes
-import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation
@@ -27,8 +25,7 @@ import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.datastore.generated.model.UserPath
 import com.amplifyframework.kotlin.api.KotlinApiFacade
-import com.google.gson.Gson
-import com.mccartycarclub.domain.model.ContactsSearchResult
+import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.domain.usecases.user.SearchResultBuilder.searchResultOf
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
@@ -44,10 +41,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import org.json.JSONObject
 import java.io.IOException
 import java.net.UnknownHostException
-import java.sql.RowId
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Named
@@ -446,7 +441,7 @@ class AmplifyRepo @Inject constructor(
             }*/
             invites
         } catch (e: ApiException) {
-            if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
+            if (e.cause is IOException || e.cause is UnknownHostException) {
                 throw NoInternetException("No Internet") // TODO: move to constant
             } else {
                 throw ResponseException("A response error occurred")// TODO: move to constant
@@ -724,55 +719,55 @@ class AmplifyRepo @Inject constructor(
         awaitClose { /* no-op */ }
     }.flowOn(ioDispatcher)
 
-    // TODO: testing will add to interface
-    override suspend fun searchUsers(userName: String) {
-        val userList = amplifyApi.query(
-            ModelQuery.list(User::class.java, User.USER_NAME.eq(userName))
-        ).data.items.firstOrNull()
+    override suspend fun searchUsers(
+        loggedInUserId: String?,
+        userName: String,
+    ): Flow<NetworkResponse<UserSearchResult>> = flow {
+        coroutineScope {
+            try {
+                val user = amplifyApi.query(
+                    ModelQuery.list(User::class.java, User.USER_NAME.eq(userName))
+                ).data.items.firstOrNull()
 
-        val userId = userList?.id
+                if (!loggedInUserId.isNullOrEmpty() && !user?.userId.isNullOrEmpty()) {
+                    val relatedUserData = amplifyApi.query(
+                        ModelQuery.get<User, UserPath>(
+                            User::class.java,
+                            User.UserIdentifier(user?.id)
+                        ) { includes(it.contacts, it.invites) }
+                    ).data
 
-        val fullUser = amplifyApi.query(
-            ModelQuery.get<User, UserPath>(
-                User::class.java,
-                User.UserIdentifier(userId)
-            ) { includes(it.contacts, it.invites) }
-        ).data
+                    val predicate =
+                        contactsQueryBuilder.buildInviteQueryPredicate(
+                            user?.userId!!,
+                            loggedInUserId
+                        )
+                    val response = amplifyApi.query(ModelQuery.list(Invite::class.java, predicate))
 
-        val contacts = (fullUser.contacts as? LoadedModelList<UserContact>)?.items
-        val invites = (fullUser.invites as? LoadedModelList<Invite>)?.items
+                    emit(
+                        NetworkResponse.Success(
+                            searchResultOf(
+                                loggedInUserId,
+                                user,
+                                relatedUserData,
+                                response,
+                            )
+                        )
+                    )
+                }
+            } catch (ae: AmplifyException) {
+                when (ae.cause) {
+                    is UnknownHostException, is IOException -> {
+                        emit(NetworkResponse.NoInternet)
+                    }
 
-        println("AmplifyRepo ***** CON $contacts")
-        println("AmplifyRepo ***** INV $invites")
-
-        // TODO: testing
-        val document = """
-            query FetchPendingSentInviteStatusQuery(${'$'}userName: String!) {
-                fetchPendingSentInviteStatus(userName: ${'$'}userName)  {
-                    userName
-                    contacts
-                    invites
+                    else -> {
+                        emit(NetworkResponse.Error(ae))
+                    }
                 }
             }
-            """.trimIndent()
-
-        val request = SimpleGraphQLRequest<String>(
-            document,
-            mapOf("userName" to userName),
-            PendingInviteStatus::class.java,
-            GsonVariablesSerializer()
-        )
-
-        Amplify.API.query(
-            request,
-            { response -> println("AmplifyRepo ***** R: ${response.data}") },
-            { error -> println("AmplifyRepo *****  ERROR ${error.message}") }
-        )
-
-    }
-
-
-
+        }
+    }.flowOn(ioDispatcher)
 }
 
 class ResponseException(message: String) : Exception(message)
