@@ -76,7 +76,6 @@ class ContactsViewModel @Inject constructor(
 
     private val _contactsState = MutableStateFlow<UserContacts>(UserContacts.Idle)
     val contactsState = _contactsState.asStateFlow()
-
     private val _contacts = mutableStateListOf<Contact>()
     val contacts: SnapshotStateList<Contact> get() = _contacts
 
@@ -273,8 +272,10 @@ class ContactsViewModel @Inject constructor(
                         }
 
                         NetDeleteResult.Success -> {
-                            _contactsState.value = UserContacts.Success
-                            _contacts.removeAll { it.userId == connectionEvent.userId }
+                            resetContactsList(
+                                userId = connectionEvent.userId,
+                                contactsState = UserContacts.Success,
+                            )
                         }
                     }
                 }
@@ -347,12 +348,10 @@ class ContactsViewModel @Inject constructor(
                         }
 
                         NetDeleteResult.Success -> {
-                            _contacts.removeAll { it.userId == connectionEvent.receiverUserId }
-                           /* _contacts.toList().forEach {
-                                println("ContactsViewModel ***** CID ${it.contactId}")
-                                println("ContactsViewModel ***** UID ${it.userId}")
-                            }
-                            println("ContactsViewModel ***** DELETE REQUEST ${_contacts} ID  ${connectionEvent.receiverUserId}")*/
+                            resetContactsList(
+                                userId = connectionEvent.receiverUserId,
+                                contactsState = UserContacts.Success,
+                            )
                         }
                     }
                 }
@@ -391,13 +390,14 @@ class ContactsViewModel @Inject constructor(
         }
     }
 
-    fun isDataPending(dataPending: Boolean) {
-        _dataPending.value = dataPending
-    }
-
     private fun removeContact(id: String, pending: Boolean) {
         _dataPending.value = pending
         _contacts.removeAll { it.contactId == id }
+    }
+
+    private fun resetContactsList(userId: String, contactsState: UserContacts) {
+        _contactsState.value = contactsState
+        _contacts.removeAll { it.userId ==userId }
     }
 
     companion object {
