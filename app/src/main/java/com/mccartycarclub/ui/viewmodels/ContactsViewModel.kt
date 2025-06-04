@@ -283,15 +283,15 @@ class ContactsViewModel @Inject constructor(
                         )
                             .first()) {
                         is NetDeleteResult.Error -> {
-
+                            // TODO: handle this
                         }
 
                         NetDeleteResult.NoInternet -> {
-
+                            // TODO: handle this
                         }
 
                         NetDeleteResult.Success -> {
-                            removeContact(connectionEvent.userId, false)
+                            _contacts.removeAll { it.userId == connectionEvent.userId }
                         }
                     }
                 }

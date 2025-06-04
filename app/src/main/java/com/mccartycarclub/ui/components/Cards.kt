@@ -212,7 +212,7 @@ fun ReceivedInviteContactCard(
             horizontalArrangement = Arrangement.Center,
         ) {
             CardListButton(primaryButtonText, onClick = {
-                onDismissClick(ContactCardEvent.DeleteReceivedInvite(contact.contactId))
+                onDismissClick(ContactCardEvent.DeleteReceivedInvite(contact.userId))
             })
 
             CardListButton(secondaryButtonText, onClick = {

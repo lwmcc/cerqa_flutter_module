@@ -670,6 +670,7 @@ fun Search(
                 UiStateResult.NoInternet -> {
 
                 }
+
                 UiStateResult.Pending -> {
 
                 }
@@ -811,32 +812,6 @@ fun UserCard(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-
-/*            Row(modifier = Modifier.fillMaxWidth()) {
-                AsyncImage(
-                    model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
-                    // TODO: add an image user.avatarUri
-                    contentDescription = stringResource(id = R.string.user_avatar),
-                    modifier = Modifier
-                        .width(60.dp)
-                        .padding(
-                            dimensionResource(id = R.dimen.card_padding_start),
-                            dimensionResource(id = R.dimen.card_padding_top),
-                        )
-                )
-                Column(
-                    modifier = Modifier
-                        .padding(
-                            dimensionResource(id = R.dimen.card_padding_start),
-                            dimensionResource(id = R.dimen.card_padding_top),
-                        )
-                        .weight(1f)
-                ) {
-                    user?.firstName?.let { Text(it) }
-                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.spacer_height)))
-                    user?.name?.let { Text(it) }
-                }
-            }*/
 
             if (hasConnection) {
                 Row(
