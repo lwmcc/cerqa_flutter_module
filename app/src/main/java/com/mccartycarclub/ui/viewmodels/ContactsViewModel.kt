@@ -6,11 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.domain.ChannelModel
-import com.mccartycarclub.domain.model.ContactsSearchResult
-import com.mccartycarclub.domain.model.SentInviteToUser
 import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.domain.usecases.user.GetContacts
-import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.LocalRepo
 import com.mccartycarclub.repository.NetDeleteResult
@@ -20,11 +17,9 @@ import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.ResponseException
 import com.mccartycarclub.repository.UiStateResult
 import com.mccartycarclub.repository.UserMapper
-import com.mccartycarclub.repository.realtime.RealtimePublishRepo
 import com.mccartycarclub.ui.components.ContactCardEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,14 +44,13 @@ class ContactsViewModel @Inject constructor(
     private val userContacts: GetContacts,
     private val repo: RemoteRepo,
     private val localRepo: LocalRepo,
-    private val realtimePublishRepo: RealtimePublishRepo,
 ) : ViewModel() {
 
     sealed class UserContacts {
         data object Idle : UserContacts()
         data class Error(val message: String) : UserContacts()
         data object NoInternet : UserContacts()
-        data class Success(val data: List<Contact>) : UserContacts()
+        data object Success : UserContacts()
     }
 
     private val _receiverQueryPending = MutableStateFlow(false)
@@ -77,11 +71,11 @@ class ContactsViewModel @Inject constructor(
     private val _inviteSentSuccess = MutableStateFlow(false)
     val inviteSentSuccess = _inviteSentSuccess.asStateFlow()
 
-    private val _contactsState = MutableStateFlow<UserContacts>(UserContacts.Idle)
-    val contactsState = _contactsState.asStateFlow()
-
     private val _dataPending = MutableStateFlow(true)
     val dataPending = _dataPending.asStateFlow()
+
+    private val _contactsState = MutableStateFlow<UserContacts>(UserContacts.Idle)
+    val contactsState = _contactsState.asStateFlow()
 
     private val _contacts = mutableStateListOf<Contact>()
     val contacts: SnapshotStateList<Contact> get() = _contacts
@@ -221,18 +215,6 @@ class ContactsViewModel @Inject constructor(
         _query2.value = searchQuery
     }
 
-    fun inviteContact(userId: String, rowId: (String) -> Unit) {
-        userContacts.addNewContact(userId, rowId = {
-            it?.let {
-                rowId(it)
-            }
-        })
-    }
-
-    fun acceptContactInvite() {
-        userContacts.acceptContactInvite()
-    }
-
     // TODO: use id instead of listIndex
     fun userConnectionEvent(listIndex: Int = 0, connectionEvent: ContactCardEvent) {
         _dataPending.value = true
@@ -291,6 +273,7 @@ class ContactsViewModel @Inject constructor(
                         }
 
                         NetDeleteResult.Success -> {
+                            _contactsState.value = UserContacts.Success
                             _contacts.removeAll { it.userId == connectionEvent.userId }
                         }
                     }
@@ -352,7 +335,7 @@ class ContactsViewModel @Inject constructor(
                         connectionEvent.receiverUserId,
                     ).first()
 
-                    when (resetButton) {
+                    when (resetButton) { // TODO: change the name of this
                         is NetDeleteResult.Error -> {
                             // TODO: show error message
                             //resetButtonToDeleteInvite(false)
@@ -365,6 +348,11 @@ class ContactsViewModel @Inject constructor(
 
                         NetDeleteResult.Success -> {
                             _contacts.removeAll { it.userId == connectionEvent.receiverUserId }
+                           /* _contacts.toList().forEach {
+                                println("ContactsViewModel ***** CID ${it.contactId}")
+                                println("ContactsViewModel ***** UID ${it.userId}")
+                            }
+                            println("ContactsViewModel ***** DELETE REQUEST ${_contacts} ID  ${connectionEvent.receiverUserId}")*/
                         }
                     }
                 }
@@ -391,30 +379,16 @@ class ContactsViewModel @Inject constructor(
 
                     is NetworkResponse.Success -> {
                         if (data.data != null) {
-                            // TODO: don't need to pass data to Succes have it in _contacts
-                            _contactsState.value = UserContacts.Success(data.data)
-
+                            _contactsState.value = UserContacts.Success
                             _contacts.clear()
                             _contacts.addAll(data.data)
+
                         }
                     }
                 }
             }
             _dataPending.value = false
         }
-    }
-
-    suspend fun usersHaveExistingConnection(
-        senderUserId: String,
-        receiverUserId: String,
-    ) {
-        repo.contactExists(senderUserId, receiverUserId).collect { hasConnection ->
-            hasConnection
-        }
-    }
-
-    fun setLoggedInUserId(loggedInUserId: String) {
-        _loggedInUserId = loggedInUserId
     }
 
     fun isDataPending(dataPending: Boolean) {
@@ -424,33 +398,6 @@ class ContactsViewModel @Inject constructor(
     private fun removeContact(id: String, pending: Boolean) {
         _dataPending.value = pending
         _contacts.removeAll { it.contactId == id }
-    }
-
-    private fun resetButtonsToPendingOnSuccess(success: Boolean) {
-        if (success) {
-            _receiverQueryPending.value = false
-            _hasConnection.value = false
-            _hasPendingInvite.value = true
-
-            // Re-enable cancel invite button
-            _isCancellingInvite.value = false
-            fetchReceivedInvites(_loggedInUserId!!)
-        } else {
-            _isSendingInvite.value = false
-        }
-    }
-
-    private fun resetButtonToConnect(success: Boolean) {
-        if (success) {
-            _receiverQueryPending.value = false
-            _hasConnection.value = false
-            _hasPendingInvite.value = false
-
-            // Re-enable Invite button
-            _isSendingInvite.value = false
-        } else {
-            _isCancellingInvite.value = false
-        }
     }
 
     companion object {

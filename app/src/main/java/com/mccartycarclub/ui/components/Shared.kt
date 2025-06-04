@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -398,10 +397,10 @@ fun Contacts(
     topBarClick: (ClickNavigation) -> Unit,
 ) {
 
-    val contacts by contactsViewModel.contactsState.collectAsStateWithLifecycle()
+    val allContacts = contactsViewModel.contacts
+    val contactsState by contactsViewModel.contactsState.collectAsStateWithLifecycle()
     val dataPending by contactsViewModel.dataPending.collectAsStateWithLifecycle()
     val userId by contactsViewModel.userId.collectAsStateWithLifecycle()
-    val allContacts = contactsViewModel.contacts
     var openAlertDialog by remember { mutableStateOf(false) }
     var selectedUserId by remember { mutableStateOf<String?>(null) }
     var selectedContactId by remember { mutableStateOf<String?>(null) }
@@ -453,7 +452,7 @@ fun Contacts(
                 slideIn = (-20).dp,
             )
 
-            when (contacts) {
+            when (contactsState) {
                 is ContactsViewModel.UserContacts.NoInternet -> {
                     println("Shared ***** NO INTERNET")
                 }
@@ -719,21 +718,6 @@ fun Notifications(topBarClick: (ClickNavigation) -> Unit) {
         ) {
             Text(text = "Notifications")
         }
-    }
-}
-
-@Composable
-fun Pending() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        CircularProgressIndicator(
-            modifier = Modifier.width(64.dp),
-            color = MaterialTheme.colorScheme.secondary,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
-        )
     }
 }
 
