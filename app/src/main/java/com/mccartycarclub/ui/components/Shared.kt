@@ -9,10 +9,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,6 +54,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
@@ -215,13 +218,10 @@ fun AppAuthenticator(
                                 val userId =
                                     attributes.firstOrNull { it.key.keyString == "sub" }?.value
 
-                                // TODO: testing
-                               // mainViewModel.setLocalUserId(userId!!)
-
                                 Amplify.API.mutate(
                                     ModelMutation.create(testUser1(userId!!)),
                                     { response -> // TODO: response?
-                                    // This is were userId is added to prefs
+                                        // This is were userId is added to prefs
                                         mainViewModel.setLocalUserId(userId)
                                     },
                                     { error ->
@@ -275,7 +275,10 @@ fun TopBar(
 ) {
     TopAppBar(
         title = {
-            Text(text = appBarTitle)
+            Text(
+                text = appBarTitle,
+                style = MaterialTheme.typography.titleLarge,
+            )
         },
         actions = {
             IconButton(
@@ -325,7 +328,10 @@ fun TopBarContacts(
 ) {
     TopAppBar(
         title = {
-            Text(text = appBarTitle)
+            Text(
+                text = appBarTitle,
+                style = MaterialTheme.typography.titleLarge,
+            )
         },
         actions = {
             IconButton(
@@ -358,7 +364,10 @@ fun TopBarGroups(
 ) {
     TopAppBar(
         title = {
-            Text(text = appBarTitle)
+            Text(
+                text = appBarTitle,
+                style = MaterialTheme.typography.titleLarge,
+            )
         },
 
         navigationIcon = {
@@ -380,7 +389,10 @@ fun TopBarSearch(
 ) {
     TopAppBar(
         title = {
-            Text(text = appBarTitle)
+            Text(
+                text = appBarTitle,
+                style = MaterialTheme.typography.titleLarge,
+            )
         },
 
         navigationIcon = {
@@ -640,7 +652,11 @@ fun Search(
                 .fillMaxWidth()
                 .padding(innerPadding),
         ) {
-            Box {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background),
+            ) {
                 TextField(
                     value = input,
                     maxLines = 2,
@@ -649,10 +665,16 @@ fun Search(
                         contactsViewModel.onQueryChange(it)
                         clearSearchVisible = input.isNotEmpty()
                     },
-                    label = { Text(stringResource(id = R.string.user_search)) },
+                    label = {
+                        Text(
+                            text = stringResource(id = R.string.user_search),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
                 )
 
                 if (clearSearchVisible) {
@@ -881,7 +903,10 @@ fun SearchResultUserCard(
     ) {
 
         if (user != null) {
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 AsyncImage(
                     model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
                     // TODO: add an image user.avatarUri
@@ -901,12 +926,23 @@ fun SearchResultUserCard(
                         )
                         .weight(1f)
                 ) {
-                    user.userName.let { Text(it) }
+                    Text(
+                        text = user.userName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
                     when (user) {
                         is SentInviteToUser -> {
                             Column {
-                                Text(user.userName)
-                                Text("Sent Invite to User")
+                                Text(
+                                    text = stringResource(id = R.string.connect_invite_sent),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer, // TODO: add date
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(MaterialTheme.colorScheme.primaryContainer)
+                                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                                )
                             }
                         }
 
@@ -924,8 +960,16 @@ fun SearchResultUserCard(
 
                         is ConnectedSearch -> {
                             Column {
-                                Text(user.userName)
-                                Text("Connection")
+                                Text(
+                                    user.userName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Text(
+                                    "Connection",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
                             }
                         }
 
@@ -934,7 +978,7 @@ fun SearchResultUserCard(
 
                                 OutlinedButton(
                                     onClick = {
-                                        user?.let { user ->
+                                        user?.let { user -> // TODO: let?????
                                             connectionEvent(
                                                 ContactCardEvent.InviteConnectEvent(
                                                     user.userId,
@@ -944,14 +988,21 @@ fun SearchResultUserCard(
                                         }
                                     },
                                     shape = RoundedCornerShape(4.dp),
+                                    contentPadding = PaddingValues(4.dp, 2.dp)
                                 ) {
-                                    Text(stringResource(id = R.string.connect_to_user))
+                                    Text(
+                                        stringResource(id = R.string.connect_to_user),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
                                 }
-
-
                             } else {
                                 if (inviteSentSuccess) {
-                                    Text("Invite Sent")
+                                    Text(
+                                        text = stringResource(id = R.string.connect_invite_sent),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
                                 }
                             }
                         }
@@ -965,7 +1016,11 @@ fun SearchResultUserCard(
 @Composable
 fun NoDataFound(message: String) {
     Column(modifier = Modifier.padding(dimensionResource(id = R.dimen.card_padding))) {
-        Text(text = message)
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
 

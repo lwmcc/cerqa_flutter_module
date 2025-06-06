@@ -1,18 +1,21 @@
 package com.mccartycarclub.ui.components
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -143,20 +146,26 @@ fun SentContactCard(
             )
 
             Column {
-                Text(text = contact.userName)
-                Text(text = contact.createdAt?.toDate().toString()) // TODO: fix this
-            }
-        }
+                Text(
+                    text = contact.userName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    // TODO: fix this format data add text also
+                    text = contact.createdAt?.toDate().toString(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer, // TODO: format and add text
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                    )
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(5.dp),
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            CardListButton(primaryButtonText, onClick = {
-                onClick(ContactCardEvent.CancelSentInvite(contact.userId))
-            })
+                CardListButton(primaryButtonText, onClick = {
+                    onClick(ContactCardEvent.CancelSentInvite(contact.userId))
+                })
+            }
         }
     }
 }
@@ -189,8 +198,20 @@ fun ReceivedInviteContactCard(
             )
 
             Column {
-                Text(text = contact.userName)
-                Text(text = contact.createdAt?.toDate().toString()) // TODO: fix this
+                Text(
+                    text = contact.userName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = contact.createdAt?.toDate().toString(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                )
             }
         }
 
@@ -198,7 +219,6 @@ fun ReceivedInviteContactCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(5.dp),
-            horizontalArrangement = Arrangement.Center,
         ) {
             CardListButton(primaryButtonText, onClick = {
                 onDismissClick(ContactCardEvent.DeleteReceivedInvite(contact.userId))
@@ -254,8 +274,8 @@ fun CardListButton(
             onClick()
         },
         shape = RoundedCornerShape(4.dp),
-        modifier = Modifier
-            .padding(start = 8.dp)
+        contentPadding = PaddingValues(4.dp, 2.dp),
+        modifier = Modifier.padding(end = 8.dp)
     ) {
         Text(text)
     }

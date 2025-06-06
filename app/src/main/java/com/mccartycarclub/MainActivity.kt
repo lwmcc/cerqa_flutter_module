@@ -11,16 +11,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.Surface
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.mccartycarclub.data.websocket.AblyPushMessagingService
-import com.mccartycarclub.data.websocket.AblyService
-import com.mccartycarclub.domain.ChannelModel
-import com.mccartycarclub.domain.websocket.RealtimeService
 import com.mccartycarclub.ui.components.StartScreen
+import com.mccartycarclub.ui.theme.AppTheme
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -37,24 +35,29 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            StartScreen( // TODO: use a main compose screen change this
-                acceptInvite = { // TODO: rename
-                    mainViewModel.acceptContactInvite()
-                },
-                inviteContact = { userId ->
-                    mainViewModel.inviteContact(
-                        rowId = { rowId ->
-                            // TODO: for testing
-                            sendConnectInvite(
-                                "Link Test, https://carclub.app",
-                                "+15551234567",
-                                rowId,
-                            )
+            AppTheme {
+
+                Surface(tonalElevation = 5.dp) {
+                    StartScreen( // TODO: use a main compose screen change this
+                        acceptInvite = {
+                            mainViewModel.acceptContactInvite()
                         },
-                        userId = userId,
+                        inviteContact = { userId ->
+                            mainViewModel.inviteContact(
+                                rowId = { rowId ->
+                                    // TODO: for testing
+                                    sendConnectInvite(
+                                        "Link Test, https://carclub.app",
+                                        "+15551234567",
+                                        rowId,
+                                    )
+                                },
+                                userId = userId,
+                            )
+                        }
                     )
                 }
-            )
+            }
         }
         checkPermissions()
         registerReceiver()
