@@ -50,7 +50,7 @@ interface RemoteRepo {
 
     suspend fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>>
 
-    fun createContact(senderUserId: String, receiverUserId: String): Flow<NetDeleteResult>
+    fun createContact(senderUserId: String, loggedInUserId: String): Flow<NetDeleteResult>
 
     suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>>
 

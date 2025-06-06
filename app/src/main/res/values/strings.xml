@@ -34,4 +34,7 @@
     <string name="dialog_remove_invite_to_connect_description">Remove the invitation to connect</string>
     <string name="dialog_accept_invite_to_connect_description">Accept the invitation to connect</string>
     <string name="dialog_icon_description">Icon for invite user to connect dialog</string>
+
+    <!-- TextField -->
+    <string name="text_field_clear">Clear text input</string>
 </resources>

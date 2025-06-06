@@ -7,6 +7,7 @@ interface QueryBuilder {
     fun buildSenderQueryPredicate(invites: List<Invite>): QueryPredicate?
     fun buildReceiverQueryPredicate(invites: List<Invite>): QueryPredicate?
 
+    // TODO: change name of this function
     fun buildInviteQueryPredicate(senderUserId: String, receiverUserId: String) =
         Invite.SENDER_ID.eq(senderUserId)
             .and(Invite.RECEIVER_ID.eq(receiverUserId))

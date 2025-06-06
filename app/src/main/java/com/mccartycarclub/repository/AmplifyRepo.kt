@@ -141,7 +141,7 @@ class AmplifyRepo @Inject constructor(
             .receiverId(receiverUserId)
             .user(
                 User
-                    .justId(rowId)
+                    .justId(rowId) // TODO: do not use justId, change this
             )
             .build()
         coroutineScope {
@@ -299,51 +299,68 @@ class AmplifyRepo @Inject constructor(
             emit(fetchInvites(receiverResponse, ReceivedContactInvite::class))
         }.flowOn(ioDispatcher)
 
-    // TODO: change and use flowOn this needs to be refactored
+    // TODO: consider refactoring to make it easier to understand
     override fun createContact(
         senderUserId: String,
-        receiverUserId: String
+        loggedInUserId: String
     ): Flow<NetDeleteResult> =
         flow {
             coroutineScope {
                 try {
-                    val predicate = contactsQueryBuilder.buildInviteQueryPredicate(
-                        senderUserId = senderUserId,
-                        receiverUserId = receiverUserId,
-                    )
 
-                    val invites = amplifyApi.query(
+                    val sendingUser = amplifyApi.query(
                         ModelQuery.list(
-                            Invite::class.java,
-                            predicate,
+                            User::class.java,
+                            User.USER_ID.eq(senderUserId)
                         )
-                    )
+                    ).data.firstOrNull()
 
-                    if (invites.data.items.firstOrNull() != null) {
-                        val sender =
-                            User.justId(senderUserId)
-                        val receiver = User.justId(receiverUserId)
+                    val receivingUser = amplifyApi.query(
+                        ModelQuery.list(
+                            User::class.java,
+                            User.USER_ID.eq(loggedInUserId)
+                        )
+                    ).data.firstOrNull()
 
-                        val senderContact =
-                            UserContact.builder()
-                                .user(sender)
-                                .contact(receiver)
-                                .build()
-                        amplifyApi.mutate(ModelMutation.create(senderContact))
+                    val senderUser = UserContact.builder()
+                        .user(sendingUser)
+                        .contact(receivingUser)
+                        .build()
 
-                        val receiverContact =
-                            UserContact.builder()
-                                .user(receiver)
-                                .contact(sender)
-                                .build()
-                        amplifyApi.mutate(ModelMutation.create(receiverContact))
+                    val receiverUser = UserContact.builder()
+                        .user(receivingUser)
+                        .contact(sendingUser)
+                        .build()
 
-                        deleteInvite(invites.data.items.first())
+                    val senderContact = amplifyApi.mutate(ModelMutation.create(senderUser))
+
+                    if (senderContact.hasData() && senderContact.data.id != null) {
+                        val receiverContact = amplifyApi.mutate(ModelMutation.create(receiverUser))
+                        if (receiverContact.hasData() && receiverContact.data.id != null) {
+
+                            val invites = amplifyApi.query(
+                                ModelQuery.list(
+                                    Invite::class.java,
+                                    contactsQueryBuilder.buildInviteQueryPredicate(
+                                        senderUserId = senderUserId,
+                                        receiverUserId = loggedInUserId,
+                                    ),
+                                )
+                            )
+
+                            if (invites.data.items.firstOrNull() != null) {
+                                deleteInvite(invites.data.items.first())
+                            } else {
+                                throw ResponseException("An error occurred") // TODO: move message to constant
+                            }
+
+                            emit(NetDeleteResult.Success)
+                        } else {
+                            throw ResponseException("An error occurred") // TODO: move message to constant
+                        }
                     } else {
                         throw ResponseException("An error occurred") // TODO: move message to constant
                     }
-
-                    emit(NetDeleteResult.Success)
                 } catch (e: ApiException) {
                     if (e.cause is IOException || e.cause is UnknownHostException) {
                         emit(NetDeleteResult.NoInternet)
@@ -356,6 +373,7 @@ class AmplifyRepo @Inject constructor(
             }
         }.flowOn(ioDispatcher)
 
+    // TODO: refactor method too long
     override suspend fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>> =
         flow {
             coroutineScope {
@@ -395,12 +413,62 @@ class AmplifyRepo @Inject constructor(
                     }
 
                     val contacts = async {
-                        val contactsResponse = fetchContacts(UserContact.CONTACT.eq(loggedInUserId))
-                        createContacts(contactsResponse)
+
+                        // TODO: refactor to helper function
+                        val rowId = amplifyApi.query(
+                            ModelQuery.list(
+                                User::class.java,
+                                User.USER_ID.eq(loggedInUserId)
+                            )
+                        ).data.first().id
+
+                        val result = amplifyApi.query(
+                            ModelQuery.get<User, UserPath>(
+                                User::class.java,
+                                User.UserIdentifier(rowId)
+                            ) { includes(it.asContact) }
+                        )
+
+                        val currentContacts =
+                            (result.data.asContact as? LoadedModelList<UserContact>)?.items.orEmpty()
+
+                        val contacts = mutableListOf<CurrentContact>()
+                        currentContacts.forEach { contact ->
+                            val user = when (val reference = contact.user) {
+                                is LazyModelReference<User> -> {
+                                    reference.fetchModel()
+                                }
+
+                                is LoadedModelReference<User> -> {
+                                    reference.value
+                                }
+
+                                else -> {
+                                    null
+                                }
+                            }
+
+                            user?.let { userContact ->
+                                contacts.add(
+                                    CurrentContact(
+                                        // TODO: might remove this may not be needed
+                                        contactId = "", // to id the contact in viewmodel list, this is the rowId
+                                        userId = userContact.userId,
+                                        userName = userContact.userName,
+                                        name = userContact.name,
+                                        avatarUri = userContact.avatarUri,
+                                        createdAt = userContact.createdAt,
+                                    )
+                                )
+                            }
+                        }
+
+                        contacts
                     }
 
                     // TODO: testing
                     emit(NetworkResponse.Success(receivedInvites.await() + sentInvites.await() + contacts.await()))
+                    //println("AmplifyRepo ***** AWAIT CONTACTS ${contacts.await()}")
                     //emit(NetworkResponse.Success(MockContacts.loadMockSentInvites()))
                 } catch (no: NoInternetException) {
                     emit(NetworkResponse.NoInternet)
@@ -539,28 +607,6 @@ class AmplifyRepo @Inject constructor(
         return contacts
     }
 
-
-/*    private suspend fun fetchRowId(
-        senderUserId: String?,
-        receiverUserId: String,
-    ): String? {
-
-        val predicate = QueryField.field("senderUserId").eq(senderUserId)
-            .and(QueryField.field("receiverUserId").eq(receiverUserId))
-
-        val filter = Invite.SENDER.eq(senderUserId)
-            .and(Invite.RECEIVER.eq(receiverUserId))
-
-        val invites = amplifyApi.query(
-            ModelQuery.list(Invite::class.java, filter)
-        ).data
-
-        println("Amplify ***** USER $senderUserId -- $receiverUserId")
-        println("AmplifyRepo ***** INVITES DATA ${invites.toString()}")
-
-        return ""
-    }*/
-
     // TODO: change param, change function name
     private suspend fun <T : Contact> fetchInvites(
         connectionInvites: List<Invite>,
@@ -603,10 +649,10 @@ class AmplifyRepo @Inject constructor(
             invites.addAll(UserMapper.toUserList(inviteReceiver, response, inviteType))
             return invites
         } catch (e: ApiException) {
-            if (e.cause is java.io.IOException || e.cause is java.net.UnknownHostException) {
-                throw NoInternetException("Cannot read proto.")
+            if (e.cause is IOException || e.cause is UnknownHostException) {
+                throw NoInternetException("No Internet")
             } else {
-                throw ResponseException("Cannot read proto.")
+                throw ResponseException("There was an error in the response")
             }
         }
     }

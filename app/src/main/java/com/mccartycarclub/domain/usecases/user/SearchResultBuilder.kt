@@ -3,6 +3,7 @@ package com.mccartycarclub.domain.usecases.user
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.core.model.LoadedModelList
+import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
@@ -33,7 +34,12 @@ object SearchResultBuilder {
             response.data.any { it.receiverId == loggedInUserId && it.senderId == userId }
 
         if (contacts.isNotEmpty()) {
-            println("SearchResultBuilder ***** USERS ARE CONTACTS")
+            // TODO: refactor if not needed, I don't think it is
+            println("SearchResultBuilder ***** searchResultOf HAS CONTACTS")
+            /*contacts.forEach {
+                val u = (it.user as LoadedModelReference<User>)
+                println("SearchResultBuilder ***** USERS ARE CONTACTS ${u.value?.userName}")
+            }*/
         } else { // Users are not contacts
             if (invites.isNotEmpty()) {
                 val sentToSearchResultUser =

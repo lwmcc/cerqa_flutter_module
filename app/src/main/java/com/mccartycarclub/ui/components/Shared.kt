@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
@@ -43,6 +44,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -409,6 +411,10 @@ fun Contacts(
     var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
     val density = LocalDensity.current
 
+    LaunchedEffect(userId) {
+        contactsViewModel.fetchAllContacts(userId)
+    }
+
     when {
         openAlertDialog -> {
             ConfirmationDialog(
@@ -425,8 +431,6 @@ fun Contacts(
             )
         }
     }
-
-    contactsViewModel.fetchReceivedInvites(userId)
 
     Scaffold(
         topBar = {
@@ -602,25 +606,16 @@ fun Search(
         },
     ) { innerPadding ->
 
-        val searchQuery2 = contactsViewModel.searchResults2.collectAsStateWithLifecycle().value
+        val searchQuery = contactsViewModel.searchResults.collectAsStateWithLifecycle().value
         val inviteSentSuccess =
             contactsViewModel.inviteSentSuccess.collectAsStateWithLifecycle().value
-        val searchQuery = contactsViewModel.searchResults.collectAsStateWithLifecycle().value
-        val hasConnection = contactsViewModel.hasConnection.collectAsStateWithLifecycle().value
-        val hasPendingInvite =
-            contactsViewModel.hasPendingInvite.collectAsStateWithLifecycle().value
         val isSendingInvite = contactsViewModel.isSendingInvite.collectAsStateWithLifecycle().value
-        val isCancellingInvite =
-            contactsViewModel.isCancellingInvite.collectAsStateWithLifecycle().value
-        val receiverQueryPending =
-            contactsViewModel.receiverQueryPending.collectAsStateWithLifecycle().value
 
         var input by remember { mutableStateOf("") }
         var openAlertDialog by remember { mutableStateOf(false) }
         var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
         var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
-
-        val density = LocalDensity.current
+        var clearSearchVisible by remember { mutableStateOf(false) }
 
         when {
             openAlertDialog -> {
@@ -644,20 +639,36 @@ fun Search(
                 .fillMaxWidth()
                 .padding(innerPadding),
         ) {
-            TextField(
-                value = input,
-                maxLines = 2,
-                onValueChange = {
-                    input = it
-                    contactsViewModel.onQueryChange(it)
-                },
-                label = { Text(stringResource(id = R.string.user_search)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                modifier = Modifier
-                    .fillMaxWidth()
-            )
+            Box {
+                TextField(
+                    value = input,
+                    maxLines = 2,
+                    onValueChange = {
+                        input = it
+                        contactsViewModel.onQueryChange(it)
+                        clearSearchVisible = input.isNotEmpty()
+                    },
+                    label = { Text(stringResource(id = R.string.user_search)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                )
 
-            when(searchQuery2) {
+                if (clearSearchVisible) {
+                    Icon(
+                        Icons.Filled.Clear,
+                        contentDescription = stringResource(id = R.string.text_field_clear),
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .clickable {
+                                input = ""
+                                contactsViewModel.onQueryChange("")
+                            },
+                    )
+                }
+            }
+
+            when (searchQuery) {
                 is UiStateResult.Error -> {
 
                 }
@@ -675,9 +686,9 @@ fun Search(
                 }
 
                 is UiStateResult.Success -> {
-                    val user2 = (searchQuery2 as? UiStateResult.Success)?.data
+                    val user = (searchQuery as? UiStateResult.Success)?.data
                     SearchResultUserCard(
-                        user = user2,
+                        user = user,
                         isSendingInvite = isSendingInvite,
                         inviteSentSuccess = inviteSentSuccess,
                         connectionEvent = { event ->
@@ -879,74 +890,79 @@ fun SearchResultUserCard(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
 
-            Row(modifier = Modifier.fillMaxWidth()) {
-                AsyncImage(
-                    model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
-                    // TODO: add an image user.avatarUri
-                    contentDescription = stringResource(id = R.string.user_avatar),
-                    modifier = Modifier
-                        .width(60.dp)
-                        .padding(
-                            dimensionResource(id = R.dimen.card_padding_start),
-                            dimensionResource(id = R.dimen.card_padding_top),
-                        )
-                )
-                Column(
-                    modifier = Modifier
-                        .padding(
-                            dimensionResource(id = R.dimen.card_padding_start),
-                            dimensionResource(id = R.dimen.card_padding_top),
-                        )
-                        .weight(1f)
-                ) {
-                    user?.userName?.let { Text(it) }
-                    when (user) {
-                        is SentInviteToUser -> {
-                            Column {
-                                Text(user.userName)
-                                Text("Sent Invite to User")
-                            }
-                        }
-
-                        is ReceivedInviteFromUser -> {
-                            Column {
-                                Text(user.userName)
-                                Text("Received Invite from User")
-                                Button(
-                                    onClick = { /*TODO*/ },
-                                ) {
-                                    Text("Accept")
+            if (user != null) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    AsyncImage(
+                        model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
+                        // TODO: add an image user.avatarUri
+                        contentDescription = stringResource(id = R.string.user_avatar),
+                        modifier = Modifier
+                            .width(60.dp)
+                            .padding(
+                                dimensionResource(id = R.dimen.card_padding_start),
+                                dimensionResource(id = R.dimen.card_padding_top),
+                            )
+                    )
+                    Column(
+                        modifier = Modifier
+                            .padding(
+                                dimensionResource(id = R.dimen.card_padding_start),
+                                dimensionResource(id = R.dimen.card_padding_top),
+                            )
+                            .weight(1f)
+                    ) {
+                        user.userName.let { Text(it) }
+                        when (user) {
+                            is SentInviteToUser -> {
+                                Column {
+                                    Text(user.userName)
+                                    Text("Sent Invite to User")
                                 }
                             }
-                        }
 
-                        is ConnectedSearch -> {
-                            Column {
-                                Text(user.userName)
-                                Text("Connection")
+                            is ReceivedInviteFromUser -> {
+                                Column {
+                                    Text(user.userName)
+                                    Text("Received Invite from User")
+                                    Button(
+                                        onClick = { /*TODO*/ },
+                                    ) {
+                                        Text("Accept")
+                                    }
+                                }
                             }
-                        }
 
-                        else -> { // is UserSearchResult which needs to be last
-                            if (!isSendingInvite) {
-                                OutlinedButton(
-                                    onClick = {
-                                        user?.let { user ->
-                                            connectionEvent(
-                                                ContactCardEvent.InviteConnectEvent(
-                                                    user.userId,
-                                                    user.rowId
+                            is ConnectedSearch -> {
+                                Column {
+                                    Text(user.userName)
+                                    Text("Connection")
+                                }
+                            }
+
+                            else -> { // is UserSearchResult which needs to be last
+                                if (!isSendingInvite) {
+
+                                    OutlinedButton(
+                                        onClick = {
+                                            user?.let { user ->
+                                                connectionEvent(
+                                                    ContactCardEvent.InviteConnectEvent(
+                                                        user.userId,
+                                                        user.rowId
+                                                    )
                                                 )
-                                            )
-                                        }
-                                    },
-                                    shape = RoundedCornerShape(4.dp),
-                                ) {
-                                    Text(stringResource(id = R.string.connect_to_user))
-                                }
-                            } else {
-                                if (inviteSentSuccess) {
-                                    Text("Invite Sent")
+                                            }
+                                        },
+                                        shape = RoundedCornerShape(4.dp),
+                                    ) {
+                                        Text(stringResource(id = R.string.connect_to_user))
+                                    }
+
+
+                                } else {
+                                    if (inviteSentSuccess) {
+                                        Text("Invite Sent")
+                                    }
                                 }
                             }
                         }
