@@ -115,17 +115,6 @@ fun CurrentContactCard(
                 Text(text = contact.createdAt?.toDate().toString()) // TODO: fix this
             }
         }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(5.dp),
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            CardListButton(primaryButtonText, onClick = {
-                onClick(ContactCardEvent.DeleteContact(contact.contactId))
-            })
-        }
     }
 }
 
