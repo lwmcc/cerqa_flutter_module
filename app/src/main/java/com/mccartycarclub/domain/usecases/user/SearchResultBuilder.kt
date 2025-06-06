@@ -7,6 +7,7 @@ import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
+import com.mccartycarclub.domain.model.ConnectedSearch
 import com.mccartycarclub.domain.model.ReceivedInviteFromUser
 import com.mccartycarclub.domain.model.SentInviteToUser
 import com.mccartycarclub.domain.model.UserSearchResult
@@ -34,12 +35,13 @@ object SearchResultBuilder {
             response.data.any { it.receiverId == loggedInUserId && it.senderId == userId }
 
         if (contacts.isNotEmpty()) {
-            // TODO: refactor if not needed, I don't think it is
-            println("SearchResultBuilder ***** searchResultOf HAS CONTACTS")
-            /*contacts.forEach {
-                val u = (it.user as LoadedModelReference<User>)
-                println("SearchResultBuilder ***** USERS ARE CONTACTS ${u.value?.userName}")
-            }*/
+            // This user is already a connection
+            searchUser = ConnectedSearch(
+                rowId = userRowId,
+                userId = userId,
+                userName = userName,
+                avatarUri = avatarUri,
+            )
         } else { // Users are not contacts
             if (invites.isNotEmpty()) {
                 val sentToSearchResultUser =

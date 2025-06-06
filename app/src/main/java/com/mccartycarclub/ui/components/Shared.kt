@@ -73,6 +73,7 @@ import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.User
+import com.amplifyframework.ui.authenticator.ui.Authenticator
 import com.mccartycarclub.MainActivity.Companion.CONTACTS_SCREEN
 import com.mccartycarclub.MainActivity.Companion.GROUPS_SCREEN
 import com.mccartycarclub.MainActivity.Companion.MAIN_SCREEN
@@ -187,7 +188,7 @@ fun AppAuthenticator(
                 .fillMaxWidth()
                 .padding(innerPadding),
         ) {
-            com.amplifyframework.ui.authenticator.ui.Authenticator { state ->
+            Authenticator { state ->
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -872,97 +873,85 @@ fun SearchResultUserCard(
     connectionEvent: (ContactCardEvent) -> Unit,
 ) {
 
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 6.dp
-        ),
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(dimensionResource(id = R.dimen.card_padding)),
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
 
-            if (user != null) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    AsyncImage(
-                        model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
-                        // TODO: add an image user.avatarUri
-                        contentDescription = stringResource(id = R.string.user_avatar),
-                        modifier = Modifier
-                            .width(60.dp)
-                            .padding(
-                                dimensionResource(id = R.dimen.card_padding_start),
-                                dimensionResource(id = R.dimen.card_padding_top),
-                            )
-                    )
-                    Column(
-                        modifier = Modifier
-                            .padding(
-                                dimensionResource(id = R.dimen.card_padding_start),
-                                dimensionResource(id = R.dimen.card_padding_top),
-                            )
-                            .weight(1f)
-                    ) {
-                        user.userName.let { Text(it) }
-                        when (user) {
-                            is SentInviteToUser -> {
-                                Column {
-                                    Text(user.userName)
-                                    Text("Sent Invite to User")
+        if (user != null) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                AsyncImage(
+                    model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
+                    // TODO: add an image user.avatarUri
+                    contentDescription = stringResource(id = R.string.user_avatar),
+                    modifier = Modifier
+                        .width(60.dp)
+                        .padding(
+                            dimensionResource(id = R.dimen.card_padding_start),
+                            dimensionResource(id = R.dimen.card_padding_top),
+                        )
+                )
+                Column(
+                    modifier = Modifier
+                        .padding(
+                            dimensionResource(id = R.dimen.card_padding_start),
+                            dimensionResource(id = R.dimen.card_padding_top),
+                        )
+                        .weight(1f)
+                ) {
+                    user.userName.let { Text(it) }
+                    when (user) {
+                        is SentInviteToUser -> {
+                            Column {
+                                Text(user.userName)
+                                Text("Sent Invite to User")
+                            }
+                        }
+
+                        is ReceivedInviteFromUser -> {
+                            Column {
+                                Text(user.userName)
+                                Text("Received Invite from User")
+                                Button(
+                                    onClick = { /*TODO*/ },
+                                ) {
+                                    Text("Accept")
                                 }
                             }
+                        }
 
-                            is ReceivedInviteFromUser -> {
-                                Column {
-                                    Text(user.userName)
-                                    Text("Received Invite from User")
-                                    Button(
-                                        onClick = { /*TODO*/ },
-                                    ) {
-                                        Text("Accept")
-                                    }
-                                }
+                        is ConnectedSearch -> {
+                            Column {
+                                Text(user.userName)
+                                Text("Connection")
                             }
+                        }
 
-                            is ConnectedSearch -> {
-                                Column {
-                                    Text(user.userName)
-                                    Text("Connection")
-                                }
-                            }
+                        else -> { // is UserSearchResult which needs to be last
+                            if (!isSendingInvite) {
 
-                            else -> { // is UserSearchResult which needs to be last
-                                if (!isSendingInvite) {
-
-                                    OutlinedButton(
-                                        onClick = {
-                                            user?.let { user ->
-                                                connectionEvent(
-                                                    ContactCardEvent.InviteConnectEvent(
-                                                        user.userId,
-                                                        user.rowId
-                                                    )
+                                OutlinedButton(
+                                    onClick = {
+                                        user?.let { user ->
+                                            connectionEvent(
+                                                ContactCardEvent.InviteConnectEvent(
+                                                    user.userId,
+                                                    user.rowId
                                                 )
-                                            }
-                                        },
-                                        shape = RoundedCornerShape(4.dp),
-                                    ) {
-                                        Text(stringResource(id = R.string.connect_to_user))
-                                    }
+                                            )
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(4.dp),
+                                ) {
+                                    Text(stringResource(id = R.string.connect_to_user))
+                                }
 
 
-                                } else {
-                                    if (inviteSentSuccess) {
-                                        Text("Invite Sent")
-                                    }
+                            } else {
+                                if (inviteSentSuccess) {
+                                    Text("Invite Sent")
                                 }
                             }
                         }
