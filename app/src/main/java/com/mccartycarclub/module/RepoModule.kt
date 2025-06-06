@@ -1,8 +1,6 @@
 package com.mccartycarclub.module
 
 import com.mccartycarclub.data.websocket.RealTimeMessaging
-import com.mccartycarclub.domain.usecases.user.GetUser
-import com.mccartycarclub.domain.usecases.user.GetUserData
 import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.AmplifyRepo
@@ -19,7 +17,6 @@ import com.mccartycarclub.repository.realtime.SubscribeRepo
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.components.SingletonComponent
 
 @Module

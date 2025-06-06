@@ -25,8 +25,8 @@ import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.datastore.generated.model.UserPath
 import com.amplifyframework.kotlin.api.KotlinApiFacade
+import com.mccartycarclub.domain.helpers.SearchResult
 import com.mccartycarclub.domain.model.UserSearchResult
-import com.mccartycarclub.domain.usecases.user.SearchResultBuilder.searchResultOf
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
@@ -52,6 +52,7 @@ import kotlin.reflect.KClass
 class AmplifyRepo @Inject constructor(
     private val amplifyApi: KotlinApiFacade,
     private val contactsQueryBuilder: QueryBuilder,
+    private val searchResult: SearchResult,
     @Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
 ) : RemoteRepo {
 
@@ -810,7 +811,7 @@ class AmplifyRepo @Inject constructor(
 
                     emit(
                         NetworkResponse.Success(
-                            searchResultOf(
+                            searchResult.searchResultOf(
                                 loggedInUserId,
                                 user,
                                 relatedUserData,

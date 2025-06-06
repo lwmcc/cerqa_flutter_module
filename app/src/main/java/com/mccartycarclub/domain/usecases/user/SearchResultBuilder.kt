@@ -3,19 +3,18 @@ package com.mccartycarclub.domain.usecases.user
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.core.model.LoadedModelList
-import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
+import com.mccartycarclub.domain.helpers.SearchResult
 import com.mccartycarclub.domain.model.ConnectedSearch
 import com.mccartycarclub.domain.model.ReceivedInviteFromUser
 import com.mccartycarclub.domain.model.SentInviteToUser
 import com.mccartycarclub.domain.model.UserSearchResult
 
-object SearchResultBuilder {
+object SearchResultBuilder : SearchResult {
 
-    // TODO: add interface
-    fun searchResultOf(
+    override fun searchResultOf(
         loggedInUserId: String?,
         user: User?,
         relatedUserData: User,
@@ -51,8 +50,7 @@ object SearchResultBuilder {
                     invites.any { it.receiverId == loggedInUserId && it.senderId == userId }
 
                 if (sentToSearchResultUser) {
-                    // TODO: sent to user
-                    println("SearchResultBuilder ***** SENT AN INVITE")
+                    // Sent to user
                     searchUser = SentInviteToUser(
                         rowId = userRowId,
                         userId = userId,
@@ -60,8 +58,7 @@ object SearchResultBuilder {
                         avatarUri = avatarUri,
                     )
                 } else if (receivedFromSearchResultUser) {
-                    // TODO: received from user
-                    println("SearchResultBuilder ***** RECEIVED AN INVITE")
+                    // Received from user
                     searchUser = ReceivedInviteFromUser(
                         rowId = userRowId,
                         userId = userId,

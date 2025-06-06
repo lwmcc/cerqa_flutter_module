@@ -4,11 +4,12 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.amplifyframework.kotlin.core.Amplify
-import com.mccartycarclub.R
 import com.mccartycarclub.data.websocket.AblyRealtimeProvider
 import com.mccartycarclub.data.websocket.AblyService
 import com.mccartycarclub.domain.UserPreferencesManager
 import com.mccartycarclub.domain.helpers.ContactsHelper
+import com.mccartycarclub.domain.helpers.SearchResult
+import com.mccartycarclub.domain.usecases.user.SearchResultBuilder
 import com.mccartycarclub.domain.websocket.AblyProvider
 import com.mccartycarclub.domain.websocket.RealtimeService
 import com.mccartycarclub.receiver.AblyBroadcastReceiver
@@ -18,8 +19,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import io.ably.lib.realtime.AblyRealtime
-import io.ably.lib.types.ClientOptions
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Named
@@ -71,5 +70,7 @@ object AppModule {
     }
 
 
-
+    @Provides
+    @Singleton
+    fun provideSearchResultBuilder(): SearchResult = SearchResultBuilder
 }
