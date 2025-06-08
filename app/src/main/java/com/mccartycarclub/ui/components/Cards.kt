@@ -48,8 +48,11 @@ fun CurrentContactCard(
             )
 
             Column {
-                Text(text = contact.userName)
-                Text(text = contact.createdAt?.toDate().toString()) // TODO: fix this
+                Text(
+                    text = contact.userName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
             }
         }
     }
@@ -185,12 +188,13 @@ fun CardListButton(
         onClick = {
             onClick()
         },
-        shape = RoundedCornerShape(4.dp),
+        shape = RoundedCornerShape(8.dp),
         contentPadding = PaddingValues(0.dp),
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onPrimary,
         )
     }
 }

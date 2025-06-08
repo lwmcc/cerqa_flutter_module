@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccartycarclub.domain.ChannelModel
 import com.mccartycarclub.domain.model.UserSearchResult
-import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.LocalRepo
 import com.mccartycarclub.repository.NetDeleteResult
@@ -35,7 +34,6 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class ContactsViewModel @Inject constructor(
-    private val userContacts: GetContacts,
     private val repo: RemoteRepo,
     private val localRepo: LocalRepo,
 ) : ViewModel() {

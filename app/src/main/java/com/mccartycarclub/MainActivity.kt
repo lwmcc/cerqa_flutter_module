@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
 
     private fun registerReceiver() {
         LocalBroadcastManager.getInstance(this)
-            .registerReceiver(pushReceiver, IntentFilter("io.ably.broadcast.PUSH_ACTIVATE"));
+            .registerReceiver(pushReceiver, IntentFilter("io.ably.broadcast.PUSH_ACTIVATE"))
         LocalBroadcastManager.getInstance(this).registerReceiver(
             pushReceiver, IntentFilter(
                 AblyPushMessagingService.PUSH_NOTIFICATION_ACTION

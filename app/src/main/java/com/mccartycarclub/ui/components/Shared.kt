@@ -14,7 +14,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -47,6 +46,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -418,12 +418,15 @@ fun Contacts(
     val contactsState by contactsViewModel.contactsState.collectAsStateWithLifecycle()
     val dataPending by contactsViewModel.dataPending.collectAsStateWithLifecycle()
     val userId by contactsViewModel.userId.collectAsStateWithLifecycle()
+
     var openAlertDialog by remember { mutableStateOf(false) }
     var selectedUserId by remember { mutableStateOf<String?>(null) }
     var selectedContactId by remember { mutableStateOf<String?>(null) }
     var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
+
     var listIndex by remember { mutableIntStateOf(0) }
     var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
+
     val density = LocalDensity.current
 
     LaunchedEffect(userId) {
@@ -540,7 +543,8 @@ fun Contacts(
                                                     alertDialogData = AlertDialogData(
                                                         icon = R.drawable.baseline_person_off_24,
                                                         title = R.string.dialog_cancel_invite_to_connect_title,
-                                                        description = R.string.dialog_cancel_invite_to_connect_description,
+                                                        description =
+                                                        R.string.dialog_cancel_invite_to_connect_description,
                                                         dialogIconDescription = R.string.dialog_icon_description,
                                                         dismiss = R.string.dialog_button_dismiss,
                                                         confirm = R.string.connect_cancel,
@@ -555,20 +559,6 @@ fun Contacts(
                                             CurrentContactCard(
                                                 contact = contact,
                                                 avatar = R.drawable.ic_dashboard_black_24dp,
-                                                // TODO: will move this event somewhere else
-                                                /*onClick = { event ->
-                                                    connectionEvent = event
-                                                    openAlertDialog = true
-                                                    alertDialogData = AlertDialogData(
-                                                        icon = R.drawable.baseline_person_remove_24,
-                                                        title = R.string.dialog_remove_connection_to_user_title,
-                                                        description =
-                                                        R.string.dialog_remove_connection_to_user_description,
-                                                        dialogIconDescription = R.string.dialog_icon_description,
-                                                        dismiss = R.string.dialog_button_dismiss,
-                                                        confirm = R.string.connect_remove,
-                                                    )
-                                                },*/
                                             )
                                         }
                                     }
@@ -900,6 +890,8 @@ fun SearchResultUserCard(
     connectionEvent: (ContactCardEvent) -> Unit,
 ) {
 
+    val showInviteSentSuccess by remember(inviteSentSuccess) { derivedStateOf { inviteSentSuccess } }
+
     Column(
         modifier = Modifier
             .fillMaxWidth(),
@@ -933,7 +925,7 @@ fun SearchResultUserCard(
                 ) {
                     Text(
                         text = user.userName,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     when (user) {
@@ -967,23 +959,23 @@ fun SearchResultUserCard(
                             Column {
                                 Text(
                                     user.userName,
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
                                 Text(
                                     "Connection",
-                                    style = MaterialTheme.typography.bodySmall,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
                         }
 
-                        else -> { // is UserSearchResult which needs to be last
+                        else -> { // Is UserSearchResult which needs to be last
                             if (!isSendingInvite) {
-
-                                OutlinedButton(
+                                CardListButton(
+                                    text = stringResource(id = R.string.connect_to_user),
                                     onClick = {
-                                        user?.let { user -> // TODO: let?????
+                                        user.let { user ->
                                             connectionEvent(
                                                 ContactCardEvent.InviteConnectEvent(
                                                     user.userId,
@@ -991,24 +983,21 @@ fun SearchResultUserCard(
                                                 )
                                             )
                                         }
-                                    },
-                                    shape = RoundedCornerShape(4.dp),
-                                    contentPadding = PaddingValues(4.dp, 2.dp)
-                                ) {
-                                    Text(
-                                        stringResource(id = R.string.connect_to_user),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                }
+                                    }
+                                )
+
                             } else {
-                                if (inviteSentSuccess) {
-                                    Text(
-                                        text = stringResource(id = R.string.connect_invite_sent),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                }
+                                TextRowAnimation(
+                                    visible = showInviteSentSuccess,
+                                    content = {
+                                        Text(
+                                            text = stringResource(id = R.string.connect_invite_sent),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer)
+                                        )
+                                    }
+                                )
                             }
                         }
                     }
@@ -1023,7 +1012,7 @@ fun NoDataFound(message: String) {
     Column(modifier = Modifier.padding(dimensionResource(id = R.dimen.card_padding))) {
         Text(
             text = message,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )
     }
@@ -1071,25 +1060,6 @@ fun ConfirmationDialog(
         )
     }
 }
-/*
-@Preview
-@Composable
-fun ConfirmationDialogPreview() {
-    ConfirmationDialog(
-        dialogTitle = stringResource(id = R.string.dialog_delete_invite_title),
-        dialogText = stringResource(id = R.string.dialog_delete_invite_description),
-        dismissText = stringResource(id = R.string.dialog_button_dismiss),
-        confirmText = stringResource(id = R.string.dialog_button_delete),
-        icon = ImageVector.vectorResource(id = android.R.drawable.ic_dialog_alert),
-        onDismissRequest = {
-
-        },
-        onConfirmation = {
-
-        },
-        alertDialogData = alertDialogData,
-    )
-}*/
 
 // TODO: remove just to test
 fun testUser1(userId: String): User {
