@@ -121,3 +121,8 @@ dependencies {
 kapt {
     correctErrorTypes = true
 }
+
+detekt {
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    buildUponDefaultConfig = false
+}
