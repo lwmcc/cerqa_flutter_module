@@ -192,6 +192,8 @@ fun AppAuthenticator(
                 .padding(innerPadding),
         ) {
             Authenticator { state ->
+                // TODO: to move somewhere this is for testing only
+                mainViewModel.setLoggedInUserId(state.user.username)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -222,7 +224,7 @@ fun AppAuthenticator(
                                     ModelMutation.create(testUser1(userId!!)),
                                     { response -> // TODO: response?
                                         // This is were userId is added to prefs
-                                        mainViewModel.setLocalUserId(userId)
+                                        mainViewModel.setLoggedInUserId(userId)
                                     },
                                     { error ->
                                         Log.e("MainActivity *****", "User creation failed", error)
@@ -499,7 +501,8 @@ fun Contacts(
                                                     alertDialogData = AlertDialogData(
                                                         icon = R.drawable.baseline_person_off_24,
                                                         title = R.string.dialog_remove_invite_to_connect_title,
-                                                        description = R.string.dialog_remove_invite_to_connect_description,
+                                                        description =
+                                                        R.string.dialog_remove_invite_to_connect_description,
                                                         dialogIconDescription = R.string.dialog_icon_description,
                                                         dismiss = R.string.dialog_button_dismiss,
                                                         confirm = R.string.connect_remove,
@@ -512,7 +515,8 @@ fun Contacts(
                                                     alertDialogData = AlertDialogData(
                                                         icon = R.drawable.baseline_person_add_24,
                                                         title = R.string.dialog_accept_invite_to_connect_title,
-                                                        description = R.string.dialog_accept_invite_to_connect_description,
+                                                        description =
+                                                        R.string.dialog_accept_invite_to_connect_description,
                                                         dialogIconDescription = R.string.dialog_icon_description,
                                                         dismiss = R.string.dialog_button_dismiss,
                                                         confirm = R.string.dialog_button_accept,
@@ -550,20 +554,21 @@ fun Contacts(
                                         item {
                                             CurrentContactCard(
                                                 contact = contact,
-                                                primaryButtonText = stringResource(id = R.string.connect_remove),
                                                 avatar = R.drawable.ic_dashboard_black_24dp,
-                                                onClick = { event ->
+                                                // TODO: will move this event somewhere else
+                                                /*onClick = { event ->
                                                     connectionEvent = event
                                                     openAlertDialog = true
                                                     alertDialogData = AlertDialogData(
                                                         icon = R.drawable.baseline_person_remove_24,
                                                         title = R.string.dialog_remove_connection_to_user_title,
-                                                        description = R.string.dialog_remove_connection_to_user_description,
+                                                        description =
+                                                        R.string.dialog_remove_connection_to_user_description,
                                                         dialogIconDescription = R.string.dialog_icon_description,
                                                         dismiss = R.string.dialog_button_dismiss,
                                                         confirm = R.string.connect_remove,
                                                     )
-                                                },
+                                                },*/
                                             )
                                         }
                                     }

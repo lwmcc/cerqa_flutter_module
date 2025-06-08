@@ -11,4 +11,7 @@
     <dimen name="spacer_width">16dp</dimen>
 
     <dimen name="card_pending_spinner">16dp</dimen>
+    <dimen name="card_secondary_text_corner_radius">4dp</dimen>
+    <dimen name="card_secondary_text_padding">4dp</dimen>
+    <dimen name="card_profile_icon_width">60dp</dimen>
 </resources>

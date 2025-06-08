@@ -23,6 +23,4 @@ fun <T : Model> validate(
             }
         }
     }
-
-
 }

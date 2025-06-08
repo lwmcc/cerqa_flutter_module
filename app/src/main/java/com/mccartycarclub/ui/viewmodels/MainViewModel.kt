@@ -12,15 +12,11 @@ import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.realtime.RealtimePublishRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ably.lib.rest.Auth
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -109,9 +105,10 @@ class MainViewModel @Inject constructor(
     }
 
     // TODO: done when hard coded user is created for testing
-    fun setLocalUserId(userId: String) {
+    fun setLoggedInUserId(userId: String) {
         viewModelScope.launch {
             localRepo.setLocalUserId(userId)
+            _userId.value = userId
         }
     }
 

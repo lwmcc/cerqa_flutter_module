@@ -19,7 +19,7 @@ class AblyPushMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(s: String) {
         super.onNewToken(s!!)
-        //Store token in Ably
+        // Store token in Ably
         ActivationContext.getActivationContext(this)
             .onNewRegistrationToken(RegistrationToken.Type.FCM, s)
     }

@@ -21,6 +21,7 @@ coreVersion = "1.43.2"
 datastorePreferencesCore = "1.1.7"
 desugar_jdk_libs = "2.1.4"
 desugar_jdk_libsVersion = "2.0.3"
+detektFormatting = "1.23.0"
 firebaseCore = "21.1.1"
 firebaseMessaging = "24.1.1"
 hiltAndroid = "2.51.1"
@@ -74,6 +75,7 @@ core-kotlin = { module = "com.amplifyframework:core-kotlin", version.ref = "core
 core-v1432 = { module = "com.amplifyframework:core", version.ref = "coreVersion" }
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 desugar_jdk_libs-v203 = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libsVersion" }
+detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detektFormatting" }
 firebase-core = { module = "com.google.firebase:firebase-core", version.ref = "firebaseCore" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebaseMessaging" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }

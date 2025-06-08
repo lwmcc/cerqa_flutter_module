@@ -6,6 +6,7 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
     id("com.google.gms.google-services")
+    id("io.gitlab.arturbosch.detekt")
 }
 
 android {
@@ -114,9 +115,6 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.core)
 
-    // DataStore
-    //implementation(libs.androidx.datastore.preferences.core)
-    //implementation(libs.androidx.datastore)
     implementation(libs.androidx.datastore.preferences)
 }
 

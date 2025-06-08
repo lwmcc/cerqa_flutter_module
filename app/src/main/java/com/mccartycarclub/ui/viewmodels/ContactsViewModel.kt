@@ -17,6 +17,8 @@ import com.mccartycarclub.repository.UiStateResult
 import com.mccartycarclub.repository.UserMapper
 import com.mccartycarclub.ui.components.ContactCardEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -79,6 +81,8 @@ class ContactsViewModel @Inject constructor(
         get() = _loggedInUserId
 
     private val _query = MutableStateFlow<String?>(null)
+
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     val searchResults: StateFlow<UiStateResult<UserSearchResult>> = _query
         .debounce(SEARCH_DELAY.milliseconds)
         .distinctUntilChanged()
@@ -293,7 +297,6 @@ class ContactsViewModel @Inject constructor(
                             _contactsState.value = UserContacts.Success
                             _contacts.clear() // TODO: is this needed? test it
                             _contacts.addAll(data.data)
-
                         }
                     }
                 }

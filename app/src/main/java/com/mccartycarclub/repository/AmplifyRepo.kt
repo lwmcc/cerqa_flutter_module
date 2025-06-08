@@ -467,10 +467,7 @@ class AmplifyRepo @Inject constructor(
                         contacts
                     }
 
-                    // TODO: testing
                     emit(NetworkResponse.Success(receivedInvites.await() + sentInvites.await() + contacts.await()))
-                    //println("AmplifyRepo ***** AWAIT CONTACTS ${contacts.await()}")
-                    //emit(NetworkResponse.Success(MockContacts.loadMockSentInvites()))
                 } catch (no: NoInternetException) {
                     emit(NetworkResponse.NoInternet)
                 } catch (re: ResponseException) {
@@ -536,7 +533,9 @@ class AmplifyRepo @Inject constructor(
         }
     }
 
-    private suspend fun fetchContacts(query: QueryPredicateOperation<Any>): GraphQLResponse<PaginatedResult<UserContact>> {
+    private suspend fun fetchContacts(
+        query: QueryPredicateOperation<Any>
+    ): GraphQLResponse<PaginatedResult<UserContact>> {
 
         try {
             val response = amplifyApi.query(

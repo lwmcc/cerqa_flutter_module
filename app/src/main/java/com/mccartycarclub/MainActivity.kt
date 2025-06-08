@@ -36,9 +36,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-
                 Surface(tonalElevation = 5.dp) {
-                    StartScreen( // TODO: use a main compose screen change this
+                    StartScreen(
                         acceptInvite = {
                             mainViewModel.acceptContactInvite()
                         },
