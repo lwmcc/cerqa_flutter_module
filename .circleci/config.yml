@@ -9,6 +9,20 @@ jobs:
       - checkout  # Check out the source code
 
       - run:
+          name: Verify raw file exists
+          command: |
+            ls -la app/src/main/res/raw
+            file app/src/main/res/raw/amplify_outputs.json || echo "amplify_outputs.json missing"
+
+      - run:
+          name: Clean Gradle
+          command: ./gradlew clean
+
+      - run:
+          name: Compile Kotlin
+          command: ./gradlew compileDebugKotlin --stacktrace
+
+      - run:
           name: Set Java 17
           command: |
             sudo update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
