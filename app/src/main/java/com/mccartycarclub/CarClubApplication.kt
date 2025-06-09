@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.mccartycarclub
 
 import android.app.Application
@@ -17,7 +19,9 @@ class CarClubApplication : Application() {
         try {
             Amplify.addPlugin(AWSCognitoAuthPlugin())
             Amplify.addPlugin(AWSApiPlugin())
-            Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), applicationContext)
+
+            val amplifyOutputs: AmplifyOutputs = AmplifyOutputs(R.raw.amplify_outputs)
+            Amplify.configure(amplifyOutputs, applicationContext)
         } catch (error: AmplifyException) {
             // TODO: log
         }
