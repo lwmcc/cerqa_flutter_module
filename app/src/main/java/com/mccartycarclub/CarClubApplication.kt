@@ -2,7 +2,7 @@ package com.mccartycarclub
 
 import android.app.Application
 import com.amplifyframework.AmplifyException
-import com.mccartycarclub.R.raw as Raw
+import com.mccartycarclub.R
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.configuration.AmplifyOutputs
@@ -17,7 +17,7 @@ class CarClubApplication : Application() {
         try {
             Amplify.addPlugin(AWSCognitoAuthPlugin())
             Amplify.addPlugin(AWSApiPlugin())
-            Amplify.configure(AmplifyOutputs(Raw.amplify_outputs), applicationContext)
+            Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), applicationContext)
         } catch (error: AmplifyException) {
             // TODO: log
         }
