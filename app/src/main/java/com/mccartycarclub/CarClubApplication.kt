@@ -18,7 +18,8 @@ class CarClubApplication : Application() {
             Amplify.addPlugin(AWSCognitoAuthPlugin())
             Amplify.addPlugin(AWSApiPlugin())
 
-            val amplifyOutputs = (AmplifyOutputs(R.raw.amplify_outputs) as com.amplifyframework.core.configuration.AmplifyOutputs)
+            val amplifyOutputs = (AmplifyOutputs(R.raw.amplify_outputs)
+                    as com.amplifyframework.core.configuration.AmplifyOutputs)
             Amplify.configure(amplifyOutputs, applicationContext)
         } catch (error: AmplifyException) {
             // TODO: log

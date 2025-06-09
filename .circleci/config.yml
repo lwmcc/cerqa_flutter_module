@@ -8,6 +8,12 @@ jobs:
     steps:
       - checkout  # Check out the source code
 
+      - run:
+          name: Set Java 17
+          command: |
+            sudo update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
+            sudo update-alternatives --set javac /usr/lib/jvm/java-17-openjdk-amd64/bin/javac
+
       - restore_cache:  # Restore cached dependencies to speed up builds
           keys:
             - android-dependencies-{{ checksum "build.gradle" }}-{{ checksum "app/build.gradle" }}
