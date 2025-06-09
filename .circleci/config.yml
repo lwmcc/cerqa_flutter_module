@@ -1,0 +1,103 @@
+# This config was automatically generated from your source code
+# Stacks detected: deps:java:.,tool:gradle:
+version: 2.1
+
+jobs:
+  test-java:
+    docker:
+      - image: cimg/android:2024.10
+    working_directory: /home/circleci/project
+    steps:
+      - checkout
+
+      # Decode google-services.json and place it in the app/ directory
+      - run:
+          name: Decode google-services.json
+          command: |
+            echo $GOOGLE_SERVICES_JSON_BASE64 | base64 -d > ./app/google-services.json
+
+      # Additional placement for google-services.json
+      - run:
+          name: Copy google-services.json to src debug and main directories
+          command: |
+            mkdir -p /home/circleci/project/app/src/debug
+            mkdir -p /home/circleci/project/app/src/main
+            cp ./app/google-services.json /home/circleci/project/app/src/debug/google-services.json
+            cp ./app/google-services.json /home/circleci/project/app/src/main/google-services.json
+
+      # Set permissions for google-services.json
+      - run:
+          name: Set permissions for google-services.json
+          command: chmod 644 app/google-services.json app/src/debug/google-services.json app/src/main/google-services.json
+
+      # Verify google-services.json placement (optional)
+      - run:
+          name: Verify google-services.json exists in all required locations
+          command: |
+            ls -la app/
+            ls -la app/src/debug/
+            ls -la app/src/main/
+
+      # Clean Gradle Cache
+      - run:
+          name: Clean Gradle Cache
+          command: ./gradlew clean
+
+      # Calculate and cache dependencies
+      - run:
+          name: Calculate cache key
+          command: |
+            find . -name 'pom.xml' -o -name 'gradlew*' -o -name '*.gradle*' | \
+            sort | xargs cat > /tmp/CIRCLECI_CACHE_KEY || true
+      - restore_cache:
+          key: cache-{{ checksum "/tmp/CIRCLECI_CACHE_KEY" }}
+
+      # Run tests and build
+      - run:
+          name: Run Gradle Build
+          command: ./gradlew build
+      - run:
+          name: Run Gradle Check
+          command: ./gradlew check
+      - run:
+          name: Run Gradle Build
+          command: ./gradlew build --stacktrace --info
+      - run:
+          name: Install Android SDK Components
+          command: sdkmanager "platforms;android-34" "build-tools;33.0.2"
+      - run:
+          name: Set Android SDK Environment Variable
+          command: export ANDROID_HOME=$ANDROID_SDK_ROOT
+
+      # Store test results
+      - store_test_results:
+          path: build/test-results
+
+      # Save Gradle cache
+      - save_cache:
+          key: cache-{{ checksum "/tmp/CIRCLECI_CACHE_KEY" }}
+          paths:
+            - ~/.gradle/caches
+
+      # Store build artifacts
+      - store_artifacts:
+          path: build/reports
+
+  deploy:
+    # This is an example deploy job, not actually used by the workflow
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - run:
+          name: deploy
+          command: '#e.g. ./deploy.sh'
+
+workflows:
+  build-and-test:
+    jobs:
+      - test-java
+      # Uncomment the deploy job if you want to add deployment
+      # - deploy:
+      #     requires:
+      #       - test-java
+d: echo "sdk.dir=$ANDROID_HOME" > local.properties
