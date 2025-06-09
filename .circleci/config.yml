@@ -3,7 +3,7 @@ version: 2.1  # Specifies the CircleCI configuration version
 jobs:
   build_and_test:  # Define a job for building and testing the app
     docker:
-      - image: cimg/android:2022.06  # Use a pre-built Android image
+      - image: cimg/android::2024.01  # Use a pre-built Android image
 
     steps:
       - checkout  # Check out the source code
