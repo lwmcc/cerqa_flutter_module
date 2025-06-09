@@ -14,6 +14,10 @@ jobs:
             - android-dependencies-
 
       - run:
+          name: Set local.properties
+          command: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - run:
           name: Download Dependencies
           command: |
             ./gradlew androidDependencies  # Download project dependencies
@@ -37,7 +41,7 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
 
 workflows:
-  version: 2.  # Defines the workflow version
+  version: 2  # Defines the workflow version
   build_workflow:  # Define a workflow to run the job
     jobs:
       - build_and_test  # Include the defined job in the workflow
