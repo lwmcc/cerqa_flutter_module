@@ -1,0 +1,12 @@
+{
+  "UserAgent": "aws-amplify-cli/2.0",
+  "Version": "1.0",
+  "api": {
+    "rest": {
+      "fetchAblyJwt": {
+        "endpoint": "https://your-api-id.execute-api.your-region.amazonaws.com/prod",
+        "region": "us-east-2"
+      }
+    }
+  }
+}

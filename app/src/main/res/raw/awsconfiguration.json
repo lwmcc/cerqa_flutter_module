@@ -1,0 +1,15 @@
+{
+  "UserAgent": "aws-amplify-cli/0.1.0",
+  "Version": "0.1.0",
+  "IdentityManager": {
+    "Default": {}
+  },
+  "API": {
+    "Events": {
+      "endpoint": "https://qwv77q2ocfawdlinpkcm3fy44e.appsync-api.us-east-2.amazonaws.com/event",
+      "region": "us-east-2",
+      "defaultAuthMode": "apiKey",
+      "apiKey": "da2-sf7r52lp4bdxrpsk7as5lx3tcm"
+    }
+  }
+}
