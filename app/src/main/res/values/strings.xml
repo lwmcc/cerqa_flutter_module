@@ -12,10 +12,18 @@
 
     <!-- Contacts -->
     <string name="connect_to_user">Connect</string>
+    <string name="connect_has_connection">Connection</string>
     <string name="connect_cancel">Cancel</string>
     <string name="connect_remove">Remove</string>
     <string name="connect_invite_users">Invite someone to connect</string>
     <string name="connect_invite_sent">Invite Sent</string>
+    <string name="connect_view_your_contacts">View your contacts</string>
+    <string name="connect_view_your_groups">View your groups</string>
+    <string name="connect_view_your_notifications">View your notifications</string>
+    <string name="connect_view_invite_received">Received invite from user</string>
+
+    <!-- Buttons -->
+    <string name="connect_button_accept">Accept</string>
 
     <!-- Dialogs -->
     <string name="dialog_button_connect">Connect</string>

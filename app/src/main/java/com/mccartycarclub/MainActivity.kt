@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.amplifyframework.ui.authenticator.ui.Authenticator
 import com.mccartycarclub.data.websocket.AblyPushMessagingService
 import com.mccartycarclub.ui.components.StartScreen
 import com.mccartycarclub.ui.theme.AppTheme
@@ -37,24 +38,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppTheme {
                 Surface(tonalElevation = 5.dp) {
-                    StartScreen(
-                        acceptInvite = {
-                            mainViewModel.acceptContactInvite()
-                        },
-                        inviteContact = { userId ->
-                            mainViewModel.inviteContact(
-                                rowId = { rowId ->
-                                    // TODO: for testing
-                                    sendConnectInvite(
-                                        "Link Test, https://carclub.app",
-                                        "+15551234567",
-                                        rowId,
-                                    )
-                                },
-                                userId = userId,
-                            )
-                        }
-                    )
+                    Authenticator { state ->
+                        StartScreen(state)
+                    }
                 }
             }
         }

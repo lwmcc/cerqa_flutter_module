@@ -7,6 +7,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
     id("com.google.gms.google-services")
     id("io.gitlab.arturbosch.detekt")
+    id ("dagger.hilt.android.plugin")
 }
 
 android {
@@ -20,7 +21,9 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.mccartycarclub.CustomTestRunner"
+
+        testInstrumentationRunnerArguments["grantPermission"] = "true"
     }
 
     buildTypes {
@@ -47,7 +50,9 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.15"
     }
-
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
@@ -55,10 +60,18 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview.android)
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.play.services.auth)
+    implementation(libs.androidx.runner)
+    implementation(libs.androidx.junit.ktx)
+    implementation(libs.androidx.ui.test.junit4.android)
+    implementation(libs.androidx.navigation.testing.android)
+    androidTestImplementation(libs.androidx.navigation.testing)
+
+    // Compose
     val composeBom = platform("androidx.compose:compose-bom:2025.01.01")
     implementation(composeBom)
-    androidTestImplementation(composeBom)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -68,15 +81,33 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    implementation( libs.hilt.android)
 
+    // Testing
+    testImplementation(composeBom)
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.hilt.android.testing)
+    debugImplementation(composeBom)
+    debugImplementation(libs.androidx.ui.test.manifest)
+    kaptTest(libs.hilt.android.compiler)
+    kaptAndroidTest(libs.hilt.android.compiler)
+    kapt (libs.hilt.compiler)
+    androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(composeBom)
+    androidTestImplementation(libs.androidx.uiautomator)
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.androidx.navigation.testing)
+    androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.truth)
+    kaptAndroidTest(libs.hilt.compiler)
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
 
     implementation(libs.androidx.material3)
-
+    kaptAndroidTest(libs.hilt.android.compiler)
     // AWS Amplify
     implementation(libs.authenticator)
     implementation(libs.aws.api)
@@ -86,7 +117,6 @@ dependencies {
     implementation(libs.core.kotlin)
     implementation(libs.aws.datastore)
 
-
     // AWS AppSync
     implementation(libs.aws.android.sdk.appsync)
 
@@ -94,10 +124,6 @@ dependencies {
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)
     implementation(libs.moshi.adapters)
-
-    implementation(libs.androidx.navigation.compose)
-
-    implementation(libs.androidx.hilt.navigation.compose)
 
     // Coil
     implementation(libs.coil.compose)

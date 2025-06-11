@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-06-08T22:13:47.365382Z">
+        <DropdownSelection timestamp="2025-06-11T06:17:58.487377Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/Users/larrymccarty/.android/avd/Pixel_8_Test_user_1.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=/Users/larrymccarty/.android/avd/Medium_Phone_API_35.avd" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -16,13 +16,24 @@
       <SelectionState runConfigName="URL https://carclub.app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="ContactCard">
+      <SelectionState runConfigName="contactsEmptyTest()">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2025-06-10T22:01:49.000892Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="LocalEmulator" identifier="path=/Users/larrymccarty/.android/avd/Pixel_8_Test_user_1.avd" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="ContactsEmptyTest()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="ContactCardPreivew">
+      <SelectionState runConfigName="loginScreen_handlesPermissionsAndNavigates()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="ContactCardPreview">
+      <SelectionState runConfigName="assert_that_app_opens()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

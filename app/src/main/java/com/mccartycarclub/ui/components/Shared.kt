@@ -14,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -71,12 +72,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import coil3.compose.AsyncImage
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.User
-import com.amplifyframework.ui.authenticator.ui.Authenticator
+import com.amplifyframework.ui.authenticator.SignedInState
 import com.mccartycarclub.MainActivity.Companion.CONTACTS_SCREEN
 import com.mccartycarclub.MainActivity.Companion.GROUPS_SCREEN
 import com.mccartycarclub.MainActivity.Companion.MAIN_SCREEN
@@ -98,8 +98,7 @@ import com.mccartycarclub.ui.viewmodels.MainViewModel
 
 @Composable
 fun StartScreen(
-    acceptInvite: () -> Unit,
-    inviteContact: (String) -> Unit,
+    state: SignedInState,
     navController: NavHostController = rememberNavController(),
     navActions: AppNavigationActions = remember(navController) {
         AppNavigationActions(navController)
@@ -108,11 +107,10 @@ fun StartScreen(
     NavHost(navController = navController, startDestination = MAIN_SCREEN) {
         composable(MAIN_SCREEN) {
             AppAuthenticator(
-                acceptInvite,
-                inviteContact,
+                state = state,
                 topBarClick = {
                     navToScreen(it, navActions)
-                }
+                },
             )
         }
 
@@ -171,8 +169,7 @@ private fun navToScreen(
 
 @Composable
 fun AppAuthenticator(
-    acceptInvite: () -> Unit,
-    inviteContact: (String) -> Unit,
+    state: SignedInState,
     topBarClick: (ClickNavigation) -> Unit,
     mainViewModel: MainViewModel = hiltViewModel(),
 ) {
@@ -191,78 +188,64 @@ fun AppAuthenticator(
                 .fillMaxWidth()
                 .padding(innerPadding),
         ) {
-            Authenticator { state ->
-                // TODO: to move somewhere this is for testing only
-                mainViewModel.setLoggedInUserId(state.user.username)
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+            // TODO: to move somewhere this is for testing only
+            mainViewModel.setLoggedInUserId(state.user.username)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "Hello ${state.user.username}!",
+                )
+
+                // All of the button below are just for testing
+                // the backed, and creating and testing users. This will
+                // be moved to an area for dev only
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        Amplify.Auth.signOut { }
+                    },
                 ) {
-                    Text(
-                        text = "Hello ${state.user.username}!",
-                    )
+                    Text(text = "Sign Out")
+                }
 
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-                            Amplify.Auth.signOut { }
-                        },
-                    ) {
-                        Text(text = "Sign Out")
-                    }
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        // TODO: move, just for testing
+                        Amplify.Auth.fetchUserAttributes({ attributes ->
+                            val userId =
+                                attributes.firstOrNull { it.key.keyString == "sub" }?.value
 
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-                            Amplify.Auth.fetchUserAttributes({ attributes ->
-                                val userId =
-                                    attributes.firstOrNull { it.key.keyString == "sub" }?.value
+                            // TODO: move just for testing
+                            Amplify.API.mutate(
+                                ModelMutation.create(testUser1(userId!!)),
+                                { response -> // TODO: response?
+                                    // This is were userId is added to prefs
+                                    mainViewModel.setLoggedInUserId(userId)
+                                },
+                                { error ->
+                                    Log.e("MainActivity *****", "User creation failed", error)
+                                }
+                            )
+                        }, { error ->
+                            Log.e(
+                                "MainActivity *****", "Failed to fetch user attributes", error
+                            )
+                        })
+                    }) {
+                    Text(text = "Create User")
+                }
 
-                                Amplify.API.mutate(
-                                    ModelMutation.create(testUser1(userId!!)),
-                                    { response -> // TODO: response?
-                                        // This is were userId is added to prefs
-                                        mainViewModel.setLoggedInUserId(userId)
-                                    },
-                                    { error ->
-                                        Log.e("MainActivity *****", "User creation failed", error)
-                                    }
-                                )
-                            }, { error ->
-                                Log.e(
-                                    "MainActivity *****", "Failed to fetch user attributes", error
-                                )
-                            })
-                        }) {
-                        Text(text = "Create User")
-                    }
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
 
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-
-                        }) {
-                        Text(text = "Add Contact")
-                    }
-
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-                            inviteContact(state.user.userId)
-                        }) {
-                        Text(text = "Send Invite")
-                    }
-
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-                            acceptInvite
-                        }) {
-                        Text(text = "Accept Invite")
-                    }
-
+                    }) {
+                    Text(text = "Add Contact")
                 }
             }
         }
@@ -290,7 +273,7 @@ fun TopBar(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_action_groups), // Use your drawable resource
-                    contentDescription = "Localized description"
+                    contentDescription = stringResource(R.string.connect_view_your_groups),
                 )
             }
             IconButton(
@@ -300,7 +283,7 @@ fun TopBar(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_action_contacts), // Use your drawable resource
-                    contentDescription = "Localized description"
+                    contentDescription = stringResource(R.string.connect_view_your_contacts),
                 )
             }
 
@@ -314,7 +297,7 @@ fun TopBar(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Notifications,
-                        contentDescription = "Email",
+                        contentDescription =stringResource(R.string.connect_view_your_notifications),
                     )
                 }
             }
@@ -704,9 +687,8 @@ fun Search(
                 }
 
                 is UiStateResult.Success -> {
-                    val user = (searchQuery as? UiStateResult.Success)?.data
                     SearchResultUserCard(
-                        user = user,
+                        user = searchQuery.data,
                         isSendingInvite = isSendingInvite,
                         inviteSentSuccess = inviteSentSuccess,
                         connectionEvent = { event ->
@@ -786,13 +768,6 @@ fun AnimatedLoadingSpinner(
         Box {
             PendingCard(dimensionResource(id = spinnerSize))
         }
-    }
-}
-
-@Composable
-fun Error() {
-    Column {
-
     }
 }
 
@@ -898,109 +873,26 @@ fun SearchResultUserCard(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-
-        if (user != null) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                AsyncImage(
-                    model = R.drawable.ic_dashboard_black_24dp,// "https://example.com/image.jpg",
-                    // TODO: add an image user.avatarUri
-                    contentDescription = stringResource(id = R.string.user_avatar),
-                    modifier = Modifier
-                        .width(60.dp)
-                        .padding(
-                            dimensionResource(id = R.dimen.card_padding_start),
-                            dimensionResource(id = R.dimen.card_padding_top),
-                        )
-                )
-                Column(
-                    modifier = Modifier
-                        .padding(
-                            dimensionResource(id = R.dimen.card_padding_start),
-                            dimensionResource(id = R.dimen.card_padding_top),
-                        )
-                        .weight(1f)
-                ) {
-                    Text(
-                        text = user.userName,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(
+                        dimensionResource(id = R.dimen.card_padding_start),
+                        dimensionResource(id = R.dimen.card_padding_top),
                     )
-                    when (user) {
-                        is SentInviteToUser -> {
-                            Column {
-                                Text(
-                                    text = stringResource(id = R.string.connect_invite_sent),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer, // TODO: add date
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(MaterialTheme.colorScheme.primaryContainer)
-                                        .padding(horizontal = 4.dp, vertical = 4.dp),
-                                )
-                            }
-                        }
+                    .weight(1f)
+            ) {
+                user?.let { user ->
 
-                        is ReceivedInviteFromUser -> {
-                            Column {
-                                Text(user.userName)
-                                Text("Received Invite from User")
-                                Button(
-                                    onClick = { /*TODO*/ },
-                                ) {
-                                    Text("Accept")
-                                }
-                            }
-                        }
-
-                        is ConnectedSearch -> {
-                            Column {
-                                Text(
-                                    user.userName,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
-                                Text(
-                                    "Connection",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
-                            }
-                        }
-
-                        else -> { // Is UserSearchResult which needs to be last
-                            if (!isSendingInvite) {
-                                CardListButton(
-                                    text = stringResource(id = R.string.connect_to_user),
-                                    onClick = {
-                                        user.let { user ->
-                                            connectionEvent(
-                                                ContactCardEvent.InviteConnectEvent(
-                                                    user.userId,
-                                                    user.rowId
-                                                )
-                                            )
-                                        }
-                                    }
-                                )
-
-                            } else {
-                                TextRowAnimation(
-                                    visible = showInviteSentSuccess,
-                                    content = {
-                                        Text(
-                                            text = stringResource(id = R.string.connect_invite_sent),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer)
-                                        )
-                                    }
-                                )
-                            }
-                        }
-                    }
+                    SearchSection(
+                        user = user,
+                        isSendingInvite = isSendingInvite,
+                        showInviteSentSuccess = showInviteSentSuccess,
+                        connectionEvent = connectionEvent,
+                    )
                 }
             }
         }
@@ -1058,6 +950,149 @@ fun ConfirmationDialog(
                 }
             },
         )
+    }
+}
+
+@Composable
+fun DescriptionAndButton(
+    description: String,
+    buttonText: String,
+    onClick: () -> Unit,
+) {
+    Column {
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onPrimaryContainer, // TODO: add date
+            modifier = Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .padding(horizontal = 4.dp, vertical = 4.dp),
+        )
+        Button(
+            onClick = {
+                onClick()
+            },
+            shape = RoundedCornerShape(8.dp),
+            contentPadding = PaddingValues(0.dp),
+        ) {
+            Text(text = buttonText)
+        }
+    }
+}
+
+@Composable
+fun SearchSection(
+    user: UserSearchResult,
+    isSendingInvite: Boolean,
+    showInviteSentSuccess: Boolean,
+    connectionEvent: (ContactCardEvent) -> Unit,
+) {
+    when (user) {
+        is SentInviteToUser -> {
+            ListSection(
+                image = R.drawable.ic_dashboard_black_24dp,
+                contentDescription = stringResource(id = R.string.user_avatar),
+                title = user.userName,
+                width = 60.dp,
+                content = {
+                    Text(
+                        text = stringResource(id = R.string.connect_invite_sent),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer, // TODO: add date
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .padding(horizontal = 4.dp, vertical = 4.dp),
+                    )
+                }
+            )
+        }
+
+        is ReceivedInviteFromUser -> {
+            ListSection(
+                image = R.drawable.ic_dashboard_black_24dp,
+                contentDescription = stringResource(id = R.string.user_avatar),
+                title = user.userName,
+                width = 60.dp,
+                content = {
+                    DescriptionAndButton(
+                        description = stringResource(id = R.string.connect_view_invite_received),
+                        buttonText = stringResource(id = R.string.connect_button_accept),
+                        onClick = {
+
+                        })
+                }
+            )
+        }
+
+        is ConnectedSearch -> {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ListSection(
+                    image = R.drawable.ic_dashboard_black_24dp,
+                    contentDescription = stringResource(id = R.string.user_avatar),
+                    title = user.userName,
+                    width = 60.dp,
+                    content = {
+                        Text(
+                            stringResource(id = R.string.connect_has_connection),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                )
+            }
+        }
+
+        else -> { // Is UserSearchResult which needs to be last
+            if (!isSendingInvite) {
+                ListSection(
+                    image = R.drawable.ic_dashboard_black_24dp,
+                    contentDescription = stringResource(id = R.string.user_avatar),
+                    title = user.userName,
+                    width = 60.dp,
+                    content = {
+                        CardListButton(
+                            text = stringResource(id = R.string.connect_to_user),
+                            onClick = {
+                                user.let { user ->
+                                    connectionEvent(
+                                        ContactCardEvent.InviteConnectEvent(
+                                            user.userId,
+                                            user.rowId
+                                        )
+                                    )
+                                }
+                            }
+                        )
+                    }
+                )
+            } else {
+                ListSection(
+                    image = R.drawable.ic_dashboard_black_24dp,
+                    contentDescription = stringResource(id = R.string.user_avatar),
+                    title = user.userName,
+                    width = 60.dp,
+                    content = {
+                        TextRowAnimation(
+                            visible = showInviteSentSuccess,
+                            content = {
+                                Text(
+                                    text = stringResource(id = R.string.connect_invite_sent),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier
+                                        .background(MaterialTheme.colorScheme.primaryContainer)
+                                )
+                            }
+                        )
+                    }
+                )
+            }
+        }
     }
 }
 

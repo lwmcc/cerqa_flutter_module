@@ -2,7 +2,9 @@
 ablyAndroid = "1.2.40"
 ablyAndroidVersion = "1.2.20"
 activityCompose = "1.10.0"
-agp = "8.5.1"
+agp = "8.10.1"
+amplifyAndroidGenerated = "2.18.0"
+amplifyframeworkAwsApi = "2.18.0"
 amplifyframeworkCore = "2.9.0"
 api = "2.9.0"
 auth = "1.28.0"
@@ -11,6 +13,7 @@ authenticatorVersion = "ANDROID_AUTHENTICATOR_VERSION"
 awsAndroidSdkAppsync = "3.4.1"
 awsApi = "2.24.0"
 awsApiVersion = "1.28.0"
+awsAuthCognito = "2.24.0"
 awsDatastore = "2.21.1"
 awsDatastoreVersion = "2.11.0"
 coilCompose = "3.1.0"
@@ -24,7 +27,13 @@ desugar_jdk_libsVersion = "2.0.3"
 detektFormatting = "1.23.0"
 firebaseCore = "21.1.1"
 firebaseMessaging = "24.1.1"
+googleHiltAndroidTesting = "2.56.2"
 hiltAndroid = "2.51.1"
+hiltAndroidCompiler = "2.51.1"
+hiltAndroidCompilerVersion = "2.56.2"
+hiltAndroidTesting = "2.51.1"
+hiltAndroidTestingVersion = "2.51.1"
+hiltCompiler = "2.51.1"
 hiltNavigationCompose = "1.2.0"
 kotlin = "2.0.0"
 coreKtx = "1.15.0"
@@ -43,14 +52,26 @@ moshiKotlinVersion = "1.15.0"
 moshiVersion = "1.15.0"
 navigationCompose = "2.8.9"
 navigationFragmentKtx = "2.6.0"
+navigationTesting = "2.9.0"
 navigationUiKtx = "2.6.0"
+robolectric = "4.13"
+truth = "1.1.5"
+uiautomator = "2.3.0"
+uiautomatorVersion = "2.2.0"
+uiTestJunit4 = "1.8.2"
+uiTestManifest = "1.8.2"
 uiToolingPreviewAndroid = "1.7.8"
 firebaseMessagingKtx = "24.1.1"
 playServicesAuth = "21.3.0"
+runner = "1.6.2"
+junitKtx = "1.2.1"
+uiTestJunit4Android = "1.8.2"
+navigationTestingAndroid = "2.9.0"
 
 [libraries]
 ably-android = { module = "io.ably:ably-android", version.ref = "ablyAndroid" }
 ably-android-v1220 = { module = "io.ably:ably-android", version.ref = "ablyAndroidVersion" }
+amplify-android-generated = { module = "com.amplifyframework:amplify-android-generated", version.ref = "amplifyAndroidGenerated" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore = { module = "androidx.datastore:datastore", version.ref = "datastorePreferencesCore" }
@@ -59,6 +80,11 @@ androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-p
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-material3 = { module = "androidx.compose.material3:material3" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "navigationTesting" }
+androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "uiTestJunit4" }
+androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "uiTestManifest" }
+androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
+androidx-uiautomator-v220 = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomatorVersion" }
 api = { module = "com.amplifyframework.kotlin:api", version.ref = "api" }
 auth = { module = "com.amplifyframework:auth", version.ref = "auth" }
 authenticator = { module = "com.amplifyframework.ui:authenticator", version.ref = "authenticator" }
@@ -66,6 +92,8 @@ authenticator-vandroidauthenticatorversion = { module = "com.amplifyframework.ui
 aws-android-sdk-appsync = { module = "com.amazonaws:aws-android-sdk-appsync", version.ref = "awsAndroidSdkAppsync" }
 aws-api = { module = "com.amplifyframework:aws-api", version.ref = "awsApi" }
 aws-api-v1280 = { module = "com.amplifyframework:aws-api", version.ref = "awsApiVersion" }
+aws-api-v2180 = { module = "com.amplifyframework:aws-api", version.ref = "amplifyframeworkAwsApi" }
+aws-auth-cognito = { module = "com.amplifyframework:aws-auth-cognito", version.ref = "awsAuthCognito" }
 aws-datastore = { module = "com.amplifyframework:aws-datastore", version.ref = "awsDatastore" }
 aws-datastore-v2110 = { module = "com.amplifyframework:aws-datastore", version.ref = "awsDatastoreVersion" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
@@ -80,6 +108,12 @@ firebase-core = { module = "com.google.firebase:firebase-core", version.ref = "f
 firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebaseMessaging" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
+hilt-android-compiler-v251 = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
+hilt-android-compiler-v2562 = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompilerVersion" }
+hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltAndroidTesting" }
+hilt-android-testing-v251 = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltAndroidTestingVersion" }
+hilt-android-testing-v2562 = { module = "com.google.dagger:hilt-android-testing", version.ref = "googleHiltAndroidTesting" }
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltCompiler" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -99,6 +133,12 @@ firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messa
 moshi-kotlin-v1150 = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshiKotlinVersion" }
 moshi-v1150 = { module = "com.squareup.moshi:moshi", version.ref = "moshiVersion" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
+androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
+androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }
+androidx-ui-test-junit4-android = { group = "androidx.compose.ui", name = "ui-test-junit4-android", version.ref = "uiTestJunit4Android" }
+androidx-navigation-testing-android = { group = "androidx.navigation", name = "navigation-testing-android", version.ref = "navigationTestingAndroid" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+truth = { module = "com.google.truth:truth", version.ref = "truth" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
