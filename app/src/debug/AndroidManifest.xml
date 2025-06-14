@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <activity
+            android:name="com.mccartycarclub.fakes.TestActivity"
+            android:exported="true" />
+
+    </application>
+</manifest>

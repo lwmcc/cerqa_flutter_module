@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.Packaging
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -53,6 +55,16 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
+
+    packaging {
+        resources.excludes.addAll(
+            listOf(
+                "/META-INF/LICENSE.md",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+            )
+        )
+    }
 }
 
 dependencies {
@@ -64,6 +76,7 @@ dependencies {
     implementation(libs.androidx.junit.ktx)
     implementation(libs.androidx.ui.test.junit4.android)
     implementation(libs.androidx.navigation.testing.android)
+    implementation(libs.androidx.rules)
     androidTestImplementation(libs.androidx.navigation.testing)
 
     // Compose
@@ -92,7 +105,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     kaptTest(libs.hilt.android.compiler)
     kaptAndroidTest(libs.hilt.android.compiler)
-    kapt (libs.hilt.compiler)
     androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(composeBom)
@@ -102,9 +114,13 @@ dependencies {
     androidTestImplementation(libs.androidx.navigation.testing)
     androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.truth)
+    androidTestImplementation("io.mockk:mockk-android:1.14.2")
+    debugImplementation(libs.androidx.ui.test.manifest)
+
     kaptAndroidTest(libs.hilt.compiler)
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
+    kapt (libs.hilt.compiler)
 
     implementation(libs.androidx.material3)
     kaptAndroidTest(libs.hilt.android.compiler)
@@ -134,7 +150,7 @@ dependencies {
     implementation("io.ably:ably-android:1.2.20")
 
     // Firebase
-    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")

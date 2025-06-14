@@ -1,0 +1,471 @@
+package com.mccartycarclub.ui.components
+
+import android.util.Log
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.amplifyframework.api.graphql.model.ModelMutation
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.ui.authenticator.SignedInState
+import com.mccartycarclub.R
+import com.mccartycarclub.navigation.ClickNavigation
+import com.mccartycarclub.repository.CurrentContact
+import com.mccartycarclub.repository.ReceivedContactInvite
+import com.mccartycarclub.repository.SentInviteContactInvite
+import com.mccartycarclub.repository.UiStateResult
+import com.mccartycarclub.ui.viewmodels.ContactsViewModel
+import com.mccartycarclub.ui.viewmodels.MainViewModel
+
+@Composable
+fun AppAuthenticator(
+    state: SignedInState,
+    topBarClick: (ClickNavigation) -> Unit,
+    mainViewModel: MainViewModel = hiltViewModel(),
+) {
+    Scaffold(
+        topBar = {
+            TopBar(
+                stringResource(id = R.string.app_name),
+                topBarClick = {
+                    topBarClick(it)
+                },
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(innerPadding),
+        ) {
+            // TODO: to move somewhere this is for testing only
+            mainViewModel.setLoggedInUserId(state.user.username)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "Hello ${state.user.username}!",
+                )
+
+                // All of the button below are just for testing
+                // the backed, and creating and testing users. This will
+                // be moved to an area for dev only
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        Amplify.Auth.signOut { }
+                    },
+                ) {
+                    Text(text = "Sign Out")
+                }
+
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        // TODO: move, just for testing
+                        Amplify.Auth.fetchUserAttributes({ attributes ->
+                            val userId =
+                                attributes.firstOrNull { it.key.keyString == "sub" }?.value
+
+                            // TODO: move just for testing
+                            Amplify.API.mutate(
+                                ModelMutation.create(testUser1(userId!!)),
+                                { response -> // TODO: response?
+                                    // This is were userId is added to prefs
+                                    mainViewModel.setLoggedInUserId(userId)
+                                },
+                                { error ->
+                                    Log.e("MainActivity *****", "User creation failed", error)
+                                }
+                            )
+                        }, { error ->
+                            Log.e(
+                                "MainActivity *****", "Failed to fetch user attributes", error
+                            )
+                        })
+                    }) {
+                    Text(text = "Create User")
+                }
+
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+
+                    }) {
+                    Text(text = "Add Contact")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun Contacts(
+    contactsViewModel: ContactsViewModel = hiltViewModel(),
+    topBarClick: (ClickNavigation) -> Unit,
+) {
+
+    val allContacts = contactsViewModel.contacts
+    val contactsState by contactsViewModel.contactsState.collectAsStateWithLifecycle()
+    val dataPending by contactsViewModel.dataPending.collectAsStateWithLifecycle()
+    val userId by contactsViewModel.userId.collectAsStateWithLifecycle()
+
+    var openAlertDialog by remember { mutableStateOf(false) }
+    var selectedUserId by remember { mutableStateOf<String?>(null) }
+    var selectedContactId by remember { mutableStateOf<String?>(null) }
+    var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
+
+    var listIndex by remember { mutableIntStateOf(0) }
+    var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
+
+    val density = LocalDensity.current
+
+    LaunchedEffect(userId) {
+        contactsViewModel.fetchAllContacts(userId)
+    }
+
+    when {
+        openAlertDialog -> {
+            ConfirmationDialog(
+                alertDialogData = alertDialogData,
+                onDismissRequest = {
+                    openAlertDialog = false
+                },
+                onConfirmation = {
+                    openAlertDialog = false
+                    connectionEvent?.let { event ->
+                        contactsViewModel.userConnectionEvent(listIndex, event)
+                    }
+                },
+            )
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopBarContacts(
+                stringResource(id = R.string.app_name),
+                topBarClick = {
+                    topBarClick(it)
+                }
+            )
+        },
+    ) { innerPadding ->
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(innerPadding),
+        ) {
+
+            AnimatedLoadingSpinner(
+                density = density,
+                dataPending = dataPending,
+                spinnerSize = R.dimen.card_pending_spinner,
+                slideIn = (-20).dp,
+            )
+
+            when (contactsState) {
+                is ContactsViewModel.UserContacts.NoInternet -> {
+                    println("Shared ***** NO INTERNET")
+                }
+
+                is ContactsViewModel.UserContacts.Error -> {
+                    println("Shared ***** ERROR")
+                }
+
+                is ContactsViewModel.UserContacts.Success -> {
+                    if (allContacts.isEmpty()) {
+                        NoDataFound(message = stringResource(id = R.string.connect_invite_users))
+                    } else {
+                        LazyColumn {
+                            allContacts.forEachIndexed { index, contact ->
+                                when (contact) {
+                                    is ReceivedContactInvite -> {
+                                        item {
+                                            ReceivedInviteContactCard(
+                                                contact = contact,
+                                                primaryButtonText = stringResource(id = R.string.connect_remove),
+                                                secondaryButtonText = stringResource(id = R.string.connect_to_user),
+                                                avatar = R.drawable.ic_dashboard_black_24dp,
+                                                onDismissClick = { event ->
+                                                    listIndex = index
+                                                    connectionEvent = event
+                                                    openAlertDialog = true
+                                                    alertDialogData = AlertDialogData(
+                                                        icon = R.drawable.baseline_person_off_24,
+                                                        title = R.string.dialog_remove_invite_to_connect_title,
+                                                        description =
+                                                            R.string.dialog_remove_invite_to_connect_description,
+                                                        dialogIconDescription = R.string.dialog_icon_description,
+                                                        dismiss = R.string.dialog_button_dismiss,
+                                                        confirm = R.string.connect_remove,
+                                                    )
+                                                },
+                                                onConfirmClick = { event ->
+                                                    listIndex = index
+                                                    connectionEvent = event
+                                                    openAlertDialog = true
+                                                    alertDialogData = AlertDialogData(
+                                                        icon = R.drawable.baseline_person_add_24,
+                                                        title = R.string.dialog_accept_invite_to_connect_title,
+                                                        description =
+                                                            R.string.dialog_accept_invite_to_connect_description,
+                                                        dialogIconDescription = R.string.dialog_icon_description,
+                                                        dismiss = R.string.dialog_button_dismiss,
+                                                        confirm = R.string.dialog_button_accept,
+                                                    )
+                                                }
+                                            )
+                                        }
+                                    }
+
+                                    is SentInviteContactInvite -> {
+                                        item {
+                                            SentContactCard(
+                                                contact = contact,
+                                                primaryButtonText = stringResource(id = R.string.connect_cancel),
+                                                avatar = R.drawable.ic_dashboard_black_24dp,
+                                                onClick = { event ->
+                                                    selectedUserId = contact.userId
+                                                    selectedContactId = contact.contactId
+                                                    connectionEvent = event
+                                                    openAlertDialog = true
+                                                    alertDialogData = AlertDialogData(
+                                                        icon = R.drawable.baseline_person_off_24,
+                                                        title = R.string.dialog_cancel_invite_to_connect_title,
+                                                        description =
+                                                            R.string.dialog_cancel_invite_to_connect_description,
+                                                        dialogIconDescription = R.string.dialog_icon_description,
+                                                        dismiss = R.string.dialog_button_dismiss,
+                                                        confirm = R.string.connect_cancel,
+                                                    )
+                                                },
+                                            )
+                                        }
+                                    }
+
+                                    is CurrentContact -> {
+                                        item {
+                                            CurrentContactCard(
+                                                contact = contact,
+                                                avatar = R.drawable.ic_dashboard_black_24dp,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                ContactsViewModel.UserContacts.Idle -> {
+                    // No action needed
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun Groups(topBarClick: (ClickNavigation) -> Unit) {
+    Scaffold(
+        topBar = {
+            TopBarGroups(
+                stringResource(id = R.string.app_name),
+                topBarClick = {
+                    topBarClick(it)
+                }
+            )
+        },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(innerPadding),
+        ) {
+            Text(text = "Groups")
+        }
+    }
+}
+
+@Composable
+fun Search(
+    contactsViewModel: ContactsViewModel = hiltViewModel(),
+    topBarClick: (ClickNavigation) -> Unit,
+) {
+    Scaffold(
+        topBar = {
+            TopBarSearch(
+                stringResource(id = R.string.app_name),
+                topBarClick = {
+                    topBarClick(it)
+                }
+            )
+        },
+    ) { innerPadding ->
+
+        val searchQuery = contactsViewModel.searchResults.collectAsStateWithLifecycle().value
+        val inviteSentSuccess =
+            contactsViewModel.inviteSentSuccess.collectAsStateWithLifecycle().value
+        val isSendingInvite = contactsViewModel.isSendingInvite.collectAsStateWithLifecycle().value
+
+        var input by remember { mutableStateOf("") }
+        var openAlertDialog by remember { mutableStateOf(false) }
+        var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
+        var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
+        var clearSearchVisible by remember { mutableStateOf(false) }
+
+        when {
+            openAlertDialog -> {
+                ConfirmationDialog(
+                    alertDialogData = alertDialogData,
+                    onDismissRequest = {
+                        openAlertDialog = false
+                    },
+                    onConfirmation = {
+                        openAlertDialog = false
+                        connectionEvent?.let { event ->
+                            contactsViewModel.userConnectionEvent(connectionEvent = event)
+                        }
+                    },
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(innerPadding),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background),
+            ) {
+                TextField(
+                    value = input,
+                    maxLines = 2,
+                    onValueChange = {
+                        input = it
+                        contactsViewModel.onQueryChange(it)
+                        clearSearchVisible = input.isNotEmpty()
+                    },
+                    label = {
+                        Text(
+                            text = stringResource(id = R.string.user_search),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                )
+
+                if (clearSearchVisible) {
+                    Icon(
+                        Icons.Filled.Clear,
+                        contentDescription = stringResource(id = R.string.text_field_clear),
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .clickable {
+                                input = ""
+                                contactsViewModel.onQueryChange("")
+                            },
+                    )
+                }
+            }
+
+            when (searchQuery) {
+                is UiStateResult.Error -> {
+
+                }
+
+                UiStateResult.Idle -> {
+
+                }
+
+                UiStateResult.NoInternet -> {
+
+                }
+
+                UiStateResult.Pending -> {
+
+                }
+
+                is UiStateResult.Success -> {
+                    SearchResultUserCard(
+                        user = searchQuery.data,
+                        isSendingInvite = isSendingInvite,
+                        inviteSentSuccess = inviteSentSuccess,
+                        connectionEvent = { event ->
+                            openAlertDialog = true
+                            connectionEvent = event
+                            alertDialogData = AlertDialogData(
+                                icon = R.drawable.sharp_contacts_24,
+                                title = R.string.dialog_invite_to_connect_title,
+                                description = R.string.dialog_invite_to_connect_description,
+                                dialogIconDescription = R.string.dialog_icon_description,
+                                dismiss = R.string.dialog_button_dismiss,
+                                confirm = R.string.dialog_button_connect,
+                            )
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun Notifications(topBarClick: (ClickNavigation) -> Unit) {
+    Scaffold(
+        topBar = {
+            TopBarSearch(
+                stringResource(id = R.string.app_name),
+                topBarClick = {
+                    topBarClick(it)
+                }
+            )
+        },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(innerPadding),
+        ) {
+            Text(text = "Notifications")
+        }
+    }
+}

@@ -67,6 +67,7 @@ runner = "1.6.2"
 junitKtx = "1.2.1"
 uiTestJunit4Android = "1.8.2"
 navigationTestingAndroid = "2.9.0"
+rules = "1.6.1"
 
 [libraries]
 ably-android = { module = "io.ably:ably-android", version.ref = "ablyAndroid" }
@@ -139,6 +140,7 @@ androidx-ui-test-junit4-android = { group = "androidx.compose.ui", name = "ui-te
 androidx-navigation-testing-android = { group = "androidx.navigation", name = "navigation-testing-android", version.ref = "navigationTestingAndroid" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
+androidx-rules = { group = "androidx.test", name = "rules", version.ref = "rules" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -3,22 +3,17 @@ package com.mccartycarclub
 import android.content.BroadcastReceiver
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.material3.Surface
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.amplifyframework.ui.authenticator.ui.Authenticator
+import com.amplifyframework.ui.authenticator.ui.Authenticator as Authenticator
 import com.mccartycarclub.data.websocket.AblyPushMessagingService
 import com.mccartycarclub.ui.components.StartScreen
+import com.mccartycarclub.ui.components.auth.AuthenticatorStateProvider
 import com.mccartycarclub.ui.theme.AppTheme
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,19 +27,23 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var pushReceiver: BroadcastReceiver
 
+    @Inject
+    lateinit var stateProvider: AuthenticatorStateProvider
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             AppTheme {
                 Surface(tonalElevation = 5.dp) {
-                    Authenticator { state ->
+                    Authenticator(state = stateProvider.provide() /*rememberAuthenticatorState()*/) { state ->
                         StartScreen(state)
                     }
                 }
             }
         }
-        checkPermissions()
+        // TODO: will move call to follow sign in success
+        //checkPermissions()
         registerReceiver()
         handleIncomingIntentS(intent)
         mainViewModel.initAbly()
@@ -60,7 +59,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val requestPermissionLauncher = registerForActivityResult(
+/*    private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
@@ -69,9 +68,9 @@ class MainActivity : ComponentActivity() {
             // TODO: show message stating my permission is needed
             println("MainActivity ***** ACCESS DENIED")
         }
-    }
+    }*/
 
-    private fun checkPermissions() {
+/*    private fun checkPermissions() {
         when {
             ContextCompat.checkSelfPermission(
                 this@MainActivity, android.Manifest.permission.READ_CONTACTS
@@ -121,9 +120,9 @@ class MainActivity : ComponentActivity() {
                 requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
             }
         }
-    }
+    }*/
 
-    private fun loadUserData() = mainViewModel.getDeviceContacts()
+/*    private fun loadUserData() = mainViewModel.getDeviceContacts()
 
     private fun sendConnectInvite(message: String, phoneNumber: String, rowId: String) {
         val intent = Intent(Intent.ACTION_SENDTO).apply {
@@ -136,7 +135,7 @@ class MainActivity : ComponentActivity() {
         //if (intent.resolveActivity(packageManager) != null) {
         startActivity(intent)
         //}
-    }
+    }*/
 
     private fun handleIncomingIntentS(intent: Intent) {
         if (intent.action.equals(LinkActions.ACTION_VIEW.action)) {
