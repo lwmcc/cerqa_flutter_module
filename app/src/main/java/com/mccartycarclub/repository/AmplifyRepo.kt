@@ -783,7 +783,8 @@ class AmplifyRepo @Inject constructor(
         awaitClose { /* no-op */ }
     }.flowOn(ioDispatcher)
 
-    override suspend fun searchUsers(
+    // TODO: return flow no need to suspend
+    override fun searchUsers(
         loggedInUserId: String?,
         userName: String,
     ): Flow<NetworkResponse<UserSearchResult>> = flow {

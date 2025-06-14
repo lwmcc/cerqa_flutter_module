@@ -43,6 +43,7 @@ import com.mccartycarclub.repository.SentInviteContactInvite
 import com.mccartycarclub.repository.UiStateResult
 import com.mccartycarclub.ui.viewmodels.ContactsViewModel
 import com.mccartycarclub.ui.viewmodels.MainViewModel
+import com.mccartycarclub.ui.viewmodels.SearchViewModel
 
 @Composable
 fun AppAuthenticator(
@@ -322,6 +323,7 @@ fun Groups(topBarClick: (ClickNavigation) -> Unit) {
 @Composable
 fun Search(
     contactsViewModel: ContactsViewModel = hiltViewModel(),
+    searchViewModel: SearchViewModel = hiltViewModel(),
     topBarClick: (ClickNavigation) -> Unit,
 ) {
     Scaffold(
@@ -336,6 +338,7 @@ fun Search(
     ) { innerPadding ->
 
         val searchQuery = contactsViewModel.searchResults.collectAsStateWithLifecycle().value
+        val uiState = searchViewModel.uiState
         val inviteSentSuccess =
             contactsViewModel.inviteSentSuccess.collectAsStateWithLifecycle().value
         val isSendingInvite = contactsViewModel.isSendingInvite.collectAsStateWithLifecycle().value
@@ -378,7 +381,9 @@ fun Search(
                     maxLines = 2,
                     onValueChange = {
                         input = it
+                        // TODO: switch to searchViewModel
                         contactsViewModel.onQueryChange(it)
+                        searchViewModel.onQueryChange(it)
                         clearSearchVisible = input.isNotEmpty()
                     },
                     label = {
@@ -401,11 +406,24 @@ fun Search(
                             .align(Alignment.CenterEnd)
                             .clickable {
                                 input = ""
+                                // TODO: switch to searchViewModel
                                 contactsViewModel.onQueryChange("")
+                                searchViewModel.onQueryChange("")
                             },
                     )
                 }
             }
+
+
+            println("SharedComposables ***** MESSAGE ${uiState.message}")
+            println("SharedComposables ***** PENDING ${uiState.pending}")
+            println("SharedComposables ***** IDLE ${uiState.idle}")
+
+
+            println("SharedComposables ***** ${uiState.searchResult?.rowId}")
+            println("SharedComposables ***** ${uiState.searchResult?.userId}")
+            println("SharedComposables ***** ${uiState.searchResult?.userName}")
+            println("SharedComposables ***** ${uiState.searchResult?.avatarUri}")
 
             when (searchQuery) {
                 is UiStateResult.Error -> {

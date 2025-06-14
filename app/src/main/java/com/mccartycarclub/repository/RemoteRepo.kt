@@ -56,7 +56,7 @@ interface RemoteRepo {
 
     fun fetchAblyToken(userId: String): Flow<TokenRequest>
 
-    suspend fun searchUsers(
+    fun searchUsers(
         loggedInUserId: String?,
         userName: String
     ): Flow<NetworkResponse<UserSearchResult>>
