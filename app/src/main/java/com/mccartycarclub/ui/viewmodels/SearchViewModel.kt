@@ -57,19 +57,19 @@ class SearchViewModel @Inject constructor(
                         uiState = uiState.copy(pending = true)
 
                         repo.searchUsers(_userId.value, userName).collect { response ->
-                            when (response) {
+                            uiState = when (response) {
                                 is NetworkResponse.Error -> {
                                     // TODO: move messages to enum
-                                    uiState = uiState.copy(message = "An Error Occurred")
+                                    uiState.copy(message = "An Error Occurred")
                                 }
 
                                 NetworkResponse.NoInternet -> {
                                     // TODO: move messages to enum
-                                    uiState = uiState.copy(message = "No Internet")
+                                    uiState.copy(message = "No Internet")
                                 }
 
                                 is NetworkResponse.Success -> {
-                                    uiState = uiState.copy(searchResult = response.data, pending = false)
+                                    uiState.copy(searchResult = response.data, pending = false)
                                 }
                             }
                         }

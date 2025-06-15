@@ -40,11 +40,11 @@ import com.mccartycarclub.navigation.ClickNavigation
 import com.mccartycarclub.repository.CurrentContact
 import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.SentInviteContactInvite
-import com.mccartycarclub.repository.UiStateResult
 import com.mccartycarclub.ui.viewmodels.ContactsViewModel
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 import com.mccartycarclub.ui.viewmodels.SearchViewModel
 
+@Suppress("LongMethod")
 @Composable
 fun AppAuthenticator(
     state: SignedInState,
@@ -130,6 +130,7 @@ fun AppAuthenticator(
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 fun Contacts(
     contactsViewModel: ContactsViewModel = hiltViewModel(),
@@ -320,6 +321,7 @@ fun Groups(topBarClick: (ClickNavigation) -> Unit) {
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 fun Search(
     contactsViewModel: ContactsViewModel = hiltViewModel(),
@@ -337,7 +339,6 @@ fun Search(
         },
     ) { innerPadding ->
 
-        val searchQuery = contactsViewModel.searchResults.collectAsStateWithLifecycle().value
         val uiState = searchViewModel.uiState
         val inviteSentSuccess =
             contactsViewModel.inviteSentSuccess.collectAsStateWithLifecycle().value
@@ -348,6 +349,8 @@ fun Search(
         var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
         var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
         var clearSearchVisible by remember { mutableStateOf(false) }
+
+        val density = LocalDensity.current
 
         when {
             openAlertDialog -> {
@@ -381,8 +384,6 @@ fun Search(
                     maxLines = 2,
                     onValueChange = {
                         input = it
-                        // TODO: switch to searchViewModel
-                        contactsViewModel.onQueryChange(it)
                         searchViewModel.onQueryChange(it)
                         clearSearchVisible = input.isNotEmpty()
                     },
@@ -406,45 +407,24 @@ fun Search(
                             .align(Alignment.CenterEnd)
                             .clickable {
                                 input = ""
-                                // TODO: switch to searchViewModel
-                                contactsViewModel.onQueryChange("")
                                 searchViewModel.onQueryChange("")
                             },
                     )
                 }
             }
 
+            AnimatedLoadingSpinner(
+                density = density,
+                dataPending = uiState.pending,
+                spinnerSize = R.dimen.card_pending_spinner,
+                slideIn = (-20).dp,
+            )
 
-            println("SharedComposables ***** MESSAGE ${uiState.message}")
-            println("SharedComposables ***** PENDING ${uiState.pending}")
-            println("SharedComposables ***** IDLE ${uiState.idle}")
+            when {
 
-
-            println("SharedComposables ***** ${uiState.searchResult?.rowId}")
-            println("SharedComposables ***** ${uiState.searchResult?.userId}")
-            println("SharedComposables ***** ${uiState.searchResult?.userName}")
-            println("SharedComposables ***** ${uiState.searchResult?.avatarUri}")
-
-            when (searchQuery) {
-                is UiStateResult.Error -> {
-
-                }
-
-                UiStateResult.Idle -> {
-
-                }
-
-                UiStateResult.NoInternet -> {
-
-                }
-
-                UiStateResult.Pending -> {
-
-                }
-
-                is UiStateResult.Success -> {
+                uiState.searchResult != null -> {
                     SearchResultUserCard(
-                        user = searchQuery.data,
+                        user = uiState.searchResult,
                         isSendingInvite = isSendingInvite,
                         inviteSentSuccess = inviteSentSuccess,
                         connectionEvent = { event ->
@@ -460,6 +440,18 @@ fun Search(
                             )
                         },
                     )
+                }
+
+                uiState.idle -> {
+                    println("Search ***** IDLE")
+                }
+
+                uiState.message != null -> {
+                    println("Search ***** MESSAGE")
+                }
+
+                else -> {
+                    println("Search ***** ELSE")
                 }
             }
         }

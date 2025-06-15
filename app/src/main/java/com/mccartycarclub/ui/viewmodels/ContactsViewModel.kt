@@ -5,32 +5,20 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccartycarclub.domain.ChannelModel
-import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.LocalRepo
 import com.mccartycarclub.repository.NetDeleteResult
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
-import com.mccartycarclub.repository.ResponseException
-import com.mccartycarclub.repository.UiStateResult
 import com.mccartycarclub.repository.UserMapper
 import com.mccartycarclub.ui.components.ContactCardEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class ContactsViewModel @Inject constructor(
@@ -44,15 +32,6 @@ class ContactsViewModel @Inject constructor(
         data object NoInternet : UserContacts()
         data object Success : UserContacts()
     }
-
-    private val _receiverQueryPending = MutableStateFlow(false)
-    val receiverQueryPending = _receiverQueryPending.asStateFlow()
-
-    private val _hasPendingInvite = MutableStateFlow(false)
-    val hasPendingInvite = _hasPendingInvite.asStateFlow()
-
-    private val _hasConnection = MutableStateFlow(false)
-    val hasConnection = _hasConnection.asStateFlow()
 
     private val _isCancellingInvite = MutableStateFlow(false)
     val isCancellingInvite = _isCancellingInvite.asStateFlow()
@@ -74,54 +53,10 @@ class ContactsViewModel @Inject constructor(
     private val _userId = MutableStateFlow<String?>(null)
     val userId: StateFlow<String?> = _userId
 
-    private var _loggedInUserId: String? = null
-    private val loggedInUserId: String?
-        get() = _loggedInUserId
-
-    private val _query = MutableStateFlow<String?>(null)
-
-    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    val searchResults: StateFlow<UiStateResult<UserSearchResult>> = _query
-        .debounce(SEARCH_DELAY.milliseconds)
-        .distinctUntilChanged()
-        .flatMapLatest { userName ->
-            flow {
-                if (userName.isNullOrBlank()) {
-                    emit(UiStateResult.Success(null))
-                } else {
-                    repo.searchUsers(_userId.value, userName!!)
-                        .collect { response ->
-                            when (response) {
-                                is NetworkResponse.Success -> {
-                                    emit(UiStateResult.Success(response.data))
-                                }
-
-                                is NetworkResponse.Error -> {
-                                    emit(UiStateResult.Error(ResponseException("")))
-                                }
-
-                                NetworkResponse.NoInternet -> {
-                                    emit(UiStateResult.NoInternet)
-                                }
-                            }
-                        }
-                }
-            }
-        }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            UiStateResult.Idle
-        )
-
     init {
         viewModelScope.launch {
             _userId.value = localRepo.getUserId().first()
         }
-    }
-
-    fun onQueryChange(searchQuery: String) {
-        _query.value = searchQuery
     }
 
     // TODO: use id instead of listIndex

@@ -320,7 +320,7 @@ fun AnimatedLoadingSpinner(
 
 @Composable
 fun SearchResultUserCard(
-    user: UserSearchResult?,
+    user: UserSearchResult,
     isSendingInvite: Boolean,
     inviteSentSuccess: Boolean,
     connectionEvent: (ContactCardEvent) -> Unit,
@@ -346,15 +346,12 @@ fun SearchResultUserCard(
                     )
                     .weight(1f)
             ) {
-                user?.let { user ->
-
-                    SearchSection(
-                        user = user,
-                        isSendingInvite = isSendingInvite,
-                        showInviteSentSuccess = showInviteSentSuccess,
-                        connectionEvent = connectionEvent,
-                    )
-                }
+                SearchSection(
+                    user = user,
+                    isSendingInvite = isSendingInvite,
+                    showInviteSentSuccess = showInviteSentSuccess,
+                    connectionEvent = connectionEvent,
+                )
             }
         }
     }
