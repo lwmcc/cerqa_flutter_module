@@ -99,8 +99,8 @@ fun AppAuthenticator(
                                 attributes.firstOrNull { it.key.keyString == "sub" }?.value
 
                             // TODO: move just for testing
-                            Amplify.API.mutate(
-                                ModelMutation.create(testUser1(userId!!)),
+/*                            Amplify.API.mutate(
+                                ModelMutation.create(testUser2(userId!!)),
                                 { response -> // TODO: response?
                                     // This is were userId is added to prefs
                                     mainViewModel.setLoggedInUserId(userId)
@@ -108,7 +108,7 @@ fun AppAuthenticator(
                                 { error ->
                                     Log.e("MainActivity *****", "User creation failed", error)
                                 }
-                            )
+                            )*/
                         }, { error ->
                             Log.e(
                                 "MainActivity *****", "Failed to fetch user attributes", error
@@ -199,8 +199,8 @@ fun Contacts(
                     println("SharedComposables ***** CONTACTS MESSAGE ${contacts.message}")
                 }
 
-                contacts.contacts.isEmpty() -> {
-                    println("SharedComposables ***** CONTACTS EMPTY")
+                contacts.contacts.isEmpty() && !contacts.pending -> {
+                    NoDataFound(message = stringResource(id = R.string.connect_invite_users))
                 }
 
                 else -> {

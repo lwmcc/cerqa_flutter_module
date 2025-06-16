@@ -852,7 +852,7 @@ open class Contact(
     val userName: String,
     val name: String,
     val avatarUri: String,
-    val createdAt: String?,
+    val createdAt: String,
 )
 
 class ReceivedContactInvite(
@@ -871,7 +871,7 @@ class SentInviteContactInvite(
     userName: String,
     name: String,
     avatarUri: String,
-    createdAt: String?,
+    createdAt: String,
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
 class CurrentContact(

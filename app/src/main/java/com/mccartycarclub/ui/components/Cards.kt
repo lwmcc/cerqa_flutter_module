@@ -89,13 +89,12 @@ fun SentContactCard(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    // TODO: fix this format data add text also
-                    text = contact.createdAt.toString(),
+                    text = "${stringResource(R.string.connect_invite_sent)}${contact.createdAt}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer, // TODO: format and add text
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier
                         .clip(RoundedCornerShape(dimensionResource(id = R.dimen.card_secondary_text_corner_radius)))
-                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
                         .padding(dimensionResource(id = R.dimen.card_secondary_text_padding)),
                 )
 
@@ -140,12 +139,12 @@ fun ReceivedInviteContactCard(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = contact.createdAt.toString(), // TODO: fix
+                    text = "${stringResource(R.string.connect_invite_received)}${contact.createdAt}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    color = MaterialTheme.colorScheme.onTertiary,
                     modifier = Modifier
                         .clip(RoundedCornerShape(dimensionResource(id = R.dimen.card_secondary_text_corner_radius)))
-                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                        .background(MaterialTheme.colorScheme.outline)
                         .padding(dimensionResource(id = R.dimen.card_secondary_text_padding)),
                 )
 
