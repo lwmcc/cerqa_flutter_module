@@ -26,7 +26,7 @@ object MockContacts {
                     userName = "$name${index + 1}",
                     name = name,
                     avatarUri = "https://api.dicebear.com/7.x/personas/svg?seed=$name$index",
-                    createdAt = Temporal.DateTime("2025-05-08T14:30:00Z")
+                    createdAt = "2025-05-08T14:30:00Z",
                 )
             )
         }
@@ -53,20 +53,12 @@ object MockContacts {
             invites.add(
                 SentInviteContactInvite(
                     senderUserId = UUID.randomUUID().toString(),
-                    sentDate = calendar.time,
                     contactId = UUID.randomUUID().toString(),
                     userId = UUID.randomUUID().toString(),
                     userName = "$name$index",
                     name = name,
                     avatarUri = "https://api.dicebear.com/7.x/personas/svg?seed=$name$index",
-                    createdAt = Temporal.DateTime(
-                        "2025-05-08T12:${
-                            String.format(
-                                "%02d",
-                                index % 60
-                            )
-                        }:00Z"
-                    )
+                    createdAt = "2025-05-08T12:${String.format("%02d", index % 60)}:00Z"
                 )
             )
         }

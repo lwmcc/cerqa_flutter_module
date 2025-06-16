@@ -90,7 +90,7 @@ fun SentContactCard(
                 )
                 Text(
                     // TODO: fix this format data add text also
-                    text = contact.createdAt?.toDate().toString(),
+                    text = contact.createdAt.toString(),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer, // TODO: format and add text
                     modifier = Modifier
@@ -140,7 +140,7 @@ fun ReceivedInviteContactCard(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = contact.createdAt?.toDate().toString(),
+                    text = contact.createdAt.toString(), // TODO: fix
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier
@@ -167,7 +167,7 @@ fun ReceivedInviteContactCard(
                                         senderUserId = contact.userId,
                                         avatarUri = contact.avatarUri,
                                         userId = contact.contactId,
-                                        createdAt = contact.createdAt,
+                                        createdAt = contact.createdAt.toString(),
                                     )
                                 )
                             )

@@ -53,7 +53,7 @@ class SearchViewModel @Inject constructor(
             query.debounce(SEARCH_DELAY.milliseconds).distinctUntilChanged()
                 .collectLatest { userName ->
 
-                    if (userName != null) {
+                    if (!userName.isNullOrEmpty()) {
                         uiState = uiState.copy(pending = true)
 
                         repo.searchUsers(_userId.value, userName).collect { response ->

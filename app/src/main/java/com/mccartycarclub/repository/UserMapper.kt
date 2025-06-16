@@ -5,12 +5,12 @@ import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.ui.components.ConnectionAccepted
+import com.mccartycarclub.utils.formatDateTimeForDisplay
 import kotlin.reflect.KClass
 
 object UserMapper {
 
     fun <T : Contact> toUserList(
-        inviteReceiver: String,
         response: GraphQLResponse<PaginatedResult<User>>,
         inviteType: KClass<T>,
     ): List<Contact> {
@@ -28,10 +28,8 @@ object UserMapper {
                             name = item.name,
                             userId = item.userId,
                             userName = item.userName,
-                            createdAt = item.createdAt,
-                            //rowId = item.id, // TODO: this is acutally the user id for receiver
+                            createdAt = formatDateTimeForDisplay(item.createdAt).orEmpty(),
                             senderUserId = item.userId,
-                            sentDate = item.createdAt.toDate(), // TODO: format date for display
                         )
                     )
                 }
@@ -44,11 +42,9 @@ object UserMapper {
                             contactId = user.id,
                             avatarUri = user.avatarUri,
                             name = user.name,
-                            receivedDate = user.createdAt.toDate(), // TODO: format date for display
-                            receiverUserId = inviteReceiver,
                             userId = user.userId,
                             userName = user.userName,
-                            createdAt = user.createdAt,
+                            createdAt = formatDateTimeForDisplay(user.createdAt).orEmpty(),
                         )
                     )
                 }
@@ -63,7 +59,7 @@ object UserMapper {
                             name = item.name,
                             userId = item.userId,
                             userName = item.userName,
-                            createdAt = item.createdAt,
+                            createdAt = formatDateTimeForDisplay(item.createdAt).orEmpty(),
                         )
                     )
                 }
@@ -76,7 +72,7 @@ object UserMapper {
     // TODO: should I keep this?
     private fun currentContactFrom(
         userId: String, contactId: String, userName: String,
-        name: String, avatarUri: String, createdAt: Temporal.DateTime,
+        name: String, avatarUri: String, createdAt: String,
     ): CurrentContact {
         return CurrentContact(
             contactId = contactId,
@@ -95,7 +91,7 @@ object UserMapper {
             name = connectionAccepted.name ?: "",
             userId = connectionAccepted.userId,
             userName = connectionAccepted.userName,
-            createdAt = connectionAccepted.createdAt ?: Temporal.DateTime(""),
+            createdAt = connectionAccepted.createdAt,
         )
     }
 }

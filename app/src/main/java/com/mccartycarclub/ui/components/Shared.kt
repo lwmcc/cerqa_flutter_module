@@ -607,7 +607,7 @@ data class ConnectionAccepted(
     val avatarUri: String,
     val senderUserId: String,
     val userId: String,
-    val createdAt: Temporal.DateTime?,
+    val createdAt: String,
 )
 
 data class AlertDialogData(

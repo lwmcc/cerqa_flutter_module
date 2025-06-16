@@ -374,8 +374,7 @@ class AmplifyRepo @Inject constructor(
             }
         }.flowOn(ioDispatcher)
 
-    // TODO: refactor method too long
-    override suspend fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>> =
+    override fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>> =
         flow {
             coroutineScope {
                 try {
@@ -431,7 +430,8 @@ class AmplifyRepo @Inject constructor(
                         )
 
                         val currentContacts =
-                            (result.data.asContact as? LoadedModelList<UserContact>)?.items.orEmpty()
+                            (result.data.asContact as? LoadedModelList<UserContact>)?.items
+                                ?: emptyList()
 
                         val contacts = mutableListOf<CurrentContact>()
                         currentContacts.forEach { contact ->
@@ -458,7 +458,7 @@ class AmplifyRepo @Inject constructor(
                                         userName = userContact.userName,
                                         name = userContact.name,
                                         avatarUri = userContact.avatarUri,
-                                        createdAt = userContact.createdAt,
+                                        createdAt = userContact.createdAt.toString(),
                                     )
                                 )
                             }
@@ -515,7 +515,7 @@ class AmplifyRepo @Inject constructor(
                     query,
                 )
             )
-            receiverResponse?.data.let {
+            receiverResponse.data.let {
                 it?.items?.forEach { item ->
                     invites.add(item)
                 }
@@ -586,10 +586,10 @@ class AmplifyRepo @Inject constructor(
                             contactId = contact?.userId!!, // TODO
                             //senderUserId = contact?.userId ?: "",
                             avatarUri = contact?.avatarUri ?: "",
-                            name = contact?.name ?: "",
-                            userName = contact?.userName ?: "",
-                            userId = contact?.userId!!, // TODO
-                            createdAt = contact?.createdAt!!, // TODO: fix this
+                            name = contact.name ?: "",
+                            userName = contact.userName ?: "",
+                            userId = contact.userId!!, // TODO
+                            createdAt = contact.createdAt.toString(), // TODO: fix this
                         )
                     )
                 }
@@ -623,7 +623,7 @@ class AmplifyRepo @Inject constructor(
             val predicate = createReceivedQueryPredicate(connectionInvites) // TODO:
             val response = amplifyApi.query(ModelQuery.list(User::class.java, predicate))
 
-            invites.addAll(UserMapper.toUserList("", response, inviteType))
+            invites.addAll(UserMapper.toUserList(response, inviteType))
 
             return NetWorkResult.Success(invites)
         } catch (e: ApiException) {
@@ -646,7 +646,7 @@ class AmplifyRepo @Inject constructor(
         try {
             val response = amplifyApi.query(ModelQuery.list(User::class.java, predicate))
 
-            invites.addAll(UserMapper.toUserList(inviteReceiver, response, inviteType))
+            invites.addAll(UserMapper.toUserList(response, inviteType))
             return invites
         } catch (e: ApiException) {
             if (e.cause is IOException || e.cause is UnknownHostException) {
@@ -687,20 +687,21 @@ class AmplifyRepo @Inject constructor(
                 response.data.items.forEach {
                     when (val user: ModelReference<User> = it.user) {
                         is LazyModelReference -> {
-                            val contact = user.fetchModel()
 
-                            // TODO: needs to be in mapper
-                            contacts.add(
-                                CurrentContact(
-                                    contactId = contact?.id!!, // TODO: fix
-                                    // senderUserId = contact?.userId ?: "",
-                                    avatarUri = contact?.avatarUri ?: "",
-                                    name = contact?.name ?: "",
-                                    userName = contact?.userName ?: "",
-                                    userId = contact?.id!!, // TODO: fix !!
-                                    createdAt = contact?.createdAt!!, // TODO: fix this
-                                )
-                            )
+                            user.fetchModel()?.let { contact ->
+                                if (contact.id != null) {
+                                    contacts.add(
+                                        CurrentContact(
+                                            contactId = contact.id,
+                                            avatarUri = contact.avatarUri.orEmpty(),
+                                            name = contact.name.orEmpty(),
+                                            userName = contact.userName.orEmpty(),
+                                            userId = contact.id.orEmpty(),
+                                            createdAt = contact.createdAt.toString(),
+                                        )
+                                    )
+                                }
+                            }
                         }
 
                         else -> {
@@ -846,44 +847,40 @@ sealed class NetworkResponse<out T> {
 }
 
 open class Contact(
-    val contactId: String, // to id the contact in viewmodel list, this is the rowId
+    val contactId: String,
     val userId: String,
     val userName: String,
     val name: String,
     val avatarUri: String,
-    val createdAt: Temporal.DateTime?, // TODO: fix this
+    val createdAt: String?,
 )
 
 class ReceivedContactInvite(
-    val receiverUserId: String,
-    val receivedDate: Date, // TODO: use correct type
     contactId: String,
     userId: String,
     userName: String,
     name: String,
     avatarUri: String,
-    createdAt: Temporal.DateTime,
+    createdAt: String,
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
 class SentInviteContactInvite(
     val senderUserId: String,
-    val sentDate: Date,
     contactId: String,
     userId: String,
     userName: String,
     name: String,
     avatarUri: String,
-    createdAt: Temporal.DateTime,
+    createdAt: String?,
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
 class CurrentContact(
-    //val senderUserId: String,
     contactId: String,
     userId: String,
     userName: String,
     name: String,
     avatarUri: String,
-    createdAt: Temporal.DateTime,
+    createdAt: String,
 ) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
 
 

@@ -1,6 +1,9 @@
 package com.mccartycarclub.ui.viewmodels
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,6 +22,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+data class UiState(
+    val pending: Boolean = false,
+    val contacts: List<Contact> = emptyList<Contact>(),
+    val message: String? = null,
+)
 
 @HiltViewModel
 class ContactsViewModel @Inject constructor(
@@ -42,8 +51,8 @@ class ContactsViewModel @Inject constructor(
     private val _inviteSentSuccess = MutableStateFlow(false)
     val inviteSentSuccess = _inviteSentSuccess.asStateFlow()
 
-    private val _dataPending = MutableStateFlow(true)
-    val dataPending = _dataPending.asStateFlow()
+    var uiState by mutableStateOf(UiState())
+        private set
 
     private val _contactsState = MutableStateFlow<UserContacts>(UserContacts.Idle)
     val contactsState = _contactsState.asStateFlow()
@@ -61,7 +70,8 @@ class ContactsViewModel @Inject constructor(
 
     // TODO: use id instead of listIndex
     fun userConnectionEvent(listIndex: Int = 0, connectionEvent: ContactCardEvent) {
-        _dataPending.value = true
+        uiState = uiState.copy(pending = true)
+
         when (connectionEvent) {
             is ContactCardEvent.InviteConnectEvent -> {
                 viewModelScope.launch {
@@ -121,7 +131,7 @@ class ContactsViewModel @Inject constructor(
                             )
                         }
                     }
-                    _dataPending.value = false
+                    uiState = uiState.copy(pending = false)
                 }
             }
 
@@ -149,7 +159,7 @@ class ContactsViewModel @Inject constructor(
                             println("ContactsViewModel ***** No internet")
                         }
                     }
-                    _dataPending.value = false
+                    uiState = uiState.copy(pending = false)
                 }
             }
 
@@ -172,7 +182,7 @@ class ContactsViewModel @Inject constructor(
                             removeContact(connectionEvent.contactId, false)
                         }
                     }
-                    _dataPending.value = false
+                    uiState = uiState.copy(pending = false)
                 }
             }
 
@@ -194,6 +204,7 @@ class ContactsViewModel @Inject constructor(
                         NetDeleteResult.NoInternet -> {
                             // TODO: show no internet message
                             // resetButtonToDeleteInvite(false)
+
                         }
 
                         NetDeleteResult.Success -> {
@@ -203,7 +214,7 @@ class ContactsViewModel @Inject constructor(
                             )
                         }
                     }
-                    _dataPending.value = false
+                    uiState = uiState.copy(pending = false)
                 }
             }
         }
@@ -211,35 +222,31 @@ class ContactsViewModel @Inject constructor(
 
     fun fetchAllContacts(loggedInUserId: String?) {
         if (loggedInUserId != null) {
-            _dataPending.value = true
+            uiState = uiState.copy(pending = true)
             viewModelScope.launch {
+
                 when (val data = repo.fetchAllContacts(loggedInUserId).first()) {
                     is NetworkResponse.Error -> {
-                        _contactsState.value =
-                                // TODO: remove message will use string
-                            UserContacts.Error(data.exception.message ?: "some message here")
+                        uiState = uiState.copy(message = "Some Error Occurred")
                     }
 
                     is NetworkResponse.NoInternet -> {
-                        // TODO: remove message will use string
-                        _contactsState.value = UserContacts.NoInternet
+                        uiState = uiState.copy(message = "No Internet")
                     }
 
                     is NetworkResponse.Success -> {
-                        if (data.data != null) {
-                            _contactsState.value = UserContacts.Success
-                            _contacts.clear() // TODO: is this needed? test it
-                            _contacts.addAll(data.data)
-                        }
+                        uiState = uiState.copy(
+                            pending = false,
+                            contacts = data.data ?: emptyList(),
+                        )
                     }
                 }
-                _dataPending.value = false
             }
         }
     }
 
     private fun removeContact(id: String, pending: Boolean) {
-        _dataPending.value = pending
+        uiState = uiState.copy(pending = true)
         _contacts.removeAll { it.contactId == id }
     }
 

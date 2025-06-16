@@ -136,10 +136,7 @@ fun Contacts(
     contactsViewModel: ContactsViewModel = hiltViewModel(),
     topBarClick: (ClickNavigation) -> Unit,
 ) {
-
-    val allContacts = contactsViewModel.contacts
-    val contactsState by contactsViewModel.contactsState.collectAsStateWithLifecycle()
-    val dataPending by contactsViewModel.dataPending.collectAsStateWithLifecycle()
+    val contacts = contactsViewModel.uiState
     val userId by contactsViewModel.userId.collectAsStateWithLifecycle()
 
     var openAlertDialog by remember { mutableStateOf(false) }
@@ -192,107 +189,99 @@ fun Contacts(
 
             AnimatedLoadingSpinner(
                 density = density,
-                dataPending = dataPending,
+                dataPending = contacts.pending,
                 spinnerSize = R.dimen.card_pending_spinner,
                 slideIn = (-20).dp,
             )
 
-            when (contactsState) {
-                is ContactsViewModel.UserContacts.NoInternet -> {
-                    println("Shared ***** NO INTERNET")
+            when {
+                contacts.message != null -> {
+                    println("SharedComposables ***** CONTACTS MESSAGE ${contacts.message}")
                 }
 
-                is ContactsViewModel.UserContacts.Error -> {
-                    println("Shared ***** ERROR")
+                contacts.contacts.isEmpty() -> {
+                    println("SharedComposables ***** CONTACTS EMPTY")
                 }
 
-                is ContactsViewModel.UserContacts.Success -> {
-                    if (allContacts.isEmpty()) {
-                        NoDataFound(message = stringResource(id = R.string.connect_invite_users))
-                    } else {
-                        LazyColumn {
-                            allContacts.forEachIndexed { index, contact ->
-                                when (contact) {
-                                    is ReceivedContactInvite -> {
-                                        item {
-                                            ReceivedInviteContactCard(
-                                                contact = contact,
-                                                primaryButtonText = stringResource(id = R.string.connect_remove),
-                                                secondaryButtonText = stringResource(id = R.string.connect_to_user),
-                                                avatar = R.drawable.ic_dashboard_black_24dp,
-                                                onDismissClick = { event ->
-                                                    listIndex = index
-                                                    connectionEvent = event
-                                                    openAlertDialog = true
-                                                    alertDialogData = AlertDialogData(
-                                                        icon = R.drawable.baseline_person_off_24,
-                                                        title = R.string.dialog_remove_invite_to_connect_title,
-                                                        description =
-                                                            R.string.dialog_remove_invite_to_connect_description,
-                                                        dialogIconDescription = R.string.dialog_icon_description,
-                                                        dismiss = R.string.dialog_button_dismiss,
-                                                        confirm = R.string.connect_remove,
-                                                    )
-                                                },
-                                                onConfirmClick = { event ->
-                                                    listIndex = index
-                                                    connectionEvent = event
-                                                    openAlertDialog = true
-                                                    alertDialogData = AlertDialogData(
-                                                        icon = R.drawable.baseline_person_add_24,
-                                                        title = R.string.dialog_accept_invite_to_connect_title,
-                                                        description =
-                                                            R.string.dialog_accept_invite_to_connect_description,
-                                                        dialogIconDescription = R.string.dialog_icon_description,
-                                                        dismiss = R.string.dialog_button_dismiss,
-                                                        confirm = R.string.dialog_button_accept,
-                                                    )
-                                                }
-                                            )
-                                        }
+                else -> {
+                    LazyColumn {
+                        contacts.contacts.forEachIndexed { index, contact ->
+                            when (contact) {
+                                is ReceivedContactInvite -> {
+                                    item {
+                                        ReceivedInviteContactCard(
+                                            contact = contact,
+                                            primaryButtonText = stringResource(id = R.string.connect_remove),
+                                            secondaryButtonText = stringResource(id = R.string.connect_to_user),
+                                            avatar = R.drawable.ic_dashboard_black_24dp,
+                                            onDismissClick = { event ->
+                                                listIndex = index
+                                                connectionEvent = event
+                                                openAlertDialog = true
+                                                alertDialogData = AlertDialogData(
+                                                    icon = R.drawable.baseline_person_off_24,
+                                                    title = R.string.dialog_remove_invite_to_connect_title,
+                                                    description =
+                                                        R.string.dialog_remove_invite_to_connect_description,
+                                                    dialogIconDescription = R.string.dialog_icon_description,
+                                                    dismiss = R.string.dialog_button_dismiss,
+                                                    confirm = R.string.connect_remove,
+                                                )
+                                            },
+                                            onConfirmClick = { event ->
+                                                listIndex = index
+                                                connectionEvent = event
+                                                openAlertDialog = true
+                                                alertDialogData = AlertDialogData(
+                                                    icon = R.drawable.baseline_person_add_24,
+                                                    title = R.string.dialog_accept_invite_to_connect_title,
+                                                    description =
+                                                        R.string.dialog_accept_invite_to_connect_description,
+                                                    dialogIconDescription = R.string.dialog_icon_description,
+                                                    dismiss = R.string.dialog_button_dismiss,
+                                                    confirm = R.string.dialog_button_accept,
+                                                )
+                                            }
+                                        )
                                     }
+                                }
 
-                                    is SentInviteContactInvite -> {
-                                        item {
-                                            SentContactCard(
-                                                contact = contact,
-                                                primaryButtonText = stringResource(id = R.string.connect_cancel),
-                                                avatar = R.drawable.ic_dashboard_black_24dp,
-                                                onClick = { event ->
-                                                    selectedUserId = contact.userId
-                                                    selectedContactId = contact.contactId
-                                                    connectionEvent = event
-                                                    openAlertDialog = true
-                                                    alertDialogData = AlertDialogData(
-                                                        icon = R.drawable.baseline_person_off_24,
-                                                        title = R.string.dialog_cancel_invite_to_connect_title,
-                                                        description =
-                                                            R.string.dialog_cancel_invite_to_connect_description,
-                                                        dialogIconDescription = R.string.dialog_icon_description,
-                                                        dismiss = R.string.dialog_button_dismiss,
-                                                        confirm = R.string.connect_cancel,
-                                                    )
-                                                },
-                                            )
-                                        }
+                                is SentInviteContactInvite -> {
+                                    item {
+                                        SentContactCard(
+                                            contact = contact,
+                                            primaryButtonText = stringResource(id = R.string.connect_cancel),
+                                            avatar = R.drawable.ic_dashboard_black_24dp,
+                                            onClick = { event ->
+                                                selectedUserId = contact.userId
+                                                selectedContactId = contact.contactId
+                                                connectionEvent = event
+                                                openAlertDialog = true
+                                                alertDialogData = AlertDialogData(
+                                                    icon = R.drawable.baseline_person_off_24,
+                                                    title = R.string.dialog_cancel_invite_to_connect_title,
+                                                    description =
+                                                        R.string.dialog_cancel_invite_to_connect_description,
+                                                    dialogIconDescription = R.string.dialog_icon_description,
+                                                    dismiss = R.string.dialog_button_dismiss,
+                                                    confirm = R.string.connect_cancel,
+                                                )
+                                            },
+                                        )
                                     }
+                                }
 
-                                    is CurrentContact -> {
-                                        item {
-                                            CurrentContactCard(
-                                                contact = contact,
-                                                avatar = R.drawable.ic_dashboard_black_24dp,
-                                            )
-                                        }
+                                is CurrentContact -> {
+                                    item {
+                                        CurrentContactCard(
+                                            contact = contact,
+                                            avatar = R.drawable.ic_dashboard_black_24dp,
+                                        )
                                     }
                                 }
                             }
                         }
                     }
-                }
-
-                ContactsViewModel.UserContacts.Idle -> {
-                    // No action needed
                 }
             }
         }

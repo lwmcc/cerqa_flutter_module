@@ -1,7 +1,6 @@
 package com.mccartycarclub.repository
 
 import com.amplifyframework.datastore.generated.model.User
-import com.mccartycarclub.domain.model.ContactsSearchResult
 import com.mccartycarclub.domain.model.UserSearchResult
 import io.ably.lib.rest.Auth.TokenRequest
 import kotlinx.coroutines.flow.Flow
@@ -48,7 +47,7 @@ interface RemoteRepo {
 
     fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>>
 
-    suspend fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>>
+    fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>>
 
     fun createContact(senderUserId: String, loggedInUserId: String): Flow<NetDeleteResult>
 
