@@ -53,7 +53,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.ui.authenticator.SignedInState
 import com.mccartycarclub.MainActivity.Companion.CONTACTS_SCREEN
@@ -88,9 +87,10 @@ fun StartScreen(
         }
 
         composable(CONTACTS_SCREEN) { backStackEntry ->
-            Contacts(topBarClick = {
-                navToScreen(it, navActions)
-            })
+            Contacts(
+                topBarClick = {
+                    navToScreen(it, navActions)
+                })
         }
 
         composable(GROUPS_SCREEN) { backStackEntry ->
@@ -214,7 +214,7 @@ fun TopBarContacts(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_action_search),
-                    contentDescription = "Localized description"
+                    contentDescription = stringResource(R.string.connect_content_description_search)
                 )
             }
         },

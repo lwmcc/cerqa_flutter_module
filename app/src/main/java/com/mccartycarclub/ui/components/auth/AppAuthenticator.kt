@@ -112,7 +112,6 @@ fun AppAuthenticator(
     val stepState = state.stepState
 
     if (stepState is SignedInState) {
-        println("MainActivity ***** STATE ${stepState.user}")
         content(stepState)
     } else {
         Box(modifier = modifier) {

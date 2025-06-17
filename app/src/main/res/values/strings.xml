@@ -23,6 +23,9 @@
     <string name="connect_view_your_notifications">View your notifications</string>
     <string name="connect_view_invite_received">Received invite from user</string>
 
+    <string name="connect_content_description_avatar">User avatar</string>
+    <string name="connect_content_description_search">User search</string>
+
     <!-- Buttons -->
     <string name="connect_button_accept">Accept</string>
 

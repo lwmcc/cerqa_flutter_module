@@ -101,6 +101,8 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.hilt.android.testing)
+    testImplementation(libs.robolectric)
+    testImplementation("io.mockk:mockk:1.14.2")
     debugImplementation(composeBom)
     debugImplementation(libs.androidx.ui.test.manifest)
     kaptTest(libs.hilt.android.compiler)

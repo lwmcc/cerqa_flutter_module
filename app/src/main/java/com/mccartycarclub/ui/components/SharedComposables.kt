@@ -27,12 +27,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.ui.authenticator.SignedInState
 import com.mccartycarclub.R
@@ -204,7 +204,7 @@ fun Contacts(
                 }
 
                 else -> {
-                    LazyColumn {
+                    LazyColumn(modifier = Modifier.testTag("contactsTag")) {
                         contacts.contacts.forEachIndexed { index, contact ->
                             when (contact) {
                                 is ReceivedContactInvite -> {
