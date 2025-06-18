@@ -16,6 +16,7 @@ import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.UserMapper
 import com.mccartycarclub.ui.components.ConnectionAccepted
 import com.mccartycarclub.ui.components.ContactCardEvent
+import com.mccartycarclub.ui.shared.MessageTypes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +28,7 @@ import javax.inject.Inject
 data class UiState(
     val pending: Boolean = false,
     val contacts: List<Contact> = emptyList<Contact>(),
-    val message: String? = null,
+    val message: MessageTypes? = null,
 )
 
 @HiltViewModel
@@ -66,9 +67,8 @@ class ContactsViewModel @Inject constructor(
                     _isSendingInvite.value = true
 
                     _userId.value?.let { userId ->
-                        val channelName =
-                            ChannelModel.NotificationsDirect.getName(connectionEvent.receiverUserId)
-
+                        //val channelName =
+                        //    ChannelModel.NotificationsDirect.getName(connectionEvent.receiverUserId)
                         // TODO: will uncomment when ready
                         //realtimePublishRepo.publish(channelName)
                         //realTime.createReceiverInviteSubscription(_userId.value.toString(), channel)
@@ -133,11 +133,11 @@ class ContactsViewModel @Inject constructor(
 
                 when (val data = repo.fetchAllContacts(loggedInUserId).first()) {
                     is NetworkResponse.Error -> {
-                        uiState = uiState.copy(message = "Some Error Occurred")
+                        uiState = uiState.copy(message = MessageTypes.Error)
                     }
 
                     is NetworkResponse.NoInternet -> {
-                        uiState = uiState.copy(message = "No Internet")
+                        uiState = uiState.copy(message = MessageTypes.NoInternet)
                     }
 
                     is NetworkResponse.Success -> {

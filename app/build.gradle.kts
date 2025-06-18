@@ -102,7 +102,8 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.hilt.android.testing)
     testImplementation(libs.robolectric)
-    testImplementation("io.mockk:mockk:1.14.2")
+    testImplementation(libs.turbine)
+    testImplementation(libs.mockk)
     debugImplementation(composeBom)
     debugImplementation(libs.androidx.ui.test.manifest)
     kaptTest(libs.hilt.android.compiler)
@@ -116,7 +117,7 @@ dependencies {
     androidTestImplementation(libs.androidx.navigation.testing)
     androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.truth)
-    androidTestImplementation("io.mockk:mockk-android:1.14.2")
+    androidTestImplementation(libs.mockk.android)
     debugImplementation(libs.androidx.ui.test.manifest)
 
     kaptAndroidTest(libs.hilt.compiler)

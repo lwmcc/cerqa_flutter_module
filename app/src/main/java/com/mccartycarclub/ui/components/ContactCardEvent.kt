@@ -7,5 +7,4 @@ open class ContactCardEvent {
 
     data class DeleteContact(val contactId: String) : ContactCardEvent()
     data class DeleteReceivedInvite(val userId: String) : ContactCardEvent()
-    data object DisconnectEvent : ContactCardEvent()
 }

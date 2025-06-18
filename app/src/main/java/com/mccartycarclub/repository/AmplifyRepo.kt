@@ -19,7 +19,6 @@ import com.amplifyframework.core.model.includes
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation
-import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.Invite
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
@@ -43,7 +42,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import java.io.IOException
 import java.net.UnknownHostException
-import java.util.Date
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.reflect.KClass
@@ -679,7 +677,7 @@ class AmplifyRepo @Inject constructor(
         predicate: QueryPredicateGroup,
     ) = amplifyApi.query(ModelQuery.list(modelClass, predicate)).data.items.firstOrNull()
 
-    override suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>> =
+/*    override suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>> =
         flow {
             val contacts = mutableListOf<Contact>()
             try {
@@ -719,7 +717,7 @@ class AmplifyRepo @Inject constructor(
             } catch (e: ApiException) {
                 println("AmplifyRepo ***** ERROR ${e.message}")
             }
-        }.flowOn(ioDispatcher)
+        }.flowOn(ioDispatcher)*/
 
     companion object {
         const val DUMMY = "dummy"
@@ -811,8 +809,8 @@ class AmplifyRepo @Inject constructor(
 
                     val predicate =
                         contactsQueryBuilder.buildInviteQueryPredicate(
-                            user?.userId!!,
-                            loggedInUserId
+                            user.userId,
+                            loggedInUserId,
                         )
                     val response = amplifyApi.query(ModelQuery.list(Invite::class.java, predicate))
 
@@ -902,26 +900,4 @@ data class AblyJwt(
     val timestamp: Double?,  // JSON timestamp is a double (scientific notation)
     val nonce: String?,
     val mac: String?
-)
-
-data class ListUsersResponse(
-    val listUsers: ListUsers
-)
-
-data class ListUsers(
-    val items: List<User>
-)
-
-data class InviteList(
-    val items: List<Invite>
-)
-
-data class ContactList(
-    val items: List<Contact>
-)
-
-data class PendingInviteStatus(
-    val userName: String,
-    val contacts: List<UserContact> = emptyList(),
-    val invites: List<Invite> = emptyList()
 )

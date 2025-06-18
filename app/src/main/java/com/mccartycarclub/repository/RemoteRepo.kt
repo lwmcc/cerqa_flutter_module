@@ -51,8 +51,6 @@ interface RemoteRepo {
 
     fun createContact(senderUserId: String, loggedInUserId: String): Flow<NetDeleteResult>
 
-    suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>>
-
     fun fetchAblyToken(userId: String): Flow<TokenRequest>
 
     fun searchUsers(

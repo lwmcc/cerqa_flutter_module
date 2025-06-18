@@ -103,7 +103,7 @@ fun AppAuthenticator(
 
                             // TODO: move just for testing
 /*                            Amplify.API.mutate(
-                                ModelMutation.create(testUser2(userId!!)),
+                                ModelMutation.create(testUser3(userId!!)),
                                 { response -> // TODO: response?
                                     // This is were userId is added to prefs
                                     mainViewModel.setLoggedInUserId(userId)
