@@ -14,6 +14,7 @@ import com.mccartycarclub.repository.NetDeleteResult
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.UserMapper
+import com.mccartycarclub.ui.components.ConnectionAccepted
 import com.mccartycarclub.ui.components.ContactCardEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -72,7 +73,6 @@ class ContactsViewModel @Inject constructor(
                         //realtimePublishRepo.publish(channelName)
                         //realTime.createReceiverInviteSubscription(_userId.value.toString(), channel)
 
-
                         val data = repo.sendInviteToConnect(
                             senderUserId = _userId.value,
                             receiverUserId = connectionEvent.receiverUserId,
@@ -98,103 +98,29 @@ class ContactsViewModel @Inject constructor(
 
             is ContactCardEvent.DeleteReceivedInvite -> {
                 viewModelScope.launch {
-                    when (repo.deleteReceivedInviteToContact(
-                        _userId.value.toString(),
-                        connectionEvent.userId,
-                    ).first()) {
-                        is NetDeleteResult.Error -> {
-                            // TODO: handle this
-                        }
-
-                        NetDeleteResult.NoInternet -> {
-                            // TODO: handle this
-                        }
-
-                        NetDeleteResult.Success -> {
-                            val contacts =
-                                uiState.contacts.filterNot { it.userId == connectionEvent.userId }
-                            uiState = uiState.copy(contacts = contacts)
-                        }
-                    }
-                    uiState = uiState.copy(pending = false)
+                    deleteReceivedInviteToConnect(connectionEvent.userId)
                 }
             }
 
             is ContactCardEvent.AcceptConnection -> {
                 viewModelScope.launch {
-                    when (val result = repo.createContact(
-                        senderUserId = connectionEvent.connectionAccepted.senderUserId,
-                        loggedInUserId = _userId.value.toString(),
-                    ).first()) {
-                        is NetDeleteResult.Error -> {
-                            println("ContactsViewModel ***** ERROR ${result.exception.message}")
-                        }
-
-                        NetDeleteResult.Success -> {
-                            val contacts = uiState.contacts.toMutableList()
-                            contacts[listIndex] =
-                                UserMapper.currentContactFrom(connectionEvent.connectionAccepted)
-                            uiState = uiState.copy(contacts = contacts)
-                        }
-
-                        NetDeleteResult.NoInternet -> {
-                            println("ContactsViewModel ***** No internet")
-                        }
-                    }
-                    uiState = uiState.copy(pending = false)
+                    createContact(
+                        listIndex,
+                        connectionEvent.connectionAccepted.senderUserId,
+                        connectionEvent.connectionAccepted,
+                    )
                 }
             }
 
             is ContactCardEvent.DeleteContact -> {
                 viewModelScope.launch {
-                    when (val result = repo.deleteContact(
-                        _userId.value.toString(),
-                        connectionEvent.contactId,
-                    ).first()) {
-                        is NetDeleteResult.Error -> {
-                            // TODO: log this
-                            result.exception.message ?: ""
-                        }
-
-                        NetDeleteResult.NoInternet -> {
-
-                        }
-
-                        NetDeleteResult.Success -> {
-                            removeContact(connectionEvent.contactId)
-                        }
-                    }
-                    uiState = uiState.copy(pending = false)
+                    deleteContact(connectionEvent.contactId)
                 }
             }
 
             is ContactCardEvent.CancelSentInvite -> {
                 viewModelScope.launch {
-                    uiState = uiState.copy(pending = true)
-                    val cancelSuccess = repo.cancelInviteToConnect(
-                        _userId.value.toString(),
-                        connectionEvent.receiverUserId,
-                    ).first()
-
-                    when (cancelSuccess) { // TODO: change the name of this
-                        is NetDeleteResult.Error -> {
-                            // TODO: show error message
-                            //resetButtonToDeleteInvite(false)
-                        }
-
-                        NetDeleteResult.NoInternet -> {
-                            // TODO: show no internet message
-                            // resetButtonToDeleteInvite(false)
-
-                        }
-
-                        NetDeleteResult.Success -> {
-                            val contacts =
-                                uiState.contacts.filterNot { it.userId == connectionEvent.receiverUserId }
-                            uiState = uiState.copy(contacts = contacts)
-                        }
-                    }
-                    uiState = uiState.copy(pending = false)
+                    cancelInviteToConnect(connectionEvent.receiverUserId)
                 }
             }
         }
@@ -228,6 +154,102 @@ class ContactsViewModel @Inject constructor(
     private fun removeContact(id: String) {
         uiState = uiState.copy(pending = true)
         _contacts.removeAll { it.contactId == id }
+    }
+
+    private suspend fun deleteReceivedInviteToConnect(userId: String) {
+        when (repo.deleteReceivedInviteToContact(
+            _userId.value.toString(), userId,
+        ).first()) {
+            is NetDeleteResult.Error -> {
+                // TODO: handle this
+            }
+
+            NetDeleteResult.NoInternet -> {
+                // TODO: handle this
+            }
+
+            NetDeleteResult.Success -> {
+                val contacts =
+                    uiState.contacts.filterNot { it.userId == userId }
+                uiState = uiState.copy(contacts = contacts)
+            }
+        }
+        uiState = uiState.copy(pending = false)
+    }
+
+    private suspend fun createContact(
+        listIndex: Int,
+        senderUserId: String,
+        connectionAccepted: ConnectionAccepted
+    ) {
+        when (val result = repo.createContact(
+            senderUserId = senderUserId,
+            loggedInUserId = _userId.value.toString(),
+        ).first()) {
+            is NetDeleteResult.Error -> {
+                println("ContactsViewModel ***** ERROR ${result.exception.message}")
+            }
+
+            NetDeleteResult.Success -> {
+                val contacts = uiState.contacts.toMutableList()
+                contacts[listIndex] =
+                    UserMapper.currentContactFrom(connectionAccepted)
+                uiState = uiState.copy(contacts = contacts)
+            }
+
+            NetDeleteResult.NoInternet -> {
+                println("ContactsViewModel ***** No internet")
+            }
+        }
+        uiState = uiState.copy(pending = false)
+    }
+
+    private suspend fun deleteContact(contactId: String) {
+        when (val result = repo.deleteContact(
+            _userId.value.toString(),
+            contactId,
+        ).first()) {
+            is NetDeleteResult.Error -> {
+                // TODO: log this
+                result.exception.message ?: ""
+            }
+
+            NetDeleteResult.NoInternet -> {
+
+            }
+
+            NetDeleteResult.Success -> {
+                removeContact(contactId)
+            }
+        }
+        uiState = uiState.copy(pending = false)
+    }
+
+    private suspend fun cancelInviteToConnect(receiverUserId: String) {
+        uiState = uiState.copy(pending = true)
+        val cancelSuccess = repo.cancelInviteToConnect(
+            _userId.value.toString(),
+            receiverUserId,
+        ).first()
+
+        when (cancelSuccess) { // TODO: change the name of this
+            is NetDeleteResult.Error -> {
+                // TODO: show error message
+                //resetButtonToDeleteInvite(false)
+            }
+
+            NetDeleteResult.NoInternet -> {
+                // TODO: show no internet message
+                // resetButtonToDeleteInvite(false)
+            }
+
+            NetDeleteResult.Success -> {
+                val contacts =
+                    uiState.contacts.filterNot { it.userId == receiverUserId }
+                uiState = uiState.copy(contacts = contacts)
+            }
+        }
+        uiState = uiState.copy(pending = false)
     }
 
     companion object {
