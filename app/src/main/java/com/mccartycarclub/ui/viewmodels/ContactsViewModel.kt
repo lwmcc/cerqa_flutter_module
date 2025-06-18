@@ -35,16 +35,6 @@ class ContactsViewModel @Inject constructor(
     private val localRepo: LocalRepo,
 ) : ViewModel() {
 
-    sealed class UserContacts {
-        data object Idle : UserContacts() // TODO: do I need this?
-        data class Error(val message: String) : UserContacts()
-        data object NoInternet : UserContacts()
-        data object Success : UserContacts()
-    }
-
-    private val _isCancellingInvite = MutableStateFlow(false)
-    val isCancellingInvite = _isCancellingInvite.asStateFlow()
-
     private val _isSendingInvite = MutableStateFlow(false)
     val isSendingInvite = _isSendingInvite.asStateFlow()
 
@@ -54,8 +44,6 @@ class ContactsViewModel @Inject constructor(
     var uiState by mutableStateOf(UiState())
         private set
 
-    private val _contactsState = MutableStateFlow<UserContacts>(UserContacts.Idle)
-    val contactsState = _contactsState.asStateFlow()
     private val _contacts = mutableStateListOf<Contact>()
     val contacts: SnapshotStateList<Contact> get() = _contacts
 
@@ -68,7 +56,6 @@ class ContactsViewModel @Inject constructor(
         }
     }
 
-    // TODO: use id instead of listIndex
     fun userConnectionEvent(listIndex: Int = 0, connectionEvent: ContactCardEvent) {
         uiState = uiState.copy(pending = true)
 
@@ -109,7 +96,6 @@ class ContactsViewModel @Inject constructor(
                 }
             }
 
-            // TODO: will be moved to cache
             is ContactCardEvent.DeleteReceivedInvite -> {
                 viewModelScope.launch {
                     when (repo.deleteReceivedInviteToContact(
@@ -125,10 +111,9 @@ class ContactsViewModel @Inject constructor(
                         }
 
                         NetDeleteResult.Success -> {
-                            resetContactsList(
-                                userId = connectionEvent.userId,
-                                contactsState = UserContacts.Success,
-                            )
+                            val contacts =
+                                uiState.contacts.filterNot { it.userId == connectionEvent.userId }
+                            uiState = uiState.copy(contacts = contacts)
                         }
                     }
                     uiState = uiState.copy(pending = false)
@@ -146,13 +131,10 @@ class ContactsViewModel @Inject constructor(
                         }
 
                         NetDeleteResult.Success -> {
-                            val index =
-                                _contacts.indexOfFirst { it.userId == connectionEvent.connectionAccepted.senderUserId }
-                            if (index != -1) {
-                                _contactsState.value = UserContacts.Success
-                                _contacts[listIndex] =
-                                    UserMapper.currentContactFrom(connectionEvent.connectionAccepted)
-                            }
+                            val contacts = uiState.contacts.toMutableList()
+                            contacts[listIndex] =
+                                UserMapper.currentContactFrom(connectionEvent.connectionAccepted)
+                            uiState = uiState.copy(contacts = contacts)
                         }
 
                         NetDeleteResult.NoInternet -> {
@@ -179,7 +161,7 @@ class ContactsViewModel @Inject constructor(
                         }
 
                         NetDeleteResult.Success -> {
-                            removeContact(connectionEvent.contactId, false)
+                            removeContact(connectionEvent.contactId)
                         }
                     }
                     uiState = uiState.copy(pending = false)
@@ -188,8 +170,7 @@ class ContactsViewModel @Inject constructor(
 
             is ContactCardEvent.CancelSentInvite -> {
                 viewModelScope.launch {
-                    _isCancellingInvite.value = true
-
+                    uiState = uiState.copy(pending = true)
                     val cancelSuccess = repo.cancelInviteToConnect(
                         _userId.value.toString(),
                         connectionEvent.receiverUserId,
@@ -208,10 +189,9 @@ class ContactsViewModel @Inject constructor(
                         }
 
                         NetDeleteResult.Success -> {
-                            resetContactsList(
-                                userId = connectionEvent.receiverUserId,
-                                contactsState = UserContacts.Success,
-                            )
+                            val contacts =
+                                uiState.contacts.filterNot { it.userId == connectionEvent.receiverUserId }
+                            uiState = uiState.copy(contacts = contacts)
                         }
                     }
                     uiState = uiState.copy(pending = false)
@@ -245,14 +225,9 @@ class ContactsViewModel @Inject constructor(
         }
     }
 
-    private fun removeContact(id: String, pending: Boolean) {
+    private fun removeContact(id: String) {
         uiState = uiState.copy(pending = true)
         _contacts.removeAll { it.contactId == id }
-    }
-
-    private fun resetContactsList(userId: String, contactsState: UserContacts) {
-        _contactsState.value = contactsState
-        _contacts.removeAll { it.userId == userId }
     }
 
     companion object {

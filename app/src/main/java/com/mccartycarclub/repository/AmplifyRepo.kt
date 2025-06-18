@@ -413,58 +413,7 @@ class AmplifyRepo @Inject constructor(
                     }
 
                     val contacts = async {
-
-                        // TODO: refactor to helper function
-                        val rowId = amplifyApi.query(
-                            ModelQuery.list(
-                                User::class.java,
-                                User.USER_ID.eq(loggedInUserId)
-                            )
-                        ).data.first().id
-
-                        val result = amplifyApi.query(
-                            ModelQuery.get<User, UserPath>(
-                                User::class.java,
-                                User.UserIdentifier(rowId)
-                            ) { includes(it.asContact) }
-                        )
-
-                        val currentContacts =
-                            (result.data.asContact as? LoadedModelList<UserContact>)?.items
-                                ?: emptyList()
-
-                        val contacts = mutableListOf<CurrentContact>()
-                        currentContacts.forEach { contact ->
-                            val user = when (val reference = contact.user) {
-                                is LazyModelReference<User> -> {
-                                    reference.fetchModel()
-                                }
-
-                                is LoadedModelReference<User> -> {
-                                    reference.value
-                                }
-
-                                else -> {
-                                    null
-                                }
-                            }
-
-                            user?.let { userContact ->
-                                contacts.add(
-                                    CurrentContact(
-                                        // TODO: might remove this may not be needed
-                                        contactId = "", // to id the contact in viewmodel list, this is the rowId
-                                        userId = userContact.userId,
-                                        userName = userContact.userName,
-                                        name = userContact.name,
-                                        avatarUri = userContact.avatarUri,
-                                        createdAt = userContact.createdAt.toString(),
-                                    )
-                                )
-                            }
-                        }
-
-                        contacts
+                        fetchCurrentContacts(loggedInUserId)
                     }
 
                     emit(NetworkResponse.Success(receivedInvites.await() + sentInvites.await() + contacts.await()))
@@ -654,6 +603,63 @@ class AmplifyRepo @Inject constructor(
             } else {
                 throw ResponseException("There was an error in the response")
             }
+        }
+    }
+
+    private suspend fun fetchCurrentContacts(loggedInUserId: String): List<CurrentContact> {
+        return try {
+            val rowId = amplifyApi.query(
+                ModelQuery.list(
+                    User::class.java,
+                    User.USER_ID.eq(loggedInUserId)
+                )
+            ).data.first().id
+
+            val result = amplifyApi.query(
+                ModelQuery.get<User, UserPath>(
+                    User::class.java,
+                    User.UserIdentifier(rowId)
+                ) { includes(it.asContact) }
+            )
+
+            val currentContacts =
+                (result.data.asContact as? LoadedModelList<UserContact>)?.items
+                    ?: emptyList()
+
+            val contacts = mutableListOf<CurrentContact>()
+            currentContacts.forEach { contact ->
+                val user = when (val reference = contact.user) {
+                    is LazyModelReference<User> -> {
+                        reference.fetchModel()
+                    }
+
+                    is LoadedModelReference<User> -> {
+                        reference.value
+                    }
+
+                    else -> {
+                        null
+                    }
+                }
+
+                user?.let { userContact ->
+                    contacts.add(
+                        CurrentContact(
+                            // TODO: might remove this may not be needed
+                            contactId = "", // to id the contact in viewmodel list, this is the rowId
+                            userId = userContact.userId,
+                            userName = userContact.userName,
+                            name = userContact.name,
+                            avatarUri = userContact.avatarUri,
+                            createdAt = userContact.createdAt.toString(),
+                        )
+                    )
+                }
+            }
+
+            contacts
+        } catch (nsee: NoSuchElementException) {
+            emptyList<CurrentContact>()
         }
     }
 
