@@ -51,13 +51,13 @@ class SearchViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            uiState = uiState.copy(pending = true)
             _userId.value = localRepo.getUserId().first()
 
             query.debounce(SEARCH_DELAY.milliseconds).distinctUntilChanged()
                 .collectLatest { userName ->
 
                     if (!userName.isNullOrEmpty()) {
+                        uiState = uiState.copy(pending = true)
                         repo.searchUsers(_userId.value, userName).collect { response ->
                             uiState = when (response) {
                                 is NetworkResponse.Error -> {

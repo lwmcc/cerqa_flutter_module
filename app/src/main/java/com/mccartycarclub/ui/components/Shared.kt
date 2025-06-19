@@ -506,7 +506,7 @@ fun SearchSection(
         }
 
         else -> { // Is UserSearchResult which needs to be last
-            if (!isSendingInvite) {
+            if (!isSendingInvite) { // Is not sending invite when VM initializes
                 ListSection(
                     image = R.drawable.ic_dashboard_black_24dp,
                     contentDescription = stringResource(id = R.string.user_avatar),
