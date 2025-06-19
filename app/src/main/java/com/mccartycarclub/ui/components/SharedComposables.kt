@@ -338,7 +338,7 @@ fun Search(
 
         var input by remember { mutableStateOf("") }
         var openAlertDialog by remember { mutableStateOf(false) }
-        var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
+        var connectionEvent by remember { mutableStateOf<ContactCardConnectionEvent?>(null) }
         var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
         var clearSearchVisible by remember { mutableStateOf(false) }
 
@@ -354,7 +354,7 @@ fun Search(
                     onConfirmation = {
                         openAlertDialog = false
                         connectionEvent?.let { event ->
-                            contactsViewModel.userConnectionEvent(connectionEvent = event)
+                            searchViewModel.inviteSentEvent(connectionEvent = event)
                         }
                     },
                 )
@@ -415,12 +415,11 @@ fun Search(
             )
 
             when {
-
                 uiState.searchResult != null -> {
                     SearchResultUserCard(
                         user = uiState.searchResult,
-                        isSendingInvite = isSendingInvite,
-                        inviteSentSuccess = inviteSentSuccess,
+                        isSendingInvite = uiState.isSendingInvite,
+                        inviteSentSuccess = uiState.inviteSent,
                         connectionEvent = { event ->
                             openAlertDialog = true
                             connectionEvent = event

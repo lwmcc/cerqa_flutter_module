@@ -9,6 +9,7 @@ import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.repository.LocalRepo
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
+import com.mccartycarclub.ui.components.ContactCardConnectionEvent
 import com.mccartycarclub.ui.viewmodels.ContactsViewModel.Companion.SEARCH_DELAY
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
@@ -26,6 +27,8 @@ import kotlin.time.Duration.Companion.milliseconds
 data class SearchUiState(
     val pending: Boolean = false,
     val idle: Boolean = true,
+    val isSendingInvite: Boolean = false,
+    val inviteSent: Boolean = false,
     val message: String? = null,
     val searchResult: UserSearchResult? = null
 )
@@ -48,14 +51,13 @@ class SearchViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            uiState = uiState.copy(pending = true)
             _userId.value = localRepo.getUserId().first()
 
             query.debounce(SEARCH_DELAY.milliseconds).distinctUntilChanged()
                 .collectLatest { userName ->
 
                     if (!userName.isNullOrEmpty()) {
-                        uiState = uiState.copy(pending = true)
-
                         repo.searchUsers(_userId.value, userName).collect { response ->
                             uiState = when (response) {
                                 is NetworkResponse.Error -> {
@@ -69,7 +71,12 @@ class SearchViewModel @Inject constructor(
                                 }
 
                                 is NetworkResponse.Success -> {
-                                    uiState.copy(searchResult = response.data, pending = false)
+                                    uiState.copy(
+                                        searchResult = response.data,
+                                        pending = false,
+                                        inviteSent = false,
+                                        isSendingInvite = false,
+                                    )
                                 }
                             }
                         }
@@ -80,7 +87,44 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    fun inviteSentEvent(connectionEvent: ContactCardConnectionEvent) {
+
+        when (connectionEvent) {
+            is ContactCardConnectionEvent.InviteConnectEvent -> {
+                viewModelScope.launch {
+                    uiState = uiState.copy(pending = true, isSendingInvite = true)
+                    //val channelName =
+                    //    ChannelModel.NotificationsDirect.getName(connectionEvent.receiverUserId)
+                    // TODO: will uncomment when ready
+                    //realtimePublishRepo.publish(channelName)
+                    //realTime.createReceiverInviteSubscription(_userId.value.toString(), channel)
+
+                    val data = repo.sendInviteToConnect(
+                        senderUserId = _userId.value,
+                        receiverUserId = connectionEvent.receiverUserId,
+                        rowId = connectionEvent.rowId,
+                    ).first()
+
+                    when (data) {
+                        is NetworkResponse.Error -> {
+                            // TODO: log update ui
+                        }
+
+                        NetworkResponse.NoInternet -> {
+                            // TODO: update ui
+                        }
+
+                        is NetworkResponse.Success -> {
+                            uiState = uiState.copy(pending = false, inviteSent = true)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun onQueryChange(searchQuery: String) {
         _query.value = searchQuery
     }
+
 }

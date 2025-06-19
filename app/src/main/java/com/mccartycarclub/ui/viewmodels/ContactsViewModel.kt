@@ -62,40 +62,6 @@ class ContactsViewModel @Inject constructor(
         uiState = uiState.copy(pending = true)
 
         when (connectionEvent) {
-            is ContactCardEvent.InviteConnectEvent -> {
-                viewModelScope.launch {
-                    _isSendingInvite.value = true
-
-                    _userId.value?.let { userId ->
-                        //val channelName =
-                        //    ChannelModel.NotificationsDirect.getName(connectionEvent.receiverUserId)
-                        // TODO: will uncomment when ready
-                        //realtimePublishRepo.publish(channelName)
-                        //realTime.createReceiverInviteSubscription(_userId.value.toString(), channel)
-
-                        val data = repo.sendInviteToConnect(
-                            senderUserId = _userId.value,
-                            receiverUserId = connectionEvent.receiverUserId,
-                            rowId = connectionEvent.rowId,
-                        ).first()
-
-                        when (data) {
-                            is NetworkResponse.Error -> {
-                                // TODO: log update ui
-                            }
-
-                            NetworkResponse.NoInternet -> {
-                                // TODO: update ui
-                            }
-
-                            is NetworkResponse.Success -> {
-                                _inviteSentSuccess.value = true
-                            }
-                        }
-                    }
-                }
-            }
-
             is ContactCardEvent.DeleteReceivedInvite -> {
                 viewModelScope.launch {
                     deleteReceivedInviteToConnect(connectionEvent.userId)

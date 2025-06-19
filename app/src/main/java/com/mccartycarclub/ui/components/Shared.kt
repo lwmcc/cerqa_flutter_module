@@ -323,7 +323,7 @@ fun SearchResultUserCard(
     user: UserSearchResult,
     isSendingInvite: Boolean,
     inviteSentSuccess: Boolean,
-    connectionEvent: (ContactCardEvent) -> Unit,
+    connectionEvent: (ContactCardConnectionEvent) -> Unit,
 ) {
 
     val showInviteSentSuccess by remember(inviteSentSuccess) { derivedStateOf { inviteSentSuccess } }
@@ -444,7 +444,7 @@ fun SearchSection(
     user: UserSearchResult,
     isSendingInvite: Boolean,
     showInviteSentSuccess: Boolean,
-    connectionEvent: (ContactCardEvent) -> Unit,
+    connectionEvent: (ContactCardConnectionEvent) -> Unit,
 ) {
     when (user) {
         is SentInviteToUser -> {
@@ -518,7 +518,7 @@ fun SearchSection(
                             onClick = {
                                 user.let { user ->
                                     connectionEvent(
-                                        ContactCardEvent.InviteConnectEvent(
+                                        ContactCardConnectionEvent.InviteConnectEvent(
                                             user.userId,
                                             user.rowId
                                         )
