@@ -929,6 +929,20 @@
               "isRequired": false
             }
           }
+        },
+        "fetchUsersByPhoneNumber": {
+          "name": "fetchUsersByPhoneNumber",
+          "isArray": false,
+          "type": "String",
+          "isRequired": false,
+          "arguments": {
+            "phoneNumber": {
+              "name": "phoneNumber",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            }
+          }
         }
       }
     }
