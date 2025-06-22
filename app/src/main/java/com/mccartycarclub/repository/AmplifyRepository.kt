@@ -46,7 +46,6 @@ import javax.inject.Inject
 import javax.inject.Named
 import kotlin.reflect.KClass
 
-// TODO: split this class up
 class AmplifyRepo @Inject constructor(
     private val amplifyApi: KotlinApiFacade,
     private val contactsQueryBuilder: QueryBuilder,
@@ -129,7 +128,7 @@ class AmplifyRepo @Inject constructor(
         }
         }
 
-    override suspend fun sendInviteToConnect(
+    override fun sendInviteToConnect(
         senderUserId: String?,
         receiverUserId: String,
         rowId: String,
@@ -204,7 +203,7 @@ class AmplifyRepo @Inject constructor(
             }
         }.flowOn(ioDispatcher)
 
-    override suspend fun deleteContact(
+    override fun deleteContact(
         loggedInUserId: String,
         contactId: String,
     ): Flow<NetDeleteResult> = flow {
@@ -384,7 +383,6 @@ class AmplifyRepo @Inject constructor(
 
                         if (predicate != null) {
                             fetchAllInvites(
-                                inviteReceiver = loggedInUserId,
                                 connectionInvites = invites,
                                 predicate = predicate,
                                 inviteType = ReceivedContactInvite::class,
@@ -400,7 +398,7 @@ class AmplifyRepo @Inject constructor(
 
                         if (predicate != null) {
                             fetchAllInvites(
-                                inviteReceiver = loggedInUserId,
+                                // inviteReceiver = loggedInUserId,
                                 connectionInvites = invites,
                                 predicate = predicate,
                                 inviteType = SentInviteContactInvite::class,
@@ -537,6 +535,7 @@ class AmplifyRepo @Inject constructor(
                             userName = contact.userName ?: "",
                             userId = contact.userId!!, // TODO
                             createdAt = contact.createdAt.toString(), // TODO: fix this
+                            phoneNUmber = contact.phone,
                         )
                     )
                 }
@@ -579,7 +578,6 @@ class AmplifyRepo @Inject constructor(
     }
 
     private suspend fun <T : Contact> fetchAllInvites(
-        inviteReceiver: String,
         connectionInvites: List<Invite>,
         predicate: QueryPredicate,
         inviteType: KClass<T>,
@@ -650,6 +648,7 @@ class AmplifyRepo @Inject constructor(
                             name = userContact.name,
                             avatarUri = userContact.avatarUri,
                             createdAt = userContact.createdAt.toString(),
+                            phoneNUmber = userContact.phone,
                         )
                     )
                 }
@@ -857,6 +856,7 @@ open class Contact(
     val name: String,
     val avatarUri: String,
     val createdAt: String,
+    val phoneNUmber: String,
 )
 
 class ReceivedContactInvite(
@@ -866,7 +866,8 @@ class ReceivedContactInvite(
     name: String,
     avatarUri: String,
     createdAt: String,
-) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
+    phoneNUmber: String,
+) : Contact(contactId, userId, userName, name, avatarUri, createdAt, phoneNUmber)
 
 class SentInviteContactInvite(
     val senderUserId: String,
@@ -876,7 +877,8 @@ class SentInviteContactInvite(
     name: String,
     avatarUri: String,
     createdAt: String,
-) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
+    phoneNUmber: String,
+) : Contact(contactId, userId, userName, name, avatarUri, createdAt, phoneNUmber)
 
 class CurrentContact(
     contactId: String,
@@ -885,7 +887,8 @@ class CurrentContact(
     name: String,
     avatarUri: String,
     createdAt: String,
-) : Contact(contactId, userId, userName, name, avatarUri, createdAt)
+    phoneNUmber: String,
+) : Contact(contactId, userId, userName, name, avatarUri, createdAt, phoneNUmber)
 
 
 @JsonClass(generateAdapter = true)

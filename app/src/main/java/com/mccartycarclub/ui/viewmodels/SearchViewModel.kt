@@ -6,7 +6,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccartycarclub.domain.model.UserSearchResult
-import com.mccartycarclub.repository.LocalRepo
+import com.mccartycarclub.repository.Contact
+import com.mccartycarclub.repository.ContactsRepository
+import com.mccartycarclub.repository.LocalRepository
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.ui.components.ContactCardConnectionEvent
@@ -37,7 +39,8 @@ data class SearchUiState(
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val repo: RemoteRepo,
-    private val localRepo: LocalRepo,
+    private val localRepo: LocalRepository,
+    private val contactsRepository: ContactsRepository,
 ) : ViewModel() {
 
     private val _userId = MutableStateFlow<String?>(null)
@@ -52,43 +55,13 @@ class SearchViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             _userId.value = localRepo.getUserId().first()
-
-            query.debounce(SEARCH_DELAY.milliseconds).distinctUntilChanged()
-                .collectLatest { userName ->
-
-                    if (!userName.isNullOrEmpty()) {
-                        uiState = uiState.copy(pending = true)
-                        repo.searchUsers(_userId.value, userName).collect { response ->
-                            uiState = when (response) {
-                                is NetworkResponse.Error -> {
-                                    // TODO: move messages to enum
-                                    uiState.copy(message = "An Error Occurred")
-                                }
-
-                                NetworkResponse.NoInternet -> {
-                                    // TODO: move messages to enum
-                                    uiState.copy(message = "No Internet")
-                                }
-
-                                is NetworkResponse.Success -> {
-                                    uiState.copy(
-                                        searchResult = response.data,
-                                        pending = false,
-                                        inviteSent = false,
-                                        isSendingInvite = false,
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        uiState = uiState.copy(idle = true)
-                    }
-                }
+            contactsRepository.combineDeviceAppUserContacts()
+            contactsRepository.fetchUsersByPhoneNumber()
+            userSearch()
         }
     }
 
     fun inviteSentEvent(connectionEvent: ContactCardConnectionEvent) {
-
         when (connectionEvent) {
             is ContactCardConnectionEvent.InviteConnectEvent -> {
                 viewModelScope.launch {
@@ -127,4 +100,69 @@ class SearchViewModel @Inject constructor(
         _query.value = searchQuery
     }
 
+    suspend fun userSearch() {
+        query.debounce(SEARCH_DELAY.milliseconds).distinctUntilChanged()
+            .collectLatest { userName ->
+
+                if (!userName.isNullOrEmpty()) {
+                    uiState = uiState.copy(pending = true)
+                    repo.searchUsers(_userId.value, userName).collect { response ->
+                        uiState = when (response) {
+                            is NetworkResponse.Error -> {
+                                // TODO: move messages to enum
+                                uiState.copy(message = "An Error Occurred")
+                            }
+
+                            NetworkResponse.NoInternet -> {
+                                // TODO: move messages to enum
+                                uiState.copy(message = "No Internet")
+                            }
+
+                            is NetworkResponse.Success -> {
+                                uiState.copy(
+                                    searchResult = response.data,
+                                    pending = false,
+                                    inviteSent = false,
+                                    isSendingInvite = false,
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    uiState = uiState.copy(idle = true)
+                }
+            }
+    }
+
+    suspend fun getAllContacts() {
+        localRepo.getAllContacts().forEach {
+            println("SearchViewModel ***** NAME ${it.name}")
+            println("SearchViewModel ***** PHOTO ${it.photoUri}")
+            println("SearchViewModel ***** NUMBERS ${it.phoneNumbers}")
+            println("SearchViewModel ***** THUMB ${it.thumbnailUri}")
+            println("SearchViewModel ***** ALL ${it.toString()}")
+        }
+
+        val contacts: List<Contact> =
+            when (val data = repo.fetchAllContacts(_userId.value.toString()).first()) {
+                is NetworkResponse.Error -> {
+                    emptyList()
+                }
+
+                NetworkResponse.NoInternet -> {
+                    emptyList()
+                }
+
+                is NetworkResponse.Success -> {
+                    data.data ?: emptyList()
+                }
+            }
+
+        contacts.forEach {
+            println("SearchViewModel ***** CONTACTS ${it.name}")
+            println("SearchViewModel ***** ${it.contactId}")
+            println("SearchViewModel ***** ${it.userName}")
+            println("SearchViewModel ***** ${it.phoneNUmber}")
+        }
+    }
 }

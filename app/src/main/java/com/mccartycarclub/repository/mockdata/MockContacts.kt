@@ -27,6 +27,7 @@ object MockContacts {
                     name = name,
                     avatarUri = "https://api.dicebear.com/7.x/personas/svg?seed=$name$index",
                     createdAt = "2025-05-08T14:30:00Z",
+                    phoneNUmber = "555-1212"
                 )
             )
         }
@@ -58,7 +59,8 @@ object MockContacts {
                     userName = "$name$index",
                     name = name,
                     avatarUri = "https://api.dicebear.com/7.x/personas/svg?seed=$name$index",
-                    createdAt = "2025-05-08T12:${String.format("%02d", index % 60)}:00Z"
+                    createdAt = "2025-05-08T12:${String.format("%02d", index % 60)}:00Z",
+                    phoneNUmber = "555-2222"
                 )
             )
         }

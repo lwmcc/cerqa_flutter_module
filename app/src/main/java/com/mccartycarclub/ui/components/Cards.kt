@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -45,7 +46,8 @@ fun CurrentContactCard(
                     .padding(
                         dimensionResource(id = R.dimen.card_padding_start),
                         dimensionResource(id = R.dimen.card_padding_top),
-                    )
+                    ),
+                /*colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onError)*/
             )
 
             Column {

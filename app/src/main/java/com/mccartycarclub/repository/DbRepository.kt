@@ -4,7 +4,7 @@ package com.mccartycarclub.repository
 import com.amplifyframework.datastore.generated.model.User
 
 // TODO: rename this
-interface DbRepo {
+interface DbRepository {
     fun fetchUserGroups(userId: String)
     fun fetchUserContacts(userId: String, userContacts: (List<Contact>) -> Unit) // TODO:: move to own interface
 

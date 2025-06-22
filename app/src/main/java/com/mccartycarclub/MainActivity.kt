@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            loadUserData()
+          //  loadUserData()
         } else {
             // TODO: show message stating my permission is needed
             println("MainActivity ***** ACCESS DENIED")
@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
             ContextCompat.checkSelfPermission(
                 this@MainActivity, android.Manifest.permission.READ_CONTACTS
             ) == PackageManager.PERMISSION_GRANTED -> {
-                loadUserData()
+             //   loadUserData()
             }
 
             ActivityCompat.shouldShowRequestPermissionRationale(
@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun loadUserData() = mainViewModel.getDeviceContacts()
+   // private fun loadUserData() = mainViewModel.getDeviceContacts()
 
     /*    private fun sendConnectInvite(message: String, phoneNumber: String, rowId: String) {
             val intent = Intent(Intent.ACTION_SENDTO).apply {

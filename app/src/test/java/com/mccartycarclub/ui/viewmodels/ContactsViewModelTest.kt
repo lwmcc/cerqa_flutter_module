@@ -5,7 +5,7 @@ import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.repository.AmplifyRepo.Companion.DUMMY
 import com.mccartycarclub.repository.Contact
-import com.mccartycarclub.repository.LocalRepo
+import com.mccartycarclub.repository.LocalRepository
 import com.mccartycarclub.repository.NetDeleteResult
 import com.mccartycarclub.repository.NetSearchResult
 import com.mccartycarclub.repository.NetWorkResult
@@ -211,7 +211,7 @@ class FakeRemoteRepo(
 
 }
 
-class FakeLocalRepo : LocalRepo {
+class FakeLocalRepo : LocalRepository {
     override fun getAllContacts(localContacts: (List<LocalContact>) -> Unit) {
         TODO("Not yet implemented")
     }

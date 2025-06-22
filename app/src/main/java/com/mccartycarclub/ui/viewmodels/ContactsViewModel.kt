@@ -7,9 +7,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mccartycarclub.domain.ChannelModel
 import com.mccartycarclub.repository.Contact
-import com.mccartycarclub.repository.LocalRepo
+import com.mccartycarclub.repository.ContactsRepository
+import com.mccartycarclub.repository.LocalRepository
 import com.mccartycarclub.repository.NetDeleteResult
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
@@ -34,7 +34,8 @@ data class UiState(
 @HiltViewModel
 class ContactsViewModel @Inject constructor(
     private val repo: RemoteRepo,
-    private val localRepo: LocalRepo,
+    private val contactsRepository: ContactsRepository,
+    private val localRepo: LocalRepository,
 ) : ViewModel() {
 
     private val _isSendingInvite = MutableStateFlow(false)
@@ -96,8 +97,7 @@ class ContactsViewModel @Inject constructor(
         if (loggedInUserId != null) {
             uiState = uiState.copy(pending = true)
             viewModelScope.launch {
-
-                when (val data = repo.fetchAllContacts(loggedInUserId).first()) {
+                when (val data = contactsRepository.fetchAllContacts(loggedInUserId).first()) {
                     is NetworkResponse.Error -> {
                         uiState = uiState.copy(message = MessageTypes.Error)
                     }

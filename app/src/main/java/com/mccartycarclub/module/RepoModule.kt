@@ -1,12 +1,18 @@
 package com.mccartycarclub.module
 
 import com.mccartycarclub.data.websocket.RealTimeMessaging
+import com.mccartycarclub.domain.helpers.ContactsHelper
+import com.mccartycarclub.domain.helpers.DeviceContacts
 import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.AmplifyRepo
+import com.mccartycarclub.repository.CombinedContactsHelper
+import com.mccartycarclub.repository.CombinedContactsRepository
 import com.mccartycarclub.repository.ContactsQueryBuilder
-import com.mccartycarclub.repository.DbRepo
-import com.mccartycarclub.repository.LocalRepo
+import com.mccartycarclub.repository.ContactsQueryHelper
+import com.mccartycarclub.repository.ContactsRepository
+import com.mccartycarclub.repository.DbRepository
+import com.mccartycarclub.repository.LocalRepository
 import com.mccartycarclub.repository.QueryBuilder
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.Repo
@@ -24,13 +30,13 @@ import dagger.hilt.components.SingletonComponent
 abstract class RepoModule {
 
     @Binds
-    abstract fun bindAmplifyDbRepo(amplifyDbRepo: AmplifyDbRepo): DbRepo
+    abstract fun bindAmplifyDbRepo(amplifyDbRepo: AmplifyDbRepo): DbRepository
 
     @Binds
     abstract fun bindAmplifyRepo(amplifyRepo: AmplifyRepo): RemoteRepo
 
     @Binds
-    abstract fun bindRepo(repo: Repo): LocalRepo
+    abstract fun bindRepo(repo: Repo): LocalRepository
 
     @Binds
     abstract fun bindQueryBuilder(contactsQueryBuilder: ContactsQueryBuilder): QueryBuilder
@@ -44,4 +50,12 @@ abstract class RepoModule {
     @Binds
     abstract fun bindPublishRepo(publishRepo: PublishRepo): RealtimePublishRepo
 
+    @Binds
+    abstract fun bindDeviceContacts(contactsHelper: ContactsHelper): DeviceContacts
+
+    @Binds
+    abstract fun bindContactsRepository(combinedContactsRepository: CombinedContactsRepository): ContactsRepository
+
+    @Binds
+    abstract fun bindContactsHelper(contactsQueryHelper: ContactsQueryHelper): CombinedContactsHelper
 }

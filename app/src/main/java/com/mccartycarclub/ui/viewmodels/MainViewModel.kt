@@ -7,7 +7,7 @@ import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.domain.usecases.user.GetContacts
 import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.domain.websocket.RealtimeService
-import com.mccartycarclub.repository.LocalRepo
+import com.mccartycarclub.repository.LocalRepository
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.realtime.RealtimePublishRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,7 +25,7 @@ class MainViewModel @Inject constructor(
     private val userContacts: GetContacts,
     private val realTime: RealTime,
     private val repo: RemoteRepo,
-    private val localRepo: LocalRepo,
+    private val localRepo: LocalRepository,
     private val realtimePublishRepo: RealtimePublishRepo,
     private val realtimeService: RealtimeService,
 ) : ViewModel() {
@@ -43,22 +42,6 @@ class MainViewModel @Inject constructor(
     private var _loggedUserId: String? = null
     val loggedUserId: String?
         get() = _loggedUserId
-
-    fun getDeviceContacts() = userContacts.getDeviceContacts(localContacts = { contacts ->
-        _localContacts.update { contacts }
-    })
-
-    fun inviteContact(userId: String, rowId: (String) -> Unit) {
-        userContacts.addNewContact(userId, rowId = {
-            it?.let {
-                rowId(it)
-            }
-        })
-    }
-
-    fun acceptContactInvite() {
-        userContacts.acceptContactInvite()
-    }
 
     fun subscribeToNotifications(channelName: String) {
         viewModelScope.launch {

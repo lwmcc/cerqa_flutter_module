@@ -36,6 +36,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.ui.authenticator.SignedInState
 import com.mccartycarclub.R
@@ -173,6 +174,9 @@ fun Contacts(
         }
     }
 
+    // TODO: testing
+    //contactsViewModel.getDeviceContacts()
+
     Scaffold(
         topBar = {
             TopBarContacts(
@@ -278,7 +282,7 @@ fun Contacts(
                                     item {
                                         CurrentContactCard(
                                             contact = contact,
-                                            avatar = R.drawable.ic_dashboard_black_24dp,
+                                            avatar = R.drawable.baseline_person_24,
                                         )
                                     }
                                 }

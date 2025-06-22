@@ -30,6 +30,7 @@ object UserMapper {
                             userName = item.userName,
                             createdAt = formatDateTimeForDisplay(item.createdAt).orEmpty(),
                             senderUserId = item.userId,
+                            phoneNUmber = item.phone,
                         )
                     )
                 }
@@ -45,6 +46,7 @@ object UserMapper {
                             userId = user.userId,
                             userName = user.userName,
                             createdAt = formatDateTimeForDisplay(user.createdAt).orEmpty(),
+                            phoneNUmber = user.phone,
                         )
                     )
                 }
@@ -60,6 +62,7 @@ object UserMapper {
                             userId = item.userId,
                             userName = item.userName,
                             createdAt = formatDateTimeForDisplay(item.createdAt).orEmpty(),
+                            phoneNumber = item.phone,
                         )
                     )
                 }
@@ -71,8 +74,13 @@ object UserMapper {
 
     // TODO: should I keep this?
     private fun currentContactFrom(
-        userId: String, contactId: String, userName: String,
-        name: String, avatarUri: String, createdAt: String,
+        userId: String,
+        contactId: String,
+        userName: String,
+        name: String,
+        avatarUri: String,
+        createdAt: String,
+        phoneNumber: String,
     ): CurrentContact {
         return CurrentContact(
             contactId = contactId,
@@ -81,6 +89,7 @@ object UserMapper {
             userId = userId,
             userName = userName,
             createdAt = createdAt,
+            phoneNUmber = phoneNumber,
         )
     }
 
@@ -92,6 +101,7 @@ object UserMapper {
             userId = connectionAccepted.userId,
             userName = connectionAccepted.userName,
             createdAt = connectionAccepted.createdAt,
+            phoneNUmber = "",
         )
     }
 }

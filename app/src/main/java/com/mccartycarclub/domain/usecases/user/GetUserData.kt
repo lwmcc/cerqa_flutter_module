@@ -1,10 +1,10 @@
 package com.mccartycarclub.domain.usecases.user
 
 import com.amplifyframework.datastore.generated.model.User
-import com.mccartycarclub.repository.DbRepo
+import com.mccartycarclub.repository.DbRepository
 import javax.inject.Inject
 
-class GetUserData @Inject constructor(private val dbRepo: DbRepo) : GetUser {
+class GetUserData @Inject constructor(private val dbRepo: DbRepository) : GetUser {
 
     override fun getUserGroups(userId: String) {
         val groups = dbRepo.fetchUserGroups(userId)

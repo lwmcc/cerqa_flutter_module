@@ -13,6 +13,7 @@ import com.mccartycarclub.domain.usecases.user.SearchResultBuilder
 import com.mccartycarclub.domain.websocket.AblyProvider
 import com.mccartycarclub.domain.websocket.RealtimeService
 import com.mccartycarclub.receiver.AblyBroadcastReceiver
+import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.datastore.UserPreferences
 import dagger.Module
 import dagger.Provides
@@ -34,8 +35,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideContactsHelper(@ApplicationContext context: Context): ContactsHelper =
-        ContactsHelper(context)
+    fun provideContactsHelper(
+        @ApplicationContext context: Context,
+        @Named("IoDispatcher") ioDispatcher: CoroutineDispatcher,
+    ): ContactsHelper = ContactsHelper(context, ioDispatcher)
 
     @Provides
     @Singleton

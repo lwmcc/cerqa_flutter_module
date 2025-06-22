@@ -1,31 +1,16 @@
 package com.mccartycarclub.repository
 
-import android.util.Log
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.aws.GsonVariablesSerializer
-import com.amplifyframework.api.graphql.GraphQLRequest
-import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
-import com.amplifyframework.api.graphql.model.ModelMutation
-import com.amplifyframework.api.graphql.model.ModelQuery
-import com.amplifyframework.api.graphql.model.ModelQuery.get
 
-import com.amplifyframework.core.Consumer
-import com.amplifyframework.core.model.LoadedModelList
-import com.amplifyframework.core.model.ModelReference
-import com.amplifyframework.core.model.includes
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
-import com.amplifyframework.datastore.generated.model.UserGroup
-import com.amplifyframework.datastore.generated.model.UserPath
-import com.amplifyframework.kotlin.core.Amplify
-import com.google.gson.Gson
 import com.squareup.moshi.Json
 import javax.inject.Inject
 
 
-class AmplifyDbRepo @Inject constructor() : DbRepo {
+class AmplifyDbRepo @Inject constructor() : DbRepository {
 
     @OptIn(InternalAmplifyApi::class)
     override fun fetchUserGroups(userId: String) {
