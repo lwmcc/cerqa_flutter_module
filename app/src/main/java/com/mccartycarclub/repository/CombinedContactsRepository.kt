@@ -37,7 +37,7 @@ class CombinedContactsRepository @Inject constructor(
     }
 
     override suspend fun fetchUsersByPhoneNumber() {
-            val phoneNumbers = listOf("+14805553211", "+4805554545")
+            val phoneNumbers = "+14805553211" //listOf("+14805553211", "+4805554545")
 
             val document = """
                         query FetchUsersByPhoneNumbers(${'$'}phoneNumbers: [String!]!) {
