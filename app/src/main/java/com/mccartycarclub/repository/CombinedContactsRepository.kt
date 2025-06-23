@@ -4,6 +4,7 @@ import com.amplifyframework.api.aws.GsonVariablesSerializer
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.User
+import com.google.common.reflect.TypeToken
 import com.mccartycarclub.domain.helpers.DeviceContacts
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -40,15 +41,19 @@ class CombinedContactsRepository @Inject constructor(
         val phoneNumber = "+14805553211"
 
         val document = """
-        query FetchUsersByPhoneNumber(${'$'}phoneNumber: String!) {
-            fetchUsersByPhoneNumber(phoneNumber: ${'$'}phoneNumber)
-        }
-    """.trimIndent()
+                query FetchUsersByPhoneNumber(${'$'}phoneNumber: String!) {
+                        fetchUsersByPhoneNumber(phoneNumber: ${'$'}phoneNumber) {
+                            id
+                            name
+                            phone
+                        }
+                    }
+                    """.trimIndent()
 
         val request = SimpleGraphQLRequest<String>(
             document,
             mapOf("phoneNumber" to phoneNumber),
-            String::class.java,
+            object : TypeToken<List<User>>() {}.type,
             GsonVariablesSerializer()
         )
 
@@ -76,3 +81,9 @@ class CombinedContactsRepository @Inject constructor(
         TODO("Not yet implemented")
     }
 }
+
+data class User(
+    val id: String,
+    val name: String?,
+    val phone: String?
+)
