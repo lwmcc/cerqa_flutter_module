@@ -37,13 +37,13 @@ class CombinedContactsRepository @Inject constructor(
     }
 
     override suspend fun fetchUsersByPhoneNumber() {
-            val phoneNumber = "+14805553211" //listOf("+14805553211", "+4805554545")
+        val phoneNumber = "+14805553211"
 
-            val document = """
-                        query FetchUsersByPhoneNumber(${'$'}phoneNumber: String!) {
-                            fetchUsersByPhoneNumber(phoneNumber: ${'$'}phoneNumber)
-                        }
-                        """.trimIndent()
+        val document = """
+        query FetchUsersByPhoneNumber(${'$'}phoneNumber: String!) {
+            fetchUsersByPhoneNumber(phoneNumber: ${'$'}phoneNumber)
+        }
+    """.trimIndent()
 
         val request = SimpleGraphQLRequest<String>(
             document,
@@ -55,10 +55,10 @@ class CombinedContactsRepository @Inject constructor(
         Amplify.API.query(
             request,
             { response ->
-                println("CombinedContactsRepository ***** RESPONSE ${response.data}")
+                println("Lambda RESPONSE → ${response.data}")
             },
             { error ->
-                println("CombinedContactsRepository Query error ***** ${error.localizedMessage}")
+                println("Lambda ERROR → ${error.localizedMessage}")
             }
         )
     }
