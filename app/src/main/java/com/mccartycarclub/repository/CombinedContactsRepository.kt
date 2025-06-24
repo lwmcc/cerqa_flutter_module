@@ -42,7 +42,18 @@ class CombinedContactsRepository @Inject constructor(
 
         val document = """
                 query FetchUsersByPhoneNumber(${'$'}phoneNumber: String!) {
-                        fetchUsersByPhoneNumber(phoneNumber: ${'$'}phoneNumber)
+                        fetchUsersByPhoneNumber(phoneNumber: ${'$'}phoneNumber) {
+                          userName
+                          contacts {
+                            id
+                            name
+                            phone
+                          }
+                          invites {
+                            id
+                            senderId
+                            receiverId
+                          }
                       }
                     """.trimIndent()
 
