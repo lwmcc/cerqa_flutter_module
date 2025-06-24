@@ -41,6 +41,16 @@ class CombinedContactsRepository @Inject constructor(
         val phoneNumber = "+14805553211"
 
         val document = """
+                        query FetchUsersByPhoneNumber(${'$'}phoneNumber: String!) {
+                            fetchUsersByPhoneNumber(phoneNumber: ${'$'}phoneNumber) {
+                                userName
+                                contacts
+                                invites
+                            }
+                        }
+                    """.trimIndent()
+
+/*        val document = """
                 query FetchUsersByPhoneNumber(${'$'}phoneNumber: String!) {
                         fetchUsersByPhoneNumber(phoneNumber: ${'$'}phoneNumber) {
                           userName
@@ -55,7 +65,7 @@ class CombinedContactsRepository @Inject constructor(
                             receiverId
                           }
                       }
-                    """.trimIndent()
+                    """.trimIndent()*/
 
         val request = SimpleGraphQLRequest<String>(
             document,
