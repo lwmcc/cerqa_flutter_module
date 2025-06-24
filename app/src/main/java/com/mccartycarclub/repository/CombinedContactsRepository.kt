@@ -43,17 +43,24 @@ class CombinedContactsRepository @Inject constructor(
         val document = """
                 query FetchUsersByPhoneNumber(${'$'}phoneNumber: String!) {
                         fetchUsersByPhoneNumber(phoneNumber: ${'$'}phoneNumber) {
+                          userName
+                          contacts {
                             id
                             name
                             phone
-                        }
-                    }
+                          }
+                          invites {
+                            id
+                            senderId
+                            receiverId
+                          }
+                      }
                     """.trimIndent()
 
         val request = SimpleGraphQLRequest<String>(
             document,
             mapOf("phoneNumber" to phoneNumber),
-            object : TypeToken<List<User>>() {}.type,
+            object : TypeToken<List<ContactUserData>>() {}.type,
             GsonVariablesSerializer()
         )
 
@@ -82,7 +89,7 @@ class CombinedContactsRepository @Inject constructor(
     }
 }
 
-data class User(
+data class ContactUserData(
     val id: String,
     val name: String?,
     val phone: String?
