@@ -867,6 +867,32 @@
               "attributes": []
             }
           }
+        },
+        "FetchUsersByPhoneNumberReturnType": {
+          "name": "FetchUsersByPhoneNumberReturnType",
+          "fields": {
+            "userName": {
+              "name": "userName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "contacts": {
+              "name": "contacts",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "invites": {
+              "name": "invites",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            }
+          }
         }
       },
       "queries": {
@@ -933,7 +959,9 @@
         "fetchUsersByPhoneNumber": {
           "name": "fetchUsersByPhoneNumber",
           "isArray": false,
-          "type": "String",
+          "type": {
+            "nonModel": "FetchUsersByPhoneNumberReturnType"
+          },
           "isRequired": false,
           "arguments": {
             "phoneNumber": {
