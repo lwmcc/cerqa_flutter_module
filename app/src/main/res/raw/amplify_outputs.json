@@ -975,5 +975,25 @@
       }
     }
   },
+  "storage": {
+    "aws_region": "us-east-2",
+    "bucket_name": "amplify-d1au4cy3a2hv98-ma-opensearchbackupbucketam-t0ztk8vspe0w",
+    "buckets": [
+      {
+        "name": "opensearch-backup-bucket-amplify-gen-2",
+        "bucket_name": "amplify-d1au4cy3a2hv98-ma-opensearchbackupbucketam-t0ztk8vspe0w",
+        "aws_region": "us-east-2",
+        "paths": {
+          "public/*": {
+            "guest": [
+              "list",
+              "write",
+              "get"
+            ]
+          }
+        }
+      }
+    ]
+  },
   "version": "1.3"
 }
