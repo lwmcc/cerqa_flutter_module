@@ -1,6 +1,7 @@
 package com.mccartycarclub.ui.viewmodels
 
 import com.amplifyframework.datastore.generated.model.User
+import com.mccartycarclub.domain.helpers.LocalDeviceContacts
 import com.mccartycarclub.domain.model.LocalContact
 import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.repository.AmplifyRepo.Companion.DUMMY
@@ -222,5 +223,9 @@ class FakeLocalRepo : LocalRepository {
 
     override fun getUserId(): Flow<String?> = flow {
         emit(DUMMY)
+    }
+
+    override suspend fun getAllContacts(): List<LocalDeviceContacts> {
+        TODO("Not yet implemented")
     }
 }

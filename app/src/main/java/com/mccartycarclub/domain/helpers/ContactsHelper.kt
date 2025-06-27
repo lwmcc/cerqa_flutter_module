@@ -12,6 +12,7 @@ import javax.inject.Named
 import javax.inject.Singleton
 import androidx.core.net.toUri
 import com.mccartycarclub.repository.RemoteRepo
+import com.mccartycarclub.utils.phoneNumberParser
 
 @Singleton
 class ContactsHelper @Inject constructor(
@@ -49,7 +50,7 @@ class ContactsHelper @Inject constructor(
                         val thumbnailUri = cursor.getString(thumbnailIndex)?.toUri()
                         val photoUri = cursor.getString(photoUriIndex)?.toUri()
 
-                        val phoneNumbers = mutableListOf<String>()
+                        val phoneNumbers = mutableListOf<String?>()
 
                         val phoneCursor: Cursor? = contentResolver.query(
                             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
@@ -65,7 +66,9 @@ class ContactsHelper @Inject constructor(
                             while (phoneIt.moveToNext()) {
                                 phoneIt.getString(numberIndex)?.let { number ->
                                     if (number.isNotBlank()) {
-                                        phoneNumbers.add(number)
+                                        phoneNumberParser(number)?.let { num ->
+                                            phoneNumbers.add(num)
+                                        } ?: phoneNumbers.add(null)
                                     }
                                 }
                             }
@@ -92,7 +95,7 @@ class ContactsHelper @Inject constructor(
 
 data class LocalDeviceContacts(
     val name: String,
-    val phoneNumbers: List<String> = emptyList(),
+    val phoneNumbers: List<String?> = emptyList(),
     val photoUri: Uri?,
     val thumbnailUri: Uri?
 )

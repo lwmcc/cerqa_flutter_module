@@ -25,6 +25,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.serialization.Serializable
 import java.io.IOException
 import java.net.UnknownHostException
 import javax.inject.Inject
@@ -77,16 +78,16 @@ class ContactsQueryHelper @Inject constructor(
         }.flowOn(ioDispatcher)
 
     override fun fetchContactAppUsers() {
-        val phoneNumbers = listOf("+15555551234", "+15555555678")
+        val phoneNumbers = listOf("+14805554545", "+14808104545")
 
         val document = """
-                        query FetchUsersByPhoneNumbers(${'$'}phoneNumbers: [String!]!) {
-                            fetchUsersByPhoneNumbers(phoneNumbers: ${'$'}phoneNumbers) {
-                                userId
+                        query SearchUsers(${'$'}phoneNumbers: [String!]!) {
+                            searchUsers(phoneNumbers: ${'$'}phoneNumbers) {
+                                id
+                                phone
                                 firstName
                                 lastName
-                                phone
-                                email
+                                userName
                             }
                         }
                     """.trimIndent()
@@ -94,7 +95,7 @@ class ContactsQueryHelper @Inject constructor(
         val request = SimpleGraphQLRequest<String>(
             document,
             mapOf("phoneNumbers" to phoneNumbers),
-            String::class.java,
+            UsersPhoneSearchResponse::class.java,
             GsonVariablesSerializer()
         )
 
@@ -348,3 +349,18 @@ class ContactsQueryHelper @Inject constructor(
     }
 
 }
+
+// TODO: move these
+@Serializable
+data class UserPhoneSearch(
+    val id: String,
+    val phone: String,
+    val firstName: String,
+    val lastName: String,
+    val userName: String
+)
+
+@Serializable
+data class UsersPhoneSearchResponse(
+    val searchUsers: List<UserPhoneSearch>
+)

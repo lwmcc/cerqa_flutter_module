@@ -161,6 +161,9 @@ dependencies {
     implementation(libs.firebase.core)
 
     implementation(libs.androidx.datastore.preferences)
+
+    // Google phone number validator
+    implementation(libs.libphonenumber)
 }
 
 kapt {

@@ -1,18 +1,24 @@
 package com.mccartycarclub.repository
 
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.aws.GsonVariablesSerializer
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.User
-import com.google.common.reflect.TypeToken
+import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.mccartycarclub.domain.helpers.DeviceContacts
+import com.mccartycarclub.domain.model.DeviceContact
+import com.mccartycarclub.domain.model.SearchContact
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import javax.inject.Named
 
 class CombinedContactsRepository @Inject constructor(
+    private val amplifyApi: KotlinApiFacade,
     private val deviceContacts: DeviceContacts,
     private val contactsHelper: CombinedContactsHelper,
+    @Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
 ) : ContactsRepository {
 
     override suspend fun createContact(user: User) {
@@ -26,63 +32,58 @@ class CombinedContactsRepository @Inject constructor(
         TODO("Not yet implemented")
     }
 
-    override suspend fun combineDeviceAppUserContacts() {
-        println("CombinedContactsRepository ***** combineDeviceAppUserContacts")
-        deviceContacts.getDeviceContacts().forEach {
-            println("CombinedContactsRepository ***** NAME ${it.name}")
-            println("CombinedContactsRepository ***** PHOTO ${it.photoUri}")
-            println("CombinedContactsRepository ***** NUMBERS ${it.phoneNumbers}")
-            println("CombinedContactsRepository ***** THUMB ${it.thumbnailUri}")
-            println("CombinedContactsRepository ***** ALL ${it.toString()}")
+    // TODO: change name of this function, maybe make it private
+    override suspend fun combineDeviceAppUserContacts() = withContext(ioDispatcher) {
+        deviceContacts.getDeviceContacts().flatMap { contact ->
+            contact.phoneNumbers.mapNotNull { phone ->
+                phone?.let {
+                    DeviceContact(
+                        name = contact.name,
+                        phoneNumbers = listOf(it),
+                        avatarUri = contact.photoUri,
+                        thumbnailUri = contact.thumbnailUri
+                    )
+                }
+            }
         }
     }
 
+    // TODO: device contacts who also use app
     override suspend fun fetchUsersByPhoneNumber() {
-        val phoneNumber = "+14805553211"
+        val deviceContacts = combineDeviceAppUserContacts()
+
+        val phoneNumbers: List<String?> = deviceContacts.flatMap { it.phoneNumbers }
 
         val document = """
-                        query FetchUsersByPhoneNumber(${'$'}phoneNumber: String!) {
-                            fetchUsersByPhoneNumber(phoneNumber: ${'$'}phoneNumber) {
+                        query SearchUsers(${'$'}phoneNumbers: [String!]!) {
+                            searchUsers(phoneNumbers: ${'$'}phoneNumbers) {
+                                id
+                                phone
+                                firstName
+                                lastName
                                 userName
-                                contacts
-                                invites
                             }
                         }
                     """.trimIndent()
 
-/*        val document = """
-                query FetchUsersByPhoneNumber(${'$'}phoneNumber: String!) {
-                        fetchUsersByPhoneNumber(phoneNumber: ${'$'}phoneNumber) {
-                          userName
-                          contacts {
-                            id
-                            name
-                            phone
-                          }
-                          invites {
-                            id
-                            senderId
-                            receiverId
-                          }
-                      }
-                    """.trimIndent()*/
-
-        val request = SimpleGraphQLRequest<String>(
+        val request = SimpleGraphQLRequest<UsersPhoneSearchResponse>(
             document,
-            mapOf("phoneNumber" to phoneNumber),
-            object : TypeToken<List<ContactUserData>>() {}.type,
+            mapOf("phoneNumbers" to phoneNumbers),
+            UsersPhoneSearchResponse::class.java,
             GsonVariablesSerializer()
         )
 
-        Amplify.API.query(
-            request,
-            { response ->
-                println("Lambda RESPONSE → ${response.data}")
-            },
-            { error ->
-                println("Lambda ERROR → ${error.localizedMessage}")
+        withContext(ioDispatcher) {
+            try {
+                val response = amplifyApi.query(request)
+                val appUsers = createNonAppUsers(deviceContacts, response.data.searchUsers)
+                val nonAppUsers = createAppUsers(deviceContacts, response.data.searchUsers)
+                // TODO: emit this
+                Pair(appUsers, nonAppUsers)
+            } catch (ae: AmplifyException) {
+                // TODO:
             }
-        )
+        }
     }
 
     /*
@@ -97,10 +98,58 @@ class CombinedContactsRepository @Inject constructor(
     ): Flow<NetDeleteResult> {
         TODO("Not yet implemented")
     }
-}
 
-data class ContactUserData(
-    val id: String,
-    val name: String?,
-    val phone: String?
-)
+    private fun createAppUsers(
+        localPhoneNumbers: List<DeviceContact>,
+        remoteUserPhoneNumbers: List<UserPhoneSearch>,
+    ): List<SearchContact> {
+        val remote = remoteUserPhoneNumbers.map { it.phone }.toSet()
+        val appUsers = localPhoneNumbers.filter { contact ->
+            contact.phoneNumbers.any { phone ->
+                phone != null && phone in remote
+            }
+        }
+
+        val user = mutableListOf<SearchContact>()
+
+        appUsers.map {
+            user.add(
+                SearchContact(
+                    name = it.name,
+                    phoneNumbers = it.phoneNumbers,
+                    avatarUri = it.avatarUri,
+                    thumbnailUri = it.thumbnailUri
+                )
+            )
+        }
+
+        return user
+    }
+
+    private fun createNonAppUsers(
+        localPhoneNumbers: List<DeviceContact>,
+        remoteUserPhoneNumbers: List<UserPhoneSearch>,
+    ): List<SearchContact> {
+        val remote = remoteUserPhoneNumbers.map { it.phone }.toSet()
+
+        val nonAppUsers = localPhoneNumbers.filterNot { contact ->
+            contact.phoneNumbers.any { phone ->
+                phone != null && phone in remote
+            }
+        }
+
+        val nonUser = mutableListOf<SearchContact>()
+
+        nonAppUsers.map {
+            nonUser.add(
+                SearchContact(
+                    name = it.name,
+                    phoneNumbers = it.phoneNumbers,
+                    avatarUri = it.avatarUri,
+                    thumbnailUri = it.thumbnailUri,
+                )
+            )
+        }
+        return nonUser
+    }
+}
