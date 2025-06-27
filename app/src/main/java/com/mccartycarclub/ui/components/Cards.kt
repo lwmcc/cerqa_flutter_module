@@ -29,7 +29,7 @@ import com.mccartycarclub.repository.ReceivedContactInvite
 
 @Composable
 fun CurrentContactCard(
-    contact: Contact,
+    contact: String,
     @DrawableRes avatar: Int,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -52,7 +52,7 @@ fun CurrentContactCard(
 
             Column {
                 Text(
-                    text = contact.userName,
+                    text = contact,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )

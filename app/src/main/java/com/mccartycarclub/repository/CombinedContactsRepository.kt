@@ -10,6 +10,7 @@ import com.mccartycarclub.domain.model.DeviceContact
 import com.mccartycarclub.domain.model.SearchContact
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Named
@@ -48,10 +49,8 @@ class CombinedContactsRepository @Inject constructor(
         }
     }
 
-    // TODO: device contacts who also use app
-    override suspend fun fetchUsersByPhoneNumber() {
+    override suspend fun fetchUsersByPhoneNumber(): Pair<List<SearchContact>, List<SearchContact>> {
         val deviceContacts = combineDeviceAppUserContacts()
-
         val phoneNumbers: List<String?> = deviceContacts.flatMap { it.phoneNumbers }
 
         val document = """
@@ -73,24 +72,34 @@ class CombinedContactsRepository @Inject constructor(
             GsonVariablesSerializer()
         )
 
-        withContext(ioDispatcher) {
+        return withContext(ioDispatcher) {
             try {
                 val response = amplifyApi.query(request)
-                val appUsers = createNonAppUsers(deviceContacts, response.data.searchUsers)
-                val nonAppUsers = createAppUsers(deviceContacts, response.data.searchUsers)
-                // TODO: emit this
+                val appUsers =
+                    createAppUsers(
+                        cacheContacts = cacheContacts,
+                        localPhoneNumbers = deviceContacts,
+                        remoteUserPhoneNumbers = response.data.searchUsers,
+                    )
+
+                val nonAppUsers = createNonAppUsers(deviceContacts, response.data.searchUsers)
+
                 Pair(appUsers, nonAppUsers)
             } catch (ae: AmplifyException) {
-                // TODO:
+                Pair(emptyList(), emptyList())
             }
         }
     }
 
-    /*
-    on device and remote
-     */
-    override fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>> =
-        contactsHelper.fetchAllContacts(loggedInUserId)
+    override fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>> {
+        return contactsHelper.fetchAllContacts(loggedInUserId).onEach { response ->
+            if (response is NetworkResponse.Success) {
+                response.data?.let { contacts ->
+                    cacheContacts = contacts
+                }
+            }
+        }
+    }
 
     override fun createContact(
         senderUserId: String,
@@ -100,25 +109,29 @@ class CombinedContactsRepository @Inject constructor(
     }
 
     private fun createAppUsers(
+        cacheContacts: List<Contact>,
         localPhoneNumbers: List<DeviceContact>,
         remoteUserPhoneNumbers: List<UserPhoneSearch>,
     ): List<SearchContact> {
+
+        val cached = cacheContacts.map { it.phoneNUmber }.toSet()
         val remote = remoteUserPhoneNumbers.map { it.phone }.toSet()
+
         val appUsers = localPhoneNumbers.filter { contact ->
             contact.phoneNumbers.any { phone ->
-                phone != null && phone in remote
+                phone != null && phone in remote && phone !in cached
             }
         }
 
         val user = mutableListOf<SearchContact>()
 
-        appUsers.map {
+        appUsers.map { contact ->
             user.add(
                 SearchContact(
-                    name = it.name,
-                    phoneNumbers = it.phoneNumbers,
-                    avatarUri = it.avatarUri,
-                    thumbnailUri = it.thumbnailUri
+                    name = contact.name,
+                    phoneNumbers = contact.phoneNumbers,
+                    avatarUri = contact.avatarUri,
+                    thumbnailUri = contact.thumbnailUri
                 )
             )
         }
@@ -151,5 +164,9 @@ class CombinedContactsRepository @Inject constructor(
             )
         }
         return nonUser
+    }
+
+    companion object {
+        private var cacheContacts: List<Contact> = emptyList()
     }
 }

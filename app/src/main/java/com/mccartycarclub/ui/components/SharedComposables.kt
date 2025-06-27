@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -36,7 +37,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.ui.authenticator.SignedInState
 import com.mccartycarclub.R
@@ -174,9 +174,6 @@ fun Contacts(
         }
     }
 
-    // TODO: testing
-    //contactsViewModel.getDeviceContacts()
-
     Scaffold(
         topBar = {
             TopBarContacts(
@@ -281,7 +278,7 @@ fun Contacts(
                                 is CurrentContact -> {
                                     item {
                                         CurrentContactCard(
-                                            contact = contact,
+                                            contact = contact.name,
                                             avatar = R.drawable.baseline_person_24,
                                         )
                                     }
@@ -419,6 +416,7 @@ fun Search(
             )
 
             when {
+                // TODO: change all to uiState????
                 uiState.searchResult != null -> {
                     SearchResultUserCard(
                         user = uiState.searchResult,
@@ -449,6 +447,22 @@ fun Search(
 
                 else -> {
                     println("Search ***** ELSE")
+                }
+            }
+
+            LazyColumn {
+                items(uiState.appUsers) { user ->
+                    CurrentContactCard(
+                        contact = user.name,
+                        avatar = R.drawable.baseline_person_24,
+                    )
+                }
+
+                items(uiState.nonAppUsers) { user ->
+                    CurrentContactCard(
+                        contact = user.name,
+                        avatar = R.drawable.baseline_person_24,
+                    )
                 }
             }
         }

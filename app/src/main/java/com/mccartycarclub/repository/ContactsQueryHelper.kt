@@ -2,7 +2,6 @@ package com.mccartycarclub.repository
 
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.aws.GsonVariablesSerializer
-import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
 import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.core.Amplify
@@ -17,7 +16,6 @@ import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.datastore.generated.model.UserPath
 import com.amplifyframework.kotlin.api.KotlinApiFacade
-import com.mccartycarclub.domain.helpers.SearchResult
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -35,20 +33,8 @@ import kotlin.reflect.KClass
 class ContactsQueryHelper @Inject constructor(
     private val amplifyApi: KotlinApiFacade,
     private val contactsQueryBuilder: QueryBuilder,
-    private val searchResult: SearchResult,
     @Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
 ) : CombinedContactsHelper {
-    override fun combineSources() {
-
-    }
-
-    override fun getDeviceContacts() {
-
-    }
-
-    override fun fetchRemoteContacts() {
-
-    }
 
     override fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>> =
         flow {
@@ -310,6 +296,7 @@ class ContactsQueryHelper @Inject constructor(
             return invites
         } catch (e: ApiException) {
             if (e.cause is IOException || e.cause is UnknownHostException) {
+                // TODO: handle no internet properly
                 throw NoInternetException("Send message") // TODO: no message needed
             } else {
                 throw ResponseException("Send message")

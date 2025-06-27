@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mccartycarclub.domain.model.SearchContact
 import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.ContactsRepository
@@ -32,7 +33,9 @@ data class SearchUiState(
     val isSendingInvite: Boolean = false,
     val inviteSent: Boolean = false,
     val message: String? = null,
-    val searchResult: UserSearchResult? = null
+    val searchResult: UserSearchResult? = null,
+    val appUsers: List<SearchContact> = emptyList(),
+    val nonAppUsers: List<SearchContact> = emptyList(),
 )
 
 @OptIn(FlowPreview::class)
@@ -56,7 +59,10 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch {
             _userId.value = localRepo.getUserId().first()
             contactsRepository.combineDeviceAppUserContacts()
-            contactsRepository.fetchUsersByPhoneNumber()
+            val (users, nonUsers) = contactsRepository.fetchUsersByPhoneNumber()
+
+            uiState = uiState.copy(appUsers = users, nonAppUsers = nonUsers)
+
             userSearch()
         }
     }
