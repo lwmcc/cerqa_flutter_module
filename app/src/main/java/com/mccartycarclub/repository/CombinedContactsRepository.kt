@@ -33,8 +33,7 @@ class CombinedContactsRepository @Inject constructor(
         TODO("Not yet implemented")
     }
 
-    // TODO: change name of this function, maybe make it private
-    override suspend fun combineDeviceAppUserContacts() = withContext(ioDispatcher) {
+    private suspend fun combineDeviceAppUserContacts() = withContext(ioDispatcher) {
         deviceContacts.getDeviceContacts().flatMap { contact ->
             contact.phoneNumbers.mapNotNull { phone ->
                 phone?.let {

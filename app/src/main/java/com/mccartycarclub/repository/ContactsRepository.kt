@@ -1,7 +1,6 @@
 package com.mccartycarclub.repository
 
 import com.amplifyframework.datastore.generated.model.User
-import com.mccartycarclub.domain.model.DeviceContact
 import com.mccartycarclub.domain.model.SearchContact
 import kotlinx.coroutines.flow.Flow
 
@@ -10,7 +9,6 @@ interface ContactsRepository {
     fun contactExists(senderUserId: String, receiverUserId: String): Flow<Boolean>
     fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>>
 
-    suspend fun combineDeviceAppUserContacts(): List<DeviceContact>
     suspend fun fetchUsersByPhoneNumber(): Pair<List<SearchContact>, List<SearchContact>>
     suspend fun createContact(user: User)
 }

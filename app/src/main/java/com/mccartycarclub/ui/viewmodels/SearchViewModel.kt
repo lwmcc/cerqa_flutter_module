@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccartycarclub.domain.model.SearchContact
 import com.mccartycarclub.domain.model.UserSearchResult
-import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.ContactsRepository
 import com.mccartycarclub.repository.LocalRepository
 import com.mccartycarclub.repository.NetworkResponse
@@ -58,9 +57,9 @@ class SearchViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             _userId.value = localRepo.getUserId().first()
-            contactsRepository.combineDeviceAppUserContacts()
-            val (users, nonUsers) = contactsRepository.fetchUsersByPhoneNumber()
+            //contactsRepository.combineDeviceAppUserContacts()
 
+            val (users, nonUsers) = contactsRepository.fetchUsersByPhoneNumber()
             uiState = uiState.copy(appUsers = users, nonAppUsers = nonUsers)
 
             userSearch()
@@ -86,11 +85,12 @@ class SearchViewModel @Inject constructor(
 
                     when (data) {
                         is NetworkResponse.Error -> {
-                            // TODO: log update ui
+                            // TODO: move messages to enum
+                            uiState.copy(message = "An Error Occurred")
                         }
 
                         NetworkResponse.NoInternet -> {
-                            // TODO: update ui
+                            uiState.copy(message = "No Internet")
                         }
 
                         is NetworkResponse.Success -> {
@@ -138,37 +138,5 @@ class SearchViewModel @Inject constructor(
                     uiState = uiState.copy(idle = true)
                 }
             }
-    }
-
-    suspend fun getAllContacts() {
-        localRepo.getAllContacts().forEach {
-            println("SearchViewModel ***** NAME ${it.name}")
-            println("SearchViewModel ***** PHOTO ${it.photoUri}")
-            println("SearchViewModel ***** NUMBERS ${it.phoneNumbers}")
-            println("SearchViewModel ***** THUMB ${it.thumbnailUri}")
-            println("SearchViewModel ***** ALL ${it.toString()}")
-        }
-
-        val contacts: List<Contact> =
-            when (val data = repo.fetchAllContacts(_userId.value.toString()).first()) {
-                is NetworkResponse.Error -> {
-                    emptyList()
-                }
-
-                NetworkResponse.NoInternet -> {
-                    emptyList()
-                }
-
-                is NetworkResponse.Success -> {
-                    data.data ?: emptyList()
-                }
-            }
-
-        contacts.forEach {
-            println("SearchViewModel ***** CONTACTS ${it.name}")
-            println("SearchViewModel ***** ${it.contactId}")
-            println("SearchViewModel ***** ${it.userName}")
-            println("SearchViewModel ***** ${it.phoneNUmber}")
-        }
     }
 }
