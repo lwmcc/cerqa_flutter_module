@@ -867,32 +867,6 @@
               "attributes": []
             }
           }
-        },
-        "FetchUsersByPhoneNumberReturnType": {
-          "name": "FetchUsersByPhoneNumberReturnType",
-          "fields": {
-            "userName": {
-              "name": "userName",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
-              "attributes": []
-            },
-            "contacts": {
-              "name": "contacts",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
-              "attributes": []
-            },
-            "invites": {
-              "name": "invites",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
-              "attributes": []
-            }
-          }
         }
       },
       "queries": {
@@ -956,19 +930,44 @@
             }
           }
         },
-        "fetchUsersByPhoneNumber": {
-          "name": "fetchUsersByPhoneNumber",
-          "isArray": false,
+        "searchUsers": {
+          "name": "searchUsers",
+          "isArray": true,
           "type": {
-            "nonModel": "FetchUsersByPhoneNumberReturnType"
+            "model": "User"
           },
           "isRequired": false,
+          "isArrayNullable": true,
           "arguments": {
-            "phoneNumber": {
-              "name": "phoneNumber",
+            "phoneNumbers": {
+              "name": "phoneNumbers",
+              "isArray": true,
+              "type": "String",
+              "isRequired": false,
+              "isArrayNullable": false
+            }
+          }
+        },
+        "searchByUserName": {
+          "name": "searchByUserName",
+          "isArray": true,
+          "type": {
+            "model": "User"
+          },
+          "isRequired": false,
+          "isArrayNullable": true,
+          "arguments": {
+            "userName": {
+              "name": "userName",
               "isArray": false,
               "type": "String",
-              "isRequired": false
+              "isRequired": true
+            },
+            "loggedInUserName": {
+              "name": "loggedInUserName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
             }
           }
         }
