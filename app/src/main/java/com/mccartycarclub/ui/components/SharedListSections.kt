@@ -38,7 +38,7 @@ fun ListSection(
 
         Column {
             Text(
-                text =title,
+                text = title,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
