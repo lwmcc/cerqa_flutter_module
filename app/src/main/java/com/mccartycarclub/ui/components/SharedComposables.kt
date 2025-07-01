@@ -519,7 +519,9 @@ fun Search(
                                     openAlertDialog = true
                                     connectionEvent =
                                         ContactCardConnectionEvent.InvitePhoneNumberConnectEvent(
-                                            receiverPhoneNumber = ""
+                                            // TODO: there is only one number here use
+                                            // it instead of list
+                                            receiverPhoneNumber = user.phoneNumbers.first().toString()
                                         )
                                     alertDialogData = AlertDialogData(
                                         icon = R.drawable.sharp_contacts_24,
@@ -529,7 +531,8 @@ fun Search(
                                         dismiss = R.string.dialog_button_dismiss,
                                         confirm = R.string.dialog_button_connect,
                                     )
-                                }
+                                },
+                                isEnabled = user.connectButtonEnabled
                             )
                         }
                     )

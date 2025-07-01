@@ -126,7 +126,33 @@ class SearchViewModel @Inject constructor(
             }
 
             is ContactCardConnectionEvent.InvitePhoneNumberConnectEvent -> {
-                println("SearchViewModel ***** SEND INVITE")
+                disableButton(connectionEvent.receiverPhoneNumber)
+
+                viewModelScope.launch {
+                    _userId.value?.let { senderUserId ->
+                        repo.sendPhoneNumberInviteToConnect(
+                            senderUserId = senderUserId,
+                            phoneNumber = connectionEvent.receiverPhoneNumber,
+                        ).collect { response ->
+                            uiState = when (response) {
+                                is NetworkResponse.Error -> {
+                                    uiState.copy(message = UiUserMessage.NETWORK_ERROR)
+                                }
+
+                                NetworkResponse.NoInternet -> {
+                                    uiState.copy(message = UiUserMessage.NO_INTERNET)
+                                }
+
+                                is NetworkResponse.Success -> {
+                                    uiState.copy(
+                                        pending = false,
+                                        message = UiUserMessage.INVITE_SENT
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -209,5 +235,16 @@ class SearchViewModel @Inject constructor(
                     uiState = uiState.copy(idle = true)
                 }
             }
+    }
+
+    fun disableButton(phoneNumber: String) {
+        val appUsers = uiState.appUsers.map {
+            if (it.phoneNumbers.any{ phone -> phone == phoneNumber }) {
+                it.copy(connectButtonEnabled = false)
+            } else {
+                it
+            }
+        }
+        uiState = uiState.copy(appUsers = appUsers)
     }
 }

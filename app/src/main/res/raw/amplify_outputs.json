@@ -963,8 +963,8 @@
               "type": "String",
               "isRequired": true
             },
-            "loggedInUserName": {
-              "name": "loggedInUserName",
+            "loggedInUserId": {
+              "name": "loggedInUserId",
               "isArray": false,
               "type": "String",
               "isRequired": true

@@ -19,4 +19,5 @@ data class SearchContact(
     val phoneNumbers: List<String?> = emptyList(),
     val avatarUri: Uri?,
     val thumbnailUri: Uri?,
+    val connectButtonEnabled: Boolean = true,
 )

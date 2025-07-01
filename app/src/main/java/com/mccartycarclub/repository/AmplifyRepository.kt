@@ -119,10 +119,10 @@ class AmplifyRepo @Inject constructor(
     // TODO: flow not needed just return object
     override fun fetchUserByUserName(userName: String): Flow<NetSearchResult<User?>> = flow {
         try {
-                val response =
-                    amplifyApi.query(ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)))
+            val response =
+                amplifyApi.query(ModelQuery.list(User::class.java, User.USER_NAME.eq(userName)))
 
-                // TODO: move to own class
+            // TODO: move to own class
             if (response.hasData() && response.data.firstOrNull() != null) {
                 emit(NetSearchResult.Success(response.data.first()))
             } else {
@@ -131,7 +131,7 @@ class AmplifyRepo @Inject constructor(
         } catch (e: ApiException) {
             emit(NetSearchResult.Error(e))
         }
-        }
+    }
 
     override fun sendInviteToConnect(
         senderUserId: String?,
@@ -143,7 +143,7 @@ class AmplifyRepo @Inject constructor(
             .senderId(senderUserId)
             .receiverId(receiverUserId)
             .user(
-                User
+                User                // TODO: revisit the use of justId
                     .justId(rowId) // TODO: do not use justId, change this
             )
             .build()
@@ -177,10 +177,42 @@ class AmplifyRepo @Inject constructor(
         senderUserId: String,
         phoneNumber: String,
     ): Flow<NetworkResponse<String>> = flow {
+        coroutineScope {
+            try {
+                amplifyApi.query(
+                    ModelQuery.list(
+                        User::class.java,
+                        User.PHONE.eq(phoneNumber)
+                    )
+                ).data.items.first()?.let { user ->
+                    val invite = Invite
+                        .builder()
+                        .senderId(senderUserId)
+                        .receiverId(user.userId)
+                        .user(User.justId(user.id))
+                        .build()
 
+                    val inviteResponse = amplifyApi.mutate(ModelMutation.create(invite))
 
-        emit(NetworkResponse.Error(ResponseException("")))
-    }
+                    if (inviteResponse.hasData() && inviteResponse.data.id != null) {
+                        emit(NetworkResponse.Success(inviteResponse.data.id))
+                    } else {
+                        emit(NetworkResponse.Error(ResponseException(""))) // TODO: messages can be handled in VM
+                    }
+                }
+            } catch (ae: AmplifyException) {
+                when (ae.cause) {
+                    is UnknownHostException, is IOException -> {
+                        emit(NetworkResponse.NoInternet)
+                    }
+
+                    else -> {
+                        emit(NetworkResponse.Error(ae))
+                    }
+                }
+            }
+        }
+    }.flowOn(ioDispatcher)
 
     override fun cancelInviteToConnect(
         senderUserId: String,
@@ -481,9 +513,9 @@ class AmplifyRepo @Inject constructor(
                     invites.add(item)
                 }
             }
-/*            receiverResponse.data.items.forEach { item ->
-                invites.add(item)
-            }*/
+            /*            receiverResponse.data.items.forEach { item ->
+                            invites.add(item)
+                        }*/
             invites
         } catch (e: ApiException) {
             if (e.cause is IOException || e.cause is UnknownHostException) {
@@ -527,11 +559,12 @@ class AmplifyRepo @Inject constructor(
 
                 }
             }
+
             is LazyModelList<*> -> {
 
-               // val page = items.fetchPage()
+                // val page = items.fetchPage()
 
-               // println("AmplifyRepo ***** ${page.items}")
+                // println("AmplifyRepo ***** ${page.items}")
             }
         }
 
@@ -835,25 +868,26 @@ class AmplifyRepo @Inject constructor(
             GsonVariablesSerializer(),
         )
 
-    /*    remoteUserContacts.forEach {
-            println("AmplifyRepo ***** REMOTE ${it.userName}")
-            println("AmplifyRepo ***** REMOTE ${it.userId}")
-        }*/
+        /*    remoteUserContacts.forEach {
+                println("AmplifyRepo ***** REMOTE ${it.userName}")
+                println("AmplifyRepo ***** REMOTE ${it.userId}")
+            }*/
 
-      //  try {
+        //  try {
 
-            return flow { emit(NetworkResponse.Success(amplifyApi.query(request).data.searchByUserName)) }
-/*        } catch (ae: AmplifyException) {
-            when (ae.cause) {
-                is UnknownHostException, is IOException -> {
-                    emit(NetworkResponse.NoInternet)
-                }
 
-                else -> {
-                    emit(NetworkResponse.Error(ae))
-                }
-            }
-        }*/
+        return flow { emit(NetworkResponse.Success(amplifyApi.query(request).data.searchByUserName)) }
+        /*        } catch (ae: AmplifyException) {
+                    when (ae.cause) {
+                        is UnknownHostException, is IOException -> {
+                            emit(NetworkResponse.NoInternet)
+                        }
+
+                        else -> {
+                            emit(NetworkResponse.Error(ae))
+                        }
+                    }
+                }*/
     }
 }
 
