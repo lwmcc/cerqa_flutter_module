@@ -31,7 +31,7 @@ fun TextRowAnimation(visible: Boolean, content: @Composable () -> Unit) {
 }
 
 @Composable
-fun RowAnimationVertical(visible: Boolean, content: @Composable () -> Unit) {
+fun ListAnimation(visible: Boolean, content: @Composable () -> Unit) {
     val density = LocalDensity.current
     AnimatedVisibility(
         visible = visible,
@@ -42,7 +42,7 @@ fun RowAnimationVertical(visible: Boolean, content: @Composable () -> Unit) {
         ) + fadeIn(
             initialAlpha = 0.3f,
             animationSpec = tween(durationMillis = 1000),
-        )
+        ),
     ) {
         content()
     }

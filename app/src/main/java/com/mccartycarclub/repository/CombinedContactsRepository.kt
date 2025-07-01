@@ -10,6 +10,7 @@ import com.mccartycarclub.domain.model.DeviceContact
 import com.mccartycarclub.domain.model.SearchContact
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -48,7 +49,8 @@ class CombinedContactsRepository @Inject constructor(
         }
     }
 
-    override suspend fun fetchUsersByPhoneNumber(): Pair<List<SearchContact>, List<SearchContact>> {
+    override suspend fun fetchUsersByPhoneNumber(loggedInUserId: String):
+            Pair<List<SearchContact>, List<SearchContact>> {
         val deviceContacts = combineDeviceAppUserContacts()
         val phoneNumbers: List<String?> = deviceContacts.flatMap { it.phoneNumbers }
 
@@ -71,12 +73,23 @@ class CombinedContactsRepository @Inject constructor(
             GsonVariablesSerializer()
         )
 
+        val contacts =
+            when (val response = contactsHelper.fetchAllContacts(loggedInUserId).first()) {
+                is NetworkResponse.Success -> {
+                    response.data ?: emptyList()
+                }
+
+                else -> {
+                    emptyList()
+                }
+            }
+
         return withContext(ioDispatcher) {
             try {
                 val response = amplifyApi.query(request)
                 val appUsers =
                     createAppUsers(
-                        cacheContacts = cacheContacts,
+                        cacheContacts = contacts,
                         localPhoneNumbers = deviceContacts,
                         remoteUserPhoneNumbers = response.data.searchUsers,
                     )

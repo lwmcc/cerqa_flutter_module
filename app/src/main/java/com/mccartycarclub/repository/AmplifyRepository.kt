@@ -33,6 +33,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.ably.lib.rest.Auth.TokenRequest
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.coroutineScope
@@ -44,6 +45,7 @@ import java.io.IOException
 import java.net.UnknownHostException
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.String
 import kotlin.reflect.KClass
 
 class AmplifyRepo @Inject constructor(
@@ -53,11 +55,13 @@ class AmplifyRepo @Inject constructor(
     @Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
 ) : RemoteRepo {
 
-    sealed class ContactType() {
+    sealed class ContactType {
         data class Received(val type: String) : ContactType()
         data class Sent(val type: String) : ContactType()
         data class Current(val type: String) : ContactType()
     }
+
+    private var remoteUserContacts = emptyList<Contact>()
 
     override fun contactExists(
         senderUserId: String,
@@ -412,7 +416,9 @@ class AmplifyRepo @Inject constructor(
                         fetchCurrentContacts(loggedInUserId)
                     }
 
-                    emit(NetworkResponse.Success(receivedInvites.await() + sentInvites.await() + contacts.await()))
+                    val (received, sent, current) = awaitAll(receivedInvites, sentInvites, contacts)
+                    remoteUserContacts = current
+                    emit(NetworkResponse.Success(received + sent + current))
                 } catch (no: NoInternetException) {
                     emit(NetworkResponse.NoInternet)
                 } catch (re: ResponseException) {
@@ -676,48 +682,6 @@ class AmplifyRepo @Inject constructor(
         predicate: QueryPredicateGroup,
     ) = amplifyApi.query(ModelQuery.list(modelClass, predicate)).data.items.firstOrNull()
 
-/*    override suspend fun fetchContacts(loggedInUserId: String): Flow<NetResult<List<Contact>>> =
-        flow {
-            val contacts = mutableListOf<Contact>()
-            try {
-                val response = amplifyApi.query(
-                    ModelQuery.list(
-                        UserContact::class.java,
-                        UserContact.CONTACT.eq(loggedInUserId)
-                    )
-                )
-
-                response.data.items.forEach {
-                    when (val user: ModelReference<User> = it.user) {
-                        is LazyModelReference -> {
-
-                            user.fetchModel()?.let { contact ->
-                                if (contact.id != null) {
-                                    contacts.add(
-                                        CurrentContact(
-                                            contactId = contact.id,
-                                            avatarUri = contact.avatarUri.orEmpty(),
-                                            name = contact.name.orEmpty(),
-                                            userName = contact.userName.orEmpty(),
-                                            userId = contact.id.orEmpty(),
-                                            createdAt = contact.createdAt.toString(),
-                                        )
-                                    )
-                                }
-                            }
-                        }
-
-                        else -> {
-                            // TODO: log this not needed
-                        }
-                    }
-                }
-                emit(NetResult.Success(contacts))
-            } catch (e: ApiException) {
-                println("AmplifyRepo ***** ERROR ${e.message}")
-            }
-        }.flowOn(ioDispatcher)*/
-
     companion object {
         const val DUMMY = "dummy"
     }
@@ -837,6 +801,50 @@ class AmplifyRepo @Inject constructor(
             }
         }
     }.flowOn(ioDispatcher)
+
+    override suspend fun searchUsersByUserName(userName: String, loggedInUserId: String):
+            Flow<NetworkResponse<List<SearchUser>>> {
+        val document = """
+                        query SearchByUserName(${'$'}userName: String!, ${'$'}loggedInUserId: String!) {
+                          searchByUserName(userName: ${'$'}userName, loggedInUserId: ${'$'}loggedInUserId) {
+                            id
+                            userName
+                            avatarUri
+                            userId
+                            phone
+                          }
+                        }
+                    """.trimIndent()
+
+        val variables = mapOf("userName" to userName, "loggedInUserId" to loggedInUserId)
+
+        val request = SimpleGraphQLRequest<SearchByUserNameResponse>(
+            document,
+            variables,
+            SearchByUserNameResponse::class.java,
+            GsonVariablesSerializer(),
+        )
+
+    /*    remoteUserContacts.forEach {
+            println("AmplifyRepo ***** REMOTE ${it.userName}")
+            println("AmplifyRepo ***** REMOTE ${it.userId}")
+        }*/
+
+      //  try {
+
+            return flow { emit(NetworkResponse.Success(amplifyApi.query(request).data.searchByUserName)) }
+/*        } catch (ae: AmplifyException) {
+            when (ae.cause) {
+                is UnknownHostException, is IOException -> {
+                    emit(NetworkResponse.NoInternet)
+                }
+
+                else -> {
+                    emit(NetworkResponse.Error(ae))
+                }
+            }
+        }*/
+    }
 }
 
 class ResponseException(message: String) : Exception(message)
@@ -900,7 +908,25 @@ data class FetchAblyJwtResponse(
 data class AblyJwt(
     val keyName: String?,
     val clientId: String?,
-    val timestamp: Double?,  // JSON timestamp is a double (scientific notation)
+    val timestamp: Double?,
     val nonce: String?,
     val mac: String?
 )
+
+data class SearchByUserNameResponse(
+    val searchByUserName: List<SearchUser>
+)
+
+data class SearchUser(
+    val id: String,
+    val userName: String?,
+    val avatarUri: String?,
+    val userId: String,
+    val phone: String?,
+    val connectButtonEnabled: Boolean = true,
+    val contactType: ContactType?,
+)
+
+enum class ContactType {
+    RECEIVED, SENT
+}

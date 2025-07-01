@@ -5,12 +5,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mccartycarclub.domain.UiUserMessage
 import com.mccartycarclub.domain.model.SearchContact
 import com.mccartycarclub.domain.model.UserSearchResult
+import com.mccartycarclub.repository.Contact
+import com.mccartycarclub.repository.ContactType
 import com.mccartycarclub.repository.ContactsRepository
 import com.mccartycarclub.repository.LocalRepository
 import com.mccartycarclub.repository.NetworkResponse
+import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.RemoteRepo
+import com.mccartycarclub.repository.SearchUser
+import com.mccartycarclub.repository.SentInviteContactInvite
 import com.mccartycarclub.ui.components.ContactCardConnectionEvent
 import com.mccartycarclub.ui.viewmodels.ContactsViewModel.Companion.SEARCH_DELAY
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,15 +30,17 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.String
 import kotlin.time.Duration.Companion.milliseconds
 
 data class SearchUiState(
     val pending: Boolean = false,
     val idle: Boolean = true,
     val isSendingInvite: Boolean = false,
-    val inviteSent: Boolean = false,
-    val message: String? = null,
+    val inviteSent: Boolean = false, // TODO: to remove no longer needed
+    val message: UiUserMessage? = null,
     val searchResult: UserSearchResult? = null,
+    val results: List<SearchUser> = emptyList(),
     val appUsers: List<SearchContact> = emptyList(),
     val nonAppUsers: List<SearchContact> = emptyList(),
 )
@@ -56,19 +64,35 @@ class SearchViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            uiState = uiState.copy(pending = true)
             _userId.value = localRepo.getUserId().first()
-            //contactsRepository.combineDeviceAppUserContacts()
 
-            val (users, nonUsers) = contactsRepository.fetchUsersByPhoneNumber()
-            uiState = uiState.copy(appUsers = users, nonAppUsers = nonUsers)
+            _userId.value?.let { userId ->
+                val (users, nonUsers) = contactsRepository.fetchUsersByPhoneNumber(userId)
+                uiState = uiState.copy(appUsers = users, nonAppUsers = nonUsers, pending = false)
+            }
 
-            userSearch()
+
+
+            userSearch(localRepo.getUserId().first().toString())
         }
     }
 
     fun inviteSentEvent(connectionEvent: ContactCardConnectionEvent) {
         when (connectionEvent) {
             is ContactCardConnectionEvent.InviteConnectEvent -> {
+
+                // TODO: push down into function
+                val updatedResults = uiState.results.map { user ->
+                    if (user.userId == connectionEvent.receiverUserId) {
+                        user.copy(connectButtonEnabled = false)
+                    } else {
+                        user
+                    }
+                }
+
+                uiState = uiState.copy(results = updatedResults)
+
                 viewModelScope.launch {
                     uiState = uiState.copy(pending = true, isSendingInvite = true)
                     //val channelName =
@@ -83,18 +107,17 @@ class SearchViewModel @Inject constructor(
                         rowId = connectionEvent.rowId,
                     ).first()
 
-                    when (data) {
+                    uiState = when (data) {
                         is NetworkResponse.Error -> {
-                            // TODO: move messages to enum
-                            uiState.copy(message = "An Error Occurred")
+                            uiState.copy(message = UiUserMessage.NETWORK_ERROR)
                         }
 
                         NetworkResponse.NoInternet -> {
-                            uiState.copy(message = "No Internet")
+                            uiState.copy(message = UiUserMessage.NO_INTERNET)
                         }
 
                         is NetworkResponse.Success -> {
-                            uiState = uiState.copy(pending = false, inviteSent = true)
+                            uiState.copy(pending = false, message = UiUserMessage.INVITE_SENT)
                         }
                     }
                 }
@@ -106,33 +129,74 @@ class SearchViewModel @Inject constructor(
         _query.value = searchQuery
     }
 
-    suspend fun userSearch() {
+    suspend fun userSearch(loggedInUserId: String) {
         query.debounce(SEARCH_DELAY.milliseconds).distinctUntilChanged()
             .collectLatest { userName ->
 
                 if (!userName.isNullOrEmpty()) {
                     uiState = uiState.copy(pending = true)
-                    repo.searchUsers(_userId.value, userName).collect { response ->
-                        uiState = when (response) {
+
+                    _userId.value?.let { id ->
+                        val allContacts = repo.fetchAllContacts(loggedInUserId)
+                        val userSearch =
+                            repo.searchUsersByUserName(userName = userName, loggedInUserId = id)
+
+                        val contacts = when (val result = allContacts.first()) {
+                            is NetworkResponse.Success -> {
+                                result.data ?: emptyList<Contact>()
+                            }
+
+                            else -> {
+                                emptyList()
+                            }
+                        }
+
+                        val searchUsers = when (val result = userSearch.first()) {
                             is NetworkResponse.Error -> {
-                                // TODO: move messages to enum
-                                uiState.copy(message = "An Error Occurred")
+                                uiState.copy(message = UiUserMessage.NETWORK_ERROR)
+                                emptyList()
                             }
 
                             NetworkResponse.NoInternet -> {
-                                // TODO: move messages to enum
-                                uiState.copy(message = "No Internet")
+                                uiState.copy(message = UiUserMessage.NO_INTERNET)
+                                emptyList()
                             }
 
                             is NetworkResponse.Success -> {
-                                uiState.copy(
-                                    searchResult = response.data,
-                                    pending = false,
-                                    inviteSent = false,
-                                    isSendingInvite = false,
-                                )
+                                result.data ?: emptyList()
                             }
                         }
+
+                        val userType: List<SearchUser> = searchUsers.map { user ->
+                            val contact = contacts.find {
+                                it.userId == user.userId
+                            }
+                            val contactType = when (contact) {
+                                is ReceivedContactInvite -> ContactType.RECEIVED
+                                is SentInviteContactInvite -> ContactType.SENT
+                                else -> null
+                            }
+                            SearchUser(
+                                id = user.id,
+                                userName = user.userName,
+                                avatarUri = user.avatarUri,
+                                userId = user.userId,
+                                phone = user.phone,
+                                connectButtonEnabled = true,
+                                contactType = contactType,
+                            )
+                        }
+
+                        val buttonsEnabled = userType.map {
+                            it.copy(connectButtonEnabled = true)
+                        }
+
+                        uiState = uiState.copy(
+                            results = buttonsEnabled,
+                            pending = false,
+                            inviteSent = false,
+                            isSendingInvite = false,
+                        )
                     }
                 } else {
                     uiState = uiState.copy(idle = true)

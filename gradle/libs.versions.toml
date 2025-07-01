@@ -6,6 +6,7 @@ agp = "8.10.1"
 amplifyAndroidGenerated = "2.18.0"
 amplifyframeworkAwsApi = "2.18.0"
 amplifyframeworkCore = "2.9.0"
+animation = "1.8.3"
 api = "2.9.0"
 auth = "1.28.0"
 authenticator = "1.4.0"
@@ -78,10 +79,12 @@ ably-android = { module = "io.ably:ably-android", version.ref = "ablyAndroid" }
 ably-android-v1220 = { module = "io.ably:ably-android", version.ref = "ablyAndroidVersion" }
 amplify-android-generated = { module = "com.amplifyframework:amplify-android-generated", version.ref = "amplifyAndroidGenerated" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-animation = { module = "androidx.compose.animation:animation", version.ref = "animation" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore = { module = "androidx.datastore:datastore", version.ref = "datastorePreferencesCore" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferencesCore" }
 androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastorePreferencesCore" }
+androidx-foundation = { module = "androidx.compose.foundation:foundation" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-material3 = { module = "androidx.compose.material3:material3" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }

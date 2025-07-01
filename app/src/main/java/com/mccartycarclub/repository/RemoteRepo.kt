@@ -58,4 +58,9 @@ interface RemoteRepo {
         loggedInUserId: String?,
         userName: String
     ): Flow<NetworkResponse<UserSearchResult>>
+
+    suspend fun searchUsersByUserName(
+        userName: String,
+        loggedInUserId: String,
+    ): Flow<NetworkResponse<List<SearchUser>>>
 }

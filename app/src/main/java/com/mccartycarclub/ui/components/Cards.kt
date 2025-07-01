@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -189,6 +188,7 @@ fun ReceivedInviteContactCard(
 fun CardListButton(
     text: String,
     onClick: () -> Unit,
+    isEnabled: Boolean = true,
 ) {
     Button(
         onClick = {
@@ -196,6 +196,7 @@ fun CardListButton(
         },
         shape = RoundedCornerShape(8.dp),
         contentPadding = PaddingValues(0.dp),
+        enabled = isEnabled,
     ) {
         Text(
             text = text,

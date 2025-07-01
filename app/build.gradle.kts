@@ -85,6 +85,8 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.foundation)
+    implementation(libs.androidx.animation)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

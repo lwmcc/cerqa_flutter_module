@@ -41,6 +41,7 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.ui.authenticator.SignedInState
 import com.mccartycarclub.R
 import com.mccartycarclub.navigation.ClickNavigation
+import com.mccartycarclub.repository.ContactType
 import com.mccartycarclub.repository.CurrentContact
 import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.SentInviteContactInvite
@@ -103,16 +104,16 @@ fun AppAuthenticator(
                                 attributes.firstOrNull { it.key.keyString == "sub" }?.value
 
                             // TODO: move just for testing
-/*                            Amplify.API.mutate(
-                                ModelMutation.create(testUser3(userId!!)),
-                                { response -> // TODO: response?
-                                    // This is were userId is added to prefs
-                                    mainViewModel.setLoggedInUserId(userId)
-                                },
-                                { error ->
-                                    Log.e("MainActivity *****", "User creation failed", error)
-                                }
-                            )*/
+                            /*                            Amplify.API.mutate(
+                                                            ModelMutation.create(testUser3(userId!!)),
+                                                            { response -> // TODO: response?
+                                                                // This is were userId is added to prefs
+                                                                mainViewModel.setLoggedInUserId(userId)
+                                                            },
+                                                            { error ->
+                                                                Log.e("MainActivity *****", "User creation failed", error)
+                                                            }
+                                                        )*/
                         }, { error ->
                             Log.e(
                                 "MainActivity *****", "Failed to fetch user attributes", error
@@ -367,6 +368,26 @@ fun Search(
                 .fillMaxWidth()
                 .padding(innerPadding),
         ) {
+
+            when {
+                uiState.message != null -> {
+                    BannerMessage(
+                        message = uiState.message,
+                        onDismiss = {
+
+                        },
+                    )
+                }
+
+                uiState.idle -> {
+                    println("Search ***** IDLE")
+                }
+
+                else -> {
+                    println("Search ***** ELSE")
+                }
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -406,7 +427,11 @@ fun Search(
                 }
             }
 
-            Spacer(modifier = Modifier.fillMaxWidth().height(dimensionResource(R.dimen.card_pending_spinner)))
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.card_pending_spinner))
+            )
 
             AnimatedLoadingSpinner(
                 density = density,
@@ -415,24 +440,72 @@ fun Search(
                 slideIn = (-20).dp,
             )
 
-            when {
-                // TODO: change all to uiState????
-                uiState.searchResult != null -> {
-                    SearchResultUserCard(
-                        user = uiState.searchResult,
-                        isSendingInvite = uiState.isSendingInvite,
-                        inviteSentSuccess = uiState.inviteSent,
-                        connectionEvent = { event ->
-                            openAlertDialog = true
-                            connectionEvent = event
-                            alertDialogData = AlertDialogData(
-                                icon = R.drawable.sharp_contacts_24,
-                                title = R.string.dialog_invite_to_connect_title,
-                                description = R.string.dialog_invite_to_connect_description,
-                                dialogIconDescription = R.string.dialog_icon_description,
-                                dismiss = R.string.dialog_button_dismiss,
-                                confirm = R.string.dialog_button_connect,
-                            )
+            if (uiState.results.isNotEmpty()) {
+                LazyColumn {
+                    items(uiState.results, key = { it.id }) { item ->
+                        ListAnimation(
+                            visible = true,
+                            content = {
+                                ListSection(
+                                    image = R.drawable.ic_dashboard_black_24dp,
+                                    contentDescription = stringResource(id = R.string.user_avatar),
+                                    title = item.userName.toString(),
+                                    width = 60.dp,
+                                    content = {
+                                        when(item.contactType) {
+                                            ContactType.RECEIVED -> {
+                                                Text(
+                                                    text = stringResource(R.string.connect_invite_received),
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                )
+                                            }
+
+                                            ContactType.SENT -> {
+                                                Text(
+                                                    text = stringResource(R.string.connect_invite_sent),
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                )
+                                            }
+
+                                            null -> {
+                                                CardListButton(
+                                                    text = stringResource(id = R.string.connect_to_user),
+                                                    onClick = {
+                                                        openAlertDialog = true
+                                                        connectionEvent =
+                                                            ContactCardConnectionEvent.InviteConnectEvent(
+                                                                receiverUserId = item.userId,
+                                                                rowId = item.id,
+                                                            )
+                                                        alertDialogData = AlertDialogData(
+                                                            icon = R.drawable.sharp_contacts_24,
+                                                            title = R.string.dialog_invite_to_connect_title,
+                                                            description = R.string.dialog_invite_to_connect_description,
+                                                            dialogIconDescription = R.string.dialog_icon_description,
+                                                            dismiss = R.string.dialog_button_dismiss,
+                                                            confirm = R.string.dialog_button_connect,
+                                                        )
+                                                    },
+                                                    isEnabled = item.connectButtonEnabled,
+                                                )
+                                            }
+                                        }
+                                    },
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+
+/*            when {
+                uiState.message != null -> {
+                    BannerMessage(
+                        message = uiState.message,
+                        onDismiss = {
+
                         },
                     )
                 }
@@ -441,27 +514,72 @@ fun Search(
                     println("Search ***** IDLE")
                 }
 
-                uiState.message != null -> {
-                    println("Search ***** MESSAGE")
-                }
-
                 else -> {
                     println("Search ***** ELSE")
                 }
-            }
+            }*/
 
             LazyColumn {
-                items(uiState.appUsers) { user ->
-                    CurrentContactCard(
-                        contact = user.name,
-                        avatar = R.drawable.baseline_person_24,
-                    )
+                if (uiState.appUsers.isNotEmpty()) {
+                    item {
+                        CardHeader(
+                            stringResource(
+                                R.string.connections_using_app,
+                                stringResource(R.string.app_name)
+                            ),
+                            R.dimen.card_padding_start,
+                        )
+                    }
                 }
+                items(uiState.appUsers) { user ->
+                    ListAnimation(visible = true, content = {
+                        ListSection(
+                            image = R.drawable.ic_dashboard_black_24dp,
+                            contentDescription = stringResource(id = R.string.user_avatar),
+                            title = user.name,
+                            width = 60.dp,
+                            content = {
+                                CardListButton(
+                                    text = stringResource(R.string.connect_to_user),
+                                    onClick = {
 
+                                    }
+                                )
+                            }
+                        )
+                    })
+
+                }
+                if (uiState.nonAppUsers.isNotEmpty()) {
+                    item {
+                        CardHeader(
+                            stringResource(
+                                R.string.connections_not_using_app,
+                                stringResource(R.string.app_name)
+                            ),
+                            R.dimen.card_padding_start,
+                        )
+                    }
+                }
                 items(uiState.nonAppUsers) { user ->
-                    CurrentContactCard(
-                        contact = user.name,
-                        avatar = R.drawable.baseline_person_24,
+                    ListAnimation(
+                        visible = true,
+                        content = {
+                            ListSection(
+                                image = R.drawable.ic_dashboard_black_24dp,
+                                contentDescription = stringResource(id = R.string.user_avatar),
+                                title = user.name,
+                                width = 60.dp,
+                                content = {
+                                    CardListButton(
+                                        text = stringResource(R.string.connect_invite_user),
+                                        onClick = {
+
+                                        }
+                                    )
+                                }
+                            )
+                        },
                     )
                 }
             }

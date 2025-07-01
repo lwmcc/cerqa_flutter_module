@@ -12,6 +12,7 @@
 
     <!-- Contacts -->
     <string name="connect_to_user">Connect</string>
+    <string name="connect_invite_user">Invite</string>
     <string name="connect_has_connection">Connection</string>
     <string name="connect_cancel">Cancel</string>
     <string name="connect_remove">Remove</string>
@@ -22,6 +23,8 @@
     <string name="connect_view_your_groups">View your groups</string>
     <string name="connect_view_your_notifications">View your notifications</string>
     <string name="connect_view_invite_received">Received invite from user</string>
+    <string name="connections_using_app">Contacts using %1$s</string>
+    <string name="connections_not_using_app">Contacts not using %1$s</string>
 
     <string name="connect_content_description_avatar">User avatar</string>
     <string name="connect_content_description_search">User search</string>
