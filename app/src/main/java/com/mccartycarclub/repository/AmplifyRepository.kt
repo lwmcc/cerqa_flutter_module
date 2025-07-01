@@ -178,27 +178,6 @@ class AmplifyRepo @Inject constructor(
         phoneNumber: String,
     ): Flow<NetworkResponse<String>> = flow {
 
-        //val response = amplifyApi.query(ModelQuery.list(User::class.java, User.PHONE.eq(phoneNumber)))
-        //println("AmplifyRepo")
-        val mutation = """
-                            mutation CreateInviteByPhone(${'$'}senderUserId: String!, ${'$'}receiverPhoneNumber: String!) {
-                              createInviteByPhone(senderUserId: ${'$'}senderUserId, receiverPhoneNumber: ${'$'}receiverPhoneNumber) {
-                                success
-                                message
-                                invite {
-                                  id
-                                  userId
-                                  senderUserId
-                                  receiverUserId
-                                }
-                              }
-                            }
-                        """.trimIndent()
-
-        val variables = mapOf(
-            "senderUserId" to senderUserId,
-            "receiverPhoneNumber" to phoneNumber
-        )
 
         emit(NetworkResponse.Error(ResponseException("")))
     }
