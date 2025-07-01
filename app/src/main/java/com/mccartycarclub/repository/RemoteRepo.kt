@@ -27,6 +27,11 @@ interface RemoteRepo {
         senderUserId: String?,
         receiverUserId: String,
         rowId: String,
+    ): Flow<NetworkResponse<String>> // TODO: use object?
+
+    suspend fun sendPhoneNumberInviteToConnect(
+        senderUserId: String,
+        phoneNumber: String,
     ): Flow<NetworkResponse<String>>
 
     fun cancelInviteToConnect(

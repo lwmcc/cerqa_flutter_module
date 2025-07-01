@@ -10,5 +10,8 @@ sealed class ContactCardEvent {
 sealed class ContactCardConnectionEvent {
     data class InviteConnectEvent(val receiverUserId: String, val rowId: String) :
         ContactCardConnectionEvent()
+
+    data class InvitePhoneNumberConnectEvent(val receiverPhoneNumber: String) :
+        ContactCardConnectionEvent()
 }
 

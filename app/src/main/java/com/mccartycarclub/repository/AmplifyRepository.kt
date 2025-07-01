@@ -3,6 +3,7 @@ package com.mccartycarclub.repository
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.aws.GsonVariablesSerializer
+import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
@@ -156,7 +157,7 @@ class AmplifyRepo @Inject constructor(
                         emit(NetworkResponse.Error(ResponseException(""))) // TODO: add messages
                     }
                 } else {
-                    emit(NetworkResponse.Error(ResponseException("")))
+                    emit(NetworkResponse.Error(ResponseException(""))) // TODO: message
                 }
             } catch (ae: AmplifyException) {
                 when (ae.cause) {
@@ -171,6 +172,36 @@ class AmplifyRepo @Inject constructor(
             }
         }
     }.flowOn(ioDispatcher)
+
+    override suspend fun sendPhoneNumberInviteToConnect(
+        senderUserId: String,
+        phoneNumber: String,
+    ): Flow<NetworkResponse<String>> = flow {
+
+        //val response = amplifyApi.query(ModelQuery.list(User::class.java, User.PHONE.eq(phoneNumber)))
+        //println("AmplifyRepo")
+        val mutation = """
+                            mutation CreateInviteByPhone(${'$'}senderUserId: String!, ${'$'}receiverPhoneNumber: String!) {
+                              createInviteByPhone(senderUserId: ${'$'}senderUserId, receiverPhoneNumber: ${'$'}receiverPhoneNumber) {
+                                success
+                                message
+                                invite {
+                                  id
+                                  userId
+                                  senderUserId
+                                  receiverUserId
+                                }
+                              }
+                            }
+                        """.trimIndent()
+
+        val variables = mapOf(
+            "senderUserId" to senderUserId,
+            "receiverPhoneNumber" to phoneNumber
+        )
+
+        emit(NetworkResponse.Error(ResponseException("")))
+    }
 
     override fun cancelInviteToConnect(
         senderUserId: String,

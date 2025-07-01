@@ -69,10 +69,12 @@ class SearchViewModel @Inject constructor(
 
             _userId.value?.let { userId ->
                 val (users, nonUsers) = contactsRepository.fetchUsersByPhoneNumber(userId)
-                uiState = uiState.copy(appUsers = users, nonAppUsers = nonUsers, pending = false)
+                uiState = uiState.copy(
+                    appUsers = users,
+                    nonAppUsers = nonUsers,
+                    pending = false,
+                )
             }
-
-
 
             userSearch(localRepo.getUserId().first().toString())
         }
@@ -122,11 +124,16 @@ class SearchViewModel @Inject constructor(
                     }
                 }
             }
+
+            is ContactCardConnectionEvent.InvitePhoneNumberConnectEvent -> {
+                println("SearchViewModel ***** SEND INVITE")
+            }
         }
     }
 
     fun onQueryChange(searchQuery: String) {
         _query.value = searchQuery
+        uiState = uiState.copy(results = emptyList())
     }
 
     suspend fun userSearch(loggedInUserId: String) {

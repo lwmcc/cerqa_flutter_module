@@ -440,84 +440,58 @@ fun Search(
                 slideIn = (-20).dp,
             )
 
-            if (uiState.results.isNotEmpty()) {
-                LazyColumn {
-                    items(uiState.results, key = { it.id }) { item ->
-                        ListAnimation(
-                            visible = true,
-                            content = {
-                                ListSection(
-                                    image = R.drawable.ic_dashboard_black_24dp,
-                                    contentDescription = stringResource(id = R.string.user_avatar),
-                                    title = item.userName.toString(),
-                                    width = 60.dp,
-                                    content = {
-                                        when(item.contactType) {
-                                            ContactType.RECEIVED -> {
-                                                Text(
-                                                    text = stringResource(R.string.connect_invite_received),
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                )
-                                            }
+            LazyColumn {
+                items(uiState.results, key = { it.id }) { item ->
+                    ListSection(
+                        image = R.drawable.ic_dashboard_black_24dp,
+                        contentDescription = stringResource(id = R.string.user_avatar),
+                        title = item.userName.toString(),
+                        width = 60.dp,
+                        content = {
+                            when (item.contactType) {
+                                ContactType.RECEIVED -> {
+                                    Text(
+                                        text = stringResource(R.string.connect_invite_received),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
 
-                                            ContactType.SENT -> {
-                                                Text(
-                                                    text = stringResource(R.string.connect_invite_sent),
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                )
-                                            }
+                                ContactType.SENT -> {
+                                    Text(
+                                        text = stringResource(R.string.connect_invite_sent),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
 
-                                            null -> {
-                                                CardListButton(
-                                                    text = stringResource(id = R.string.connect_to_user),
-                                                    onClick = {
-                                                        openAlertDialog = true
-                                                        connectionEvent =
-                                                            ContactCardConnectionEvent.InviteConnectEvent(
-                                                                receiverUserId = item.userId,
-                                                                rowId = item.id,
-                                                            )
-                                                        alertDialogData = AlertDialogData(
-                                                            icon = R.drawable.sharp_contacts_24,
-                                                            title = R.string.dialog_invite_to_connect_title,
-                                                            description = R.string.dialog_invite_to_connect_description,
-                                                            dialogIconDescription = R.string.dialog_icon_description,
-                                                            dismiss = R.string.dialog_button_dismiss,
-                                                            confirm = R.string.dialog_button_connect,
-                                                        )
-                                                    },
-                                                    isEnabled = item.connectButtonEnabled,
+                                null -> {
+                                    CardListButton(
+                                        text = stringResource(id = R.string.connect_to_user),
+                                        onClick = {
+                                            openAlertDialog = true
+                                            connectionEvent =
+                                                ContactCardConnectionEvent.InviteConnectEvent(
+                                                    receiverUserId = item.userId,
+                                                    rowId = item.id,
                                                 )
-                                            }
-                                        }
-                                    },
-                                )
+                                            alertDialogData = AlertDialogData(
+                                                icon = R.drawable.sharp_contacts_24,
+                                                title = R.string.dialog_invite_to_connect_title,
+                                                description = R.string.dialog_invite_to_connect_description,
+                                                dialogIconDescription = R.string.dialog_icon_description,
+                                                dismiss = R.string.dialog_button_dismiss,
+                                                confirm = R.string.dialog_button_connect,
+                                            )
+                                        },
+                                        isEnabled = item.connectButtonEnabled,
+                                    )
+                                }
                             }
-                        )
-                    }
-                }
-            }
-
-/*            when {
-                uiState.message != null -> {
-                    BannerMessage(
-                        message = uiState.message,
-                        onDismiss = {
-
                         },
                     )
                 }
-
-                uiState.idle -> {
-                    println("Search ***** IDLE")
-                }
-
-                else -> {
-                    println("Search ***** ELSE")
-                }
-            }*/
+            }
 
             LazyColumn {
                 if (uiState.appUsers.isNotEmpty()) {
@@ -527,29 +501,40 @@ fun Search(
                                 R.string.connections_using_app,
                                 stringResource(R.string.app_name)
                             ),
-                            R.dimen.card_padding_start,
+                            R.dimen.card_heading_padding,
                         )
                     }
                 }
                 items(uiState.appUsers) { user ->
-                    ListAnimation(visible = true, content = {
-                        ListSection(
-                            image = R.drawable.ic_dashboard_black_24dp,
-                            contentDescription = stringResource(id = R.string.user_avatar),
-                            title = user.name,
-                            width = 60.dp,
-                            content = {
-                                CardListButton(
-                                    text = stringResource(R.string.connect_to_user),
-                                    onClick = {
 
-                                    }
-                                )
-                            }
-                        )
-                    })
-
+                    ListSection(
+                        image = R.drawable.ic_dashboard_black_24dp,
+                        contentDescription = stringResource(id = R.string.user_avatar),
+                        title = user.name,
+                        width = 60.dp,
+                        content = {
+                            CardListButton(
+                                text = stringResource(R.string.connect_to_user),
+                                onClick = {
+                                    openAlertDialog = true
+                                    connectionEvent =
+                                        ContactCardConnectionEvent.InvitePhoneNumberConnectEvent(
+                                            receiverPhoneNumber = ""
+                                        )
+                                    alertDialogData = AlertDialogData(
+                                        icon = R.drawable.sharp_contacts_24,
+                                        title = R.string.dialog_invite_to_connect_title,
+                                        description = R.string.dialog_invite_to_connect_description,
+                                        dialogIconDescription = R.string.dialog_icon_description,
+                                        dismiss = R.string.dialog_button_dismiss,
+                                        confirm = R.string.dialog_button_connect,
+                                    )
+                                }
+                            )
+                        }
+                    )
                 }
+
                 if (uiState.nonAppUsers.isNotEmpty()) {
                     item {
                         CardHeader(
@@ -561,25 +546,21 @@ fun Search(
                         )
                     }
                 }
-                items(uiState.nonAppUsers) { user ->
-                    ListAnimation(
-                        visible = true,
-                        content = {
-                            ListSection(
-                                image = R.drawable.ic_dashboard_black_24dp,
-                                contentDescription = stringResource(id = R.string.user_avatar),
-                                title = user.name,
-                                width = 60.dp,
-                                content = {
-                                    CardListButton(
-                                        text = stringResource(R.string.connect_invite_user),
-                                        onClick = {
 
-                                        }
-                                    )
+                items(uiState.nonAppUsers) { user ->
+                    ListSection(
+                        image = R.drawable.ic_dashboard_black_24dp,
+                        contentDescription = stringResource(id = R.string.user_avatar),
+                        title = user.name,
+                        width = 60.dp,
+                        content = {
+                            CardListButton(
+                                text = stringResource(R.string.connect_invite_user),
+                                onClick = {
+
                                 }
                             )
-                        },
+                        }
                     )
                 }
             }
