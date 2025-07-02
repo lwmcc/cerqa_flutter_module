@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.ui.authenticator.SignedInState
 import com.mccartycarclub.R
+import com.mccartycarclub.domain.model.SmsMessage
 import com.mccartycarclub.navigation.ClickNavigation
 import com.mccartycarclub.repository.ContactType
 import com.mccartycarclub.repository.CurrentContact
@@ -321,6 +323,7 @@ fun Search(
     contactsViewModel: ContactsViewModel = hiltViewModel(),
     searchViewModel: SearchViewModel = hiltViewModel(),
     topBarClick: (ClickNavigation) -> Unit,
+    sendSms: (SmsMessage) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -551,6 +554,8 @@ fun Search(
                 }
 
                 items(uiState.nonAppUsers) { user ->
+                    val title =  stringResource(R.string.sms_title)
+                    val appLink = stringResource(R.string.app_link)
                     ListSection(
                         image = R.drawable.ic_dashboard_black_24dp,
                         contentDescription = stringResource(id = R.string.user_avatar),
@@ -560,7 +565,13 @@ fun Search(
                             CardListButton(
                                 text = stringResource(R.string.connect_invite_user),
                                 onClick = {
-
+                                    sendSms(
+                                        SmsMessage(
+                                            title = title,
+                                            message = appLink,
+                                            phoneNumber = user.phoneNumbers.first().toString(),
+                                        )
+                                    )
                                 }
                             )
                         }

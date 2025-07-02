@@ -64,6 +64,7 @@ import com.mccartycarclub.R
 import com.mccartycarclub.domain.model.ConnectedSearch
 import com.mccartycarclub.domain.model.ReceivedInviteFromUser
 import com.mccartycarclub.domain.model.SentInviteToUser
+import com.mccartycarclub.domain.model.SmsMessage
 import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.navigation.AppNavigationActions
 import com.mccartycarclub.navigation.ClickNavigation
@@ -74,7 +75,8 @@ fun StartScreen(
     navController: NavHostController = rememberNavController(),
     navActions: AppNavigationActions = remember(navController) {
         AppNavigationActions(navController)
-    }
+    },
+    sendSms: (SmsMessage) -> Unit,
 ) {
     NavHost(navController = navController, startDestination = MAIN_SCREEN) {
         composable(MAIN_SCREEN) {
@@ -102,6 +104,8 @@ fun StartScreen(
         composable(SEARCH_SCREEN) { backStackEntry ->
             Search(topBarClick = {
                 navToScreen(it, navActions)
+            }, sendSms = { message ->
+                sendSms(message)
             })
         }
 

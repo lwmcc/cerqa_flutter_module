@@ -53,4 +53,9 @@
 
     <!-- TextField -->
     <string name="text_field_clear">Clear text input</string>
+
+    <!-- SMS -->
+    <string name="sms_title">Invite a Friend to Connect</string>
+    <string name="app_link"><a href=">https://www.cerqa.app/mobile/">Try Cerqa</a></string>
+
 </resources>

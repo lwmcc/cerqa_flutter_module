@@ -1,6 +1,8 @@
 package com.mccartycarclub
 
+import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
@@ -23,6 +25,7 @@ import com.mccartycarclub.ui.theme.AppTheme
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -42,7 +45,17 @@ class MainActivity : ComponentActivity() {
             AppTheme {
                 Surface(tonalElevation = 5.dp) {
                     Authenticator(state = stateProvider.provide() /*rememberAuthenticatorState()*/) { state ->
-                        StartScreen(state)
+                        StartScreen(
+                            state,
+                            sendSms = { message ->
+                                sendSms(
+                                    context = this@MainActivity,
+                                    message = message.message,
+                                    title = message.title,
+                                    phoneNumber = message.phoneNumber,
+                                )
+                            },
+                        )
                         checkPermissions()
                     }
                 }
@@ -126,6 +139,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    fun sendSms(context: Context, message: String, title: String, phoneNumber: String) {
+        val smsIntent = Intent(Intent.ACTION_SENDTO).apply {
+            data = "smsto:$phoneNumber".toUri()
+            putExtra("sms_body", message)
+        }
+        val chooser: Intent = Intent.createChooser(smsIntent, title)
+        try {
+            context.startActivity(chooser)
+        } catch (e: ActivityNotFoundException) {
+            // TODO: show banner
+        }
+    }
    // private fun loadUserData() = mainViewModel.getDeviceContacts()
 
     /*    private fun sendConnectInvite(message: String, phoneNumber: String, rowId: String) {
