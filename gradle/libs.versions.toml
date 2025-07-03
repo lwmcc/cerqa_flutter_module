@@ -2,7 +2,7 @@
 ablyAndroid = "1.2.40"
 ablyAndroidVersion = "1.2.20"
 activityCompose = "1.10.0"
-agp = "8.10.1"
+agp = "8.11.0"
 amplifyAndroidGenerated = "2.18.0"
 amplifyframeworkAwsApi = "2.18.0"
 amplifyframeworkCore = "2.9.0"
@@ -73,6 +73,9 @@ junitKtx = "1.2.1"
 uiTestJunit4Android = "1.8.2"
 navigationTestingAndroid = "2.9.0"
 rules = "1.6.1"
+kotlinStdlib = "2.0.0"
+kotlinTest = "2.0.0"
+androidxCore = "1.5.0"
 
 [libraries]
 ably-android = { module = "io.ably:ably-android", version.ref = "ablyAndroid" }
@@ -152,9 +155,14 @@ robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectr
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 androidx-rules = { group = "androidx.test", name = "rules", version.ref = "rules" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlinStdlib" }
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
+androidx-core = { group = "androidx.test", name = "core", version.ref = "androidxCore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }

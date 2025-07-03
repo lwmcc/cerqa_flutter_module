@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.compose.compiler) apply false
     id("com.google.gms.google-services") version "4.4.2" apply false
     id("io.gitlab.arturbosch.detekt") version("1.23.8")
+    alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.android.kotlin.multiplatform.library) apply false
 }
 
 dependencies {

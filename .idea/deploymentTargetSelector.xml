@@ -4,24 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-06-27T05:20:03.519329Z">
+        <DropdownSelection timestamp="2025-07-02T21:16:20.515365Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/Users/larrymccarty/.android/avd/Pixel_8_Test_user_1.avd" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
-      </SelectionState>
-      <SelectionState runConfigName="URL https://carclub.app">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="contactsEmptyTest()">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-06-10T22:01:49.000892Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/Users/larrymccarty/.android/avd/Pixel_8_Test_user_1.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=/Users/larry/.android/avd/Medium_Phone.avd" />
             </handle>
           </Target>
         </DropdownSelection>
