@@ -1,15 +1,16 @@
 import com.android.build.api.dsl.Packaging
 
 plugins {
+    kotlin("multiplatform") version "2.2.0" apply false
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
 
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
-    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
     id("com.google.gms.google-services")
     id("io.gitlab.arturbosch.detekt")
-    id ("dagger.hilt.android.plugin")
+    id("dagger.hilt.android.plugin")
 }
 
 android {
@@ -166,6 +167,8 @@ dependencies {
 
     // Google phone number validator
     implementation(libs.libphonenumber)
+
+    implementation("androidx.compose.runtime:runtime:1.6.0")
 }
 
 kapt {

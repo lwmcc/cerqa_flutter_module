@@ -29,19 +29,20 @@ detektFormatting = "1.23.0"
 firebaseCore = "21.1.1"
 firebaseMessaging = "24.1.1"
 googleHiltAndroidTesting = "2.56.2"
-hiltAndroid = "2.51.1"
-hiltAndroidCompiler = "2.51.1"
+hiltAndroid = "2.56.2"
+hiltAndroidCompiler = "2.56.2"
 hiltAndroidCompilerVersion = "2.56.2"
-hiltAndroidTesting = "2.51.1"
-hiltAndroidTestingVersion = "2.51.1"
-hiltCompiler = "2.51.1"
+hiltAndroidTesting = "2.56.2"
+hiltAndroidTestingVersion = "2.56.2"
+hiltCompiler = "2.56.2"
 hiltNavigationCompose = "1.2.0"
-kotlin = "2.0.0"
+kotlin = "2.2.0"
 coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 appcompat = "1.7.0"
+kotlinxCoroutinesCore = "1.10.2"
 libphonenumber = "8.13.27"
 material = "1.12.0"
 constraintlayout = "2.1.4"
@@ -130,6 +131,7 @@ androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "j
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 kotlin-core = { module = "com.amplifyframework.kotlin:core", version.ref = "amplifyframeworkCore" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", version.ref = "libphonenumber" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
