@@ -22,4 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "CarClub"
 include(":app")
-include(":iosApp")
+include(":shared")

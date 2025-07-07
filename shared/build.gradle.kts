@@ -5,15 +5,13 @@ plugins {
     id("org.jetbrains.compose") version "1.8.2"
 }
 
-
-
 kotlin {
 
     // Target declarations - add or remove as needed below. These define
     // which platforms this KMP module supports.
     // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
     androidLibrary {
-        namespace = "com.carclub.shared"
+        namespace = "com.cerqa.shared"
         compileSdk = 36
         minSdk = 29
 
