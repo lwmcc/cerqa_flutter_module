@@ -32,7 +32,7 @@ kotlin {
     // A step-by-step guide on how to include this library in an XCode
     // project can be found here:
     // https://developer.android.com/kotlin/multiplatform/migrate
-    val xcfName = "sharedKit"
+    val xcfName = "Shared"
 
     iosX64 {
         binaries.framework {
@@ -108,7 +108,17 @@ kotlin {
                 // on common by default and will correctly pull the iOS artifacts of any
                 // KMP dependencies declared in commonMain.
                 kotlin("multiplatform")
+                implementation(compose.runtime)
+                implementation(compose.foundation)
+                implementation(compose.material)
+                implementation(compose.ui)
             }
+        }
+    }
+
+    tasks.matching { it.name == "syncComposeResourcesForIos" }.configureEach {
+        onlyIf {
+            System.getenv("SDK_NAME") != null // set by Xcode
         }
     }
 

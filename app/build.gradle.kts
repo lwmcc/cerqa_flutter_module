@@ -169,8 +169,6 @@ dependencies {
     implementation(libs.libphonenumber)
 
     implementation("androidx.compose.runtime:runtime:1.6.0")
-
-    implementation(project(":shared"))
 }
 
 kapt {

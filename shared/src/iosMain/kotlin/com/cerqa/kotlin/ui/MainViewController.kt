@@ -1,5 +1,8 @@
 package com.cerqa.kotlin.ui
 
 import androidx.compose.ui.window.ComposeUIViewController
+import platform.UIKit.UIViewController
 
-fun MainViewController() = ComposeUIViewController { StartScreen() }
+fun mainViewController(): UIViewController = ComposeUIViewController {
+    StartScreen()
+}
