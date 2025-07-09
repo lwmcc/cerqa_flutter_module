@@ -69,7 +69,9 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlin.stdlib)
-                // Add KMP dependencies here
+
+                // KMP dependencies
+                implementation(libs.lifecycle.viewmodel.compose)
             }
         }
 
@@ -88,7 +90,6 @@ kotlin {
                 implementation("androidx.compose.material:material:1.8.3")
                 implementation("androidx.compose.ui:ui-tooling-preview:1.8.3")
                 implementation("androidx.activity:activity-compose:1.9.0")
-
             }
         }
 
