@@ -3,6 +3,7 @@ package com.cerqa.kotlin.ui
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.window.ComposeUIViewController
+import com.cerqa.kotlin.ui.theme.PlatformThemeWrapper
 import com.cerqa.kotlin.viewmodels.MainViewModel
 import platform.UIKit.UIViewController
 
@@ -14,5 +15,7 @@ fun mainViewController(userId: String, userName: String): UIViewController =
             mainViewModel.setUserData(userId = userId, userName = userName)
         }
 
-        StartScreen()
+        PlatformThemeWrapper {
+            StartScreen()
+        }
     }
