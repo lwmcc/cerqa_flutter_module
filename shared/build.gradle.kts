@@ -69,9 +69,10 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlin.stdlib)
-
-                // KMP dependencies
                 implementation(libs.lifecycle.viewmodel.compose)
+                implementation(libs.navigation.compose)
+                implementation(compose.materialIconsExtended)
+                implementation(compose.material3)
             }
         }
 
@@ -86,10 +87,11 @@ kotlin {
                 // Add Android-specific dependencies here. Note that this source set depends on
                 // commonMain by default and will correctly pull the Android artifacts of any KMP
                 // dependencies declared in commonMain.
-                implementation("androidx.compose.ui:ui:1.8.3")
-                implementation("androidx.compose.material:material:1.8.3")
-                implementation("androidx.compose.ui:ui-tooling-preview:1.8.3")
-                implementation("androidx.activity:activity-compose:1.9.0")
+                implementation(libs.androidx.ui)
+                implementation(libs.androidx.material)
+                implementation(libs.androidx.ui.tooling.preview)
+                implementation(libs.material3)
+                implementation(libs.androidx.material3.adaptive)
             }
         }
 
