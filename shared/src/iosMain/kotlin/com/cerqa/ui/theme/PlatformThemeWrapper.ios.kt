@@ -1,4 +1,4 @@
-package com.cerqa.kotlin.ui.theme
+package com.cerqa.ui.theme
 
 import androidx.compose.runtime.Composable
 
