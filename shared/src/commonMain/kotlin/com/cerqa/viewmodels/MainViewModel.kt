@@ -2,16 +2,16 @@ package com.cerqa.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.cerqa.data.Preferences
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class MainViewModel : ViewModel() {
+class MainViewModel(private val preferences: Preferences) : KoinComponent {
 
-    val preferences = Preferences()
     fun setUserData(userId: String, userName: String) {
         preferences.setUserData(userId = userId, userName = userName)
     }
 
     fun getUserData() {
         val userData = preferences.getUserData()
-        println("MainViewModel ***** USER ID ${userData.userId} NAME ${userData.userName}")
     }
 }
