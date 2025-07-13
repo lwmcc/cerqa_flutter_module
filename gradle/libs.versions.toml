@@ -41,6 +41,15 @@ hiltAndroidTesting = "2.56.2"
 hiltAndroidTestingVersion = "2.56.2"
 hiltCompiler = "2.56.2"
 hiltNavigationCompose = "1.2.0"
+insertKoinKoinAndroid = "4.2.0"
+insertKoinKoinCore = "YOUR_KOIN_VERSION"
+koinAndroid = "4.1.0"
+koinAndroidVersion = "4.0.3"
+koinAndroidxCompose = "4.1.0"
+koinAndroidxComposeVersion = "4.2.0"
+koinAnnotations = "4.0.3"
+koinCore = "4.1.0"
+koinCoreVersion = "4.0.3"
 kotlin = "2.2.0"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -153,6 +162,15 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinAndroid" }
+koin-android-v403 = { module = "io.insert-koin:koin-android", version.ref = "koinAndroidVersion" }
+koin-android-v420 = { module = "io.insert-koin:koin-android", version.ref = "insertKoinKoinAndroid" }
+koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinAndroidxCompose" }
+koin-androidx-compose-v420 = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinAndroidxComposeVersion" }
+koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koinAnnotations" }
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koinCore" }
+koin-core-v403 = { module = "io.insert-koin:koin-core", version.ref = "koinCoreVersion" }
+koin-core-vyourkoinversion = { module = "io.insert-koin:koin-core", version.ref = "insertKoinKoinCore" }
 kotlin-core = { module = "com.amplifyframework.kotlin:core", version.ref = "amplifyframeworkCore" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", version.ref = "libphonenumber" }

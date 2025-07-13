@@ -73,6 +73,9 @@ kotlin {
                 implementation(libs.navigation.compose)
                 implementation(compose.materialIconsExtended)
                 implementation(compose.material3)
+                implementation(libs.koin.core)
+                implementation(libs.koin.core)
+                implementation(libs.koin.androidx.compose)
             }
         }
 
@@ -92,6 +95,7 @@ kotlin {
                 implementation(libs.androidx.ui.tooling.preview)
                 implementation(libs.material3)
                 implementation(libs.androidx.material3.adaptive)
+                implementation(libs.koin.android)
             }
         }
 

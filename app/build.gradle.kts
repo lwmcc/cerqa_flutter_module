@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.androidx.ui.test.junit4.android)
     implementation(libs.androidx.navigation.testing.android)
     implementation(libs.androidx.rules)
+    implementation(project(":shared"))
     androidTestImplementation(libs.androidx.navigation.testing)
 
     // Compose
@@ -169,6 +170,9 @@ dependencies {
     implementation(libs.libphonenumber)
 
     implementation("androidx.compose.runtime:runtime:1.6.0")
+
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
 }
 
 kapt {

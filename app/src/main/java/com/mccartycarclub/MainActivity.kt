@@ -19,18 +19,21 @@ import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.amplifyframework.ui.authenticator.ui.Authenticator as Authenticator
 import com.mccartycarclub.data.websocket.AblyPushMessagingService
-import com.mccartycarclub.ui.components.StartScreen
 import com.mccartycarclub.ui.components.auth.AuthenticatorStateProvider
 import com.mccartycarclub.ui.theme.AppTheme
-import com.mccartycarclub.ui.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.core.net.toUri
+import com.cerqa.ui.StartScreen
+import com.cerqa.viewmodels.MainViewModel
+import org.koin.java.KoinJavaComponent
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val mainViewModel: MainViewModel by viewModels()
+    private val mainViewModel: MainViewModel by lazy {
+        KoinJavaComponent.get(MainViewModel::class.java)
+    }
 
     @Inject
     lateinit var pushReceiver: BroadcastReceiver
@@ -45,17 +48,22 @@ class MainActivity : ComponentActivity() {
             AppTheme {
                 Surface(tonalElevation = 5.dp) {
                     Authenticator(state = stateProvider.provide() /*rememberAuthenticatorState()*/) { state ->
-                        StartScreen(
-                            state,
-                            sendSms = { message ->
-                                sendSms(
-                                    context = this@MainActivity,
-                                    message = message.message,
-                                    title = message.title,
-                                    phoneNumber = message.phoneNumber,
-                                )
-                            },
+                        mainViewModel.setUserData(
+                            userId = state.user.userId,
+                            userName = state.user.username,
                         )
+                        StartScreen()
+                        /*                        StartScreen(
+                                                    state,
+                                                    sendSms = { message ->
+                                                        sendSms(
+                                                            context = this@MainActivity,
+                                                            message = message.message,
+                                                            title = message.title,
+                                                            phoneNumber = message.phoneNumber,
+                                                        )
+                                                    },
+                                                )*/
                         checkPermissions()
                     }
                 }
@@ -63,7 +71,7 @@ class MainActivity : ComponentActivity() {
         }
         registerReceiver()
         handleIncomingIntentS(intent)
-        mainViewModel.initAbly()
+        //mainViewModel.initAbly()
     }
 
     private fun registerReceiver() {

@@ -2,7 +2,7 @@ package com.cerqa.data
 
 import com.cerqa.models.UserData
 
-expect class Preferences() {
+interface Preferences {
     fun setUserData(userName: String, userId: String)
     fun getUserData(): UserData
 }
