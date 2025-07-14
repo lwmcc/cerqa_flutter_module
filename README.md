@@ -1,3 +1,7 @@
+
+<img width="200" alt="cerqa-ios" src="https://github.com/user-attachments/assets/34ddaa20-c2dc-447c-a287-e1cba69eecb1" />
+<img width="200" alt="cerqa-android" src="https://github.com/user-attachments/assets/d1533587-07e7-47c0-8356-3f0f2ee30f00" />
+
 This is a full stack android and AWS Amplify app. Amplify is the client to the AppSync GraphQL APIs, DynamoDb, and to other AWS services.  When completed, this app will be part communicatin tool, part navigation tool etc. The code is written in kotlin, with a small amount of code in TypeScript for the db schema.
 
 My CarClub(Cerqa App) is going to be an Android and iOS, KMM, CMP cross platform app. I started with Android as I am an Android developer, and integrated some 3rd party APIs. These are AWS Amplify, OpenSearch, Lambdas, etc. For real time messaging, the app is using Ably with Firebase Cloud Messaging. The UI is Compose, so I figured that if the app will be multiplatform then it would be a good idea to use KMM, and Compose Multiplatform.
