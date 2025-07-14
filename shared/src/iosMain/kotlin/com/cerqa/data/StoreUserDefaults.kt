@@ -4,7 +4,7 @@ import com.cerqa.models.UserData
 import platform.Foundation.NSUserDefaults
 
 class StoreUserDefaults(private val defaults: NSUserDefaults) : StoreDefaults {
-    override fun setUserData(userId: String, userName: String) {
+    override suspend fun setUserData(userId: String, userName: String) {
         defaults.setObject(value = userId, forKey = "user-id")
         defaults.setObject(value = userName, forKey = "user-name")
     }

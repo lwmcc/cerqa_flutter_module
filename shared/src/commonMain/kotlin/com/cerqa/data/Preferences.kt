@@ -3,6 +3,6 @@ package com.cerqa.data
 import com.cerqa.models.UserData
 
 interface Preferences {
-    fun setUserData(userName: String, userId: String)
+    suspend fun setUserData(userName: String, userId: String)
     fun getUserData(): UserData
 }

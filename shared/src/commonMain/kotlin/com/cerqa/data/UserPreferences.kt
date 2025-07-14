@@ -3,7 +3,7 @@ package com.cerqa.data
 import com.cerqa.models.UserData
 
 class UserPreferences(val defaults: StoreDefaults) : Preferences {
-    override fun setUserData(userName: String, userId: String) {
+    override suspend fun setUserData(userName: String, userId: String) {
         defaults.setUserData(userId = userId, userName = userName)
     }
 
