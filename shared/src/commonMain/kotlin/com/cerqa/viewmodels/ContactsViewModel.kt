@@ -5,13 +5,13 @@ import com.cerqa.data.Preferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-/*
+
 data class UiState(
     val pending: Boolean = false,
-    val contacts: List<Contact> = emptyList<Contact>(),
-    val message: MessageTypes? = null,
+    //val contacts: List<Contact> = emptyList<Contact>(),
+    //val message: MessageTypes? = null,
 )
-*/
+
 
 class ContactsViewModel(
     private val preferences: Preferences,
