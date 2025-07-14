@@ -1,3 +1,4 @@
+The iOS screenshot is on the left, and the other is the Android screenshot.
 
 <img width="200" alt="cerqa-ios" src="https://github.com/user-attachments/assets/34ddaa20-c2dc-447c-a287-e1cba69eecb1" />
 <img width="200" alt="cerqa-android" src="https://github.com/user-attachments/assets/d1533587-07e7-47c0-8356-3f0f2ee30f00" />
