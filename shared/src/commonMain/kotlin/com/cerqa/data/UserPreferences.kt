@@ -2,13 +2,12 @@ package com.cerqa.data
 
 import com.cerqa.models.UserData
 
-class UserPreferences : Preferences {
+class UserPreferences(val defaults: StoreDefaults) : Preferences {
     override fun setUserData(userName: String, userId: String) {
-        println("UserPreferences ***** setUserData")
+        defaults.setUserData(userId = userId, userName = userName)
     }
 
     override fun getUserData(): UserData {
-        println("getUserData ***** setUserData")
-        return UserData("", "")
+        return defaults.getUserData()
     }
 }

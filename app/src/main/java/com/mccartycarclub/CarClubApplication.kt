@@ -7,7 +7,9 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.kotlin.core.Amplify
 import com.cerqa.di.appModule
+import com.cerqa.di.platformModule
 import dagger.hilt.android.HiltAndroidApp
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext.startKoin
 
 @HiltAndroidApp
@@ -26,7 +28,8 @@ class CarClubApplication : Application() {
         }
 
         startKoin {
-            modules(appModule)
+            androidContext(this@CarClubApplication)
+            modules(appModule, platformModule())
         }
     }
 }

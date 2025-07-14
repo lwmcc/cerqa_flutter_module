@@ -96,6 +96,7 @@ kotlin {
                 implementation(libs.material3)
                 implementation(libs.androidx.material3.adaptive)
                 implementation(libs.koin.android)
+                implementation(libs.androidx.core.ktx)
             }
         }
 
