@@ -34,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -157,6 +158,11 @@ fun TopBar(
                 style = MaterialTheme.typography.titleLarge,
             )
         },
+
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+
         actions = {
             IconButton(
                 onClick = {
@@ -189,7 +195,7 @@ fun TopBar(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Notifications,
-                        contentDescription =stringResource(R.string.connect_view_your_notifications),
+                        contentDescription = stringResource(R.string.connect_view_your_notifications),
                     )
                 }
             }
