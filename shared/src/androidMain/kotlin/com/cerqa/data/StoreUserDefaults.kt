@@ -5,7 +5,7 @@ import androidx.core.content.edit
 import com.cerqa.models.UserData
 
 class StoreUserDefaults(private val preferences: SharedPreferences) : StoreDefaults {
-    override fun setUserData(userId: String, userName: String) {
+    override suspend fun setUserData(userId: String, userName: String) {
         preferences.edit {
             putString("user-id", userId)
             putString("user-name", userName)
