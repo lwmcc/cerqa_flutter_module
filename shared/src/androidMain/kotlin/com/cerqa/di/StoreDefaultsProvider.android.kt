@@ -17,6 +17,7 @@ fun getPlatformContext(): Context {
     }
     return appContext
 }
+
 actual fun provideStoreDefaults(): StoreDefaults {
     val prefs: SharedPreferences = getPlatformContext()
         .getSharedPreferences("preferences", Context.MODE_PRIVATE)

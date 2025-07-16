@@ -11,7 +11,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.material3.Surface
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
