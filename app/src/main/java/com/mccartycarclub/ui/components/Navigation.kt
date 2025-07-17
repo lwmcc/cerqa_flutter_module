@@ -1,16 +1,14 @@
-package com.cerqa.ui.components
+package com.mccartycarclub.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.Contacts
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Groups2
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Search
-import com.cerqa.ui.AppNavigationActions
 import com.cerqa.ui.BottomNavItem
 import com.cerqa.ui.TopNavItem
+import com.mccartycarclub.navigation.AppNavigationActions
 
 sealed class AppScreens(val route: String) {
     object Main : AppScreens("main")
@@ -60,19 +58,6 @@ val topNavItemsMain = listOf(
     ),
 )
 
-val topNavItemsContacts = listOf(
-    TopNavItem(
-        route = AppScreens.Contacts.route,
-        icon = Icons.Outlined.Search,
-        contentDescription = "Search screen",
-    ),
-    TopNavItem(
-        route = AppScreens.Groups.route,
-        icon = Icons.Outlined.Delete,
-        contentDescription = "Edit contacts",
-    ),
-)
-
 fun navToScreen(
     route: String,
     currentRoute: String,
@@ -80,9 +65,8 @@ fun navToScreen(
 ) {
     when (route) {
         AppScreens.Main.route -> if (route != currentRoute) {
-            navActions.navigateToMain()
-        }
 
+        }
 
         AppScreens.Chat.route -> if (route != currentRoute) {
             navActions.navigateToChat()

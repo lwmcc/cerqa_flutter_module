@@ -24,14 +24,12 @@ import com.cerqa.ui.components.AppScreens
 import com.cerqa.viewmodels.MainViewModel
 import com.cerqa.ui.components.navItems
 import com.cerqa.ui.components.navToScreen
-import com.cerqa.ui.components.topNavItemsMain
-import com.cerqa.viewmodels.ContactsViewModel
+import com.cerqa.ui.components.topNavItemsContacts
 
 @Composable
 fun StartScreen(
     onNavHostReady: suspend (NavController) -> Unit = {},
     mainViewModel: MainViewModel = koinInject(),
-    contactsViewModel: ContactsViewModel = koinInject(),
     navController: NavHostController = rememberNavController(),
     navActions: AppNavigationActions = remember(navController) {
         AppNavigationActions(navController)
@@ -41,6 +39,8 @@ fun StartScreen(
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
 
+    val topNavItems = getTopNavItems(currentRoute)
+
     LaunchedEffect(navController) {
         onNavHostReady(navController)
     }
@@ -48,7 +48,7 @@ fun StartScreen(
     Scaffold(
         topBar = {
             TopBar(
-                items = topNavItemsMain,
+                items = topNavItems,
                 onNavClick = {
                     // TODO: nav to profile
                 },
@@ -83,10 +83,10 @@ fun StartScreen(
             }
 
             composable(AppScreens.Contacts.route) {
-                ContactsScreen(contactsViewModel)
+                ContactsScreen()
             }
             composable(AppScreens.Groups.route) {
-                GroupsScreen()
+               GroupsScreen()
             }
         }
     }
@@ -124,8 +124,22 @@ fun NotificationScreen() {
 }
 
 @Composable
-fun ContactsScreen(contactsViewModel: ContactsViewModel) {
-    Text("CONTACTS")
+fun ContactsScreen() {
+    Scaffold(
+        topBar = {
+            TopBar(
+                items = topNavItemsContacts,
+                onNavClick = {
+                    // TODO: nav to profile
+                },
+                onTopNavClick = { route ->
+                   // navToScreen(route, currentRoute.toString(), navActions)
+                },
+            )
+        },
+    ) {
+
+    }
 }
 
 @Composable

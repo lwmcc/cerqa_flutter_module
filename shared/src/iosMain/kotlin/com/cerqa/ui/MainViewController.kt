@@ -8,6 +8,7 @@ import com.cerqa.viewmodels.MainViewModel
 import org.koin.mp.KoinPlatform.getKoin
 import platform.UIKit.UIViewController
 
+/*
 fun mainViewController(userId: String, userName: String): UIViewController =
     ComposeUIViewController {
         val mainViewModel = getKoin().get<MainViewModel>()
@@ -20,3 +21,4 @@ fun mainViewController(userId: String, userName: String): UIViewController =
             StartScreen()
         }
     }
+*/

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="XcodeMetaData" PROJECT_DIR="$PROJECT_DIR$/cerqaiOS" PROJECT_FILE="$PROJECT_DIR$/cerqaiOS/cerqaiOS.xcodeproj" />
+  <component name="XcodeMetaData">
+    <contentRoot DIR="$PROJECT_DIR$" />
+  </component>
 </project>

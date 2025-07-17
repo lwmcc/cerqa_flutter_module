@@ -31,6 +31,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -50,17 +51,19 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.ui.authenticator.SignedInState
-import com.mccartycarclub.MainActivity.Companion.CONTACTS_SCREEN
-import com.mccartycarclub.MainActivity.Companion.GROUPS_SCREEN
-import com.mccartycarclub.MainActivity.Companion.MAIN_SCREEN
-import com.mccartycarclub.MainActivity.Companion.NOTIFICATIONS_SCREEN
-import com.mccartycarclub.MainActivity.Companion.SEARCH_SCREEN
+import com.cerqa.ui.BottomBar
+import com.cerqa.ui.TopBar
+import com.cerqa.ui.components.AppScreens
+import com.cerqa.ui.components.navItems
+import com.cerqa.ui.getTopNavItems
 import com.mccartycarclub.R
 import com.mccartycarclub.domain.model.ConnectedSearch
 import com.mccartycarclub.domain.model.ReceivedInviteFromUser
@@ -69,9 +72,12 @@ import com.mccartycarclub.domain.model.SmsMessage
 import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.navigation.AppNavigationActions
 import com.mccartycarclub.navigation.ClickNavigation
+import com.mccartycarclub.ui.viewmodels.ContactsViewModel
+import com.mccartycarclub.ui.viewmodels.MainViewModel
 
 @Composable
 fun StartScreen(
+    mainViewModel: MainViewModel,
     state: SignedInState,
     navController: NavHostController = rememberNavController(),
     navActions: AppNavigationActions = remember(navController) {
@@ -79,68 +85,60 @@ fun StartScreen(
     },
     sendSms: (SmsMessage) -> Unit,
 ) {
-    NavHost(navController = navController, startDestination = MAIN_SCREEN) {
-        composable(MAIN_SCREEN) {
-            AppAuthenticator(
-                state = state,
-                topBarClick = {
-                    navToScreen(it, navActions)
+
+    val contactsViewModel: ContactsViewModel = hiltViewModel()
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
+    val topNavItems = getTopNavItems(currentRoute)
+
+    Scaffold(
+        topBar = {
+            TopBar(
+                items = topNavItems,
+                onNavClick = {
+                    // TODO: nav to profile
+                },
+                onTopNavClick = { route ->
+                    navToScreen(route, currentRoute.toString(), navActions)
+                },
+            )
+        },
+
+        bottomBar = {
+            BottomBar(
+                items = navItems,
+                currentRoute = currentRoute,
+                onBottomNavClick = { route ->
+                    navToScreen(route, currentRoute.toString(), navActions)
                 },
             )
         }
+    ) { paddingValues ->
+        NavHost(navController = navController, startDestination = AppScreens.Main.route) {
+            composable(AppScreens.Main.route) {
+                MainScreen(mainViewModel)
+            }
 
-        composable(CONTACTS_SCREEN) { backStackEntry ->
-            Contacts(
-                topBarClick = {
-                    navToScreen(it, navActions)
-                })
-        }
+            composable(AppScreens.Chat.route) {
+                ChatScreen()
+            }
 
-        composable(GROUPS_SCREEN) { backStackEntry ->
-            Groups(topBarClick = {
-                navToScreen(it, navActions)
-            })
-        }
+            composable(AppScreens.Notifications.route) {
+                NotificationScreen()
+            }
 
-        composable(SEARCH_SCREEN) { backStackEntry ->
-            Search(topBarClick = {
-                navToScreen(it, navActions)
-            }, sendSms = { message ->
-                sendSms(message)
-            })
-        }
-
-        composable(NOTIFICATIONS_SCREEN) { backStackEntry ->
-            Notifications(topBarClick = {
-                navToScreen(it, navActions)
-            })
-        }
-    }
-}
-
-private fun navToScreen(
-    clickNavigation: ClickNavigation,
-    navActions: AppNavigationActions,
-) {
-    when (clickNavigation) {
-        ClickNavigation.NavToContacts -> {
-            navActions.navigateToContacts()
-        }
-
-        ClickNavigation.NavToGroups -> {
-            navActions.navigateToGroups()
-        }
-
-        ClickNavigation.NavToSearch -> {
-            navActions.navigateToSearch()
-        }
-
-        ClickNavigation.NavToNotifications -> {
-            navActions.navigateToNotifications()
-        }
-
-        ClickNavigation.PopBackstack -> {
-            navActions.popBackStack()
+            composable(AppScreens.Contacts.route) {
+                //ContactsScreen(contactsViewModel)
+                Contacts(
+                    paddingValues,
+                    contactsViewModel,
+                    topBarClick = {
+                        println("ICON CLICKED")
+                    })
+            }
+            composable(AppScreens.Groups.route) {
+                GroupsScreen()
+            }
         }
     }
 }

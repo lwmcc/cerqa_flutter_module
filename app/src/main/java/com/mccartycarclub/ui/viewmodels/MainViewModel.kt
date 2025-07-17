@@ -87,8 +87,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // TODO: done when hard coded user is created for testing
-    fun setLoggedInUserId(userId: String) {
+    fun setLoggedInUserId(userId: String, userName: String) {
         viewModelScope.launch {
             localRepo.setLocalUserId(userId)
             _userId.value = userId

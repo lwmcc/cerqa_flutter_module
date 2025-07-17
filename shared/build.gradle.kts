@@ -97,6 +97,22 @@ kotlin {
                 implementation(libs.androidx.material3.adaptive)
                 implementation(libs.koin.android)
                 implementation(libs.androidx.core.ktx)
+
+                // AWS Amplify
+                implementation("com.amplifyframework:core-kotlin:2.29.1")
+                implementation("com.amplifyframework:aws-api:2.29.1")
+                implementation(libs.authenticator)
+                implementation(libs.aws.api)
+                implementation(libs.authenticator.vandroidauthenticatorversion)
+                implementation(libs.core)
+                implementation(libs.core.kotlin)
+                implementation(libs.aws.datastore)
+            }
+        }
+
+        commonTest {
+            dependencies {
+                implementation(libs.kotlin.test)
             }
         }
 

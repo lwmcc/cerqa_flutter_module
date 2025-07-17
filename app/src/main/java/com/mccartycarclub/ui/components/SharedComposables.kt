@@ -3,9 +3,12 @@ package com.mccartycarclub.ui.components
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,12 +27,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -74,7 +77,7 @@ fun AppAuthenticator(
                 .padding(innerPadding),
         ) {
             // TODO: to move somewhere this is for testing only
-            mainViewModel.setLoggedInUserId(state.user.username)
+            //mainViewModel.setLoggedInUserId(state.user.username)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -140,6 +143,7 @@ fun AppAuthenticator(
 @Suppress("LongMethod")
 @Composable
 fun Contacts(
+    paddingValues: PaddingValues,
     contactsViewModel: ContactsViewModel = hiltViewModel(),
     topBarClick: (ClickNavigation) -> Unit,
 ) {
@@ -177,21 +181,10 @@ fun Contacts(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopBarContacts(
-                stringResource(id = R.string.app_name),
-                topBarClick = {
-                    topBarClick(it)
-                }
-            )
-        },
-    ) { innerPadding ->
-
+    Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(innerPadding),
         ) {
 
             AnimatedLoadingSpinner(
@@ -602,4 +595,59 @@ fun Notifications(topBarClick: (ClickNavigation) -> Unit) {
             Text(text = "Notifications")
         }
     }
+}
+
+@Composable
+fun MainScreen(mainViewModel: MainViewModel) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "larry composable test",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Button(onClick = {
+            //mainViewModel.getUserData()
+        }) {
+            Text("Prefs Read/Write Test")
+        }
+    }
+}
+
+@Composable
+fun ChatScreen() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White), // Optional for debugging
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "CHAT",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+@Composable
+fun NotificationScreen() {
+    Text("NOTIFICATIONS")
+}
+
+@Composable
+fun ContactsScreen(contactsViewModel: ContactsViewModel) {
+    Text(
+        text = "CONTACTS",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
+}
+
+@Composable
+fun GroupsScreen() {
+    Text("GROUPS")
 }

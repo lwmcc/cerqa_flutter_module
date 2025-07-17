@@ -55,6 +55,7 @@ class ContactsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            // TODO: why save it just get it
             _userId.value = localRepo.getUserId().first()
         }
     }
@@ -93,6 +94,7 @@ class ContactsViewModel @Inject constructor(
         }
     }
 
+    // TODO: don't need to pass in id here can get it from preferences
     fun fetchAllContacts(loggedInUserId: String?) {
         if (loggedInUserId != null) {
             uiState = uiState.copy(pending = true)

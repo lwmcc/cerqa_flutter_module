@@ -6,16 +6,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.More
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.cerqa.ui.components.AppScreens
+import com.cerqa.ui.components.topNavItemsContacts
+import com.cerqa.ui.components.topNavItemsMain
 
 data class BottomNavItem(
     val route: String,
@@ -29,6 +28,14 @@ data class TopNavItem(
     val icon: ImageVector,
     val contentDescription: String,
 )
+
+fun getTopNavItems(route: String?): List<TopNavItem> {
+    return when (route) {
+        AppScreens.Main.route -> topNavItemsMain
+        AppScreens.Contacts.route -> topNavItemsContacts
+        else -> emptyList()
+    }
+}
 
 @Composable
 fun BottomBar(

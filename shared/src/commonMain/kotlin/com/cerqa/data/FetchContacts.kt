@@ -1,5 +1,5 @@
 package com.cerqa.data
 
 interface FetchContacts {
-    fun fetchAllContacts()
+    suspend fun fetchAllContacts()
 }

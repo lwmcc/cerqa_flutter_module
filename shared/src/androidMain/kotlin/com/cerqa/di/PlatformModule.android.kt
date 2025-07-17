@@ -2,6 +2,10 @@ package com.cerqa.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.amplifyframework.api.ApiCategoryBehavior
+import com.amplifyframework.core.Amplify
+import com.cerqa.data.FetchContacts
+import com.cerqa.data.FetchContactsRepository
 import com.cerqa.data.StoreDefaults
 import com.cerqa.data.StoreUserDefaults
 import org.koin.android.ext.koin.androidContext
@@ -12,5 +16,7 @@ actual fun platformModule(): Module = module {
     single<SharedPreferences> {
         androidContext().getSharedPreferences("preferences", Context.MODE_PRIVATE)
     }
+    single<ApiCategoryBehavior>{ Amplify.API}
     single<StoreDefaults> { StoreUserDefaults(get()) }
+    single<FetchContacts> { FetchContactsRepository(get(), get(), get()) }
 }

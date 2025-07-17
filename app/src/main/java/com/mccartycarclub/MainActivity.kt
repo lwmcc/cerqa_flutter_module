@@ -11,6 +11,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.material3.Surface
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -23,16 +24,13 @@ import com.mccartycarclub.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.core.net.toUri
-import com.cerqa.ui.StartScreen
-import com.cerqa.viewmodels.MainViewModel
-import org.koin.java.KoinJavaComponent
+import com.mccartycarclub.ui.components.StartScreen
+import com.mccartycarclub.ui.viewmodels.MainViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val mainViewModel: MainViewModel by lazy {
-        KoinJavaComponent.get(MainViewModel::class.java)
-    }
+    private val mainViewModel: MainViewModel by viewModels()
 
     @Inject
     lateinit var pushReceiver: BroadcastReceiver
@@ -47,22 +45,22 @@ class MainActivity : ComponentActivity() {
             AppTheme {
                 Surface(tonalElevation = 5.dp) {
                     Authenticator(state = stateProvider.provide() /*rememberAuthenticatorState()*/) { state ->
-                        mainViewModel.setUserData(
+                        mainViewModel.setLoggedInUserId(
                             userId = state.user.userId,
                             userName = state.user.username,
                         )
-                        StartScreen()
-                        /*                        StartScreen(
-                                                    state,
-                                                    sendSms = { message ->
-                                                        sendSms(
-                                                            context = this@MainActivity,
-                                                            message = message.message,
-                                                            title = message.title,
-                                                            phoneNumber = message.phoneNumber,
-                                                        )
-                                                    },
-                                                )*/
+                        StartScreen(
+                            mainViewModel,
+                            state,
+                            sendSms = { message ->
+                                sendSms(
+                                    context = this@MainActivity,
+                                    message = message.message,
+                                    title = message.title,
+                                    phoneNumber = message.phoneNumber,
+                                )
+                            },
+                        )
                         checkPermissions()
                     }
                 }
