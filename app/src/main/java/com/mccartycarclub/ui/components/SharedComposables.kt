@@ -2,57 +2,27 @@ package com.mccartycarclub.ui.components
 
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.ui.authenticator.SignedInState
 import com.mccartycarclub.R
-import com.mccartycarclub.domain.model.SmsMessage
 import com.mccartycarclub.navigation.ClickNavigation
-import com.mccartycarclub.repository.ContactType
-import com.mccartycarclub.repository.CurrentContact
-import com.mccartycarclub.repository.ReceivedContactInvite
-import com.mccartycarclub.repository.SentInviteContactInvite
-import com.mccartycarclub.ui.viewmodels.ContactsViewModel
 import com.mccartycarclub.ui.viewmodels.MainViewModel
-import com.mccartycarclub.ui.viewmodels.SearchViewModel
 
 @Suppress("LongMethod")
 @Composable
@@ -140,154 +110,6 @@ fun AppAuthenticator(
     }
 }
 
-@Suppress("LongMethod")
-@Composable
-fun Contacts(
-    paddingValues: PaddingValues,
-    contactsViewModel: ContactsViewModel = hiltViewModel(),
-    topBarClick: (ClickNavigation) -> Unit,
-) {
-    val contacts = contactsViewModel.uiState
-    val userId by contactsViewModel.userId.collectAsStateWithLifecycle()
-
-    var openAlertDialog by remember { mutableStateOf(false) }
-    var selectedUserId by remember { mutableStateOf<String?>(null) }
-    var selectedContactId by remember { mutableStateOf<String?>(null) }
-    var connectionEvent by remember { mutableStateOf<ContactCardEvent?>(null) }
-
-    var listIndex by remember { mutableIntStateOf(0) }
-    var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
-
-    val density = LocalDensity.current
-
-    LaunchedEffect(userId) {
-        contactsViewModel.fetchAllContacts(userId)
-    }
-
-    when {
-        openAlertDialog -> {
-            ConfirmationDialog(
-                alertDialogData = alertDialogData,
-                onDismissRequest = {
-                    openAlertDialog = false
-                },
-                onConfirmation = {
-                    openAlertDialog = false
-                    connectionEvent?.let { event ->
-                        contactsViewModel.userConnectionEvent(listIndex, event)
-                    }
-                },
-            )
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-
-            AnimatedLoadingSpinner(
-                density = density,
-                dataPending = contacts.pending,
-                spinnerSize = R.dimen.card_pending_spinner,
-                slideIn = (-20).dp,
-            )
-
-            when {
-                contacts.message != null -> {
-                    println("SharedComposables ***** CONTACTS MESSAGE ${contacts.message}")
-                }
-
-                contacts.contacts.isEmpty() && !contacts.pending -> {
-                    NoDataFound(message = stringResource(id = R.string.connect_invite_users))
-                }
-
-                else -> {
-                    LazyColumn(modifier = Modifier.testTag("contactsTag")) {
-                        contacts.contacts.forEachIndexed { index, contact ->
-                            when (contact) {
-                                is ReceivedContactInvite -> {
-                                    item {
-                                        ReceivedInviteContactCard(
-                                            contact = contact,
-                                            primaryButtonText = stringResource(id = R.string.connect_remove),
-                                            secondaryButtonText = stringResource(id = R.string.connect_to_user),
-                                            avatar = R.drawable.ic_dashboard_black_24dp,
-                                            onDismissClick = { event ->
-                                                listIndex = index
-                                                connectionEvent = event
-                                                openAlertDialog = true
-                                                alertDialogData = AlertDialogData(
-                                                    icon = R.drawable.baseline_person_off_24,
-                                                    title = R.string.dialog_remove_invite_to_connect_title,
-                                                    description =
-                                                        R.string.dialog_remove_invite_to_connect_description,
-                                                    dialogIconDescription = R.string.dialog_icon_description,
-                                                    dismiss = R.string.dialog_button_dismiss,
-                                                    confirm = R.string.connect_remove,
-                                                )
-                                            },
-                                            onConfirmClick = { event ->
-                                                listIndex = index
-                                                connectionEvent = event
-                                                openAlertDialog = true
-                                                alertDialogData = AlertDialogData(
-                                                    icon = R.drawable.baseline_person_add_24,
-                                                    title = R.string.dialog_accept_invite_to_connect_title,
-                                                    description =
-                                                        R.string.dialog_accept_invite_to_connect_description,
-                                                    dialogIconDescription = R.string.dialog_icon_description,
-                                                    dismiss = R.string.dialog_button_dismiss,
-                                                    confirm = R.string.dialog_button_accept,
-                                                )
-                                            }
-                                        )
-                                    }
-                                }
-
-                                is SentInviteContactInvite -> {
-                                    item {
-                                        SentContactCard(
-                                            contact = contact,
-                                            primaryButtonText = stringResource(id = R.string.connect_cancel),
-                                            avatar = R.drawable.ic_dashboard_black_24dp,
-                                            onClick = { event ->
-                                                selectedUserId = contact.userId
-                                                selectedContactId = contact.contactId
-                                                connectionEvent = event
-                                                openAlertDialog = true
-                                                alertDialogData = AlertDialogData(
-                                                    icon = R.drawable.baseline_person_off_24,
-                                                    title = R.string.dialog_cancel_invite_to_connect_title,
-                                                    description =
-                                                        R.string.dialog_cancel_invite_to_connect_description,
-                                                    dialogIconDescription = R.string.dialog_icon_description,
-                                                    dismiss = R.string.dialog_button_dismiss,
-                                                    confirm = R.string.connect_cancel,
-                                                )
-                                            },
-                                        )
-                                    }
-                                }
-
-                                is CurrentContact -> {
-                                    item {
-                                        CurrentContactCard(
-                                            contact = contact.name,
-                                            avatar = R.drawable.baseline_person_24,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 @Composable
 fun Groups(topBarClick: (ClickNavigation) -> Unit) {
     Scaffold(
@@ -306,271 +128,6 @@ fun Groups(topBarClick: (ClickNavigation) -> Unit) {
                 .padding(innerPadding),
         ) {
             Text(text = "Groups")
-        }
-    }
-}
-
-@Suppress("LongMethod")
-@Composable
-fun Search(
-    contactsViewModel: ContactsViewModel = hiltViewModel(),
-    searchViewModel: SearchViewModel = hiltViewModel(),
-    topBarClick: (ClickNavigation) -> Unit,
-    sendSms: (SmsMessage) -> Unit,
-) {
-    Scaffold(
-        topBar = {
-            TopBarSearch(
-                stringResource(id = R.string.app_name),
-                topBarClick = {
-                    topBarClick(it)
-                }
-            )
-        },
-    ) { innerPadding ->
-
-        val uiState = searchViewModel.uiState
-        val inviteSentSuccess =
-            contactsViewModel.inviteSentSuccess.collectAsStateWithLifecycle().value
-        val isSendingInvite = contactsViewModel.isSendingInvite.collectAsStateWithLifecycle().value
-
-        var input by remember { mutableStateOf("") }
-        var openAlertDialog by remember { mutableStateOf(false) }
-        var connectionEvent by remember { mutableStateOf<ContactCardConnectionEvent?>(null) }
-        var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
-        var clearSearchVisible by remember { mutableStateOf(false) }
-
-        val density = LocalDensity.current
-
-        when {
-            openAlertDialog -> {
-                ConfirmationDialog(
-                    alertDialogData = alertDialogData,
-                    onDismissRequest = {
-                        openAlertDialog = false
-                    },
-                    onConfirmation = {
-                        openAlertDialog = false
-                        connectionEvent?.let { event ->
-                            searchViewModel.inviteSentEvent(connectionEvent = event)
-                        }
-                    },
-                )
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(innerPadding),
-        ) {
-
-            when {
-                uiState.message != null -> {
-                    BannerMessage(
-                        message = uiState.message,
-                        onDismiss = {
-
-                        },
-                    )
-                }
-
-                uiState.idle -> {
-                    println("Search ***** IDLE")
-                }
-
-                else -> {
-                    println("Search ***** ELSE")
-                }
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background),
-            ) {
-                TextField(
-                    value = input,
-                    maxLines = 2,
-                    onValueChange = {
-                        input = it
-                        searchViewModel.onQueryChange(it)
-                        clearSearchVisible = input.isNotEmpty()
-                    },
-                    label = {
-                        Text(
-                            text = stringResource(id = R.string.user_search),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                )
-
-                if (clearSearchVisible) {
-                    Icon(
-                        Icons.Filled.Clear,
-                        contentDescription = stringResource(id = R.string.text_field_clear),
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .clickable {
-                                input = ""
-                                searchViewModel.onQueryChange("")
-                            },
-                    )
-                }
-            }
-
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.card_pending_spinner))
-            )
-
-            AnimatedLoadingSpinner(
-                density = density,
-                dataPending = uiState.pending,
-                spinnerSize = R.dimen.card_pending_spinner,
-                slideIn = (-20).dp,
-            )
-
-            LazyColumn {
-                items(uiState.results, key = { it.id }) { item ->
-                    ListSection(
-                        image = R.drawable.ic_dashboard_black_24dp,
-                        contentDescription = stringResource(id = R.string.user_avatar),
-                        title = item.userName.toString(),
-                        width = 60.dp,
-                        content = {
-                            when (item.contactType) {
-                                ContactType.RECEIVED -> {
-                                    Text(
-                                        text = stringResource(R.string.connect_invite_received),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                }
-
-                                ContactType.SENT -> {
-                                    Text(
-                                        text = stringResource(R.string.connect_invite_sent),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                }
-
-                                null -> {
-                                    CardListButton(
-                                        text = stringResource(id = R.string.connect_to_user),
-                                        onClick = {
-                                            openAlertDialog = true
-                                            connectionEvent =
-                                                ContactCardConnectionEvent.InviteConnectEvent(
-                                                    receiverUserId = item.userId,
-                                                    rowId = item.id,
-                                                )
-                                            alertDialogData = AlertDialogData(
-                                                icon = R.drawable.sharp_contacts_24,
-                                                title = R.string.dialog_invite_to_connect_title,
-                                                description = R.string.dialog_invite_to_connect_description,
-                                                dialogIconDescription = R.string.dialog_icon_description,
-                                                dismiss = R.string.dialog_button_dismiss,
-                                                confirm = R.string.dialog_button_connect,
-                                            )
-                                        },
-                                        isEnabled = item.connectButtonEnabled,
-                                    )
-                                }
-                            }
-                        },
-                    )
-                }
-            }
-
-            LazyColumn {
-                if (uiState.appUsers.isNotEmpty()) {
-                    item {
-                        CardHeader(
-                            stringResource(
-                                R.string.connections_using_app,
-                                stringResource(R.string.app_name)
-                            ),
-                            R.dimen.card_heading_padding,
-                        )
-                    }
-                }
-                items(uiState.appUsers) { user ->
-
-                    ListSection(
-                        image = R.drawable.ic_dashboard_black_24dp,
-                        contentDescription = stringResource(id = R.string.user_avatar),
-                        title = user.name,
-                        width = 60.dp,
-                        content = {
-                            CardListButton(
-                                text = stringResource(R.string.connect_to_user),
-                                onClick = {
-                                    openAlertDialog = true
-                                    connectionEvent =
-                                        ContactCardConnectionEvent.InvitePhoneNumberConnectEvent(
-                                            // TODO: there is only one number here use
-                                            // it instead of list
-                                            receiverPhoneNumber = user.phoneNumbers.first().toString()
-                                        )
-                                    alertDialogData = AlertDialogData(
-                                        icon = R.drawable.sharp_contacts_24,
-                                        title = R.string.dialog_invite_to_connect_title,
-                                        description = R.string.dialog_invite_to_connect_description,
-                                        dialogIconDescription = R.string.dialog_icon_description,
-                                        dismiss = R.string.dialog_button_dismiss,
-                                        confirm = R.string.dialog_button_connect,
-                                    )
-                                },
-                                isEnabled = user.connectButtonEnabled
-                            )
-                        }
-                    )
-                }
-
-                if (uiState.nonAppUsers.isNotEmpty()) {
-                    item {
-                        CardHeader(
-                            stringResource(
-                                R.string.connections_not_using_app,
-                                stringResource(R.string.app_name)
-                            ),
-                            R.dimen.card_padding_start,
-                        )
-                    }
-                }
-
-                items(uiState.nonAppUsers) { user ->
-                    val title =  stringResource(R.string.sms_title)
-                    val appLink = stringResource(R.string.app_link)
-                    ListSection(
-                        image = R.drawable.ic_dashboard_black_24dp,
-                        contentDescription = stringResource(id = R.string.user_avatar),
-                        title = user.name,
-                        width = 60.dp,
-                        content = {
-                            CardListButton(
-                                text = stringResource(R.string.connect_invite_user),
-                                onClick = {
-                                    sendSms(
-                                        SmsMessage(
-                                            title = title,
-                                            message = appLink,
-                                            phoneNumber = user.phoneNumbers.first().toString(),
-                                        )
-                                    )
-                                }
-                            )
-                        }
-                    )
-                }
-            }
         }
     }
 }
@@ -598,26 +155,6 @@ fun Notifications(topBarClick: (ClickNavigation) -> Unit) {
 }
 
 @Composable
-fun MainScreen(mainViewModel: MainViewModel) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "larry composable test",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Button(onClick = {
-            //mainViewModel.getUserData()
-        }) {
-            Text("Prefs Read/Write Test")
-        }
-    }
-}
-
-@Composable
 fun ChatScreen() {
     Box(
         modifier = Modifier
@@ -635,19 +172,48 @@ fun ChatScreen() {
 
 @Composable
 fun NotificationScreen() {
-    Text("NOTIFICATIONS")
-}
-
-@Composable
-fun ContactsScreen(contactsViewModel: ContactsViewModel) {
-    Text(
-        text = "CONTACTS",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface,
-    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White), // Optional for debugging
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "NOTIFICATIONS",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
 }
 
 @Composable
 fun GroupsScreen() {
-    Text("GROUPS")
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White), // Optional for debugging
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "GROUPS",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+@Composable
+fun GroupsAddScreen() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White), // Optional for debugging
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "GROUPS ADD",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
 }

@@ -1,19 +1,25 @@
 package com.cerqa.ui
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.runtime.Composable
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.cerqa.ui.components.AppScreens
+import com.cerqa.navigation.AppDestination
 import com.cerqa.ui.components.topNavItemsContacts
+import com.cerqa.ui.components.topNavItemsGroups
 import com.cerqa.ui.components.topNavItemsMain
 
 data class BottomNavItem(
@@ -31,8 +37,10 @@ data class TopNavItem(
 
 fun getTopNavItems(route: String?): List<TopNavItem> {
     return when (route) {
-        AppScreens.Main.route -> topNavItemsMain
-        AppScreens.Contacts.route -> topNavItemsContacts
+        AppDestination.Main.route -> topNavItemsMain
+        AppDestination.Contacts.route -> topNavItemsContacts
+        AppDestination.ContactsSearch.route -> topNavItemsContacts
+        AppDestination.GroupsAdd.route -> topNavItemsGroups
         else -> emptyList()
     }
 }
@@ -61,10 +69,13 @@ fun BottomBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
+    text: String,
     items: List<TopNavItem>,
     onNavClick: () -> Unit,
     onTopNavClick: (String) -> Unit,
+    onQueryChanged: (String) -> Unit,
 ) {
+
     TopAppBar(
         navigationIcon = {
             IconButton(onClick = onNavClick) {
@@ -72,9 +83,17 @@ fun TopBar(
             }
         },
         title = {
-            Text(
-                text = "Top Bar",
-                style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
+            TextField(
+                value = "", // TODO: add text
+                onValueChange = onQueryChanged,
+                placeholder = { Text(text = text) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.textFieldColors(
+                    backgroundColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                )
             )
         },
         actions = {

@@ -1,24 +1,50 @@
 package com.mccartycarclub.navigation
 
 import androidx.navigation.NavHostController
-import com.cerqa.ui.components.AppScreens
+import com.cerqa.navigation.AppDestination
 
 class AppNavigationActions(private val navController: NavHostController) {
+
     fun navigateToContacts() {
-        navController.navigate(AppScreens.Contacts.route)
+        navController.navigate(AppDestination.Contacts.route) {
+            launchSingleTop = true
+        }
+    }
+
+    fun navigateToContactsSearch() {
+        navController.navigate(AppDestination.ContactsSearch.route) {
+            launchSingleTop = true
+        }
+    }
+
+    fun navigateToGroups() {
+        navController.navigate(AppDestination.Groups.route) {
+            launchSingleTop = true
+        }
+    }
+
+    fun navigateToGroupsAdd() {
+        navController.navigate(AppDestination.GroupsAdd.route) {
+            launchSingleTop = true
+        }
+    }
+
+    fun navigateToMain() {
+        navController.navigate(AppDestination.Main.route) {
+            launchSingleTop = true
+        }
     }
 
     fun navigateToChat() {
-        navController.navigate(AppScreens.Chat.route)
-    }
-
-
-    fun navigateToGroups() {
-        navController.navigate(AppScreens.Groups.route)
+        navController.navigate(AppDestination.Chat.route) {
+            launchSingleTop = true
+        }
     }
 
     fun navigateToNotifications() {
-        navController.navigate(AppScreens.Notifications.route)
+        navController.navigate(AppDestination.Notifications.route) {
+            launchSingleTop = true
+        }
     }
 
     fun popBackStack() {

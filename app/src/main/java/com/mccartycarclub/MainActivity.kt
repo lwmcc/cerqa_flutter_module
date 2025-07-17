@@ -24,7 +24,7 @@ import com.mccartycarclub.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.core.net.toUri
-import com.mccartycarclub.ui.components.StartScreen
+import com.mccartycarclub.ui.start.StartScreen
 import com.mccartycarclub.ui.viewmodels.MainViewModel
 
 @AndroidEntryPoint
@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppTheme {
                 Surface(tonalElevation = 5.dp) {
-                    Authenticator(state = stateProvider.provide() /*rememberAuthenticatorState()*/) { state ->
+                    Authenticator(state = stateProvider.provide()) { state ->
                         mainViewModel.setLoggedInUserId(
                             userId = state.user.userId,
                             userName = state.user.username,
@@ -52,6 +52,9 @@ class MainActivity : ComponentActivity() {
                         StartScreen(
                             mainViewModel,
                             state,
+                            topBarClick = {
+
+                            },
                             sendSms = { message ->
                                 sendSms(
                                     context = this@MainActivity,
