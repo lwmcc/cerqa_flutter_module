@@ -848,7 +848,7 @@ class AmplifyRepo @Inject constructor(
 
     override suspend fun searchUsersByUserName(userName: String, loggedInUserId: String):
             Flow<NetworkResponse<List<SearchUser>>> {
-        /*        val document = """
+                val document = """
                         query SearchByUserName(${'$'}userName: String!, ${'$'}loggedInUserId: String!) {
                           searchByUserName(userName: ${'$'}userName, loggedInUserId: ${'$'}loggedInUserId) {
                             id
@@ -858,8 +858,8 @@ class AmplifyRepo @Inject constructor(
                             phone
                           }
                         }
-                    """.trimIndent()*/
-        val document = """
+                    """.trimIndent()
+        val document2 = """
                     query FetchUsersByUserName(${'$'}userName: String!) {
                         fetchUsersByUserName(userName: ${'$'}userName) {
                             userId
@@ -883,11 +883,8 @@ class AmplifyRepo @Inject constructor(
             GsonVariablesSerializer(),
         )
 
-        val user = amplifyApi.query(request).data.searchByUserName
-        user.forEach {
-            println("AmplifyRepository ***** ${it.userName}")
-            println("AmplifyRepository ***** ${it.phone}")
-        }
+       // val user = amplifyApi.query(request).data.searchByUserName
+
 
         return emptyFlow()
     }

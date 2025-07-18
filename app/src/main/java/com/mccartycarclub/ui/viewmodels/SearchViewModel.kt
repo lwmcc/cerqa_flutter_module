@@ -67,14 +67,15 @@ class SearchViewModel @Inject constructor(
             uiState = uiState.copy(pending = true)
             _userId.value = localRepo.getUserId().first()
 
-            _userId.value?.let { userId ->
+            // TODO: fix NPE
+/*            _userId.value?.let { userId ->
                 val (users, nonUsers) = contactsRepository.fetchUsersByPhoneNumber(userId)
                 uiState = uiState.copy(
                     appUsers = users,
                     nonAppUsers = nonUsers,
                     pending = false,
                 )
-            }
+            }*/
 
             userSearch(localRepo.getUserId().first().toString())
         }

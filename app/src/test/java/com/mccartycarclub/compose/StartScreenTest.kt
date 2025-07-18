@@ -7,7 +7,6 @@ import com.mccartycarclub.repository.AmplifyRepo.Companion.DUMMY
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.testdoubles.receivedInvites
-import com.mccartycarclub.ui.components.Contacts
 import com.mccartycarclub.ui.viewmodels.ContactsViewModel
 import com.mccartycarclub.ui.viewmodels.UiState
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -57,12 +56,12 @@ class StartScreenTest {
             contacts = receivedInvites
         )
 
-        composeTestRule.setContent {
+       /* composeTestRule.setContent {
             Contacts(
                 contactsViewModel,
                 topBarClick = {}
             )
-        }
+        }*/
 
         composeTestRule.onNodeWithText("LarryM").assertExists()
         composeTestRule.onAllNodes(hasTestTag("contactItem"))[0].assertExists()

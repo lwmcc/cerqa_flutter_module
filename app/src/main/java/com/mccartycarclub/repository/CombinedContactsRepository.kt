@@ -91,7 +91,7 @@ class CombinedContactsRepository @Inject constructor(
                     createAppUsers(
                         cacheContacts = contacts,
                         localPhoneNumbers = deviceContacts,
-                        remoteUserPhoneNumbers = response.data.searchUsers,
+                        remoteUserPhoneNumbers = response.data.searchUsers,// TODO: fix NPE in here
                     )
 
                 val nonAppUsers = createNonAppUsers(deviceContacts, response.data.searchUsers)

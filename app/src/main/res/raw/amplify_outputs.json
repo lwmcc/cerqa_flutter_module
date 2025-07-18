@@ -929,6 +929,23 @@
               "isRequired": false
             }
           }
+        },
+        "fetchUsersByUserName": {
+          "name": "fetchUsersByUserName",
+          "isArray": true,
+          "type": {
+            "model": "User"
+          },
+          "isRequired": false,
+          "isArrayNullable": true,
+          "arguments": {
+            "userName": {
+              "name": "userName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            }
+          }
         }
       }
     }
