@@ -172,7 +172,7 @@ class SearchViewModel @Inject constructor(
                     _userId.value?.let { id ->
                         val allContacts = repo.fetchAllContacts(loggedInUserId)
                         val userSearch =
-                            repo.searchUsersByUserName(userName = userName, loggedInUserId = id)
+                            repo.searchUsersByUserName(userName = userName, loggedInUserId = id) // TODO: get loggedInUserId in repo
 
                         val contacts = when (val result = allContacts.first()) {
                             is NetworkResponse.Success -> {

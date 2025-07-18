@@ -40,6 +40,7 @@ import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import java.io.IOException
@@ -847,7 +848,7 @@ class AmplifyRepo @Inject constructor(
 
     override suspend fun searchUsersByUserName(userName: String, loggedInUserId: String):
             Flow<NetworkResponse<List<SearchUser>>> {
-        val document = """
+        /*        val document = """
                         query SearchByUserName(${'$'}userName: String!, ${'$'}loggedInUserId: String!) {
                           searchByUserName(userName: ${'$'}userName, loggedInUserId: ${'$'}loggedInUserId) {
                             id
@@ -857,9 +858,23 @@ class AmplifyRepo @Inject constructor(
                             phone
                           }
                         }
-                    """.trimIndent()
+                    """.trimIndent()*/
+        val document = """
+                    query FetchUsersByUserName(${'$'}userName: String!) {
+                        fetchUsersByUserName(userName: ${'$'}userName) {
+                            userId
+                            firstName
+                            lastName
+                            name
+                            phone
+                            userName
+                            email
+                            avatarUri
+                        }
+                    }
+                """.trimIndent()
 
-        val variables = mapOf("userName" to userName, "loggedInUserId" to loggedInUserId)
+        val variables = mapOf("userName" to userName)
 
         val request = SimpleGraphQLRequest<SearchByUserNameResponse>(
             document,
@@ -868,26 +883,13 @@ class AmplifyRepo @Inject constructor(
             GsonVariablesSerializer(),
         )
 
-        /*    remoteUserContacts.forEach {
-                println("AmplifyRepo ***** REMOTE ${it.userName}")
-                println("AmplifyRepo ***** REMOTE ${it.userId}")
-            }*/
+        val user = amplifyApi.query(request).data.searchByUserName
+        user.forEach {
+            println("AmplifyRepository ***** ${it.userName}")
+            println("AmplifyRepository ***** ${it.phone}")
+        }
 
-        //  try {
-
-
-        return flow { emit(NetworkResponse.Success(amplifyApi.query(request).data.searchByUserName)) }
-        /*        } catch (ae: AmplifyException) {
-                    when (ae.cause) {
-                        is UnknownHostException, is IOException -> {
-                            emit(NetworkResponse.NoInternet)
-                        }
-
-                        else -> {
-                            emit(NetworkResponse.Error(ae))
-                        }
-                    }
-                }*/
+        return emptyFlow()
     }
 }
 
