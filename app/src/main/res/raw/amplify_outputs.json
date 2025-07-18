@@ -944,6 +944,12 @@
               "isArray": false,
               "type": "String",
               "isRequired": false
+            },
+            "loggedInUserId": {
+              "name": "loggedInUserId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false
             }
           }
         }

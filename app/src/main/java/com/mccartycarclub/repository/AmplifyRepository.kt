@@ -857,32 +857,6 @@ class AmplifyRepo @Inject constructor(
                         }
                     """.trimIndent()
 
-/*                val document = """
-                        query SearchByUserName(${'$'}userName: String!, ${'$'}loggedInUserId: String!) {
-                          searchByUserName(userName: ${'$'}userName, loggedInUserId: ${'$'}loggedInUserId) {
-                            id
-                            userName
-                            avatarUri
-                            userId
-                            phone
-                          }
-                        }
-                    """.trimIndent()
-        val document2 = """
-                    query FetchUsersByUserName(${'$'}userName: String!) {
-                        fetchUsersByUserName(userName: ${'$'}userName) {
-                            userId
-                            firstName
-                            lastName
-                            name
-                            phone
-                            userName
-                            email
-                            avatarUri
-                        }
-                    }
-                """.trimIndent()*/
-
         val variables = mapOf("userName" to userName)
 
         val request = SimpleGraphQLRequest<String>(
@@ -891,10 +865,12 @@ class AmplifyRepo @Inject constructor(
             String::class.java,
             GsonVariablesSerializer(),
         )
-        println("AmplifyRepository ***** ${request.toString()}")
-
-       // val user = amplifyApi.query(request).data.searchByUserName
-
+        val response = amplifyApi.query(request)
+        if (response.hasData()) {
+            println("AmplifyRepository ***** DATA ${response.data}")
+        } else {
+            println("AmplifyRepository ***** NO DATA")
+        }
 
         return emptyFlow()
     }
