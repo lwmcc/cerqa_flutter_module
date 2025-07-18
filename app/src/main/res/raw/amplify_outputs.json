@@ -932,12 +932,9 @@
         },
         "fetchUsersByUserName": {
           "name": "fetchUsersByUserName",
-          "isArray": true,
-          "type": {
-            "model": "User"
-          },
+          "isArray": false,
+          "type": "String",
           "isRequired": false,
-          "isArrayNullable": true,
           "arguments": {
             "userName": {
               "name": "userName",
