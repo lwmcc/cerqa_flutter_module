@@ -848,7 +848,16 @@ class AmplifyRepo @Inject constructor(
 
     override suspend fun searchUsersByUserName(userName: String, loggedInUserId: String):
             Flow<NetworkResponse<List<SearchUser>>> {
-                val document = """
+
+        val document = """
+                        query FetchUsersByUserName(${'$'}userName: String!, ${'$'}loggedInUserId: String!) {
+                            sayHello(userName: ${'$'}userName, loggedInUserId: ${'$'}loggedInUserId) {
+                                userName
+                            }
+                        }
+                    """.trimIndent()
+
+/*                val document = """
                         query SearchByUserName(${'$'}userName: String!, ${'$'}loggedInUserId: String!) {
                           searchByUserName(userName: ${'$'}userName, loggedInUserId: ${'$'}loggedInUserId) {
                             id
@@ -872,16 +881,17 @@ class AmplifyRepo @Inject constructor(
                             avatarUri
                         }
                     }
-                """.trimIndent()
+                """.trimIndent()*/
 
         val variables = mapOf("userName" to userName)
 
-        val request = SimpleGraphQLRequest<SearchByUserNameResponse>(
+        val request = SimpleGraphQLRequest<String>(
             document,
             variables,
-            SearchByUserNameResponse::class.java,
+            String::class.java,
             GsonVariablesSerializer(),
         )
+        println("AmplifyRepository ***** ${request.toString()}")
 
        // val user = amplifyApi.query(request).data.searchByUserName
 
