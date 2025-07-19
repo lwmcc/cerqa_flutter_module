@@ -12,7 +12,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -40,11 +42,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
             AppTheme {
                 Surface(tonalElevation = 5.dp) {
-                    Authenticator(state = stateProvider.provide()) { state ->
+                    Authenticator(
+                        state = stateProvider.provide(),
+                        modifier = Modifier.fillMaxHeight(),
+                    ) { state ->
                         mainViewModel.setLoggedInUserId(
                             userId = state.user.userId,
                             userName = state.user.username,

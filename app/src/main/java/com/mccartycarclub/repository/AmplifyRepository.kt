@@ -40,7 +40,7 @@ import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import java.io.IOException
@@ -51,6 +51,7 @@ import kotlin.String
 import kotlin.reflect.KClass
 
 class AmplifyRepo @Inject constructor(
+    private val localRepo: LocalRepository, // TODO: change this name?
     private val amplifyApi: KotlinApiFacade,
     private val contactsQueryBuilder: QueryBuilder,
     private val searchResult: SearchResult,
@@ -135,13 +136,12 @@ class AmplifyRepo @Inject constructor(
     }
 
     override fun sendInviteToConnect(
-        senderUserId: String?,
         receiverUserId: String,
         rowId: String,
     ): Flow<NetworkResponse<String>> = flow {
         val invite = Invite
             .builder()
-            .senderId(senderUserId)
+            .senderId( localRepo.getUserId().first())
             .receiverId(receiverUserId)
             .user(
                 User                // TODO: revisit the use of justId
@@ -174,10 +174,8 @@ class AmplifyRepo @Inject constructor(
         }
     }.flowOn(ioDispatcher)
 
-    override suspend fun sendPhoneNumberInviteToConnect(
-        senderUserId: String,
-        phoneNumber: String,
-    ): Flow<NetworkResponse<String>> = flow {
+    override fun sendPhoneNumberInviteToConnect(phoneNumber: String):
+            Flow<NetworkResponse<String>> = flow {
         coroutineScope {
             try {
                 amplifyApi.query(
@@ -188,7 +186,7 @@ class AmplifyRepo @Inject constructor(
                 ).data.items.first()?.let { user ->
                     val invite = Invite
                         .builder()
-                        .senderId(senderUserId)
+                        .senderId(localRepo.getUserId().first())
                         .receiverId(user.userId)
                         .user(User.justId(user.id))
                         .build()
@@ -418,13 +416,13 @@ class AmplifyRepo @Inject constructor(
             }
         }.flowOn(ioDispatcher)
 
-    override fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>> =
+    override fun fetchAllContacts(): Flow<NetworkResponse<List<Contact>>> =
         flow {
             coroutineScope {
                 try {
                     val receivedInvites = async {
                         val invites =
-                            fetchReceivedInvites(Invite.RECEIVER_ID.eq(loggedInUserId))
+                            fetchReceivedInvites(Invite.RECEIVER_ID.eq(localRepo.getUserId().first()))
                         val predicate =
                             contactsQueryBuilder.buildReceiverQueryPredicate(invites)
 
@@ -440,7 +438,7 @@ class AmplifyRepo @Inject constructor(
                     }
 
                     val sentInvites = async {
-                        val invites = fetchSentInvites(Invite.SENDER_ID.eq(loggedInUserId))
+                        val invites = fetchSentInvites(Invite.SENDER_ID.eq(localRepo.getUserId().first()))
                         val predicate = contactsQueryBuilder.buildSenderQueryPredicate(invites)
 
                         if (predicate != null) {
@@ -456,7 +454,7 @@ class AmplifyRepo @Inject constructor(
                     }
 
                     val contacts = async {
-                        fetchCurrentContacts(loggedInUserId)
+                        fetchCurrentContacts()
                     }
 
                     val (received, sent, current) = awaitAll(receivedInvites, sentInvites, contacts)
@@ -652,12 +650,12 @@ class AmplifyRepo @Inject constructor(
         }
     }
 
-    private suspend fun fetchCurrentContacts(loggedInUserId: String): List<CurrentContact> {
+    private suspend fun fetchCurrentContacts(): List<CurrentContact> {
         return try {
             val rowId = amplifyApi.query(
                 ModelQuery.list(
                     User::class.java,
-                    User.USER_ID.eq(loggedInUserId)
+                    User.USER_ID.eq(localRepo.getUserId().first())
                 )
             ).data.first().id
 
@@ -846,34 +844,37 @@ class AmplifyRepo @Inject constructor(
         }
     }.flowOn(ioDispatcher)
 
-    override suspend fun searchUsersByUserName(userName: String, loggedInUserId: String):
-            Flow<NetworkResponse<List<SearchUser>>> {
+    override suspend fun searchUsersByUserName(userName: String):
+    // TODO: will recognized if result is loggedInUser
+    // localRepo: LocalRepository,
 
-        val document = """
-                        query FetchUsersByUserName(${'$'}userName: String!, ${'$'}loggedInUserId: String!) {
-                            sayHello(userName: ${'$'}userName, loggedInUserId: ${'$'}loggedInUserId) {
-                                userName
-                            }
-                        }
-                    """.trimIndent()
+            Flow<NetworkResponse<List<User>>> = flow {
+        coroutineScope {
+            try {
+                val response = amplifyApi.query(
+                    ModelQuery.list(
+                        User::class.java,
+                        User.USER_NAME.contains(userName)
+                    )
+                )
+                if (response.hasData()) {
+                    emit(NetworkResponse.Success(response.data.items.toList()))
+                } else {
+                    emit(NetworkResponse.Error(ResponseException(""))) // TODO: add message MessageType
+                }
+            } catch (ae: AmplifyException) {
+                when (ae.cause) {
+                    is UnknownHostException, is IOException -> {
+                        emit(NetworkResponse.NoInternet)
+                    }
 
-        val variables = mapOf("userName" to userName)
-
-        val request = SimpleGraphQLRequest<String>(
-            document,
-            variables,
-            String::class.java,
-            GsonVariablesSerializer(),
-        )
-        val response = amplifyApi.query(request)
-        if (response.hasData()) {
-            println("AmplifyRepository ***** DATA ${response.data}")
-        } else {
-            println("AmplifyRepository ***** NO DATA")
+                    else -> {
+                        emit(NetworkResponse.Error(ae))
+                    }
+                }
+            }
         }
-
-        return emptyFlow()
-    }
+    }.flowOn(ioDispatcher)
 }
 
 class ResponseException(message: String) : Exception(message)

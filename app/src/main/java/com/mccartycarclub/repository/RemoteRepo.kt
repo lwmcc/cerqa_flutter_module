@@ -24,15 +24,11 @@ interface RemoteRepo {
     fun fetchUserByUserName(userName: String): Flow<NetSearchResult<User?>>
 
     fun sendInviteToConnect(
-        senderUserId: String?,
         receiverUserId: String,
         rowId: String,
     ): Flow<NetworkResponse<String>> // TODO: use object?
 
-    suspend fun sendPhoneNumberInviteToConnect(
-        senderUserId: String,
-        phoneNumber: String,
-    ): Flow<NetworkResponse<String>>
+    fun sendPhoneNumberInviteToConnect(phoneNumber: String, ): Flow<NetworkResponse<String>>
 
     fun cancelInviteToConnect(
         senderUserId: String,
@@ -53,7 +49,7 @@ interface RemoteRepo {
     fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>>
 
     // TODO: will be in combined repo
-    fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>>
+    fun fetchAllContacts(): Flow<NetworkResponse<List<Contact>>>
 
     fun createContact(senderUserId: String, loggedInUserId: String): Flow<NetDeleteResult>
 
@@ -64,8 +60,5 @@ interface RemoteRepo {
         userName: String
     ): Flow<NetworkResponse<UserSearchResult>>
 
-    suspend fun searchUsersByUserName(
-        userName: String,
-        loggedInUserId: String,
-    ): Flow<NetworkResponse<List<SearchUser>>>
+    suspend fun searchUsersByUserName(userName: String): Flow<NetworkResponse<List<User>>>
 }

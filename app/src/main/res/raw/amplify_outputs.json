@@ -929,26 +929,6 @@
               "isRequired": false
             }
           }
-        },
-        "fetchUsersByUserName": {
-          "name": "fetchUsersByUserName",
-          "isArray": false,
-          "type": "String",
-          "isRequired": false,
-          "arguments": {
-            "userName": {
-              "name": "userName",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false
-            },
-            "loggedInUserId": {
-              "name": "loggedInUserId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": false
-            }
-          }
         }
       }
     }

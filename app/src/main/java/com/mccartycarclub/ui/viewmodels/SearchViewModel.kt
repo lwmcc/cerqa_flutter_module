@@ -53,9 +53,6 @@ class SearchViewModel @Inject constructor(
     private val contactsRepository: ContactsRepository,
 ) : ViewModel() {
 
-    private val _userId = MutableStateFlow<String?>(null)
-    val userId: StateFlow<String?> = _userId
-
     private val _query = MutableStateFlow<String?>(null)
     val query = _query.asStateFlow()
 
@@ -65,7 +62,6 @@ class SearchViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             uiState = uiState.copy(pending = true)
-            _userId.value = localRepo.getUserId().first()
 
             // TODO: fix NPE
 /*            _userId.value?.let { userId ->
@@ -77,7 +73,7 @@ class SearchViewModel @Inject constructor(
                 )
             }*/
 
-            userSearch(localRepo.getUserId().first().toString())
+            userSearch()
         }
     }
 
@@ -105,7 +101,6 @@ class SearchViewModel @Inject constructor(
                     //realTime.createReceiverInviteSubscription(_userId.value.toString(), channel)
 
                     val data = repo.sendInviteToConnect(
-                        senderUserId = _userId.value,
                         receiverUserId = connectionEvent.receiverUserId,
                         rowId = connectionEvent.rowId,
                     ).first()
@@ -130,26 +125,23 @@ class SearchViewModel @Inject constructor(
                 disableButton(connectionEvent.receiverPhoneNumber)
 
                 viewModelScope.launch {
-                    _userId.value?.let { senderUserId ->
-                        repo.sendPhoneNumberInviteToConnect(
-                            senderUserId = senderUserId,
-                            phoneNumber = connectionEvent.receiverPhoneNumber,
-                        ).collect { response ->
-                            uiState = when (response) {
-                                is NetworkResponse.Error -> {
-                                    uiState.copy(message = UiUserMessage.NETWORK_ERROR)
-                                }
+                    repo.sendPhoneNumberInviteToConnect(
+                        phoneNumber = connectionEvent.receiverPhoneNumber
+                    ).collect { response ->
+                        uiState = when (response) {
+                            is NetworkResponse.Error -> {
+                                uiState.copy(message = UiUserMessage.NETWORK_ERROR)
+                            }
 
-                                NetworkResponse.NoInternet -> {
-                                    uiState.copy(message = UiUserMessage.NO_INTERNET)
-                                }
+                            NetworkResponse.NoInternet -> {
+                                uiState.copy(message = UiUserMessage.NO_INTERNET)
+                            }
 
-                                is NetworkResponse.Success -> {
-                                    uiState.copy(
-                                        pending = false,
-                                        message = UiUserMessage.INVITE_SENT
-                                    )
-                                }
+                            is NetworkResponse.Success -> {
+                                uiState.copy(
+                                    pending = false,
+                                    message = UiUserMessage.INVITE_SENT
+                                )
                             }
                         }
                     }
@@ -163,75 +155,73 @@ class SearchViewModel @Inject constructor(
         uiState = uiState.copy(results = emptyList())
     }
 
-    suspend fun userSearch(loggedInUserId: String) {
+    suspend fun userSearch() {
         query.debounce(SEARCH_DELAY.milliseconds).distinctUntilChanged()
             .collectLatest { userName ->
 
                 if (!userName.isNullOrEmpty()) {
                     uiState = uiState.copy(pending = true)
 
-                    _userId.value?.let { id ->
-                        val allContacts = repo.fetchAllContacts(loggedInUserId)
-                        val userSearch =
-                            repo.searchUsersByUserName(userName = userName, loggedInUserId = id) // TODO: get loggedInUserId in repo
+                    val userSearch = // TODO: get loggedInUserId in repo
+                        repo.searchUsersByUserName(userName = userName)
 
-                        val contacts = when (val result = allContacts.first()) {
-                            is NetworkResponse.Success -> {
-                                result.data ?: emptyList<Contact>()
-                            }
-
-                            else -> {
-                                emptyList()
-                            }
+                    val contacts = when (val result = repo.fetchAllContacts().first()) {
+                        is NetworkResponse.Success -> {
+                            result.data ?: emptyList()
                         }
 
-                        val searchUsers = when (val result = userSearch.first()) {
-                            is NetworkResponse.Error -> {
-                                uiState.copy(message = UiUserMessage.NETWORK_ERROR)
-                                emptyList()
-                            }
+                        else -> {
+                            emptyList()
+                        }
+                    }
 
-                            NetworkResponse.NoInternet -> {
-                                uiState.copy(message = UiUserMessage.NO_INTERNET)
-                                emptyList()
-                            }
-
-                            is NetworkResponse.Success -> {
-                                result.data ?: emptyList()
-                            }
+                    val searchUsers = when (val result = userSearch.first()) {
+                        is NetworkResponse.Error -> {
+                            uiState.copy(message = UiUserMessage.NETWORK_ERROR)
+                            emptyList()
                         }
 
-                        val userType: List<SearchUser> = searchUsers.map { user ->
-                            val contact = contacts.find {
-                                it.userId == user.userId
-                            }
-                            val contactType = when (contact) {
-                                is ReceivedContactInvite -> ContactType.RECEIVED
-                                is SentInviteContactInvite -> ContactType.SENT
-                                else -> null
-                            }
-                            SearchUser(
-                                id = user.id,
-                                userName = user.userName,
-                                avatarUri = user.avatarUri,
-                                userId = user.userId,
-                                phone = user.phone,
-                                connectButtonEnabled = true,
-                                contactType = contactType,
-                            )
+                        NetworkResponse.NoInternet -> {
+                            uiState.copy(message = UiUserMessage.NO_INTERNET)
+                            emptyList()
                         }
 
-                        val buttonsEnabled = userType.map {
-                            it.copy(connectButtonEnabled = true)
+                        is NetworkResponse.Success -> {
+                            result.data ?: emptyList()
                         }
+                    }
 
-                        uiState = uiState.copy(
-                            results = buttonsEnabled,
-                            pending = false,
-                            inviteSent = false,
-                            isSendingInvite = false,
+                    val userType: List<SearchUser> = searchUsers.map { user ->
+                        val contact = contacts.find {
+                            it.userId == user.userId
+                        }
+                        val contactType = when (contact) {
+                            is ReceivedContactInvite -> ContactType.RECEIVED
+                            is SentInviteContactInvite -> ContactType.SENT
+                            else -> null
+                        }
+                        SearchUser(
+                            id = user.id,
+                            userName = user.userName,
+                            avatarUri = user.avatarUri,
+                            userId = user.userId,
+                            phone = user.phone,
+                            connectButtonEnabled = true,
+                            contactType = contactType,
                         )
                     }
+
+                    val buttonsEnabled = userType.map {
+                        it.copy(connectButtonEnabled = true)
+                    }
+
+                    uiState = uiState.copy(
+                        results = buttonsEnabled,
+                        pending = false,
+                        inviteSent = false,
+                        isSendingInvite = false,
+                    )
+
                 } else {
                     uiState = uiState.copy(idle = true)
                 }
