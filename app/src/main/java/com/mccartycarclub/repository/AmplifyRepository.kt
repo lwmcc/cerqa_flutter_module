@@ -855,6 +855,7 @@ class AmplifyRepo @Inject constructor(
                     ModelQuery.list(
                         User::class.java,
                         User.USER_NAME.contains(userName)
+                            .and(User.USER_ID.ne(localRepo.getUserId().first()))
                     )
                 )
                 if (response.hasData()) {

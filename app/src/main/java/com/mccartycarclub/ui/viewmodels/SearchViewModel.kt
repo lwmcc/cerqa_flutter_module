@@ -8,10 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.mccartycarclub.domain.UiUserMessage
 import com.mccartycarclub.domain.model.SearchContact
 import com.mccartycarclub.domain.model.UserSearchResult
-import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.ContactType
 import com.mccartycarclub.repository.ContactsRepository
-import com.mccartycarclub.repository.LocalRepository
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.RemoteRepo
@@ -22,7 +20,6 @@ import com.mccartycarclub.ui.viewmodels.ContactsViewModel.Companion.SEARCH_DELAY
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -49,7 +46,6 @@ data class SearchUiState(
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val repo: RemoteRepo,
-    private val localRepo: LocalRepository,
     private val contactsRepository: ContactsRepository,
 ) : ViewModel() {
 
@@ -64,14 +60,14 @@ class SearchViewModel @Inject constructor(
             uiState = uiState.copy(pending = true)
 
             // TODO: fix NPE
-/*            _userId.value?.let { userId ->
-                val (users, nonUsers) = contactsRepository.fetchUsersByPhoneNumber(userId)
-                uiState = uiState.copy(
-                    appUsers = users,
-                    nonAppUsers = nonUsers,
-                    pending = false,
-                )
-            }*/
+            /*            _userId.value?.let { userId ->
+                            val (users, nonUsers) = contactsRepository.fetchUsersByPhoneNumber(userId)
+                            uiState = uiState.copy(
+                                appUsers = users,
+                                nonAppUsers = nonUsers,
+                                pending = false,
+                            )
+                        }*/
 
             userSearch()
         }
@@ -156,86 +152,88 @@ class SearchViewModel @Inject constructor(
     }
 
     suspend fun userSearch() {
-        query.debounce(SEARCH_DELAY.milliseconds).distinctUntilChanged()
-            .collectLatest { userName ->
+        query.debounce(SEARCH_DELAY.milliseconds).distinctUntilChanged().collectLatest { userName ->
+            if (!userName.isNullOrEmpty()) {
+                uiState = uiState.copy(pending = true)
 
-                if (!userName.isNullOrEmpty()) {
-                    uiState = uiState.copy(pending = true)
+                val userSearch = // TODO: get loggedInUserId in repo
+                    repo.searchUsersByUserName(userName = userName)
 
-                    val userSearch = // TODO: get loggedInUserId in repo
-                        repo.searchUsersByUserName(userName = userName)
-
-                    val contacts = when (val result = repo.fetchAllContacts().first()) {
-                        is NetworkResponse.Success -> {
-                            result.data ?: emptyList()
-                        }
-
-                        else -> {
-                            emptyList()
-                        }
+                val contacts = when (val result = repo.fetchAllContacts().first()) {
+                    is NetworkResponse.Success -> {
+                        result.data ?: emptyList()
                     }
 
-                    val searchUsers = when (val result = userSearch.first()) {
-                        is NetworkResponse.Error -> {
-                            uiState.copy(message = UiUserMessage.NETWORK_ERROR)
-                            emptyList()
-                        }
-
-                        NetworkResponse.NoInternet -> {
-                            uiState.copy(message = UiUserMessage.NO_INTERNET)
-                            emptyList()
-                        }
-
-                        is NetworkResponse.Success -> {
-                            result.data ?: emptyList()
-                        }
+                    else -> {
+                        emptyList()
                     }
-
-                    val userType: List<SearchUser> = searchUsers.map { user ->
-                        val contact = contacts.find {
-                            it.userId == user.userId
-                        }
-                        val contactType = when (contact) {
-                            is ReceivedContactInvite -> ContactType.RECEIVED
-                            is SentInviteContactInvite -> ContactType.SENT
-                            else -> null
-                        }
-                        SearchUser(
-                            id = user.id,
-                            userName = user.userName,
-                            avatarUri = user.avatarUri,
-                            userId = user.userId,
-                            phone = user.phone,
-                            connectButtonEnabled = true,
-                            contactType = contactType,
-                        )
-                    }
-
-                    val buttonsEnabled = userType.map {
-                        it.copy(connectButtonEnabled = true)
-                    }
-
-                    uiState = uiState.copy(
-                        results = buttonsEnabled,
-                        pending = false,
-                        inviteSent = false,
-                        isSendingInvite = false,
-                    )
-
-                } else {
-                    uiState = uiState.copy(idle = true)
                 }
+
+                val searchUsers = when (val result = userSearch.first()) {
+                    is NetworkResponse.Error -> {
+                        uiState.copy(message = UiUserMessage.NETWORK_ERROR)
+                        emptyList()
+                    }
+
+                    NetworkResponse.NoInternet -> {
+                        uiState.copy(message = UiUserMessage.NO_INTERNET)
+                        emptyList()
+                    }
+
+                    is NetworkResponse.Success -> {
+                        result.data ?: emptyList()
+                    }
+                }
+
+                val userType: List<SearchUser> = searchUsers.map { user ->
+                    val contact = contacts.find {
+                        it.userId == user.userId
+                    }
+                    val contactType = when (contact) {
+                        is ReceivedContactInvite -> ContactType.RECEIVED
+                        is SentInviteContactInvite -> ContactType.SENT
+                        else -> null
+                    }
+                    SearchUser(
+                        id = user.id,
+                        userName = user.userName,
+                        avatarUri = user.avatarUri,
+                        userId = user.userId,
+                        phone = user.phone,
+                        connectButtonEnabled = true,
+                        contactType = contactType,
+                    )
+                }
+
+                enableButton(userType)
+
+            } else {
+                uiState = uiState.copy(idle = true)
             }
+        }
     }
 
     fun disableButton(phoneNumber: String) {
         val appUsers = uiState.appUsers.map {
-            if (it.phoneNumbers.any{ phone -> phone == phoneNumber }) {
+            if (it.phoneNumbers.any { phone -> phone == phoneNumber }) {
                 it.copy(connectButtonEnabled = false)
             } else {
                 it
             }
         }
         uiState = uiState.copy(appUsers = appUsers)
+    }
+
+    private fun enableButton(users: List<SearchUser>) {
+        val buttonsEnabled = users.map {
+            it.copy(connectButtonEnabled = true)
+        }
+
+        uiState = uiState.copy(
+            results = buttonsEnabled,
+            pending = false,
+            inviteSent = false,
+            isSendingInvite = false,
+        )
     }
 }
