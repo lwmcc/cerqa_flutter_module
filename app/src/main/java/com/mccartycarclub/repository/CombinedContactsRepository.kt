@@ -49,8 +49,9 @@ class CombinedContactsRepository @Inject constructor(
         }
     }
 
-    override suspend fun fetchUsersByPhoneNumber(loggedInUserId: String):
+    override suspend fun fetchUsersByPhoneNumber():
             Pair<List<SearchContact>, List<SearchContact>> {
+
         val deviceContacts = combineDeviceAppUserContacts()
         val phoneNumbers: List<String?> = deviceContacts.flatMap { it.phoneNumbers }
 
@@ -74,7 +75,7 @@ class CombinedContactsRepository @Inject constructor(
         )
 
         val contacts =
-            when (val response = contactsHelper.fetchAllContacts(loggedInUserId).first()) {
+            when (val response = contactsHelper.fetchAllContacts().first()) {
                 is NetworkResponse.Success -> {
                     response.data ?: emptyList()
                 }
@@ -103,8 +104,8 @@ class CombinedContactsRepository @Inject constructor(
         }
     }
 
-    override fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>> {
-        return contactsHelper.fetchAllContacts(loggedInUserId).onEach { response ->
+    override fun fetchAllContacts(): Flow<NetworkResponse<List<Contact>>> {
+        return contactsHelper.fetchAllContacts().onEach { response ->
             if (response is NetworkResponse.Success) {
                 response.data?.let { contacts ->
                     cacheContacts = contacts

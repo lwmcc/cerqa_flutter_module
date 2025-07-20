@@ -3,7 +3,6 @@ package com.mccartycarclub.repository
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.aws.GsonVariablesSerializer
-import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
@@ -51,7 +50,7 @@ import kotlin.String
 import kotlin.reflect.KClass
 
 class AmplifyRepo @Inject constructor(
-    private val localRepo: LocalRepository, // TODO: change this name?
+    private val localRepository: LocalRepository,
     private val amplifyApi: KotlinApiFacade,
     private val contactsQueryBuilder: QueryBuilder,
     private val searchResult: SearchResult,
@@ -141,7 +140,7 @@ class AmplifyRepo @Inject constructor(
     ): Flow<NetworkResponse<String>> = flow {
         val invite = Invite
             .builder()
-            .senderId( localRepo.getUserId().first())
+            .senderId( localRepository.getUserId().first())
             .receiverId(receiverUserId)
             .user(
                 User                // TODO: revisit the use of justId
@@ -186,7 +185,7 @@ class AmplifyRepo @Inject constructor(
                 ).data.items.first()?.let { user ->
                     val invite = Invite
                         .builder()
-                        .senderId(localRepo.getUserId().first())
+                        .senderId(localRepository.getUserId().first())
                         .receiverId(user.userId)
                         .user(User.justId(user.id))
                         .build()
@@ -422,7 +421,7 @@ class AmplifyRepo @Inject constructor(
                 try {
                     val receivedInvites = async {
                         val invites =
-                            fetchReceivedInvites(Invite.RECEIVER_ID.eq(localRepo.getUserId().first()))
+                            fetchReceivedInvites(Invite.RECEIVER_ID.eq(localRepository.getUserId().first()))
                         val predicate =
                             contactsQueryBuilder.buildReceiverQueryPredicate(invites)
 
@@ -438,7 +437,7 @@ class AmplifyRepo @Inject constructor(
                     }
 
                     val sentInvites = async {
-                        val invites = fetchSentInvites(Invite.SENDER_ID.eq(localRepo.getUserId().first()))
+                        val invites = fetchSentInvites(Invite.SENDER_ID.eq(localRepository.getUserId().first()))
                         val predicate = contactsQueryBuilder.buildSenderQueryPredicate(invites)
 
                         if (predicate != null) {
@@ -655,7 +654,7 @@ class AmplifyRepo @Inject constructor(
             val rowId = amplifyApi.query(
                 ModelQuery.list(
                     User::class.java,
-                    User.USER_ID.eq(localRepo.getUserId().first())
+                    User.USER_ID.eq(localRepository.getUserId().first())
                 )
             ).data.first().id
 
@@ -845,9 +844,6 @@ class AmplifyRepo @Inject constructor(
     }.flowOn(ioDispatcher)
 
     override suspend fun searchUsersByUserName(userName: String):
-    // TODO: will recognized if result is loggedInUser
-    // localRepo: LocalRepository,
-
             Flow<NetworkResponse<List<User>>> = flow {
         coroutineScope {
             try {
@@ -855,7 +851,7 @@ class AmplifyRepo @Inject constructor(
                     ModelQuery.list(
                         User::class.java,
                         User.USER_NAME.contains(userName)
-                            .and(User.USER_ID.ne(localRepo.getUserId().first()))
+                            .and(User.USER_ID.ne(localRepository.getUserId().first()))
                     )
                 )
                 if (response.hasData()) {

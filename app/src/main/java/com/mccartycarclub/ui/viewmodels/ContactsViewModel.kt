@@ -50,6 +50,7 @@ class ContactsViewModel @Inject constructor(
     private val _contacts = mutableStateListOf<Contact>()
     val contacts: SnapshotStateList<Contact> get() = _contacts
 
+    // TODO: to remove and pass into repository
     private val _userId = MutableStateFlow<String?>(null)
     val userId: StateFlow<String?> = _userId
 
@@ -99,7 +100,7 @@ class ContactsViewModel @Inject constructor(
         if (loggedInUserId != null) {
             uiState = uiState.copy(pending = true)
             viewModelScope.launch {
-                when (val data = contactsRepository.fetchAllContacts(loggedInUserId).first()) {
+                when (val data = contactsRepository.fetchAllContacts().first()) {
                     is NetworkResponse.Error -> {
                         uiState = uiState.copy(message = MessageTypes.Error)
                     }

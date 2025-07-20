@@ -21,6 +21,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.serialization.Serializable
@@ -31,31 +32,33 @@ import javax.inject.Named
 import kotlin.reflect.KClass
 
 class ContactsQueryHelper @Inject constructor(
+    private val localRepository: LocalRepository,
     private val amplifyApi: KotlinApiFacade,
     private val contactsQueryBuilder: QueryBuilder,
     @Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
 ) : CombinedContactsHelper {
 
-    override fun fetchAllContacts(loggedInUserId: String): Flow<NetworkResponse<List<Contact>>> =
+    override fun fetchAllContacts(): Flow<NetworkResponse<List<Contact>>> =
         flow {
             coroutineScope {
                 try {
+                    val userId = localRepository.getUserId().first().toString()
                     val receivedInvites = async {
-                        getContactsFromInvites(loggedInUserId = loggedInUserId, isSender = false)
+                        getContactsFromInvites(loggedInUserId = userId, isSender = false)
                     }
 
                     val sentInvites = async {
-                        getContactsFromInvites(loggedInUserId = loggedInUserId, isSender = true)
+                        getContactsFromInvites(loggedInUserId = userId, isSender = true)
                     }
 
                     val contacts = async {
-                        fetchCurrentContacts(loggedInUserId)
+                        fetchCurrentContacts(userId)
                     }
 
                     val (received, sent, current) = awaitAll(receivedInvites, sentInvites, contacts)
 
                     emit(NetworkResponse.Success(received + sent + current))
-                } catch (no: NoInternetException) {
+                } catch (no: NoInternetException) { // TODO: log this
                     emit(NetworkResponse.NoInternet)
                 } catch (re: ResponseException) {
                     emit(NetworkResponse.Error(re))

@@ -59,15 +59,12 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch {
             uiState = uiState.copy(pending = true)
 
-            // TODO: fix NPE
-            /*            _userId.value?.let { userId ->
-                            val (users, nonUsers) = contactsRepository.fetchUsersByPhoneNumber(userId)
-                            uiState = uiState.copy(
-                                appUsers = users,
-                                nonAppUsers = nonUsers,
-                                pending = false,
-                            )
-                        }*/
+            val (users, nonUsers) = contactsRepository.fetchUsersByPhoneNumber()
+            uiState = uiState.copy(
+                appUsers = users,
+                nonAppUsers = nonUsers,
+                pending = false,
+            )
 
             userSearch()
         }
@@ -156,8 +153,7 @@ class SearchViewModel @Inject constructor(
             if (!userName.isNullOrEmpty()) {
                 uiState = uiState.copy(pending = true)
 
-                val userSearch = // TODO: get loggedInUserId in repo
-                    repo.searchUsersByUserName(userName = userName)
+                val userSearch = repo.searchUsersByUserName(userName = userName)
 
                 val contacts = when (val result = repo.fetchAllContacts().first()) {
                     is NetworkResponse.Success -> {
