@@ -798,6 +798,10 @@ class AmplifyRepo @Inject constructor(
         userName: String,
     ): Flow<NetworkResponse<UserSearchResult>> = flow {
         coroutineScope {
+
+            amplifyApi.query(
+                ModelQuery.list(User::class.java, User.PHONE.contains("")))
+
             try {
                 val user = amplifyApi.query(
                     ModelQuery.list(User::class.java, User.USER_NAME.eq(userName))
