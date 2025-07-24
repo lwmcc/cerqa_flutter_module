@@ -10,5 +10,6 @@ interface ContactsRepository {
     fun fetchAllContacts(): Flow<NetworkResponse<List<Contact>>>
 
     suspend fun fetchUsersByPhoneNumber(): Pair<List<SearchContact>, List<SearchContact>>
+    suspend fun getDeviceContacts(): ContactsWrapper
     suspend fun createContact(user: User)
 }

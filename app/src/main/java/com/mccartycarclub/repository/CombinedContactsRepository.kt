@@ -9,6 +9,8 @@ import com.mccartycarclub.domain.helpers.DeviceContacts
 import com.mccartycarclub.domain.model.DeviceContact
 import com.mccartycarclub.domain.model.SearchContact
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
@@ -47,6 +49,45 @@ class CombinedContactsRepository @Inject constructor(
                 }
             }
         }
+    }
+
+    override suspend fun getDeviceContacts(): ContactsWrapper {
+
+        val deviceContacts = combineDeviceAppUserContacts()
+
+        // TODO: return from here
+        val remoteContacts = coroutineScope {
+            async {
+                when (val response = contactsHelper.fetchAllContacts().first()) {
+                    is NetworkResponse.Success -> {
+                        response.data ?: emptyList()
+                    }
+
+                    else -> {
+                        emptyList()
+                    }
+                }
+            }
+        }
+
+        return getAppUsersFromDeviceContacts(deviceContacts,remoteContacts.await())
+    }
+
+    fun getAppUsersFromDeviceContacts(
+        deviceContacts: List<DeviceContact>,
+        contacts: List<Contact>,
+    ): ContactsWrapper {
+        val contactsReduced = contacts.map { it.phoneNUmber }.toSet()
+
+        val appUsers = deviceContacts.filter { deviceContact ->
+            deviceContact.phoneNumbers.any { phone -> phone in contactsReduced }
+        }
+
+        val nonAppUsers = deviceContacts.filter { deviceContact ->
+            deviceContact.phoneNumbers.none { phone -> phone in contactsReduced }
+        }
+
+        return ContactsWrapper(appUsers = appUsers, nonAppUsers = nonAppUsers)
     }
 
     override suspend fun fetchUsersByPhoneNumber():
@@ -183,3 +224,8 @@ class CombinedContactsRepository @Inject constructor(
         private var cacheContacts: List<Contact> = emptyList()
     }
 }
+
+data class ContactsWrapper(
+    val appUsers: List<DeviceContact>,
+    val nonAppUsers: List<DeviceContact>,
+)

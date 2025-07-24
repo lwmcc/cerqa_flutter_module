@@ -9,6 +9,7 @@
 
     <!-- Search -->
     <string name="user_search">User Search</string>
+    <string name="user_search_connected">Connected</string>
 
     <!-- User -->
     <string name="user_avatar">User avatar</string>

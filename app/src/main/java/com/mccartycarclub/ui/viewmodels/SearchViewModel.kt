@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccartycarclub.domain.UiUserMessage
-import com.mccartycarclub.domain.model.SearchContact
+import com.mccartycarclub.domain.model.DeviceContact
 import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.repository.ContactType
 import com.mccartycarclub.repository.ContactsRepository
@@ -38,8 +38,9 @@ data class SearchUiState(
     val message: UiUserMessage? = null,
     val searchResult: UserSearchResult? = null,
     val results: List<SearchUser> = emptyList(),
-    val appUsers: List<SearchContact> = emptyList(),
-    val nonAppUsers: List<SearchContact> = emptyList(),
+    val appUsers: List<DeviceContact> = emptyList(),
+    val nonAppUsers: List<DeviceContact> = emptyList(),
+    val deviceContacts: List<DeviceContact> = emptyList(),
 )
 
 @OptIn(FlowPreview::class)
@@ -58,12 +59,12 @@ class SearchViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             uiState = uiState.copy(pending = true)
+            val contactsWrapper = contactsRepository.getDeviceContacts()
 
-            val (users, nonUsers) = contactsRepository.fetchUsersByPhoneNumber()
             uiState = uiState.copy(
-                appUsers = users,
-                nonAppUsers = nonUsers,
                 pending = false,
+                appUsers = contactsWrapper.appUsers,
+                nonAppUsers = contactsWrapper.nonAppUsers,
             )
 
             userSearch()
@@ -212,12 +213,12 @@ class SearchViewModel @Inject constructor(
     fun disableButton(phoneNumber: String) {
         val appUsers = uiState.appUsers.map {
             if (it.phoneNumbers.any { phone -> phone == phoneNumber }) {
-                it.copy(connectButtonEnabled = false)
+               // it.copy(connectButtonEnabled = false)
             } else {
                 it
             }
         }
-        uiState = uiState.copy(appUsers = appUsers)
+        //uiState = uiState.copy(appUsers = appUsers)
     }
 
     private fun enableButton(users: List<SearchUser>) {

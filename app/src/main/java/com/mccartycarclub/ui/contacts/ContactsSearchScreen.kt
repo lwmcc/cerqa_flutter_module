@@ -235,7 +235,7 @@ fun ContactsSearchScreen(
                                 R.string.connections_using_app,
                                 stringResource(R.string.app_name)
                             ),
-                            R.dimen.card_heading_padding,
+                            R.dimen.card_padding_start,
                         )
                     }
                 }
@@ -247,26 +247,12 @@ fun ContactsSearchScreen(
                         title = user.name,
                         width = 60.dp,
                         content = {
-                            CardListButton(
-                                text = stringResource(R.string.connect_to_user),
-                                onClick = {
-                                    openAlertDialog = true
-                                    connectionEvent =
-                                        ContactCardConnectionEvent.InvitePhoneNumberConnectEvent(
-                                            // TODO: there is only one number here use
-                                            // it instead of list
-                                            receiverPhoneNumber = user.phoneNumbers.first().toString()
-                                        )
-                                    alertDialogData = AlertDialogData(
-                                        icon = R.drawable.sharp_contacts_24,
-                                        title = R.string.dialog_invite_to_connect_title,
-                                        description = R.string.dialog_invite_to_connect_description,
-                                        dialogIconDescription = R.string.dialog_icon_description,
-                                        dismiss = R.string.dialog_button_dismiss,
-                                        confirm = R.string.dialog_button_connect,
-                                    )
-                                },
-                                isEnabled = user.connectButtonEnabled
+                            Text(
+                                text = stringResource(R.string.user_search_connected),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.surfaceContainer),
                             )
                         }
                     )
@@ -285,7 +271,7 @@ fun ContactsSearchScreen(
                 }
 
                 items(uiState.nonAppUsers) { user ->
-                    val title =  stringResource(R.string.sms_title)
+                    val title = stringResource(R.string.sms_title)
                     val appLink = stringResource(R.string.app_link)
                     ListSection(
                         image = R.drawable.ic_dashboard_black_24dp,

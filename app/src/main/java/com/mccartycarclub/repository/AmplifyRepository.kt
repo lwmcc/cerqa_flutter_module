@@ -442,7 +442,6 @@ class AmplifyRepo @Inject constructor(
 
                         if (predicate != null) {
                             fetchAllInvites(
-                                // inviteReceiver = loggedInUserId,
                                 connectionInvites = invites,
                                 predicate = predicate,
                                 inviteType = SentInviteContactInvite::class,
