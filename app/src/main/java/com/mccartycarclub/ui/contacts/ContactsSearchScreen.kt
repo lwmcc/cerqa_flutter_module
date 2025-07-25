@@ -52,7 +52,7 @@ import com.mccartycarclub.ui.viewmodels.SearchViewModel
 @Composable
 fun ContactsSearchScreen(
     contactsViewModel: ContactsViewModel = hiltViewModel(),
-    searchViewModel: SearchViewModel = hiltViewModel(),
+    searchViewModel: SearchViewModel,
     topBarClick: (ClickNavigation) -> Unit,
     sendSms: (SmsMessage) -> Unit,
 ) {
@@ -127,25 +127,6 @@ fun ContactsSearchScreen(
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.background),
             ) {
-                TextField(
-                    value = input,
-                    maxLines = 2,
-                    onValueChange = {
-                        input = it
-                        searchViewModel.onQueryChange(it)
-                        clearSearchVisible = input.isNotEmpty()
-                    },
-                    label = {
-                        Text(
-                            text = stringResource(id = R.string.user_search),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                )
 
                 if (clearSearchVisible) {
                     Icon(

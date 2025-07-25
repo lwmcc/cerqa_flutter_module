@@ -12,7 +12,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -44,7 +47,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             AppTheme {
-                Surface(tonalElevation = 5.dp) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 5.dp,
+                ) {
                     Authenticator(
                         state = stateProvider.provide(),
                         modifier = Modifier.fillMaxHeight(),
@@ -55,7 +64,7 @@ class MainActivity : ComponentActivity() {
                         )
                         StartScreen(
                             mainViewModel,
-                            state,
+                            state = state,
                             topBarClick = {
 
                             },
