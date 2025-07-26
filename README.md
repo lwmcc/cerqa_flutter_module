@@ -1,7 +1,6 @@
 App MainScreen click through to ContactsScreen and then to SearchContactsScreen. Will remove that second search field in order to implement the first one. Alsom, I will either add the phone numbers on search screen becauase then a contact has more than one phone number they will have more than one entry in the list, or I will show contact once and have a phone number chooser when inviting to connect that way.
 
-[click_through_to_search_contacts.webm](https://github.com/user-attachments/assets/47a28e3a-95da-4ade-ba23-cd7c11e162e4)
-
+[cerqa-vid.webm](https://github.com/user-attachments/assets/accba938-4d98-4507-a810-44cd0b920676)
 
 The iOS screenshot is on the left, and the other is the Android screenshot.
 
