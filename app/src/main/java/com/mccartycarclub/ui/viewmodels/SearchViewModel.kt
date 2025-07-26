@@ -10,6 +10,7 @@ import com.mccartycarclub.domain.model.DeviceContact
 import com.mccartycarclub.domain.model.UserSearchResult
 import com.mccartycarclub.repository.ContactType
 import com.mccartycarclub.repository.ContactsRepository
+import com.mccartycarclub.repository.CurrentContact
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.RemoteRepo
@@ -189,6 +190,7 @@ class SearchViewModel @Inject constructor(
                     val contactType = when (contact) {
                         is ReceivedContactInvite -> ContactType.RECEIVED
                         is SentInviteContactInvite -> ContactType.SENT
+                        is CurrentContact -> ContactType.CURRENT
                         else -> null
                     }
                     SearchUser(

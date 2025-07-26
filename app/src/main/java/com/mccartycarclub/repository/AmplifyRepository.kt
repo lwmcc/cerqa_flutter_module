@@ -958,5 +958,5 @@ data class SearchUser(
 )
 
 enum class ContactType {
-    RECEIVED, SENT
+    RECEIVED, SENT, CURRENT
 }

@@ -180,6 +180,14 @@ fun ContactsSearchScreen(
                                     )
                                 }
 
+                                ContactType.CURRENT -> {
+                                    Text(
+                                        text = stringResource(R.string.connected),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
+
                                 null -> {
                                     CardListButton(
                                         text = stringResource(id = R.string.connect_to_user),
@@ -212,10 +220,7 @@ fun ContactsSearchScreen(
                 if (uiState.appUsers.isNotEmpty()) {
                     item {
                         CardHeader(
-                            stringResource(
-                                R.string.connections_using_app,
-                                stringResource(R.string.app_name)
-                            ),
+                            stringResource(R.string.connections_using_app),
                             R.dimen.card_padding_start,
                         )
                     }
@@ -242,10 +247,7 @@ fun ContactsSearchScreen(
                 if (uiState.nonAppUsers.isNotEmpty()) {
                     item {
                         CardHeader(
-                            stringResource(
-                                R.string.connections_not_using_app,
-                                stringResource(R.string.app_name)
-                            ),
+                            stringResource(R.string.connections_not_using_app),
                             R.dimen.card_padding_start,
                         )
                     }
