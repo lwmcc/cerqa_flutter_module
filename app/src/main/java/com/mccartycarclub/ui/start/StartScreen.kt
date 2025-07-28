@@ -13,9 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.amplifyframework.ui.authenticator.SignedInState
-import com.mccartycarclub.CarClubApplication.Companion.CERQA_ENGINE_ID
-import com.mccartycarclub.CarClubApplication.Companion.CHAT_HOME_ROUTE
-import com.mccartycarclub.CarClubApplication.Companion.INITIAL_ROUTE
+import com.mccartycarclub.CarClubApplication.Companion.CHAT_ENGINE_ID
 import com.mccartycarclub.R
 import com.mccartycarclub.domain.model.SmsMessage
 import com.mccartycarclub.navigation.AppDestination
@@ -101,15 +99,9 @@ fun StartScreen(
                         onChatClick = { // TODO: don't need here and above
                             context.startActivity(
                                 FlutterActivity
-                                    .withNewEngine()
-                                    .initialRoute(CHAT_HOME_ROUTE)
+                                    .withCachedEngine(CHAT_ENGINE_ID)
                                     .build(context)
                             )
-                            /*                            context.startActivity(
-                                                            FlutterActivity
-                                                                .withCachedEngine(CERQA_ENGINE_ID)
-                                                                .build(context)
-                                                        )*/
                         })
                 },
             )

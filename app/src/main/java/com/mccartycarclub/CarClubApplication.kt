@@ -1,21 +1,26 @@
 package com.mccartycarclub
 
 import android.app.Application
+import android.os.Handler
+import android.os.Looper
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.kotlin.core.Amplify
 import dagger.hilt.android.HiltAndroidApp
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
+import io.flutter.plugin.common.MethodChannel
 
 
 @HiltAndroidApp
 class CarClubApplication : Application() {
 
-    lateinit var flutterEngine: FlutterEngine
+    lateinit var chatEngine: FlutterEngine
+    lateinit var inboxEngine: FlutterEngine
 
     override fun onCreate() {
         super.onCreate()
@@ -31,24 +36,37 @@ class CarClubApplication : Application() {
             println("CarClubApplication ***** Error Starting Amplify")
         }
 
-        flutterEngine = FlutterEngine(this)
-        //flutterEngine.navigationChannel.setInitialRoute(INITIAL_ROUTE);
-
-        flutterEngine.dartExecutor.executeDartEntrypoint(
+        // Chat Engine
+        chatEngine = FlutterEngine(this)
+        chatEngine.navigationChannel.setInitialRoute(CHAT_INITIAL_ROUTE);
+        chatEngine.dartExecutor.executeDartEntrypoint(
             DartExecutor.DartEntrypoint.createDefault()
         )
+        FlutterEngineCache.getInstance().put(CHAT_ENGINE_ID, chatEngine)
 
-        FlutterEngineCache.getInstance().put(CERQA_ENGINE_ID, flutterEngine)
+        // Inbox Engine
+        inboxEngine = FlutterEngine(this)
+        inboxEngine.navigationChannel.setInitialRoute(INBOX_INITIAL_ROUTE);
+        inboxEngine.dartExecutor.executeDartEntrypoint(
+            DartExecutor.DartEntrypoint.createDefault()
+        )
+        FlutterEngineCache.getInstance().put(INBOX_ENGINE_ID, inboxEngine)
+
+        //MethodChannel(
+        //    chatEngine.dartExecutor.binaryMessenger,
+        //    "chat_method_channel"
+        //).invokeMethod("amplifyToken", "message-flutter")
     }
 
     companion object {
-        const val CERQA_ENGINE_ID = "cerqa_engine_id"
-        const val INITIAL_ROUTE = "/"
-        const val CHAT_HOME_ROUTE = "/chat_home"
+        const val CHAT_ENGINE_ID = "chat_engine_id"
+        const val INBOX_ENGINE_ID = "inbox_engine_id"
+        const val CHAT_INITIAL_ROUTE = "/"
         const val CHAT_ROUTE = "chat"
         const val CONVERSATION_ROUTE = "conversation"
         const val GROUP_CHAT_ROUTE = "group_chat"
         const val GROUP_CONVERSATIONS_ROUTE = "group_conversation"
         const val INBOX_ROUTE = "inbox"
+        const val INBOX_INITIAL_ROUTE = "/inbox"
     }
 }
