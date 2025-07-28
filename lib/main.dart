@@ -1,6 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 void main() => runApp(const MyApp());
+
+final GoRouter _router = GoRouter(
+  routes: [
+    GoRoute(
+      path: '/',
+      redirect: (_, __) => '/chat_home',
+    ),
+    GoRoute(
+      path: '/chat_home',
+      name: 'chat_home',
+      builder: (_, __) => const ChatHomeScreen(),
+    ),
+    GoRoute(
+      path: '/conversation',
+      name: 'conversation',
+      builder: (_, __) => const ConversationScreen(),
+    ),
+    GoRoute(
+      path: '/inbox',
+      name: 'inbox',
+      builder: (_, __) => const InboxScreen(),
+    ),
+    GoRoute(
+      path: '/profile',
+      name: 'profile',
+      builder: (_, __) => const ProfileScreen(),
+    ),
+  ],
+);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -8,7 +38,8 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(routerConfig: _router);
+    /*    return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         // This is the theme of your application.
@@ -22,6 +53,137 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    );*/
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Default Home')),
+      body: Center(
+        child: ElevatedButton(
+          child: const Text('Default Home'),
+          onPressed: () {
+            context.goNamed('Default Home Screen');
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class ChatHomeScreen extends StatelessWidget {
+  const ChatHomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Chat Home')),
+      body: Center(
+        child: ElevatedButton(
+          child: const Text('Chat Home'),
+          onPressed: () {
+            context.goNamed('conversation');
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class ConversationScreen extends StatelessWidget {
+  const ConversationScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Conversation')),
+      body: Center(
+        child: ElevatedButton(
+          child: const Text('Conversation'),
+          onPressed: () {},
+        ),
+      ),
+    );
+  }
+}
+
+class GroupChatScreen extends StatelessWidget {
+  const GroupChatScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Group Chat')),
+      body: Center(
+        child: ElevatedButton(
+          child: const Text('Open route'),
+          onPressed: () {
+            // Navigate to second route when tapped.
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class CreateGroupScreen extends StatelessWidget {
+  const CreateGroupScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Create New Group')),
+      body: Center(
+        child: ElevatedButton(
+          child: const Text('Create Group'),
+          onPressed: () {
+            // Navigate to second route when tapped.
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class InboxScreen extends StatelessWidget {
+  const InboxScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Conversation')),
+      body: Center(
+        child: ElevatedButton(
+          child: const Text('Open route'),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Profile')),
+      body: Center(
+        child: ElevatedButton(
+          child: const Text('Open route'),
+          onPressed: () {
+            // Navigate to second route when tapped.
+          },
+        ),
+      ),
     );
   }
 }
