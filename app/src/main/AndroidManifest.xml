@@ -42,6 +42,7 @@
                     android:host="carclub.app" />
             </intent-filter>
         </activity>
+
         <activity
             android:name="io.flutter.embedding.android.FlutterActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
