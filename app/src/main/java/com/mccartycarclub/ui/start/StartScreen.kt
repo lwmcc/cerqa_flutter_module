@@ -30,9 +30,9 @@ import com.mccartycarclub.ui.components.NotificationScreen
 import com.mccartycarclub.ui.components.navToScreen
 import com.mccartycarclub.ui.contacts.ContactsScreen
 import com.mccartycarclub.ui.contacts.ContactsSearchScreen
-import com.mccartycarclub.ui.viewmodels.ContactsViewModel
-import com.mccartycarclub.ui.viewmodels.MainViewModel
-import com.mccartycarclub.ui.viewmodels.SearchViewModel
+import com.mccartycarclub.viewmodels.ContactsViewModel
+import com.mccartycarclub.viewmodels.MainViewModel
+import com.mccartycarclub.viewmodels.SearchViewModel
 import io.flutter.embedding.android.FlutterActivity
 
 

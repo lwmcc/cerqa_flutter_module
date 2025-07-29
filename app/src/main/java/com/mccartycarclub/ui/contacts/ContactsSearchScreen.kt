@@ -10,14 +10,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,8 +42,8 @@ import com.mccartycarclub.ui.components.ConfirmationDialog
 import com.mccartycarclub.ui.components.ContactCardConnectionEvent
 import com.mccartycarclub.ui.components.ListSection
 import com.mccartycarclub.ui.components.TopBarSearch
-import com.mccartycarclub.ui.viewmodels.ContactsViewModel
-import com.mccartycarclub.ui.viewmodels.SearchViewModel
+import com.mccartycarclub.viewmodels.ContactsViewModel
+import com.mccartycarclub.viewmodels.SearchViewModel
 
 @Suppress("LongMethod")
 @Composable

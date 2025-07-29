@@ -34,7 +34,7 @@ import com.mccartycarclub.ui.components.CurrentContactCard
 import com.mccartycarclub.ui.components.NoDataFound
 import com.mccartycarclub.ui.components.ReceivedInviteContactCard
 import com.mccartycarclub.ui.components.SentContactCard
-import com.mccartycarclub.ui.viewmodels.ContactsViewModel
+import com.mccartycarclub.viewmodels.ContactsViewModel
 
 @Suppress("LongMethod")
 @Composable

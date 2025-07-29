@@ -6,6 +6,8 @@ import com.mccartycarclub.domain.helpers.DeviceContacts
 import com.mccartycarclub.domain.websocket.RealTime
 import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.AmplifyRepo
+import com.mccartycarclub.repository.ChatContacts
+import com.mccartycarclub.repository.ChatContactsAmplify
 import com.mccartycarclub.repository.CombinedContactsHelper
 import com.mccartycarclub.repository.CombinedContactsRepository
 import com.mccartycarclub.repository.ContactsQueryBuilder
@@ -58,4 +60,9 @@ abstract class RepoModule {
 
     @Binds
     abstract fun bindContactsHelper(contactsQueryHelper: ContactsQueryHelper): CombinedContactsHelper
+
+    @Binds
+    abstract fun bindChatContactsr(chatContactsAmplify: ChatContactsAmplify): ChatContacts
+
+
 }
