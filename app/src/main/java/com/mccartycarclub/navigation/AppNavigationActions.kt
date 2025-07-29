@@ -1,7 +1,6 @@
 package com.mccartycarclub.navigation
 
 import androidx.navigation.NavHostController
-import com.cerqa.navigation.AppDestination
 
 class AppNavigationActions(private val navController: NavHostController) {
 

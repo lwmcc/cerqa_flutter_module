@@ -1,4 +1,4 @@
-package com.mccartycarclub.ui.viewmodels
+package com.mccartycarclub.viewmodels
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,7 +17,7 @@ import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.repository.SearchUser
 import com.mccartycarclub.repository.SentInviteContactInvite
 import com.mccartycarclub.ui.components.ContactCardConnectionEvent
-import com.mccartycarclub.ui.viewmodels.ContactsViewModel.Companion.SEARCH_DELAY
+import com.mccartycarclub.viewmodels.ContactsViewModel.Companion.SEARCH_DELAY
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow

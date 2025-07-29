@@ -30,7 +30,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.core.net.toUri
 import com.mccartycarclub.ui.start.StartScreen
-import com.mccartycarclub.ui.viewmodels.MainViewModel
+import com.mccartycarclub.viewmodels.MainViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

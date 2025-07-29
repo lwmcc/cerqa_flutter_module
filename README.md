@@ -14,3 +14,14 @@ My CarClub(Cerqa App) is going to be an Android and iOS, KMM, CMP cross platform
 At this point the Android app has quite a few GraphQL queries and mutations to handle data for contacts functionality. Some of these include creating a contact, and viewing contacts. The contacts screen shows a list, which can include current contacts, contacts that the use has sent an invitation to connect, and invitations to connect that the user has received. With OpenSearch, the user table has been ingested and that data can be searchen for a people that the app user knows, and who are also using the app. At this point OpenSearch appears to be expensive so that service may be removed for a simple GraphQL query.
 
 Now that I have some functionality working, I have started to integrate a cross platform project and will start adapting the Amplify authentication flow by moving it over to this project and implementing that for iOS version login.
+# cerqa_flutter_module
+
+A new Flutter project.
+
+## Getting Started
+
+For help getting started with Flutter development, view the online
+[documentation](https://flutter.dev/).
+
+For instructions integrating Flutter modules to your existing applications,
+see the [add-to-app documentation](https://flutter.dev/to/add-to-app).

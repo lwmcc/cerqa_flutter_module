@@ -7,8 +7,8 @@ import com.mccartycarclub.repository.AmplifyRepo.Companion.DUMMY
 import com.mccartycarclub.repository.NetworkResponse
 import com.mccartycarclub.repository.RemoteRepo
 import com.mccartycarclub.testdoubles.receivedInvites
-import com.mccartycarclub.ui.viewmodels.ContactsViewModel
-import com.mccartycarclub.ui.viewmodels.UiState
+import com.mccartycarclub.viewmodels.ContactsViewModel
+import com.mccartycarclub.viewmodels.UiState
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -45,7 +45,7 @@ class StartScreenTest {
     fun `verify received user invite`() {
         val contactsViewModel = mockk<ContactsViewModel>(relaxed = true)
 
-        every { mockRepo.fetchAllContacts(DUMMY) } returns flowOf(
+        every { mockRepo.fetchAllContacts() } returns flowOf(
             NetworkResponse.Success(
                 receivedInvites
             )

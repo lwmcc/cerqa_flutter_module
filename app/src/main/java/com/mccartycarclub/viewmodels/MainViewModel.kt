@@ -1,4 +1,4 @@
-package com.mccartycarclub.ui.viewmodels
+package com.mccartycarclub.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

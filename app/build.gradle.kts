@@ -1,5 +1,3 @@
-import com.android.build.api.dsl.Packaging
-
 plugins {
     kotlin("multiplatform") version "2.2.0" apply false
     alias(libs.plugins.android.application)
@@ -27,6 +25,10 @@ android {
         testInstrumentationRunner = "com.mccartycarclub.CustomTestRunner"
 
         testInstrumentationRunnerArguments["grantPermission"] = "true"
+
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
+        }
     }
 
     buildTypes {
@@ -78,7 +80,6 @@ dependencies {
     implementation(libs.androidx.ui.test.junit4.android)
     implementation(libs.androidx.navigation.testing.android)
     implementation(libs.androidx.rules)
-    implementation(project(":shared"))
     androidTestImplementation(libs.androidx.navigation.testing)
 
     // Compose
@@ -131,6 +132,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.material3)
 
     kaptAndroidTest(libs.hilt.android.compiler)
 
@@ -176,6 +178,11 @@ dependencies {
 
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
+
+    implementation(project(":flutter"))
+    debugImplementation("io.flutter:flutter_embedding_debug:1.0.0-<hash>")
+    releaseImplementation("io.flutter:flutter_embedding_release:1.0.0-<hash>")
+
 }
 
 kapt {

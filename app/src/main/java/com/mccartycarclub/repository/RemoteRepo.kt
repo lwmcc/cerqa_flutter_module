@@ -44,9 +44,9 @@ interface RemoteRepo {
 
     suspend fun createContact(user: User)
 
-    fun fetchReceivedInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>>
+    fun fetchReceivedInvites(): Flow<NetWorkResult<List<Contact>>>
 
-    fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>>
+    fun fetchSentInvites(): Flow<NetWorkResult<List<Contact>>>
 
     // TODO: will be in combined repo
     fun fetchAllContacts(): Flow<NetworkResponse<List<Contact>>>

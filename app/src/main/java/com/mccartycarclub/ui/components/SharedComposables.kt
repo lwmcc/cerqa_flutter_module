@@ -22,7 +22,7 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.ui.authenticator.SignedInState
 import com.mccartycarclub.R
 import com.mccartycarclub.navigation.ClickNavigation
-import com.mccartycarclub.ui.viewmodels.MainViewModel
+import com.mccartycarclub.viewmodels.MainViewModel
 
 @Suppress("LongMethod")
 @Composable

@@ -1,4 +1,4 @@
-package com.mccartycarclub.ui.viewmodels
+package com.mccartycarclub.viewmodels
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -27,7 +27,7 @@ import javax.inject.Inject
 
 data class UiState(
     val pending: Boolean = false,
-    val contacts: List<Contact> = emptyList<Contact>(),
+    val contacts: List<Contact> = emptyList(),
     val message: MessageTypes? = null,
 )
 

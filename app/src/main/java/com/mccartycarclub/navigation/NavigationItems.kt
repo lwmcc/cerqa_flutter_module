@@ -1,4 +1,4 @@
-package com.cerqa.ui.components
+package com.mccartycarclub.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
@@ -8,9 +8,6 @@ import androidx.compose.material.icons.outlined.Groups2
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
-import com.cerqa.navigation.AppDestination
-import com.cerqa.ui.BottomNavItem
-import com.cerqa.ui.TopNavItem
 
 /**
  * Main bottom navigation bar items
@@ -20,19 +17,19 @@ val navItems = listOf(
         route = AppDestination.Main.route,
         icon = Icons.Outlined.Home,
         label = "Home",
-        contentDescription = "Home" // TODO: move to resources
+        contentDescription = "Home" // TODO: move to resource
     ),
     BottomNavItem(
         route = AppDestination.Chat.route,
         icon = Icons.AutoMirrored.Outlined.Chat,
         label = "Chat",
-        contentDescription = "Chat" // TODO: move to resources
+        contentDescription = "Chat" // TODO: move to resource
     ),
     BottomNavItem(
         route = AppDestination.Notifications.route,
         icon = Icons.Outlined.Notifications,
         label = "Notifications",
-        contentDescription = "Inbox" // TODO: move to resources
+        contentDescription = "Inbox" // TODO: move to resource
     ),
 )
 
