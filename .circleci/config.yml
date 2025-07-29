@@ -1,0 +1,34 @@
+version: 2.1
+
+executors:
+  android-executor:
+    docker:
+      - image: circleci/android:api-30
+    working_directory: ~/project
+
+jobs:
+  build:
+    executor: android-executor
+    steps:
+      - checkout
+
+      - run:
+          name: Install Flutter
+          command: |
+            git clone https://github.com/flutter/flutter.git -b stable
+            echo 'export PATH="$PATH:`pwd`/flutter/bin"' >> $BASH_ENV
+            source $BASH_ENV
+            flutter doctor
+
+      - run:
+          name: Get Flutter dependencies and build AAR
+          command: |
+            cd cerqa_flutter_module
+            flutter pub get
+            flutter build aar
+
+      - run:
+          name: Build Android app
+          command: |
+            cd ..
+            ./gradlew assembleDebug

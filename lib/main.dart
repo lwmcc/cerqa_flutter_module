@@ -1,10 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-void main() => runApp(const MyApp());
+/// void main() => runApp(const MyApp());
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AuthTokenReceiver.init();
+  runApp(const MyApp());
+}
 
 final GoRouter _router = GoRouter(
-  routes: [
+  routes: <RouteBase>[
+    GoRoute(
+      path: '/',
+      builder: (BuildContext context, GoRouterState state) {
+        return const ChatHomeScreen();
+      },
+      routes: <RouteBase>[
+        GoRoute(
+          path: 'conversation',
+          name: 'conversation',
+          builder: (BuildContext context, GoRouterState state) {
+            return const ConversationScreen();
+          },
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/inbox',
+      name: 'inbox',
+      builder: (BuildContext context, GoRouterState state) {
+        return const InboxScreen();
+      },
+    ),
+  ],
+  /*  routes: [
     GoRoute(
       path: '/',
       redirect: (_, __) => '/chat_home',
@@ -29,7 +60,7 @@ final GoRouter _router = GoRouter(
       name: 'profile',
       builder: (_, __) => const ProfileScreen(),
     ),
-  ],
+  ],*/
 );
 
 class MyApp extends StatelessWidget {
@@ -268,5 +299,17 @@ class _MyHomePageState extends State<MyHomePage> {
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+}
+
+class AuthTokenReceiver {
+  static const MethodChannel _channel = MethodChannel('chat_method_channel');
+  static Future<void> init() async {
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == "amplifyToken") {
+        final token = call.arguments as String;
+        print("Amplify Android Auth Token: $token");
+      }
+    });
   }
 }
