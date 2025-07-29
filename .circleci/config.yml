@@ -8,6 +8,24 @@ jobs:
     steps:
       - checkout  # Check out the source code
 
+      # Install Flutter
+      - run:
+          name: Install Flutter
+          command: |
+            git clone https://github.com/flutter/flutter.git -b stable
+            echo 'export PATH="$PATH:$PWD/flutter/bin"' >> $BASH_ENV
+            echo 'export PATH="$PATH:$PWD/flutter/bin/cache/dart-sdk/bin"' >> $BASH_ENV
+            source $BASH_ENV
+            flutter doctor
+
+      # Build Flutter module
+      - run:
+          name: Build Flutter module AAR
+          command: |
+            cd cerqa_flutter_module
+            flutter pub get
+            flutter build aar
+
       - run:
           name: Verify raw file exists
           command: |
