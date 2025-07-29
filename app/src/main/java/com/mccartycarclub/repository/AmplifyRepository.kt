@@ -328,16 +328,16 @@ class AmplifyRepo @Inject constructor(
         val response = amplifyApi.mutate(ModelMutation.create(user))
     }
 
-    override fun fetchSentInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
+    override fun fetchSentInvites(): Flow<NetWorkResult<List<Contact>>> =
         flow {
-            val senderResponse = fetchSentInvites(Invite.SENDER_ID.eq(loggedInUserId))
+            val senderResponse = fetchSentInvites(Invite.SENDER_ID.eq(localRepository.getUserId().first()))
             emit(fetchInvites(senderResponse, SentInviteContactInvite::class))
         }.flowOn(ioDispatcher)
 
-    override fun fetchReceivedInvites(loggedInUserId: String): Flow<NetWorkResult<List<Contact>>> =
+    override fun fetchReceivedInvites(): Flow<NetWorkResult<List<Contact>>> =
         flow {
             val receiverResponse =
-                fetchReceivedInvites(Invite.RECEIVER_ID.eq(loggedInUserId))
+                fetchReceivedInvites(Invite.RECEIVER_ID.eq(localRepository.getUserId().first()))
             emit(fetchInvites(receiverResponse, ReceivedContactInvite::class))
         }.flowOn(ioDispatcher)
 
