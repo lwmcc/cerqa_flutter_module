@@ -22,7 +22,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/../cerqa_flutter_module/.android/Flutter" />
+            <option value="$PROJECT_DIR$/cerqa_flutter_module/.android/Flutter" />
             <option value="$USER_HOME$/dev/flutter/packages/flutter_tools/gradle" />
           </set>
         </option>

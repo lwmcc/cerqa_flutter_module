@@ -35,6 +35,5 @@ dependencyResolutionManagement {
 rootProject.name = "CarClub"
 include(":app")
 
-val filePath = settingsDir.parentFile.toString() + "/cerqa_flutter_module/.android/include_flutter.groovy"
-apply(from = File(filePath))
-
+val filePath = File(settingsDir, "cerqa_flutter_module/.android/include_flutter.groovy").path
+apply(from = filePath)
