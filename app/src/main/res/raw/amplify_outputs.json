@@ -881,20 +881,6 @@
         }
       },
       "queries": {
-        "sayHello": {
-          "name": "sayHello",
-          "isArray": false,
-          "type": "String",
-          "isRequired": false,
-          "arguments": {
-            "name": {
-              "name": "name",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false
-            }
-          }
-        },
         "fetchAblyJwt": {
           "name": "fetchAblyJwt",
           "isArray": false,
@@ -938,40 +924,6 @@
               "isArray": false,
               "type": "String",
               "isRequired": false
-            }
-          }
-        },
-        "searchUsersByPhoneNumber": {
-          "name": "searchUsersByPhoneNumber",
-          "isArray": false,
-          "type": {
-            "model": "User"
-          },
-          "isRequired": false,
-          "arguments": {
-            "phoneNumber": {
-              "name": "phoneNumber",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true
-            }
-          }
-        },
-        "searchUsersByPhone": {
-          "name": "searchUsersByPhone",
-          "isArray": true,
-          "type": {
-            "model": "User"
-          },
-          "isRequired": false,
-          "isArrayNullable": true,
-          "arguments": {
-            "phoneNumbers": {
-              "name": "phoneNumbers",
-              "isArray": true,
-              "type": "String",
-              "isRequired": false,
-              "isArrayNullable": false
             }
           }
         }

@@ -1,11 +1,12 @@
 package com.mccartycarclub.repository
 
+import com.amplifyframework.core.model.ModelList
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import javax.inject.Inject
 
 class ChatContactsAmplify @Inject constructor(private val amplifyApi: KotlinApiFacade,): ChatContacts {
     override fun fetchChats() {
-
+        //amplifyApi.query(ModelList)
     }
 
     override fun fetchGroupsChats() {
