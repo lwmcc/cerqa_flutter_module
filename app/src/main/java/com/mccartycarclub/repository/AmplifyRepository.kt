@@ -581,7 +581,7 @@ class AmplifyRepo @Inject constructor(
                             userName = contact.userName ?: "",
                             userId = contact.userId!!, // TODO
                             createdAt = contact.createdAt.toString(), // TODO: fix this
-                            phoneNUmber = contact.phone,
+                            phoneNumber = contact.phone,
                         )
                     )
                 }
@@ -694,7 +694,7 @@ class AmplifyRepo @Inject constructor(
                             name = userContact.name,
                             avatarUri = userContact.avatarUri,
                             createdAt = userContact.createdAt.toString(),
-                            phoneNUmber = userContact.phone,
+                            phoneNumber = userContact.phone,
                         )
                     )
                 }
@@ -894,7 +894,7 @@ open class Contact(
     val name: String,
     val avatarUri: String,
     val createdAt: String,
-    val phoneNUmber: String,
+    val phoneNumber: String,
 )
 
 class ReceivedContactInvite(
@@ -904,8 +904,8 @@ class ReceivedContactInvite(
     name: String,
     avatarUri: String,
     createdAt: String,
-    phoneNUmber: String,
-) : Contact(contactId, userId, userName, name, avatarUri, createdAt, phoneNUmber)
+    phoneNumber: String,
+) : Contact(contactId, userId, userName, name, avatarUri, createdAt, phoneNumber)
 
 class SentInviteContactInvite(
     val senderUserId: String,
@@ -915,8 +915,8 @@ class SentInviteContactInvite(
     name: String,
     avatarUri: String,
     createdAt: String,
-    phoneNUmber: String,
-) : Contact(contactId, userId, userName, name, avatarUri, createdAt, phoneNUmber)
+    phoneNumber: String,
+) : Contact(contactId, userId, userName, name, avatarUri, createdAt, phoneNumber)
 
 class CurrentContact(
     contactId: String,
@@ -925,8 +925,8 @@ class CurrentContact(
     name: String,
     avatarUri: String,
     createdAt: String,
-    phoneNUmber: String,
-) : Contact(contactId, userId, userName, name, avatarUri, createdAt, phoneNUmber)
+    phoneNumber: String,
+) : Contact(contactId, userId, userName, name, avatarUri, createdAt, phoneNumber)
 
 
 @JsonClass(generateAdapter = true)

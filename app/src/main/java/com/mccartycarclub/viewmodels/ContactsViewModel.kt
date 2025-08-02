@@ -50,6 +50,9 @@ class ContactsViewModel @Inject constructor(
     private val _contacts = mutableStateListOf<Contact>()
     val contacts: SnapshotStateList<Contact> get() = _contacts
 
+    private val _chatContacts = mutableStateOf<List<Contact>>(emptyList())
+    val chatContacts = _chatContacts
+
     // TODO: to remove and pass into repository
     private val _userId = MutableStateFlow<String?>(null)
     val userId: StateFlow<String?> = _userId
@@ -117,6 +120,39 @@ class ContactsViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    // TODO: remove above function and use this one
+    fun fetchContacts() {
+        uiState = uiState.copy(pending = true)
+        viewModelScope.launch {
+            when (val data = contactsRepository.fetchAllContacts().first()) {
+                is NetworkResponse.Error -> {
+                    //uiState = uiState.copy(message = MessageTypes.Error)
+                }
+
+                is NetworkResponse.NoInternet -> {
+                    //uiState = uiState.copy(message = MessageTypes.NoInternet)
+                }
+
+                is NetworkResponse.Success -> {
+                    val contacts = data.data ?: emptyList() // TODO: just return empty list
+                    contacts.forEach {
+                        println("ContactsViewModel ***** CONTACTS NAME ${it.name}")
+                        println("ContactsViewModel ***** CONTACTS UNAME ${it.userName}")
+                        println("ContactsViewModel ***** CONTACTS UID ${it.userId}")
+                        println("ContactsViewModel ***** CONTACTS PHONE ${it.phoneNumber}")
+                        println("ContactsViewModel ***** CONTACTS AURI ${it.avatarUri}")
+                    }
+
+                    //uiState = uiState.copy(
+                    //    pending = false,
+                    //    contacts = data.data ?: emptyList(),
+                   // )
+                }
+            }
+            uiState = uiState.copy(pending = false)
         }
     }
 

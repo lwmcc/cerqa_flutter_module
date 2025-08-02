@@ -171,7 +171,7 @@ class ContactsQueryHelper @Inject constructor(
                             name = userContact.name,
                             avatarUri = userContact.avatarUri,
                             createdAt = userContact.createdAt.toString(),
-                            phoneNUmber = userContact.phone,
+                            phoneNumber = userContact.phone,
                         )
                     )
                 }

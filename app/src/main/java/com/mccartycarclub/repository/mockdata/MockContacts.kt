@@ -1,6 +1,5 @@
 package com.mccartycarclub.repository.mockdata
 
-import com.amplifyframework.core.model.temporal.Temporal
 import com.mccartycarclub.repository.Contact
 import com.mccartycarclub.repository.SentInviteContactInvite
 import java.util.Calendar
@@ -27,7 +26,7 @@ object MockContacts {
                     name = name,
                     avatarUri = "https://api.dicebear.com/7.x/personas/svg?seed=$name$index",
                     createdAt = "2025-05-08T14:30:00Z",
-                    phoneNUmber = "555-1212"
+                    phoneNumber = "555-1212"
                 )
             )
         }
@@ -60,7 +59,7 @@ object MockContacts {
                     name = name,
                     avatarUri = "https://api.dicebear.com/7.x/personas/svg?seed=$name$index",
                     createdAt = "2025-05-08T12:${String.format("%02d", index % 60)}:00Z",
-                    phoneNUmber = "555-2222"
+                    phoneNumber = "555-2222"
                 )
             )
         }

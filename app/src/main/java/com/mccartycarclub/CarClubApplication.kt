@@ -44,6 +44,11 @@ class CarClubApplication : Application() {
         )
         FlutterEngineCache.getInstance().put(CHAT_ENGINE_ID, chatEngine)
 
+        // Register the Android implementation of CerqaHostApi to handle calls
+        // coming from Flutter and the binary messenger of the Flutter engine.
+        // Letting Flutter invoke Android methods through Pigeon.
+        //CerqaHostApi.setUp(chatEngine.dartExecutor.binaryMessenger, ChatHostApi())
+
         // Inbox Engine
         inboxEngine = FlutterEngine(this)
         inboxEngine.navigationChannel.setInitialRoute(INBOX_INITIAL_ROUTE);

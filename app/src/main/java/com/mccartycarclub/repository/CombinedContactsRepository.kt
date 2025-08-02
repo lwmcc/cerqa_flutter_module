@@ -77,7 +77,7 @@ class CombinedContactsRepository @Inject constructor(
         deviceContacts: List<DeviceContact>,
         contacts: List<Contact>,
     ): ContactsWrapper {
-        val contactsReduced = contacts.map { it.phoneNUmber }.toSet()
+        val contactsReduced = contacts.map { it.phoneNumber }.toSet()
 
         val appUsers = deviceContacts.filter { deviceContact ->
             deviceContact.phoneNumbers.any { phone -> phone in contactsReduced }
@@ -168,7 +168,7 @@ class CombinedContactsRepository @Inject constructor(
         remoteUserPhoneNumbers: List<UserPhoneSearch>,
     ): List<SearchContact> {
 
-        val cached = cacheContacts.map { it.phoneNUmber }.toSet()
+        val cached = cacheContacts.map { it.phoneNumber }.toSet()
         val remote = remoteUserPhoneNumbers.map { it.phone }.toSet()
 
         val appUsers = localPhoneNumbers.filter { contact ->

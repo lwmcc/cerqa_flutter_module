@@ -1,12 +1,21 @@
 package com.mccartycarclub.repository
 
+import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.core.model.ModelList
 import com.amplifyframework.kotlin.api.KotlinApiFacade
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
-class ChatContactsAmplify @Inject constructor(private val amplifyApi: KotlinApiFacade,): ChatContacts {
-    override fun fetchChats() {
-        //amplifyApi.query(ModelList)
+class ChatContactsAmplify @Inject constructor(
+    private val amplifyApi: KotlinApiFacade,
+    private val localRepository: LocalRepository,
+) : ChatContacts {
+    override suspend fun fetchChats() {
+        localRepository.getUserId().first()
+
+       // amplifyApi.query(ModelQuery.list(modelClass, predicate))
+
+      //  amplifyApi.query(ModelList)
     }
 
     override fun fetchGroupsChats() {
@@ -22,6 +31,15 @@ class ChatContactsAmplify @Inject constructor(private val amplifyApi: KotlinApiF
     }
 
     override fun startChat() {
-        TODO("Not yet implemented")
+        println("ChatContactsAmplify ***** UID")
+    }
+
+    fun String.createDirectChatChannelName(senderUserId: String, receiverUserId: String): String {
+
+        return ""
+    }
+
+    companion object {
+        const val SEPARATOR = ":"
     }
 }

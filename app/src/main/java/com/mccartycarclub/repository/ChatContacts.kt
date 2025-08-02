@@ -1,7 +1,7 @@
 package com.mccartycarclub.repository
 
 interface ChatContacts {
-    fun fetchChats()
+    suspend fun fetchChats()
     fun fetchGroupsChats()
     fun createMessage()
     fun deleteMessage()

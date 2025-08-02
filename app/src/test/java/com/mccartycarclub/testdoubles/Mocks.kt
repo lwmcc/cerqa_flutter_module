@@ -4,7 +4,7 @@ import com.mccartycarclub.repository.ReceivedContactInvite
 
 @Suppress("MaxLineLength")
 val receivedInvites = listOf(
-    ReceivedContactInvite(contactId = "1212-2222-3344", userId = "2222-1122-3344", userName = "LarryM", name = "Larry", avatarUri = "https://www.cerqa.app/avatars/larrym", createdAt = "6/13/2025", phoneNUmber = "4805551212"),
+    ReceivedContactInvite(contactId = "1212-2222-3344", userId = "2222-1122-3344", userName = "LarryM", name = "Larry", avatarUri = "https://www.cerqa.app/avatars/larrym", createdAt = "6/13/2025", phoneNumber = "4805551212"),
     ReceivedContactInvite("contact-1000", "user-2000", "Alice01", "Alice", "https://www.cerqa.app/avatars/alice01", "6/13/2025", "4805551212"),
     ReceivedContactInvite("contact-1001", "user-2001", "Bob02", "Bob", "https://www.cerqa.app/avatars/bob02", "6/13/2025", "4805551212"),
     ReceivedContactInvite("contact-1002", "user-2002", "Charlie03", "Charlie", "https://www.cerqa.app/avatars/charlie03", "6/13/2025", "4805551212"),

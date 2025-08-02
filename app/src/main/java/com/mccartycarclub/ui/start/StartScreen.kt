@@ -2,6 +2,7 @@ package com.mccartycarclub.ui.start
 
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -30,6 +31,7 @@ import com.mccartycarclub.ui.components.NotificationScreen
 import com.mccartycarclub.ui.components.navToScreen
 import com.mccartycarclub.ui.contacts.ContactsScreen
 import com.mccartycarclub.ui.contacts.ContactsSearchScreen
+import com.mccartycarclub.viewmodels.ChatViewModel
 import com.mccartycarclub.viewmodels.ContactsViewModel
 import com.mccartycarclub.viewmodels.MainViewModel
 import com.mccartycarclub.viewmodels.SearchViewModel
@@ -50,9 +52,16 @@ fun StartScreen(
 ) {
 
     val contactsViewModel: ContactsViewModel = hiltViewModel()
+    val chatViewModel: ChatViewModel = hiltViewModel()
+
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
     val topNavItems = getTopNavItems(currentRoute)
+
+    LaunchedEffect(Unit) {
+        contactsViewModel.fetchContacts()
+        chatViewModel.fetchChats()
+    }
 
     val context = LocalContext.current
 

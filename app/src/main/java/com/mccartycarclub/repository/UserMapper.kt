@@ -2,7 +2,6 @@ package com.mccartycarclub.repository
 
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
-import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.ui.components.ConnectionAccepted
 import com.mccartycarclub.utils.formatDateTimeForDisplay
@@ -30,7 +29,7 @@ object UserMapper {
                             userName = item.userName,
                             createdAt = formatDateTimeForDisplay(item.createdAt).orEmpty(),
                             senderUserId = item.userId,
-                            phoneNUmber = item.phone,
+                            phoneNumber = item.phone,
                         )
                     )
                 }
@@ -46,7 +45,7 @@ object UserMapper {
                             userId = user.userId,
                             userName = user.userName,
                             createdAt = formatDateTimeForDisplay(user.createdAt).orEmpty(),
-                            phoneNUmber = user.phone,
+                            phoneNumber = user.phone,
                         )
                     )
                 }
@@ -89,7 +88,7 @@ object UserMapper {
             userId = userId,
             userName = userName,
             createdAt = createdAt,
-            phoneNUmber = phoneNumber,
+            phoneNumber = phoneNumber,
         )
     }
 
@@ -101,7 +100,7 @@ object UserMapper {
             userId = connectionAccepted.userId,
             userName = connectionAccepted.userName,
             createdAt = connectionAccepted.createdAt,
-            phoneNUmber = "",
+            phoneNumber = "",
         )
     }
 }
