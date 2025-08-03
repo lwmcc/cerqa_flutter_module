@@ -17,7 +17,7 @@ import com.mccartycarclub.utils.phoneNumberParser
 @Singleton
 class ContactsHelper @Inject constructor(
     private val context: Context,
-    @Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
+    @param:Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
 ) : DeviceContacts {
     override suspend fun getDeviceContacts(): List<LocalDeviceContacts> =
         withContext(ioDispatcher) {

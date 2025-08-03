@@ -54,7 +54,7 @@ class AmplifyRepo @Inject constructor(
     private val amplifyApi: KotlinApiFacade,
     private val contactsQueryBuilder: QueryBuilder,
     private val searchResult: SearchResult,
-    @Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
+    @param:Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
 ) : RemoteRepo {
 
     sealed class ContactType {

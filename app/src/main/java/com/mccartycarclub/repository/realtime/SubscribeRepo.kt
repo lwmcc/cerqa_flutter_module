@@ -28,12 +28,12 @@ import javax.inject.Named
 class SubscribeRepo @Inject constructor(
     private val amplifyApi: KotlinApiFacade,
     private val ablyProvider: AblyProvider,
-    @Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
+    @param:Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
 ) : RealtimeSubscribeRepo {
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     override suspend fun createUserChannel(userId: String) {
 
-        val user = User.builder()
+/*        val user = User.builder()
             .userId(userId)
             .firstName(DUMMY)
             .lastName(DUMMY)
@@ -42,13 +42,15 @@ class SubscribeRepo @Inject constructor(
         val channel = Channel.builder()
             .user(user)
             .name("larry-channel")
-            .build()
+            .build()*/
 
+/*
         val message = Message.builder()
             .content("larry test message")
             .channel(channel)
             .id(channel.id)
             .build()
+*/
 
         /*try {
             amplifyApi.mutate(ModelMutation.create(channel))

@@ -13,67 +13,60 @@ import io.flutter.plugin.common.StandardMethodCodec
 import io.flutter.plugin.common.StandardMessageCodec
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
-
 private object ChatHostPigeonUtils {
 
-    fun createConnectionError(channelName: String): FlutterError {
-        return FlutterError(
-            "channel-error",
-            "Unable to establish connection on channel: '$channelName'.",
-            ""
-        )
-    }
+  fun createConnectionError(channelName: String): FlutterError {
+    return FlutterError("channel-error",  "Unable to establish connection on channel: '$channelName'.", "")  }
 
-    fun wrapResult(result: Any?): List<Any?> {
-        return listOf(result)
-    }
+  fun wrapResult(result: Any?): List<Any?> {
+    return listOf(result)
+  }
 
-    fun wrapError(exception: Throwable): List<Any?> {
-        return if (exception is FlutterError) {
-            listOf(
-                exception.code,
-                exception.message,
-                exception.details
-            )
-        } else {
-            listOf(
-                exception.javaClass.simpleName,
-                exception.toString(),
-                "Cause: " + exception.cause + ", Stacktrace: " + Log.getStackTraceString(exception)
-            )
-        }
+  fun wrapError(exception: Throwable): List<Any?> {
+    return if (exception is FlutterError) {
+      listOf(
+        exception.code,
+        exception.message,
+        exception.details
+      )
+    } else {
+      listOf(
+        exception.javaClass.simpleName,
+        exception.toString(),
+        "Cause: " + exception.cause + ", Stacktrace: " + Log.getStackTraceString(exception)
+      )
     }
-
-    fun deepEquals(a: Any?, b: Any?): Boolean {
-        if (a is ByteArray && b is ByteArray) {
-            return a.contentEquals(b)
-        }
-        if (a is IntArray && b is IntArray) {
-            return a.contentEquals(b)
-        }
-        if (a is LongArray && b is LongArray) {
-            return a.contentEquals(b)
-        }
-        if (a is DoubleArray && b is DoubleArray) {
-            return a.contentEquals(b)
-        }
-        if (a is Array<*> && b is Array<*>) {
-            return a.size == b.size &&
-                    a.indices.all { deepEquals(a[it], b[it]) }
-        }
-        if (a is List<*> && b is List<*>) {
-            return a.size == b.size &&
-                    a.indices.all { deepEquals(a[it], b[it]) }
-        }
-        if (a is Map<*, *> && b is Map<*, *>) {
-            return a.size == b.size && a.all {
-                (b as Map<Any?, Any?>).containsKey(it.key) &&
-                        deepEquals(it.value, b[it.key])
-            }
-        }
-        return a == b
+  }
+  fun deepEquals(a: Any?, b: Any?): Boolean {
+    if (a is ByteArray && b is ByteArray) {
+        return a.contentEquals(b)
     }
-
+    if (a is IntArray && b is IntArray) {
+        return a.contentEquals(b)
+    }
+    if (a is LongArray && b is LongArray) {
+        return a.contentEquals(b)
+    }
+    if (a is DoubleArray && b is DoubleArray) {
+        return a.contentEquals(b)
+    }
+    if (a is Array<*> && b is Array<*>) {
+      return a.size == b.size &&
+          a.indices.all{ deepEquals(a[it], b[it]) }
+    }
+    if (a is List<*> && b is List<*>) {
+      return a.size == b.size &&
+          a.indices.all{ deepEquals(a[it], b[it]) }
+    }
+    if (a is Map<*, *> && b is Map<*, *>) {
+      return a.size == b.size && a.all {
+          (b as Map<Any?, Any?>).containsKey(it.key) &&
+          deepEquals(it.value, b[it.key])
+      }
+    }
+    return a == b
+  }
+      
 }
 
 /**
@@ -82,429 +75,337 @@ private object ChatHostPigeonUtils {
  * @property message The error message.
  * @property details The error details. Must be a datatype supported by the api codec.
  */
-class FlutterError(
-    val code: String,
-    override val message: String? = null,
-    val details: Any? = null
+class FlutterError (
+  val code: String,
+  override val message: String? = null,
+  val details: Any? = null
 ) : Throwable()
 
 /** Generated class from Pigeon that represents data sent in messages. */
-data class Contact(
-    val userName: String? = null,
-    val phoneNumber: String? = null,
-    val userId: String? = null,
-    val avatarUri: String? = null
-) {
-    companion object {
-        fun fromList(pigeonVar_list: List<Any?>): Contact {
-            val userName = pigeonVar_list[0] as String?
-            val phoneNumber = pigeonVar_list[1] as String?
-            val userId = pigeonVar_list[2] as String?
-            val avatarUri = pigeonVar_list[3] as String?
-            return Contact(userName, phoneNumber, userId, avatarUri)
-        }
+data class Contact (
+  val userName: String? = null,
+  val phoneNumber: String? = null,
+  val userId: String? = null,
+  val avatarUri: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): Contact {
+      val userName = pigeonVar_list[0] as String?
+      val phoneNumber = pigeonVar_list[1] as String?
+      val userId = pigeonVar_list[2] as String?
+      val avatarUri = pigeonVar_list[3] as String?
+      return Contact(userName, phoneNumber, userId, avatarUri)
     }
-
-    fun toList(): List<Any?> {
-        return listOf(
-            userName,
-            phoneNumber,
-            userId,
-            avatarUri,
-        )
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      userName,
+      phoneNumber,
+      userId,
+      avatarUri,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other !is Contact) {
+      return false
     }
-
-    override fun equals(other: Any?): Boolean {
-        if (other !is Contact) {
-            return false
-        }
-        if (this === other) {
-            return true
-        }
-        return ChatHostPigeonUtils.deepEquals(toList(), other.toList())
+    if (this === other) {
+      return true
     }
+    return ChatHostPigeonUtils.deepEquals(toList(), other.toList())  }
 
-    override fun hashCode(): Int = toList().hashCode()
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
-data class Chat(
-    val userName: String? = null,
-    val avatarUri: String? = null
-) {
-    companion object {
-        fun fromList(pigeonVar_list: List<Any?>): Chat {
-            val userName = pigeonVar_list[0] as String?
-            val avatarUri = pigeonVar_list[1] as String?
-            return Chat(userName, avatarUri)
-        }
+data class Chat (
+  val userName: String? = null,
+  val avatarUri: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): Chat {
+      val userName = pigeonVar_list[0] as String?
+      val avatarUri = pigeonVar_list[1] as String?
+      return Chat(userName, avatarUri)
     }
-
-    fun toList(): List<Any?> {
-        return listOf(
-            userName,
-            avatarUri,
-        )
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      userName,
+      avatarUri,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other !is Chat) {
+      return false
     }
-
-    override fun equals(other: Any?): Boolean {
-        if (other !is Chat) {
-            return false
-        }
-        if (this === other) {
-            return true
-        }
-        return ChatHostPigeonUtils.deepEquals(toList(), other.toList())
+    if (this === other) {
+      return true
     }
+    return ChatHostPigeonUtils.deepEquals(toList(), other.toList())  }
 
-    override fun hashCode(): Int = toList().hashCode()
+  override fun hashCode(): Int = toList().hashCode()
 }
-
 private open class ChatHostPigeonCodec : StandardMessageCodec() {
-    override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
-        return when (type) {
-            129.toByte() -> {
-                return (readValue(buffer) as? List<Any?>)?.let {
-                    Contact.fromList(it)
-                }
-            }
-
-            130.toByte() -> {
-                return (readValue(buffer) as? List<Any?>)?.let {
-                    Chat.fromList(it)
-                }
-            }
-
-            else -> super.readValueOfType(type, buffer)
+  override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
+    return when (type) {
+      129.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          Contact.fromList(it)
         }
-    }
-
-    override fun writeValue(stream: ByteArrayOutputStream, value: Any?) {
-        when (value) {
-            is Contact -> {
-                stream.write(129)
-                writeValue(stream, value.toList())
-            }
-
-            is Chat -> {
-                stream.write(130)
-                writeValue(stream, value.toList())
-            }
-
-            else -> super.writeValue(stream, value)
+      }
+      130.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          Chat.fromList(it)
         }
+      }
+      else -> super.readValueOfType(type, buffer)
     }
+  }
+  override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
+    when (value) {
+      is Contact -> {
+        stream.write(129)
+        writeValue(stream, value.toList())
+      }
+      is Chat -> {
+        stream.write(130)
+        writeValue(stream, value.toList())
+      }
+      else -> super.writeValue(stream, value)
+    }
+  }
 }
 
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface CerqaHostApi {
-    fun createChat(receiverUserId: String)
-    fun deleteChat()
-    fun createGroup()
-    fun deleteGroup()
-    fun createMessage()
-    fun deleteMessage()
-    fun createGroupMessage()
-    fun deleteGroupMessage()
+  fun createChat(receiverUserId: String)
+  fun deleteChat()
+  fun createGroup()
+  fun deleteGroup()
+  fun createMessage()
+  fun deleteMessage()
+  fun createGroupMessage()
+  fun deleteGroupMessage()
 
-    companion object {
-        /** The codec used by CerqaHostApi. */
-        val codec: MessageCodec<Any?> by lazy {
-            ChatHostPigeonCodec()
-        }
-
-        /** Sets up an instance of `CerqaHostApi` to handle messages through the `binaryMessenger`. */
-        @JvmOverloads
-        fun setUp(
-            binaryMessenger: BinaryMessenger,
-            api: CerqaHostApi?,
-            messageChannelSuffix: String = ""
-        ) {
-            val separatedMessageChannelSuffix =
-                if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-            run {
-                val channel = BasicMessageChannel<Any?>(
-                    binaryMessenger,
-                    "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.createChat$separatedMessageChannelSuffix",
-                    codec
-                )
-                if (api != null) {
-                    channel.setMessageHandler { message, reply ->
-                        val args = message as List<Any?>
-                        val receiverUserIdArg = args[0] as String
-                        val wrapped: List<Any?> = try {
-                            api.createChat(receiverUserIdArg)
-                            listOf(null)
-                        } catch (exception: Throwable) {
-                            ChatHostPigeonUtils.wrapError(exception)
-                        }
-                        reply.reply(wrapped)
-                    }
-                } else {
-                    channel.setMessageHandler(null)
-                }
-            }
-            run {
-                val channel = BasicMessageChannel<Any?>(
-                    binaryMessenger,
-                    "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.deleteChat$separatedMessageChannelSuffix",
-                    codec
-                )
-                if (api != null) {
-                    channel.setMessageHandler { _, reply ->
-                        val wrapped: List<Any?> = try {
-                            api.deleteChat()
-                            listOf(null)
-                        } catch (exception: Throwable) {
-                            ChatHostPigeonUtils.wrapError(exception)
-                        }
-                        reply.reply(wrapped)
-                    }
-                } else {
-                    channel.setMessageHandler(null)
-                }
-            }
-            run {
-                val channel = BasicMessageChannel<Any?>(
-                    binaryMessenger,
-                    "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.createGroup$separatedMessageChannelSuffix",
-                    codec
-                )
-                if (api != null) {
-                    channel.setMessageHandler { _, reply ->
-                        val wrapped: List<Any?> = try {
-                            api.createGroup()
-                            listOf(null)
-                        } catch (exception: Throwable) {
-                            ChatHostPigeonUtils.wrapError(exception)
-                        }
-                        reply.reply(wrapped)
-                    }
-                } else {
-                    channel.setMessageHandler(null)
-                }
-            }
-            run {
-                val channel = BasicMessageChannel<Any?>(
-                    binaryMessenger,
-                    "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.deleteGroup$separatedMessageChannelSuffix",
-                    codec
-                )
-                if (api != null) {
-                    channel.setMessageHandler { _, reply ->
-                        val wrapped: List<Any?> = try {
-                            api.deleteGroup()
-                            listOf(null)
-                        } catch (exception: Throwable) {
-                            ChatHostPigeonUtils.wrapError(exception)
-                        }
-                        reply.reply(wrapped)
-                    }
-                } else {
-                    channel.setMessageHandler(null)
-                }
-            }
-            run {
-                val channel = BasicMessageChannel<Any?>(
-                    binaryMessenger,
-                    "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.createMessage$separatedMessageChannelSuffix",
-                    codec
-                )
-                if (api != null) {
-                    channel.setMessageHandler { _, reply ->
-                        val wrapped: List<Any?> = try {
-                            api.createMessage()
-                            listOf(null)
-                        } catch (exception: Throwable) {
-                            ChatHostPigeonUtils.wrapError(exception)
-                        }
-                        reply.reply(wrapped)
-                    }
-                } else {
-                    channel.setMessageHandler(null)
-                }
-            }
-            run {
-                val channel = BasicMessageChannel<Any?>(
-                    binaryMessenger,
-                    "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.deleteMessage$separatedMessageChannelSuffix",
-                    codec
-                )
-                if (api != null) {
-                    channel.setMessageHandler { _, reply ->
-                        val wrapped: List<Any?> = try {
-                            api.deleteMessage()
-                            listOf(null)
-                        } catch (exception: Throwable) {
-                            ChatHostPigeonUtils.wrapError(exception)
-                        }
-                        reply.reply(wrapped)
-                    }
-                } else {
-                    channel.setMessageHandler(null)
-                }
-            }
-            run {
-                val channel = BasicMessageChannel<Any?>(
-                    binaryMessenger,
-                    "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.createGroupMessage$separatedMessageChannelSuffix",
-                    codec
-                )
-                if (api != null) {
-                    channel.setMessageHandler { _, reply ->
-                        val wrapped: List<Any?> = try {
-                            api.createGroupMessage()
-                            listOf(null)
-                        } catch (exception: Throwable) {
-                            ChatHostPigeonUtils.wrapError(exception)
-                        }
-                        reply.reply(wrapped)
-                    }
-                } else {
-                    channel.setMessageHandler(null)
-                }
-            }
-            run {
-                val channel = BasicMessageChannel<Any?>(
-                    binaryMessenger,
-                    "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.deleteGroupMessage$separatedMessageChannelSuffix",
-                    codec
-                )
-                if (api != null) {
-                    channel.setMessageHandler { _, reply ->
-                        val wrapped: List<Any?> = try {
-                            api.deleteGroupMessage()
-                            listOf(null)
-                        } catch (exception: Throwable) {
-                            ChatHostPigeonUtils.wrapError(exception)
-                        }
-                        reply.reply(wrapped)
-                    }
-                } else {
-                    channel.setMessageHandler(null)
-                }
-            }
-        }
+  companion object {
+    /** The codec used by CerqaHostApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      ChatHostPigeonCodec()
     }
+    /** Sets up an instance of `CerqaHostApi` to handle messages through the `binaryMessenger`. */
+    @JvmOverloads
+    fun setUp(binaryMessenger: BinaryMessenger, api: CerqaHostApi?, messageChannelSuffix: String = "") {
+      val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.createChat$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val receiverUserIdArg = args[0] as String
+            val wrapped: List<Any?> = try {
+              api.createChat(receiverUserIdArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              ChatHostPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.deleteChat$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.deleteChat()
+              listOf(null)
+            } catch (exception: Throwable) {
+              ChatHostPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.createGroup$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.createGroup()
+              listOf(null)
+            } catch (exception: Throwable) {
+              ChatHostPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.deleteGroup$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.deleteGroup()
+              listOf(null)
+            } catch (exception: Throwable) {
+              ChatHostPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.createMessage$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.createMessage()
+              listOf(null)
+            } catch (exception: Throwable) {
+              ChatHostPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.deleteMessage$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.deleteMessage()
+              listOf(null)
+            } catch (exception: Throwable) {
+              ChatHostPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.createGroupMessage$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.createGroupMessage()
+              listOf(null)
+            } catch (exception: Throwable) {
+              ChatHostPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.deleteGroupMessage$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.deleteGroupMessage()
+              listOf(null)
+            } catch (exception: Throwable) {
+              ChatHostPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+    }
+  }
 }
-
 /** Generated class from Pigeon that represents Flutter messages that can be called from Kotlin. */
-class CerqaFlutterApi(
-    private val binaryMessenger: BinaryMessenger,
-    private val messageChannelSuffix: String = ""
-) {
-    companion object {
-        /** The codec used by CerqaFlutterApi. */
-        val codec: MessageCodec<Any?> by lazy {
-            ChatHostPigeonCodec()
-        }
+class CerqaFlutterApi(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
+  companion object {
+    /** The codec used by CerqaFlutterApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      ChatHostPigeonCodec()
     }
-
-    fun sendChats(callback: (Result<Unit>) -> Unit) {
-        val separatedMessageChannelSuffix =
-            if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-        val channelName =
-            "dev.flutter.pigeon.cerqa_flutter_module.CerqaFlutterApi.sendChats$separatedMessageChannelSuffix"
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-        channel.send(null) {
-            if (it is List<*>) {
-                if (it.size > 1) {
-                    callback(
-                        Result.failure(
-                            FlutterError(
-                                it[0] as String,
-                                it[1] as String,
-                                it[2] as String?
-                            )
-                        )
-                    )
-                } else {
-                    callback(Result.success(Unit))
-                }
-            } else {
-                callback(Result.failure(ChatHostPigeonUtils.createConnectionError(channelName)))
-            }
+  }
+  fun sendChats(chatsArg: List<Chat>, callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.cerqa_flutter_module.CerqaFlutterApi.sendChats$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(chatsArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
         }
+      } else {
+        callback(Result.failure(ChatHostPigeonUtils.createConnectionError(channelName)))
+      } 
     }
-
-    fun sendContacts(callback: (Result<Unit>) -> Unit) {
-        val separatedMessageChannelSuffix =
-            if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-        val channelName =
-            "dev.flutter.pigeon.cerqa_flutter_module.CerqaFlutterApi.sendContacts$separatedMessageChannelSuffix"
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-        channel.send(null) {
-            if (it is List<*>) {
-                if (it.size > 1) {
-                    callback(
-                        Result.failure(
-                            FlutterError(
-                                it[0] as String,
-                                it[1] as String,
-                                it[2] as String?
-                            )
-                        )
-                    )
-                } else {
-                    callback(Result.success(Unit))
-                }
-            } else {
-                callback(Result.failure(ChatHostPigeonUtils.createConnectionError(channelName)))
-            }
+  }
+  fun sendContacts(callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.cerqa_flutter_module.CerqaFlutterApi.sendContacts$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(null) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
         }
+      } else {
+        callback(Result.failure(ChatHostPigeonUtils.createConnectionError(channelName)))
+      } 
     }
-
-    fun sendGroups(callback: (Result<Unit>) -> Unit) {
-        val separatedMessageChannelSuffix =
-            if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-        val channelName =
-            "dev.flutter.pigeon.cerqa_flutter_module.CerqaFlutterApi.sendGroups$separatedMessageChannelSuffix"
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-        channel.send(null) {
-            if (it is List<*>) {
-                if (it.size > 1) {
-                    callback(
-                        Result.failure(
-                            FlutterError(
-                                it[0] as String,
-                                it[1] as String,
-                                it[2] as String?
-                            )
-                        )
-                    )
-                } else {
-                    callback(Result.success(Unit))
-                }
-            } else {
-                callback(Result.failure(ChatHostPigeonUtils.createConnectionError(channelName)))
-            }
+  }
+  fun sendGroups(callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.cerqa_flutter_module.CerqaFlutterApi.sendGroups$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(null) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
         }
+      } else {
+        callback(Result.failure(ChatHostPigeonUtils.createConnectionError(channelName)))
+      } 
     }
-
-    fun sendMessages(callback: (Result<Unit>) -> Unit) {
-        val separatedMessageChannelSuffix =
-            if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-        val channelName =
-            "dev.flutter.pigeon.cerqa_flutter_module.CerqaFlutterApi.sendMessages$separatedMessageChannelSuffix"
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-        channel.send(null) {
-            if (it is List<*>) {
-                if (it.size > 1) {
-                    callback(
-                        Result.failure(
-                            FlutterError(
-                                it[0] as String,
-                                it[1] as String,
-                                it[2] as String?
-                            )
-                        )
-                    )
-                } else {
-                    callback(Result.success(Unit))
-                }
-            } else {
-                callback(Result.failure(ChatHostPigeonUtils.createConnectionError(channelName)))
-            }
+  }
+  fun sendMessages(callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.cerqa_flutter_module.CerqaFlutterApi.sendMessages$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(null) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
         }
+      } else {
+        callback(Result.failure(ChatHostPigeonUtils.createConnectionError(channelName)))
+      } 
     }
+  }
 }

@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "us-east-2_FuzJ0AcFB",
-    "aws_region": "us-east-2",
-    "user_pool_client_id": "1rl0jpe9s4mnsefq6k2if077rk",
-    "identity_pool_id": "us-east-2:206732fb-ea8c-45e7-9cd3-d76944253560",
+    "user_pool_id": "us-east-1_cYeDjGJAz",
+    "aws_region": "us-east-1",
+    "user_pool_client_id": "3f7sa8c8c6u3s840j3sct8bnb6",
+    "identity_pool_id": "us-east-1:355b42d7-9637-4f76-8ef1-b64cb611bfb2",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -25,9 +25,9 @@
     "unauthenticated_identities_enabled": true
   },
   "data": {
-    "url": "https://pm5m2ypttnauheez4q5xdrvsci.appsync-api.us-east-2.amazonaws.com/graphql",
-    "aws_region": "us-east-2",
-    "api_key": "da2-uihtenjplvachd6atvnhwi4imq",
+    "url": "https://nrdbndtphvay5gn4hnm6aalqd4.appsync-api.us-east-1.amazonaws.com/graphql",
+    "aws_region": "us-east-1",
+    "api_key": "da2-ksl3dio5jvfapewpyhh2ioltme",
     "default_authorization_type": "API_KEY",
     "authorization_types": [
       "AMAZON_COGNITO_USER_POOLS",
@@ -170,7 +170,7 @@
               "name": "channels",
               "isArray": true,
               "type": {
-                "model": "Channel"
+                "model": "UserChannel"
               },
               "isRequired": false,
               "attributes": [],
@@ -179,6 +179,38 @@
                 "connectionType": "HAS_MANY",
                 "associatedWith": [
                   "userId"
+                ]
+              }
+            },
+            "channelsCreated": {
+              "name": "channelsCreated",
+              "isArray": true,
+              "type": {
+                "model": "Channel"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "createdByUserId"
+                ]
+              }
+            },
+            "messagesSent": {
+              "name": "messagesSent",
+              "isArray": true,
+              "type": {
+                "model": "Message"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "senderId"
                 ]
               }
             },
@@ -644,15 +676,15 @@
               "isRequired": false,
               "attributes": []
             },
-            "userId": {
-              "name": "userId",
+            "createdByUserId": {
+              "name": "createdByUserId",
               "isArray": false,
               "type": "ID",
               "isRequired": true,
               "attributes": []
             },
-            "user": {
-              "name": "user",
+            "creator": {
+              "name": "creator",
               "isArray": false,
               "type": {
                 "model": "User"
@@ -662,7 +694,7 @@
               "association": {
                 "connectionType": "BELONGS_TO",
                 "targetNames": [
-                  "userId"
+                  "createdByUserId"
                 ]
               }
             },
@@ -671,6 +703,36 @@
               "isArray": true,
               "type": {
                 "model": "Message"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "channelId"
+                ]
+              }
+            },
+            "isGroup": {
+              "name": "isGroup",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
+            "isPublic": {
+              "name": "isPublic",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
+            "channels": {
+              "name": "channels",
+              "isArray": true,
+              "type": {
+                "model": "UserChannel"
               },
               "isRequired": false,
               "attributes": [],
@@ -730,11 +792,145 @@
             "sortKeyFieldNames": []
           }
         },
+        "UserChannel": {
+          "name": "UserChannel",
+          "fields": {
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "userId": {
+              "name": "userId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "channelId": {
+              "name": "channelId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "role": {
+              "name": "role",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "user": {
+              "name": "user",
+              "isArray": false,
+              "type": {
+                "model": "User"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "userId"
+                ]
+              }
+            },
+            "isMuted": {
+              "name": "isMuted",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
+            "channel": {
+              "name": "channel",
+              "isArray": false,
+              "type": {
+                "model": "Channel"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "channelId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "UserChannels",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "byUserChannel",
+                "queryField": "listUserChannelByUserIdAndChannelId",
+                "fields": [
+                  "userId",
+                  "channelId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": false,
+            "primaryKeyFieldName": "id",
+            "sortKeyFieldNames": []
+          }
+        },
         "Message": {
           "name": "Message",
           "fields": {
             "id": {
               "name": "id",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "senderId": {
+              "name": "senderId",
               "isArray": false,
               "type": "ID",
               "isRequired": true,
@@ -753,6 +949,21 @@
               "type": "ID",
               "isRequired": true,
               "attributes": []
+            },
+            "sender": {
+              "name": "sender",
+              "isArray": false,
+              "type": {
+                "model": "User"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "senderId"
+                ]
+              }
             },
             "channel": {
               "name": "channel",

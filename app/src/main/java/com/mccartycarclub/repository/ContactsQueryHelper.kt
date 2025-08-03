@@ -35,7 +35,7 @@ class ContactsQueryHelper @Inject constructor(
     private val localRepository: LocalRepository,
     private val amplifyApi: KotlinApiFacade,
     private val contactsQueryBuilder: QueryBuilder,
-    @Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
+    @param:Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
 ) : CombinedContactsHelper {
 
     override fun fetchAllContacts(): Flow<NetworkResponse<List<Contact>>> =

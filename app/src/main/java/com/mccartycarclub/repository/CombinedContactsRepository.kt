@@ -22,7 +22,7 @@ class CombinedContactsRepository @Inject constructor(
     private val amplifyApi: KotlinApiFacade,
     private val deviceContacts: DeviceContacts,
     private val contactsHelper: CombinedContactsHelper,
-    @Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
+    @param:Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
 ) : ContactsRepository {
 
     override suspend fun createContact(user: User) {

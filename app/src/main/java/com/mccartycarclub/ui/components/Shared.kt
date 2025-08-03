@@ -480,7 +480,7 @@ fun SearchSection(
 // TODO: remove just to test
 fun testUser1(userId: String): User {
     return User.builder()
-        .userId(userId)
+       // .userId(userId)
         .firstName("Larry")
         .lastName("McCarty")
         .userName("LarryM")
@@ -494,7 +494,7 @@ fun testUser1(userId: String): User {
 
 fun testUser2(userId: String): User {
     return User.builder()
-        .userId(userId)
+       // .userId(userId)
         .firstName("Lebron")
         .lastName("James")
         .userName("KingJames")
@@ -507,7 +507,7 @@ fun testUser2(userId: String): User {
 
 fun testUser3(userId: String): User {
     return User.builder()
-        .userId(userId)
+       // .userId(userId)
         .firstName("Luka")
         .lastName("Doncic")
         .id(userId)

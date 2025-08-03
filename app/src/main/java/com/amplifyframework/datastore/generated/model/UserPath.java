@@ -12,7 +12,9 @@ public final class UserPath extends ModelPath<User> {
   private UserContactPath asContact;
   private UserGroupPath groups;
   private InvitePath invites;
-  private ChannelPath channels;
+  private UserChannelPath channels;
+  private ChannelPath channelsCreated;
+  private MessagePath messagesSent;
   UserPath(@NonNull String name, @NonNull Boolean isCollection, @Nullable PropertyPath parent) {
     super(name, isCollection, parent, User.class);
   }
@@ -45,10 +47,24 @@ public final class UserPath extends ModelPath<User> {
     return invites;
   }
   
-  public synchronized ChannelPath getChannels() {
+  public synchronized UserChannelPath getChannels() {
     if (channels == null) {
-      channels = new ChannelPath("channels", true, this);
+      channels = new UserChannelPath("channels", true, this);
     }
     return channels;
+  }
+  
+  public synchronized ChannelPath getChannelsCreated() {
+    if (channelsCreated == null) {
+      channelsCreated = new ChannelPath("channelsCreated", true, this);
+    }
+    return channelsCreated;
+  }
+  
+  public synchronized MessagePath getMessagesSent() {
+    if (messagesSent == null) {
+      messagesSent = new MessagePath("messagesSent", true, this);
+    }
+    return messagesSent;
   }
 }

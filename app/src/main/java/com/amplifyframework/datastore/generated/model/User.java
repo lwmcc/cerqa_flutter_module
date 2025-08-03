@@ -27,7 +27,7 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @ModelConfig(pluralName = "Users", type = Model.Type.USER, version = 1, authRules = {
   @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 }, hasLazySupport = true)
-@Index(name = "undefined", fields = {"id"})
+@Index(name = "userIndexPhone", fields = {"phone","userName"})
 public final class User implements Model {
   public static final UserPath rootPath = new UserPath("root", false, null);
   public static final QueryField ID = field("User", "id");
@@ -40,7 +40,7 @@ public final class User implements Model {
   public static final QueryField EMAIL = field("User", "email");
   public static final QueryField AVATAR_URI = field("User", "avatarUri");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="String", isRequired = true) String userId;
+  private final @ModelField(targetType="ID") String userId;
   private final @ModelField(targetType="String", isRequired = true) String firstName;
   private final @ModelField(targetType="String", isRequired = true) String lastName;
   private final @ModelField(targetType="String") String name;
@@ -52,7 +52,9 @@ public final class User implements Model {
   private final @ModelField(targetType="UserContact") @HasMany(associatedWith = "contact", type = UserContact.class) ModelList<UserContact> asContact = null;
   private final @ModelField(targetType="UserGroup") @HasMany(associatedWith = "user", type = UserGroup.class) ModelList<UserGroup> groups = null;
   private final @ModelField(targetType="Invite") @HasMany(associatedWith = "user", type = Invite.class) ModelList<Invite> invites = null;
-  private final @ModelField(targetType="Channel") @HasMany(associatedWith = "user", type = Channel.class) ModelList<Channel> channels = null;
+  private final @ModelField(targetType="UserChannel") @HasMany(associatedWith = "user", type = UserChannel.class) ModelList<UserChannel> channels = null;
+  private final @ModelField(targetType="Channel") @HasMany(associatedWith = "creator", type = Channel.class) ModelList<Channel> channelsCreated = null;
+  private final @ModelField(targetType="Message") @HasMany(associatedWith = "sender", type = Message.class) ModelList<Message> messagesSent = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -113,8 +115,16 @@ public final class User implements Model {
       return invites;
   }
   
-  public ModelList<Channel> getChannels() {
+  public ModelList<UserChannel> getChannels() {
       return channels;
+  }
+  
+  public ModelList<Channel> getChannelsCreated() {
+      return channelsCreated;
+  }
+  
+  public ModelList<Message> getMessagesSent() {
+      return messagesSent;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -196,7 +206,7 @@ public final class User implements Model {
       .toString();
   }
   
-  public static UserIdStep builder() {
+  public static FirstNameStep builder() {
       return new Builder();
   }
   
@@ -233,11 +243,6 @@ public final class User implements Model {
       email,
       avatarUri);
   }
-  public interface UserIdStep {
-    FirstNameStep userId(String userId);
-  }
-  
-
   public interface FirstNameStep {
     LastNameStep firstName(String firstName);
   }
@@ -251,6 +256,7 @@ public final class User implements Model {
   public interface BuildStep {
     User build();
     BuildStep id(String id);
+    BuildStep userId(String userId);
     BuildStep name(String name);
     BuildStep phone(String phone);
     BuildStep userName(String userName);
@@ -259,11 +265,11 @@ public final class User implements Model {
   }
   
 
-  public static class Builder implements UserIdStep, FirstNameStep, LastNameStep, BuildStep {
+  public static class Builder implements FirstNameStep, LastNameStep, BuildStep {
     private String id;
-    private String userId;
     private String firstName;
     private String lastName;
+    private String userId;
     private String name;
     private String phone;
     private String userName;
@@ -302,13 +308,6 @@ public final class User implements Model {
     }
     
     @Override
-     public FirstNameStep userId(String userId) {
-        Objects.requireNonNull(userId);
-        this.userId = userId;
-        return this;
-    }
-    
-    @Override
      public LastNameStep firstName(String firstName) {
         Objects.requireNonNull(firstName);
         this.firstName = firstName;
@@ -319,6 +318,12 @@ public final class User implements Model {
      public BuildStep lastName(String lastName) {
         Objects.requireNonNull(lastName);
         this.lastName = lastName;
+        return this;
+    }
+    
+    @Override
+     public BuildStep userId(String userId) {
+        this.userId = userId;
         return this;
     }
     
@@ -366,14 +371,8 @@ public final class User implements Model {
   public final class CopyOfBuilder extends Builder {
     private CopyOfBuilder(String id, String userId, String firstName, String lastName, String name, String phone, String userName, String email, String avatarUri) {
       super(id, userId, firstName, lastName, name, phone, userName, email, avatarUri);
-      Objects.requireNonNull(userId);
       Objects.requireNonNull(firstName);
       Objects.requireNonNull(lastName);
-    }
-    
-    @Override
-     public CopyOfBuilder userId(String userId) {
-      return (CopyOfBuilder) super.userId(userId);
     }
     
     @Override
@@ -384,6 +383,11 @@ public final class User implements Model {
     @Override
      public CopyOfBuilder lastName(String lastName) {
       return (CopyOfBuilder) super.lastName(lastName);
+    }
+    
+    @Override
+     public CopyOfBuilder userId(String userId) {
+      return (CopyOfBuilder) super.userId(userId);
     }
     
     @Override

@@ -23,20 +23,23 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
-/** This is an auto generated class representing the Message type in your schema. */
+/** This is an auto generated class representing the UserChannel type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Messages", type = Model.Type.USER, version = 1, authRules = {
+@ModelConfig(pluralName = "UserChannels", type = Model.Type.USER, version = 1, authRules = {
   @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 }, hasLazySupport = true)
-public final class Message implements Model {
-  public static final MessagePath rootPath = new MessagePath("root", false, null);
-  public static final QueryField ID = field("Message", "id");
-  public static final QueryField CONTENT = field("Message", "content");
-  public static final QueryField SENDER = field("Message", "senderId");
-  public static final QueryField CHANNEL = field("Message", "channelId");
+@Index(name = "byUserChannel", fields = {"userId","channelId"})
+public final class UserChannel implements Model {
+  public static final UserChannelPath rootPath = new UserChannelPath("root", false, null);
+  public static final QueryField ID = field("UserChannel", "id");
+  public static final QueryField ROLE = field("UserChannel", "role");
+  public static final QueryField USER = field("UserChannel", "userId");
+  public static final QueryField IS_MUTED = field("UserChannel", "isMuted");
+  public static final QueryField CHANNEL = field("UserChannel", "channelId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="String", isRequired = true) String content;
-  private final @ModelField(targetType="User") @BelongsTo(targetName = "senderId", targetNames = {"senderId"}, type = User.class) ModelReference<User> sender;
+  private final @ModelField(targetType="String") String role;
+  private final @ModelField(targetType="User") @BelongsTo(targetName = "userId", targetNames = {"userId"}, type = User.class) ModelReference<User> user;
+  private final @ModelField(targetType="Boolean") Boolean isMuted;
   private final @ModelField(targetType="Channel") @BelongsTo(targetName = "channelId", targetNames = {"channelId"}, type = Channel.class) ModelReference<Channel> channel;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
@@ -50,12 +53,16 @@ public final class Message implements Model {
       return id;
   }
   
-  public String getContent() {
-      return content;
+  public String getRole() {
+      return role;
   }
   
-  public ModelReference<User> getSender() {
-      return sender;
+  public ModelReference<User> getUser() {
+      return user;
+  }
+  
+  public Boolean getIsMuted() {
+      return isMuted;
   }
   
   public ModelReference<Channel> getChannel() {
@@ -70,10 +77,11 @@ public final class Message implements Model {
       return updatedAt;
   }
   
-  private Message(String id, String content, ModelReference<User> sender, ModelReference<Channel> channel) {
+  private UserChannel(String id, String role, ModelReference<User> user, Boolean isMuted, ModelReference<Channel> channel) {
     this.id = id;
-    this.content = content;
-    this.sender = sender;
+    this.role = role;
+    this.user = user;
+    this.isMuted = isMuted;
     this.channel = channel;
   }
   
@@ -84,13 +92,14 @@ public final class Message implements Model {
       } else if(obj == null || getClass() != obj.getClass()) {
         return false;
       } else {
-      Message message = (Message) obj;
-      return ObjectsCompat.equals(getId(), message.getId()) &&
-              ObjectsCompat.equals(getContent(), message.getContent()) &&
-              ObjectsCompat.equals(getSender(), message.getSender()) &&
-              ObjectsCompat.equals(getChannel(), message.getChannel()) &&
-              ObjectsCompat.equals(getCreatedAt(), message.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), message.getUpdatedAt());
+      UserChannel userChannel = (UserChannel) obj;
+      return ObjectsCompat.equals(getId(), userChannel.getId()) &&
+              ObjectsCompat.equals(getRole(), userChannel.getRole()) &&
+              ObjectsCompat.equals(getUser(), userChannel.getUser()) &&
+              ObjectsCompat.equals(getIsMuted(), userChannel.getIsMuted()) &&
+              ObjectsCompat.equals(getChannel(), userChannel.getChannel()) &&
+              ObjectsCompat.equals(getCreatedAt(), userChannel.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), userChannel.getUpdatedAt());
       }
   }
   
@@ -98,8 +107,9 @@ public final class Message implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
-      .append(getContent())
-      .append(getSender())
+      .append(getRole())
+      .append(getUser())
+      .append(getIsMuted())
       .append(getChannel())
       .append(getCreatedAt())
       .append(getUpdatedAt())
@@ -110,10 +120,11 @@ public final class Message implements Model {
   @Override
    public String toString() {
     return new StringBuilder()
-      .append("Message {")
+      .append("UserChannel {")
       .append("id=" + String.valueOf(getId()) + ", ")
-      .append("content=" + String.valueOf(getContent()) + ", ")
-      .append("sender=" + String.valueOf(getSender()) + ", ")
+      .append("role=" + String.valueOf(getRole()) + ", ")
+      .append("user=" + String.valueOf(getUser()) + ", ")
+      .append("isMuted=" + String.valueOf(getIsMuted()) + ", ")
       .append("channel=" + String.valueOf(getChannel()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
@@ -121,7 +132,7 @@ public final class Message implements Model {
       .toString();
   }
   
-  public static ContentStep builder() {
+  public static BuildStep builder() {
       return new Builder();
   }
   
@@ -133,9 +144,10 @@ public final class Message implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    */
-  public static Message justId(String id) {
-    return new Message(
+  public static UserChannel justId(String id) {
+    return new UserChannel(
       id,
+      null,
       null,
       null,
       null
@@ -144,60 +156,66 @@ public final class Message implements Model {
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      content,
-      sender,
+      role,
+      user,
+      isMuted,
       channel);
   }
-  public interface ContentStep {
-    BuildStep content(String content);
-  }
-  
-
   public interface BuildStep {
-    Message build();
+    UserChannel build();
     BuildStep id(String id);
-    BuildStep sender(User sender);
+    BuildStep role(String role);
+    BuildStep user(User user);
+    BuildStep isMuted(Boolean isMuted);
     BuildStep channel(Channel channel);
   }
   
 
-  public static class Builder implements ContentStep, BuildStep {
+  public static class Builder implements BuildStep {
     private String id;
-    private String content;
-    private ModelReference<User> sender;
+    private String role;
+    private ModelReference<User> user;
+    private Boolean isMuted;
     private ModelReference<Channel> channel;
     public Builder() {
       
     }
     
-    private Builder(String id, String content, ModelReference<User> sender, ModelReference<Channel> channel) {
+    private Builder(String id, String role, ModelReference<User> user, Boolean isMuted, ModelReference<Channel> channel) {
       this.id = id;
-      this.content = content;
-      this.sender = sender;
+      this.role = role;
+      this.user = user;
+      this.isMuted = isMuted;
       this.channel = channel;
     }
     
     @Override
-     public Message build() {
+     public UserChannel build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
         
-        return new Message(
+        return new UserChannel(
           id,
-          content,
-          sender,
+          role,
+          user,
+          isMuted,
           channel);
     }
     
     @Override
-     public BuildStep content(String content) {
-        Objects.requireNonNull(content);
-        this.content = content;
+     public BuildStep role(String role) {
+        this.role = role;
         return this;
     }
     
     @Override
-     public BuildStep sender(User sender) {
-        this.sender = new LoadedModelReferenceImpl<>(sender);
+     public BuildStep user(User user) {
+        this.user = new LoadedModelReferenceImpl<>(user);
+        return this;
+    }
+    
+    @Override
+     public BuildStep isMuted(Boolean isMuted) {
+        this.isMuted = isMuted;
         return this;
     }
     
@@ -219,19 +237,24 @@ public final class Message implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String content, ModelReference<User> sender, ModelReference<Channel> channel) {
-      super(id, content, sender, channel);
-      Objects.requireNonNull(content);
+    private CopyOfBuilder(String id, String role, ModelReference<User> user, Boolean isMuted, ModelReference<Channel> channel) {
+      super(id, role, user, isMuted, channel);
+      
     }
     
     @Override
-     public CopyOfBuilder content(String content) {
-      return (CopyOfBuilder) super.content(content);
+     public CopyOfBuilder role(String role) {
+      return (CopyOfBuilder) super.role(role);
     }
     
     @Override
-     public CopyOfBuilder sender(User sender) {
-      return (CopyOfBuilder) super.sender(sender);
+     public CopyOfBuilder user(User user) {
+      return (CopyOfBuilder) super.user(user);
+    }
+    
+    @Override
+     public CopyOfBuilder isMuted(Boolean isMuted) {
+      return (CopyOfBuilder) super.isMuted(isMuted);
     }
     
     @Override
@@ -241,9 +264,9 @@ public final class Message implements Model {
   }
   
 
-  public static class MessageIdentifier extends ModelIdentifier<Message> {
+  public static class UserChannelIdentifier extends ModelIdentifier<UserChannel> {
     private static final long serialVersionUID = 1L;
-    public MessageIdentifier(String id) {
+    public UserChannelIdentifier(String id) {
       super(id);
     }
   }
