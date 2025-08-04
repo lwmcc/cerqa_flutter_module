@@ -340,7 +340,7 @@ class CerqaFlutterApi(private val binaryMessenger: BinaryMessenger, private val 
       ChatHostPigeonCodec()
     }
   }
-  fun sendChats(chatsArg: List<Chat>, callback: (Result<Unit>) -> Unit)
+  fun sendChats(chatsArg: List<Chat>, callback: (Result<List<Chat>>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
     val channelName = "dev.flutter.pigeon.cerqa_flutter_module.CerqaFlutterApi.sendChats$separatedMessageChannelSuffix"
@@ -349,8 +349,11 @@ class CerqaFlutterApi(private val binaryMessenger: BinaryMessenger, private val 
       if (it is List<*>) {
         if (it.size > 1) {
           callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else if (it[0] == null) {
+          callback(Result.failure(FlutterError("null-error", "Flutter api returned null value for non-null return value.", "")))
         } else {
-          callback(Result.success(Unit))
+          val output = it[0] as List<Chat>
+          callback(Result.success(output))
         }
       } else {
         callback(Result.failure(ChatHostPigeonUtils.createConnectionError(channelName)))

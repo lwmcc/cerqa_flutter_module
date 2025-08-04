@@ -9,10 +9,12 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.kotlin.core.Amplify
+import com.mccartycarclub.pigeon.PigeonFlutterApi
 import dagger.hilt.android.HiltAndroidApp
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
+import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodChannel
 
 
@@ -21,6 +23,8 @@ class CarClubApplication : Application() {
 
     lateinit var chatEngine: FlutterEngine
     lateinit var inboxEngine: FlutterEngine
+
+    lateinit var pigeonFlutterApi: PigeonFlutterApi
 
     override fun onCreate() {
         super.onCreate()
@@ -44,10 +48,16 @@ class CarClubApplication : Application() {
         )
         FlutterEngineCache.getInstance().put(CHAT_ENGINE_ID, chatEngine)
 
+        /*
+         * Initialize the Pigeon Flutter API in order to
+         * send data from Android to Flutter
+         */
+        pigeonFlutterApi = PigeonFlutterApi(chatEngine.dartExecutor.binaryMessenger)
+
         // Register the Android implementation of CerqaHostApi to handle calls
         // coming from Flutter and the binary messenger of the Flutter engine.
         // Letting Flutter invoke Android methods through Pigeon.
-        //CerqaHostApi.setUp(chatEngine.dartExecutor.binaryMessenger, ChatHostApi())
+        // CerqaHostApi.setUp(chatEngine.dartExecutor.binaryMessenger, ChatHostApi())
 
         // Inbox Engine
         inboxEngine = FlutterEngine(this)
