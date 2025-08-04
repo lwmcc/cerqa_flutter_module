@@ -52,7 +52,7 @@ class CarClubApplication : Application() {
          * Initialize the Pigeon Flutter API in order to
          * send data from Android to Flutter
          */
-        pigeonFlutterApi = PigeonFlutterApi(chatEngine.dartExecutor.binaryMessenger)
+        //pigeonFlutterApi = PigeonFlutterApi(chatEngine.dartExecutor.binaryMessenger)
 
         // Register the Android implementation of CerqaHostApi to handle calls
         // coming from Flutter and the binary messenger of the Flutter engine.

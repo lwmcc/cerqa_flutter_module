@@ -29,6 +29,8 @@ import com.mccartycarclub.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.core.net.toUri
+import com.mccartycarclub.pigeon.Chat
+import com.mccartycarclub.pigeon.PigeonFlutterApi
 import com.mccartycarclub.ui.start.StartScreen
 import com.mccartycarclub.viewmodels.MainViewModel
 
@@ -42,6 +44,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var stateProvider: AuthenticatorStateProvider
+
+    @Inject
+    lateinit var pigeonFlutterApi: PigeonFlutterApi
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,7 +90,23 @@ class MainActivity : ComponentActivity() {
         registerReceiver()
         handleIncomingIntentS(intent)
         //mainViewModel.initAbly()
+        pigeonFlutterApi.flutterApi?.sendChats(chatsToSend) { result ->
+            println("_CerqaFlutterApi ***** PIGEON RESULT SUCCESS ${result.isSuccess}")
+        }
     }
+
+    // TODO: pigeon flutter test
+    val chat1 = Chat().apply {
+        userName = "LarryM"
+        avatarUri = "https://www.fakeurl.com/larrym"
+    }
+
+    val chat2 = Chat().apply {
+        userName = "Bron"
+        avatarUri = "http://www.fakeurl.com/bron"
+    }
+
+    val chatsToSend = listOf(chat1, chat2)
 
     private fun registerReceiver() {
         LocalBroadcastManager.getInstance(this)

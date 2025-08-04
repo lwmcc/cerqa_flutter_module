@@ -120,8 +120,8 @@ data class Contact (
 
 /** Generated class from Pigeon that represents data sent in messages. */
 data class Chat (
-  val userName: String? = null,
-  val avatarUri: String? = null
+  var userName: String? = null,
+  var avatarUri: String? = null
 )
  {
   companion object {
