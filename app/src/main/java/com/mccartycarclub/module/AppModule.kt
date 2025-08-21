@@ -13,6 +13,7 @@ import com.mccartycarclub.domain.helpers.SearchResult
 import com.mccartycarclub.domain.usecases.user.SearchResultBuilder
 import com.mccartycarclub.domain.websocket.AblyProvider
 import com.mccartycarclub.domain.websocket.RealtimeService
+import com.mccartycarclub.pigeon.CerqaFlutterApi
 import com.mccartycarclub.pigeon.PigeonFlutterApi
 import com.mccartycarclub.receiver.AblyBroadcastReceiver
 import com.mccartycarclub.repository.datastore.UserPreferences
@@ -103,6 +104,12 @@ object AppModule {
     @Singleton
     fun providePigeonFlutterApi(flutterEngine: FlutterEngine): PigeonFlutterApi {
         return PigeonFlutterApi(flutterEngine.dartExecutor.binaryMessenger)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCerqaFlutterApi(flutterEngine: FlutterEngine): CerqaFlutterApi {
+        return CerqaFlutterApi(flutterEngine.dartExecutor.binaryMessenger)
     }
 
 }

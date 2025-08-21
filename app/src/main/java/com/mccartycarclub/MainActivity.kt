@@ -29,10 +29,12 @@ import com.mccartycarclub.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.core.net.toUri
+import com.mccartycarclub.pigeon.CerqaFlutterApi
 import com.mccartycarclub.pigeon.Chat
 import com.mccartycarclub.pigeon.PigeonFlutterApi
 import com.mccartycarclub.ui.start.StartScreen
 import com.mccartycarclub.viewmodels.MainViewModel
+import kotlin.String
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -44,6 +46,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var stateProvider: AuthenticatorStateProvider
+
+    @Inject
+    lateinit var cerqaFlutterApi: CerqaFlutterApi
 
     @Inject
     lateinit var pigeonFlutterApi: PigeonFlutterApi
@@ -89,22 +94,22 @@ class MainActivity : ComponentActivity() {
         }
         registerReceiver()
         handleIncomingIntentS(intent)
+
         //mainViewModel.initAbly()
-        pigeonFlutterApi.flutterApi?.sendChats(chatsToSend) { result ->
-            println("_CerqaFlutterApi ***** PIGEON RESULT SUCCESS ${result.isSuccess}")
-        }
+        //pigeonFlutterApi.flutterApi?.sendChats(chatsToSend) { result ->
+        //    println("_CerqaFlutterApi ***** PIGEON RESULT SUCCESS ${result.isSuccess}")
+        //}
     }
 
     // TODO: pigeon flutter test
-    val chat1 = Chat().apply {
-        userName = "LarryM"
-        avatarUri = "https://www.fakeurl.com/larrym"
-    }
-
-    val chat2 = Chat().apply {
-        userName = "Bron"
-        avatarUri = "http://www.fakeurl.com/bron"
-    }
+    val chat1 = Chat(
+        userName = "LarryM",
+        avatarUri = "https://www.fakeurl.com/larrym",
+    )
+    val chat2 = Chat(
+        userName = "Bron",
+        avatarUri = "http://www.fakeurl.com/bron",
+    )
 
     val chatsToSend = listOf(chat1, chat2)
 

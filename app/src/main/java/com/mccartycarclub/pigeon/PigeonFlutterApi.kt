@@ -9,11 +9,7 @@ class PigeonFlutterApi(messenger: BinaryMessenger) {
         flutterApi = CerqaFlutterApi(messenger)
     }
 
-    fun sendChats(chats: List<Chat>, callback: (Result<List<Chat>>) -> Unit) {
+/*    fun sendChats(chats: List<Chat>, callback: (Result<List<Chat>>) -> Unit) {
         flutterApi!!.sendChats(chats) { result -> callback(result) }
-    }
-
-    fun setContacts() {
-
-    }
+    }*/
 }
