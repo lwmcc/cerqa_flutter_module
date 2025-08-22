@@ -119,26 +119,94 @@ data class Contact (
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
+data class Group (
+  val groudId: String? = null,
+  val groupName: String? = null,
+  val groupAvatarUri: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): Group {
+      val groudId = pigeonVar_list[0] as String?
+      val groupName = pigeonVar_list[1] as String?
+      val groupAvatarUri = pigeonVar_list[2] as String?
+      return Group(groudId, groupName, groupAvatarUri)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      groudId,
+      groupName,
+      groupAvatarUri,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other !is Group) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return ChatHostPigeonUtils.deepEquals(toList(), other.toList())  }
+
+  override fun hashCode(): Int = toList().hashCode()
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
 data class Chat (
+  val chatId: String? = null,
   val userName: String? = null,
   val avatarUri: String? = null
 )
  {
   companion object {
     fun fromList(pigeonVar_list: List<Any?>): Chat {
-      val userName = pigeonVar_list[0] as String?
-      val avatarUri = pigeonVar_list[1] as String?
-      return Chat(userName, avatarUri)
+      val chatId = pigeonVar_list[0] as String?
+      val userName = pigeonVar_list[1] as String?
+      val avatarUri = pigeonVar_list[2] as String?
+      return Chat(chatId, userName, avatarUri)
     }
   }
   fun toList(): List<Any?> {
     return listOf(
+      chatId,
       userName,
       avatarUri,
     )
   }
   override fun equals(other: Any?): Boolean {
     if (other !is Chat) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return ChatHostPigeonUtils.deepEquals(toList(), other.toList())  }
+
+  override fun hashCode(): Int = toList().hashCode()
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class Message (
+  val messageId: String? = null,
+  val message: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): Message {
+      val messageId = pigeonVar_list[0] as String?
+      val message = pigeonVar_list[1] as String?
+      return Message(messageId, message)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      messageId,
+      message,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other !is Message) {
       return false
     }
     if (this === other) {
@@ -158,7 +226,17 @@ private open class ChatHostPigeonCodec : StandardMessageCodec() {
       }
       130.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
+          Group.fromList(it)
+        }
+      }
+      131.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
           Chat.fromList(it)
+        }
+      }
+      132.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          Message.fromList(it)
         }
       }
       else -> super.readValueOfType(type, buffer)
@@ -170,8 +248,16 @@ private open class ChatHostPigeonCodec : StandardMessageCodec() {
         stream.write(129)
         writeValue(stream, value.toList())
       }
-      is Chat -> {
+      is Group -> {
         stream.write(130)
+        writeValue(stream, value.toList())
+      }
+      is Chat -> {
+        stream.write(131)
+        writeValue(stream, value.toList())
+      }
+      is Message -> {
+        stream.write(132)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -183,20 +269,20 @@ private open class ChatHostPigeonCodec : StandardMessageCodec() {
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface CerqaHostApi {
   fun fetchChats(callback: (Result<List<Chat>>) -> Unit)
-  fun fetchDirectConversation(receiverUserId: String)
+  fun fetchDirectConversation(receiverUserId: String, callback: (Result<List<Message>>) -> Unit)
   fun createMessage()
   fun deleteMessage()
   fun createChat(receiverUserId: String)
   fun deleteChat()
   fun doesGroupNameExist(groupName: String): Boolean
-  fun fetchGroupChats()
+  fun fetchGroupChats(callback: (Result<List<Group>>) -> Unit)
   fun fetchGroupConversation()
   fun deleteGroupMessage()
   fun fetchGroupMessage()
   fun createGroupMessage()
   fun createGroup(groupName: String)
   fun deleteGroup()
-  fun fetchContacts(): List<Contact>
+  fun fetchContacts(callback: (Result<List<Contact>>) -> Unit)
 
   companion object {
     /** The codec used by CerqaHostApi. */
@@ -231,13 +317,15 @@ interface CerqaHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val receiverUserIdArg = args[0] as String
-            val wrapped: List<Any?> = try {
-              api.fetchDirectConversation(receiverUserIdArg)
-              listOf(null)
-            } catch (exception: Throwable) {
-              ChatHostPigeonUtils.wrapError(exception)
+            api.fetchDirectConversation(receiverUserIdArg) { result: Result<List<Message>> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(ChatHostPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(ChatHostPigeonUtils.wrapResult(data))
+              }
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -330,13 +418,15 @@ interface CerqaHostApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.fetchGroupChats$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              api.fetchGroupChats()
-              listOf(null)
-            } catch (exception: Throwable) {
-              ChatHostPigeonUtils.wrapError(exception)
+            api.fetchGroupChats{ result: Result<List<Group>> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(ChatHostPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(ChatHostPigeonUtils.wrapResult(data))
+              }
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -444,12 +534,15 @@ interface CerqaHostApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.fetchContacts$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              listOf(api.fetchContacts())
-            } catch (exception: Throwable) {
-              ChatHostPigeonUtils.wrapError(exception)
+            api.fetchContacts{ result: Result<List<Contact>> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(ChatHostPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(ChatHostPigeonUtils.wrapResult(data))
+              }
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)

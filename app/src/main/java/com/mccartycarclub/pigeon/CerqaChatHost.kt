@@ -20,8 +20,8 @@ class ChatHostApi @Inject constructor(private val chatRepository: ChatRepository
         TODO("Not yet implemented")
     }
 
-    override fun fetchGroupChats() {
-        TODO("Not yet implemented")
+    override fun fetchGroupChats(callback: (Result<List<Group>>) -> Unit) {
+        callback(Result.success(chatRepository.fetchGroups()))
     }
 
     override fun fetchGroupConversation() {
@@ -32,15 +32,20 @@ class ChatHostApi @Inject constructor(private val chatRepository: ChatRepository
         TODO("Not yet implemented")
     }
 
-    override fun fetchContacts(): List<Contact> {
-        TODO("Not yet implemented")
+    override fun fetchContacts(callback: (Result<List<Contact>>) -> Unit) {
+        callback(Result.success(chatRepository.fetchContacts()))
     }
 
     override fun fetchChats(callback: (Result<List<Chat>>) -> Unit) {
         callback(Result.success(chatRepository.fetchChats()))
     }
 
-    override fun fetchDirectConversation(receiverUserId: String) {
+    override fun fetchDirectConversation(
+        receiverUserId: String,
+        callback: (
+            Result<List<Message>>,
+        ) -> Unit
+    ) {
         TODO("Not yet implemented")
     }
 
