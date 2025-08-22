@@ -1,4 +1,4 @@
-Added flutter screen for Chat. Will add for Profile, and Inbox. The Chat screen is using mock data for now, I have added the Pigeon tool for Android, Flutter communication. I am working on wiring this up at them moment so that I can fetch chats, and groups from Amplify and send them to the Flutter UI.
+Added flutter screen for Chat. Will add for Profile, and Inbox. The Chat screen is using mock data for now, I have added the Pigeon tool for Android, Flutter communication. I am working on wiring this up at the moment so that I can fetch chats, and groups from Amplify and send them to the Flutter UI.
 
 [flutter_test_mock_data_from_android.webm](https://github.com/user-attachments/assets/7214794c-4c93-4f6b-8758-75eeec85a8c1)
 
