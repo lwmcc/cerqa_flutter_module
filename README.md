@@ -17,7 +17,7 @@ My CarClub(Cerqa App) is going to be an Android and iOS, KMM, <s>CMP</s>, Flutte
 
 At this point the Android app has quite a few GraphQL queries and mutations to handle data for contacts functionality. Some of these include creating a contact, and viewing contacts. The contacts screen shows a list, which can include current contacts, contacts that the user has sent an invitation to connect, and invitations to connect that the user has received. With <s>OpenSearch</s>, the user table has been ingested and that data can be searchen for a people that the app user knows, and who are also using the app. At this point OpenSearch appears to be expensive so that service may be removed for a simple GraphQL query. I will no longer use OpenSearch, it is too expensive. I love the service and it is flawless, just out of reach because of cost.
 
-Now that I have some functionality working, I have started to integrate a cross platform project and will start adapting the Amplify authentication flow by moving it over to this project and implementing that for iOS version login.
+Now that I have some functionality working, <s>I have started to integrate a cross platform project and will start adapting the Amplify authentication flow by moving it over to this project and implementing that for iOS version login</s>. I will implement Amplify Authentication on Android, and on iOS because auth is not compatible with KMM.
 # cerqa_flutter_module
 
 A new Flutter project.
