@@ -16,9 +16,21 @@ class Contact {
   String? avatarUri;
 }
 
+class Group {
+  String? groudId;
+  String? groupName;
+  String? groupAvatarUri;
+}
+
 class Chat {
+  String? chatId;
   String? userName;
   String? avatarUri;
+}
+
+class Message {
+  String? messageId;
+  String? message;
 }
 
 @HostApi()
@@ -27,7 +39,8 @@ abstract class CerqaHostApi {
   @async
   List<Chat> fetchChats();
 
-  void fetchDirectConversation(String receiverUserId);
+  @async
+  List<Message> fetchDirectConversation(String receiverUserId);
 
   void createMessage();
 
@@ -39,7 +52,8 @@ abstract class CerqaHostApi {
 
   bool doesGroupNameExist(String groupName);
 
-  void fetchGroupChats();
+  @async
+  List<Group> fetchGroupChats();
 
   void fetchGroupConversation();
 
@@ -53,6 +67,7 @@ abstract class CerqaHostApi {
 
   void deleteGroup();
 
+  @async
   List<Contact> fetchContacts();
 }
 

@@ -1,11 +1,11 @@
 import 'package:cerqa_flutter_module/src/chat.g.dart';
+import 'package:cerqa_flutter_module/ui/ChatScreens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/services/binary_messenger.dart';
 import 'package:go_router/go_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // CerqaFlutterApi.setUp(_CerqaFlutterApi());
   runApp(const MyApp());
 }
 
@@ -245,6 +245,8 @@ class _MyHomePageState extends State<MyHomePage>
   late TabController _tabController;
 
   List<Chat> chats = [];
+  List<Group> groupChats = [];
+  List<Contact> contacts = [];
 
   void _incrementCounter() {
     setState(() {
@@ -270,6 +272,8 @@ class _MyHomePageState extends State<MyHomePage>
     });
 
     _loadChats();
+    _loadGroups();
+    _loadContacts();
   }
 
   @override
@@ -290,9 +294,25 @@ class _MyHomePageState extends State<MyHomePage>
             onPressed: () {
               switch (_currentTabIndex) {
                 case 0:
-                  print("Main ***** CREATE CHAT");
+                  //_loadContacts();
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (context) =>
+                          NewChatScreen(
+                            header: "New Chat",
+                            contacts: contacts,
+                          ),
+                    ),
+                  );
                 case 1:
-                  print("Main ***** CREATE GROUP");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (context) => NewGroupChatScreen(),
+                    ),
+                  );
                 default:
                   print("TAB ERROR");
               }
@@ -322,20 +342,38 @@ class _MyHomePageState extends State<MyHomePage>
                 // TODO: string resource for No name found
                 title: Text(chats[index].userName ?? "No name found"),
                 onTap: () {
-                  print('Tapped on ${chats[index].userName}');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (context) =>
+                          DirectConversationScreen(
+                              header: chats[index].userName ?? "Chat"),
+                    ),
+                  );
                 },
               );
             },
           ),
 
           // Groups Tab lists view
-          ListView(
-            padding: const EdgeInsets.all(16),
-            children: const [
-              ListTile(leading: Icon(Icons.chat), title: Text('Group Chat item 1')),
-              ListTile(leading: Icon(Icons.chat), title: Text('Group Chat item 2')),
-              ListTile(leading: Icon(Icons.chat), title: Text('Group Chat item 3')),
-            ],
+          ListView.builder(
+            itemCount: groupChats.length,
+            itemBuilder: (BuildContext context, int index) {
+              return ListTile(
+                title: Text(groupChats[index].groupName ?? "No name found"),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (context) =>
+                          GroupConversationScreen(
+                              header: groupChats[index].groupName ??
+                                  "Group Chat"),
+                    ),
+                  );
+                },
+              );
+            },
           ),
         ],
       ),
@@ -351,6 +389,20 @@ class _MyHomePageState extends State<MyHomePage>
     final result = await _hostApi.fetchChats();
     setState(() {
       chats = result;
+    });
+  }
+
+  Future<void> _loadGroups() async {
+    final result = await _hostApi.fetchGroupChats();
+    setState(() {
+      groupChats = result;
+    });
+  }
+
+  Future<void> _loadContacts() async {
+    final result = await _hostApi.fetchContacts();
+    setState(() {
+      contacts = result;
     });
   }
 }
