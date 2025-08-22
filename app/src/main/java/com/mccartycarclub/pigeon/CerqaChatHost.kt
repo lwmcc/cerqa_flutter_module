@@ -1,8 +1,11 @@
 package com.mccartycarclub.pigeon
 
+import com.mccartycarclub.repository.ChatRepository
+import javax.inject.Inject
+
 
 // TODO: split this up
-class ChatHostApi : CerqaHostApi {
+class ChatHostApi @Inject constructor(private val chatRepository: ChatRepository) : CerqaHostApi {
 
     override fun createChat(receiverUserId: String) {
         // loggedInUser and participant
@@ -34,7 +37,7 @@ class ChatHostApi : CerqaHostApi {
     }
 
     override fun fetchChats(callback: (Result<List<Chat>>) -> Unit) {
-        println("ChatHostApi ***** CHATS FROM ANDROID")
+        callback(Result.success(chatRepository.fetchChats()))
     }
 
     override fun fetchDirectConversation(receiverUserId: String) {

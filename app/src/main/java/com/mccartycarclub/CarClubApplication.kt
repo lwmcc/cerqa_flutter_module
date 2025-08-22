@@ -9,10 +9,12 @@ import com.amplifyframework.kotlin.core.Amplify
 import com.mccartycarclub.pigeon.CerqaHostApi
 import com.mccartycarclub.pigeon.ChatHostApi
 import com.mccartycarclub.pigeon.PigeonFlutterApi
+import com.mccartycarclub.repository.ChatRepository
 import dagger.hilt.android.HiltAndroidApp
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
+import javax.inject.Inject
 
 @HiltAndroidApp
 class CarClubApplication : Application() {
@@ -21,6 +23,9 @@ class CarClubApplication : Application() {
     lateinit var inboxEngine: FlutterEngine
 
     lateinit var pigeonFlutterApi: PigeonFlutterApi
+
+    @Inject
+    lateinit var chatRepository: ChatRepository
 
     override fun onCreate() {
         super.onCreate()
@@ -46,7 +51,7 @@ class CarClubApplication : Application() {
 
 
         // Register Android to handle message through binaryMessenger
-        CerqaHostApi.setUp(chatEngine.dartExecutor.binaryMessenger, ChatHostApi())
+        CerqaHostApi.setUp(chatEngine.dartExecutor.binaryMessenger, ChatHostApi(chatRepository))
 
         // Initialize the Pigeon Flutter API in order to send data from Android to Flutter
         //pigeonFlutterApi = PigeonFlutterApi(chatEngine.dartExecutor.binaryMessenger)

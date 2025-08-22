@@ -14,8 +14,10 @@ import com.mccartycarclub.domain.usecases.user.SearchResultBuilder
 import com.mccartycarclub.domain.websocket.AblyProvider
 import com.mccartycarclub.domain.websocket.RealtimeService
 import com.mccartycarclub.pigeon.CerqaFlutterApi
+import com.mccartycarclub.pigeon.ChatHostApi
 import com.mccartycarclub.pigeon.PigeonFlutterApi
 import com.mccartycarclub.receiver.AblyBroadcastReceiver
+import com.mccartycarclub.repository.ChatRepository
 import com.mccartycarclub.repository.datastore.UserPreferences
 import dagger.Module
 import dagger.Provides
@@ -112,4 +114,9 @@ object AppModule {
         return CerqaFlutterApi(flutterEngine.dartExecutor.binaryMessenger)
     }
 
+    @Provides
+    @Singleton
+    fun provideChatHostApi(chatRepository: ChatRepository): ChatHostApi {
+        return ChatHostApi(chatRepository)
+    }
 }
