@@ -1,6 +1,6 @@
 Added flutter screen for Chat. Will add for Profile, and Inbox. The Chat screen is using mock data for now, I have added the Pigeon tool for Android, Flutter communication. I am working on wiring this up at the moment so that I can fetch chats, and groups from Amplify and send them to the Flutter UI.
 
-[flutter_test_mock_data_from_android.webm](https://github.com/user-attachments/assets/7214794c-4c93-4f6b-8758-75eeec85a8c1)
+[chat_ui_with_mock_data.webm](https://github.com/user-attachments/assets/b2755c96-8bc5-4b9a-a098-00f3b872d930)
 
 App MainScreen click through to ContactsScreen and then to SearchContactsScreen. Will remove that second search field in order to implement the first one. Also, I will either add the phone numbers on search screen becauase when a contact has more than one phone number they will have more than one entry in the list, or I will show contact once and have a phone number chooser when inviting to connect that way.
 
