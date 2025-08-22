@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  CerqaFlutterApi.setUp(_CerqaFlutterApi());
+  // CerqaFlutterApi.setUp(_CerqaFlutterApi());
   runApp(const MyApp());
 }
 
@@ -315,13 +315,17 @@ class _MyHomePageState extends State<MyHomePage>
         children: [
 
           // Chats Tab list view
-          ListView(
-            padding: const EdgeInsets.all(16),
-            children: const [
-              ListTile(leading: Icon(Icons.chat), title: Text('Chat item 1')),
-              ListTile(leading: Icon(Icons.chat), title: Text('Chat item 2')),
-              ListTile(leading: Icon(Icons.chat), title: Text('Chat item 3')),
-            ],
+          ListView.builder(
+            itemCount: chats.length,
+            itemBuilder: (BuildContext context, int index) {
+              return ListTile(
+                // TODO: string resource for No name found
+                title: Text(chats[index].userName ?? "No name found"),
+                onTap: () {
+                  print('Tapped on ${chats[index].userName}');
+                },
+              );
+            },
           ),
 
           // Groups Tab lists view
@@ -348,117 +352,5 @@ class _MyHomePageState extends State<MyHomePage>
     setState(() {
       chats = result;
     });
-  }
-}
-
-class _CerqaHostApi implements CerqaHostApi {
-  @override
-  Future<void> createChat(String receiverUserId) {
-    // TODO: implement createChat
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> createGroup(String groupName) {
-    // TODO: implement createGroup
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> createGroupMessage() {
-    // TODO: implement createGroupMessage
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> createMessage() {
-    // TODO: implement createMessage
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> deleteChat() {
-    // TODO: implement deleteChat
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> deleteGroup() {
-    // TODO: implement deleteGroup
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> deleteGroupMessage() {
-    // TODO: implement deleteGroupMessage
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> deleteMessage() {
-    // TODO: implement deleteMessage
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<bool> doesGroupNameExist(String groupName) {
-    // TODO: implement doesGroupNameExist
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<Chat>> fetchChats() {
-    // TODO: implement fetchChats
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<Contact>> fetchContacts() {
-    // TODO: implement fetchContacts
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> fetchDirectConversation(String receiverUserId) {
-    // TODO: implement fetchDirectConversation
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> fetchGroupChats() {
-    // TODO: implement fetchGroupChats
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> fetchGroupConversation() {
-    // TODO: implement fetchGroupConversation
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> fetchGroupMessage() {
-    // TODO: implement fetchGroupMessage
-    throw UnimplementedError();
-  }
-
-  @override
-  // TODO: implement pigeonVar_binaryMessenger
-  BinaryMessenger? get pigeonVar_binaryMessenger => throw UnimplementedError();
-
-  @override
-  // TODO: implement pigeonVar_messageChannelSuffix
-  String get pigeonVar_messageChannelSuffix => throw UnimplementedError();
-
-
-
-}
-
-
-
-class _CerqaFlutterApi implements CerqaFlutterApi {
-
-  List<Contact> fetchContacts() {
-    return List.empty();
   }
 }
