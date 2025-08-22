@@ -1,13 +1,13 @@
 import 'package:pigeon/pigeon.dart';
 
 @ConfigurePigeon(
-    PigeonOptions(
-      dartOut: 'lib/src/chat.g.dart',
-      dartOptions: DartOptions(),
-      kotlinOut: '../app/src/main/java/com/mccartycarclub/pigeon/ChatHost.kt',
-      kotlinOptions: KotlinOptions(package: 'com.mccartycarclub.pigeon',),
-      dartPackageName: 'cerqa_flutter_module',
-    )
+  PigeonOptions(
+    dartOut: 'lib/src/chat.g.dart',
+    dartOptions: DartOptions(),
+    kotlinOut: '../app/src/main/java/com/mccartycarclub/pigeon/ChatHost.kt',
+    kotlinOptions: KotlinOptions(package: 'com.mccartycarclub.pigeon'),
+    dartPackageName: 'cerqa_flutter_module',
+  ),
 )
 class Contact {
   String? userName;
@@ -23,31 +23,40 @@ class Chat {
 
 @HostApi()
 abstract class CerqaHostApi {
-  void createChat(String receiverUserId);
 
-  void deleteChat();
+  @async
+  List<Chat> fetchChats();
 
-  void createGroup();
-
-  void deleteGroup();
+  void fetchDirectConversation(String receiverUserId);
 
   void createMessage();
 
   void deleteMessage();
 
-  void createGroupMessage();
+  void createChat(String receiverUserId);
+
+  void deleteChat();
+
+  bool doesGroupNameExist(String groupName);
+
+  void fetchGroupChats();
+
+  void fetchGroupConversation();
 
   void deleteGroupMessage();
+
+  void fetchGroupMessage();
+
+  void createGroupMessage();
+
+  void createGroup(String groupName);
+
+  void deleteGroup();
+
+  List<Contact> fetchContacts();
 }
 
 @FlutterApi()
 abstract class CerqaFlutterApi {
-  List<Chat> sendChats(List<Chat> chats);
-
-  void sendContacts();
-
-  void sendGroups();
-
-  //TODO: change to sendConversation(), maybe
-  void sendMessages();
+  //void sendChats(List<Chat> chats);
 }

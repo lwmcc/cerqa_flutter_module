@@ -1,4 +1,3 @@
-/*
 import 'cerqa_app_api.dart';
 
 class FlutterApi implements CerqaFlutterApi {
@@ -9,7 +8,7 @@ class FlutterApi implements CerqaFlutterApi {
   }
 
   @override
-  void sendContacts() {
+  void sendContacts(List<Contact> contacts) {
     // TODO: implement sendContacts
   }
 
@@ -23,4 +22,4 @@ class FlutterApi implements CerqaFlutterApi {
     // TODO: implement sendMessages
   }
 
-}*/
+}

@@ -1,5 +1,6 @@
 import 'package:cerqa_flutter_module/src/chat.g.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/src/services/binary_messenger.dart';
 import 'package:go_router/go_router.dart';
 
 void main() async {
@@ -15,7 +16,7 @@ final GoRouter _router = GoRouter(
       builder: (BuildContext context, GoRouterState state) {
         //return const ChatHomeScreen();
         //return const HomeScreen();
-        return const MyHomePage(title: 'Chat Home');
+        return MyHomePage(title: 'Chat Home');
       },
       routes: <RouteBase>[
         GoRoute(
@@ -236,12 +237,14 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
-  int _counter = 0;
+
+  final CerqaHostApi _hostApi = CerqaHostApi();
+
   int _currentTabIndex = 0;
 
-  final bool _isListenerAttached = false;
-
   late TabController _tabController;
+
+  List<Chat> chats = [];
 
   void _incrementCounter() {
     setState(() {
@@ -250,7 +253,7 @@ class _MyHomePageState extends State<MyHomePage>
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
-      _counter++;
+      //_counter++;
     });
   }
 
@@ -265,6 +268,8 @@ class _MyHomePageState extends State<MyHomePage>
         });
       }
     });
+
+    _loadChats();
   }
 
   @override
@@ -275,6 +280,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   Widget build(BuildContext context) {
+    print("_CerqaFlutterApi ***** LENGTH ${ chats.length}");
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.title} (Tab $_currentTabIndex)'),
@@ -293,6 +299,7 @@ class _MyHomePageState extends State<MyHomePage>
             },
           ),
         ],
+
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -301,9 +308,13 @@ class _MyHomePageState extends State<MyHomePage>
           ],
         ),
       ),
+
       body: TabBarView(
+
         controller: _tabController,
         children: [
+
+          // Chats Tab list view
           ListView(
             padding: const EdgeInsets.all(16),
             children: const [
@@ -312,12 +323,14 @@ class _MyHomePageState extends State<MyHomePage>
               ListTile(leading: Icon(Icons.chat), title: Text('Chat item 3')),
             ],
           ),
+
+          // Groups Tab lists view
           ListView(
             padding: const EdgeInsets.all(16),
             children: const [
-              ListTile(leading: Icon(Icons.chat), title: Text('Chat item 1')),
-              ListTile(leading: Icon(Icons.chat), title: Text('Chat item 2')),
-              ListTile(leading: Icon(Icons.chat), title: Text('Chat item 3')),
+              ListTile(leading: Icon(Icons.chat), title: Text('Group Chat item 1')),
+              ListTile(leading: Icon(Icons.chat), title: Text('Group Chat item 2')),
+              ListTile(leading: Icon(Icons.chat), title: Text('Group Chat item 3')),
             ],
           ),
         ],
@@ -329,31 +342,123 @@ class _MyHomePageState extends State<MyHomePage>
       ),
     );
   }
+
+  Future<void> _loadChats() async {
+    final result = await _hostApi.fetchChats();
+    setState(() {
+      chats = result;
+    });
+  }
 }
 
+class _CerqaHostApi implements CerqaHostApi {
+  @override
+  Future<void> createChat(String receiverUserId) {
+    // TODO: implement createChat
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> createGroup(String groupName) {
+    // TODO: implement createGroup
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> createGroupMessage() {
+    // TODO: implement createGroupMessage
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> createMessage() {
+    // TODO: implement createMessage
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> deleteChat() {
+    // TODO: implement deleteChat
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> deleteGroup() {
+    // TODO: implement deleteGroup
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> deleteGroupMessage() {
+    // TODO: implement deleteGroupMessage
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> deleteMessage() {
+    // TODO: implement deleteMessage
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> doesGroupNameExist(String groupName) {
+    // TODO: implement doesGroupNameExist
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<Chat>> fetchChats() {
+    // TODO: implement fetchChats
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<Contact>> fetchContacts() {
+    // TODO: implement fetchContacts
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> fetchDirectConversation(String receiverUserId) {
+    // TODO: implement fetchDirectConversation
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> fetchGroupChats() {
+    // TODO: implement fetchGroupChats
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> fetchGroupConversation() {
+    // TODO: implement fetchGroupConversation
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> fetchGroupMessage() {
+    // TODO: implement fetchGroupMessage
+    throw UnimplementedError();
+  }
+
+  @override
+  // TODO: implement pigeonVar_binaryMessenger
+  BinaryMessenger? get pigeonVar_binaryMessenger => throw UnimplementedError();
+
+  @override
+  // TODO: implement pigeonVar_messageChannelSuffix
+  String get pigeonVar_messageChannelSuffix => throw UnimplementedError();
+
+
+
+}
+
+
+
 class _CerqaFlutterApi implements CerqaFlutterApi {
-  @override
-  List<Chat> sendChats(List<Chat> chats) {
-    for (var chat in chats) {
-      print("_CerqaFlutterApi ***** sendChats() USER NAME ${chat.userName}");
-      print("_CerqaFlutterApi ***** sendChats() URI ${chat.avatarUri}");
-    }
 
-    return chats;
-  }
-
-  @override
-  void sendContacts() {
-    // TODO: implement sendContacts
-  }
-
-  @override
-  void sendGroups() {
-    // TODO: implement sendGroups
-  }
-
-  @override
-  void sendMessages() {
-    // TODO: implement sendMessages
+  List<Contact> fetchContacts() {
+    return List.empty();
   }
 }
