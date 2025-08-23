@@ -16,7 +16,7 @@ final GoRouter _router = GoRouter(
       builder: (BuildContext context, GoRouterState state) {
         //return const ChatHomeScreen();
         //return const HomeScreen();
-        return MyHomePage(title: 'Chat Home');
+        return MyHomePage(title: 'Chat Home', titles: ['Chat', 'Group Chat']); // TODO: add resource string
       },
       routes: <RouteBase>[
         GoRoute(
@@ -218,7 +218,7 @@ class ProfileScreen extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.titles});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -230,6 +230,7 @@ class MyHomePage extends StatefulWidget {
   // always marked "final".
 
   final String title;
+  final List<String> titles;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -287,14 +288,14 @@ class _MyHomePageState extends State<MyHomePage>
     print("_CerqaFlutterApi ***** LENGTH ${ chats.length}");
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.title} (Tab $_currentTabIndex)'),
+        title: Text(widget.titles[_currentTabIndex]),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
               switch (_currentTabIndex) {
                 case 0:
-                  //_loadContacts();
+                //_loadContacts();
 
                   Navigator.push(
                     context,
@@ -310,7 +311,7 @@ class _MyHomePageState extends State<MyHomePage>
                   Navigator.push(
                     context,
                     MaterialPageRoute<void>(
-                      builder: (context) => NewGroupChatScreen(),
+                      builder: (context) => NewGroupChatScreen(contacts: contacts),
                     ),
                   );
                 default:
@@ -346,7 +347,7 @@ class _MyHomePageState extends State<MyHomePage>
                     context,
                     MaterialPageRoute<void>(
                       builder: (context) =>
-                          DirectConversationScreen(
+                          DirectMessageScreen(
                               header: chats[index].userName ?? "Chat"),
                     ),
                   );
