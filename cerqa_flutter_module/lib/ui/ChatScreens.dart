@@ -116,8 +116,8 @@ class NewChatScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute<void>(
                   builder: (context) => DirectMessageScreen(
-                    header: contacts[index].userName ?? "Chat",
-                  ),
+                        header: contacts[index].userName ?? "Chat",
+                      ),
                 ),
               );
             },

@@ -16,7 +16,10 @@ final GoRouter _router = GoRouter(
       builder: (BuildContext context, GoRouterState state) {
         //return const ChatHomeScreen();
         //return const HomeScreen();
-        return MyHomePage(title: 'Chat Home', titles: ['Chat', 'Group Chat']); // TODO: add resource string
+        return MyHomePage(
+          title: 'Chat Home',
+          titles: ['Chat', 'Group Chat'],
+        ); // TODO: add resource string
       },
       routes: <RouteBase>[
         GoRoute(
@@ -238,7 +241,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
-
   final CerqaHostApi _hostApi = CerqaHostApi();
 
   int _currentTabIndex = 0;
@@ -285,7 +287,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   Widget build(BuildContext context) {
-    print("_CerqaFlutterApi ***** LENGTH ${ chats.length}");
+    print("_CerqaFlutterApi ***** LENGTH ${chats.length}");
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.titles[_currentTabIndex]),
@@ -295,23 +297,21 @@ class _MyHomePageState extends State<MyHomePage>
             onPressed: () {
               switch (_currentTabIndex) {
                 case 0:
-                //_loadContacts();
+                  //_loadContacts();
 
                   Navigator.push(
                     context,
                     MaterialPageRoute<void>(
                       builder: (context) =>
-                          NewChatScreen(
-                            header: "New Chat",
-                            contacts: contacts,
-                          ),
+                          NewChatScreen(header: "New Chat", contacts: contacts),
                     ),
                   );
                 case 1:
                   Navigator.push(
                     context,
                     MaterialPageRoute<void>(
-                      builder: (context) => NewGroupChatScreen(contacts: contacts),
+                      builder: (context) =>
+                          NewGroupChatScreen(contacts: contacts),
                     ),
                   );
                 default:
@@ -331,24 +331,32 @@ class _MyHomePageState extends State<MyHomePage>
       ),
 
       body: TabBarView(
-
         controller: _tabController,
         children: [
 
           // Chats Tab list view
-          ListView.builder(
+          chats.isEmpty
+              ? Center(
+            child: Text(
+
+              "No chats found", // TODO: add string resource
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          )
+              : ListView.builder(
             itemCount: chats.length,
             itemBuilder: (BuildContext context, int index) {
               return ListTile(
+
                 // TODO: string resource for No name found
-                title: Text(chats[index].userName ?? "No name found"),
+                title: Text(chats[index].userName ?? "Start chatting"),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute<void>(
-                      builder: (context) =>
-                          DirectMessageScreen(
-                              header: chats[index].userName ?? "Chat"),
+                      builder: (context) => DirectMessageScreen(
+                            header: chats[index].userName ?? "Chat",
+                          ),
                     ),
                   );
                 },
@@ -366,10 +374,9 @@ class _MyHomePageState extends State<MyHomePage>
                   Navigator.push(
                     context,
                     MaterialPageRoute<void>(
-                      builder: (context) =>
-                          GroupConversationScreen(
-                              header: groupChats[index].groupName ??
-                                  "Group Chat"),
+                      builder: (context) => GroupConversationScreen(
+                        header: groupChats[index].groupName ?? "Group Chat",
+                      ),
                     ),
                   );
                 },
