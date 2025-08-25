@@ -1,28 +1,56 @@
 package com.mccartycarclub.repository
 
+import com.amplifyframework.AmplifyException
+import com.amplifyframework.api.graphql.model.ModelQuery
+import com.amplifyframework.core.model.LazyModelReference
+import com.amplifyframework.core.model.LoadedModelReference
+import com.amplifyframework.datastore.generated.model.User
+import com.amplifyframework.datastore.generated.model.UserChannel
+import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.mccartycarclub.pigeon.Chat
 import com.mccartycarclub.pigeon.Group
 import com.mccartycarclub.pigeon.Contact
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import javax.inject.Named
 
-class ChatRepositoryImpl @Inject constructor() : ChatRepository {
-    override fun fetchChats(): List<Chat> {
+class ChatRepositoryImpl @Inject constructor(
+    private val localRepository: LocalRepository,
+    private val amplifyApi: KotlinApiFacade,
+    @param:Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
+) : ChatRepository {
 
-        // Fake data to test flutter side
-        return mutableListOf(
-            Chat(
-                userName = "Mlarrym",
-                avatarUri = "",
-            ),
-            Chat(
-                userName = "Bron",
-                avatarUri = "",
-            ),
-            Chat(
-                userName = "Luka",
-                avatarUri = "",
-            )
-        )
+    override suspend fun fetchChats(): List<Chat> = withContext(ioDispatcher) {
+
+        try {
+            val predicate = UserChannel.USER.eq(localRepository.getUserId().first())
+            val response = amplifyApi.query(ModelQuery.list(UserChannel::class.java, predicate))
+
+            if (response.hasData()) {
+                val chats = response.data.items.mapNotNull { userChannel ->
+                    val userRef = userChannel.user ?: return@mapNotNull null
+                    val userObj = when (userRef) {
+                        is LazyModelReference<*> -> userRef.fetchModel()
+                        is LoadedModelReference<*> -> userRef
+                    } as? User ?: return@mapNotNull null
+
+                    Chat(
+                        chatId = userObj.id,
+                        userName = userObj.userName ?: "Unknown",
+                        avatarUri = userObj.avatarUri ?: ""
+                    )
+                }
+
+                chats
+            } else {
+                emptyList()
+            }
+
+        } catch (ae: AmplifyException) {
+            emptyList()
+        }
     }
 
     override fun fetchContacts(): List<Contact> {
