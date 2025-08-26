@@ -1,20 +1,31 @@
 package com.mccartycarclub.repository
 
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.LoadedModelReference
+import com.amplifyframework.datastore.generated.model.Channel
+import com.amplifyframework.datastore.generated.model.Message as RepositoryMessage
+import com.mccartycarclub.pigeon.Message as PigeonMessage
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserChannel
 import com.amplifyframework.kotlin.api.KotlinApiFacade
+import com.mccartycarclub.domain.helpers.createChannelId
+import com.mccartycarclub.domain.helpers.toPigeonMessage
 import com.mccartycarclub.pigeon.Chat
 import com.mccartycarclub.pigeon.Group
 import com.mccartycarclub.pigeon.Contact
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.collections.emptyList
 
 class ChatRepositoryImpl @Inject constructor(
     private val localRepository: LocalRepository,
@@ -101,5 +112,92 @@ class ChatRepositoryImpl @Inject constructor(
                 groupAvatarUri = "",
             ),
         )
+    }
+
+    override fun fetchDirectMessages(receiverUserId: String): Flow<List<PigeonMessage>> = flow {
+
+        val loggedInUserId = localRepository.getUserId().firstOrNull()
+
+        val messageId = loggedInUserId?.createChannelId(receiverUserId)
+
+        val response = amplifyApi.query(
+            ModelQuery.list(
+                RepositoryMessage::class.java,
+                RepositoryMessage.CHANNEL.eq(messageId)
+            )
+        )
+
+        if (response.hasData()) {
+            val messages = response.data.items.toList().sortedBy { it.createdAt }
+            emit(toPigeonMessage(messages))
+        } else {
+            emit(emptyList())
+        }
+    }.flowOn(ioDispatcher)
+
+    override fun createMessage(
+        channelId: String?,
+        message: String?,
+        senderUserId: String,
+    ): Flow<Boolean> = flow {
+
+        if (channelId == null || message == null) {
+            emit(false)
+            return@flow
+        }
+
+        val user = User.justId(senderUserId)
+
+        val channel = Channel.builder()
+            .id(channelId)
+            .name("NAME-NOT-NEEDED-FOR-PRIVATE-v2")
+            .isGroup(false)
+            .isPublic(false)
+            .creator(user)
+            .build()
+
+        val chatMessage = RepositoryMessage.builder()
+            .content(message)
+            .channel(channel)
+            .sender(user)
+            .build()
+
+        try {
+
+            if (channelExists(channelId)) {
+                amplifyApi.mutate(ModelMutation.create(chatMessage))
+            } else {
+                val channelResponse = amplifyApi.mutate(ModelMutation.create(channel))
+
+                if (!channelResponse.hasData()) {
+                    emit(false)
+                    return@flow
+                }
+                val userChannel = UserChannel.builder()
+                    .user(user)
+                    .channel(channelResponse.data)
+                    .build()
+
+                amplifyApi.mutate(ModelMutation.create(userChannel))
+                amplifyApi.mutate(ModelMutation.create(chatMessage))
+            }
+            emit(true)
+        } catch (ae: AmplifyException) {
+            emit(false)
+        } catch (e: Exception) {
+            emit(false)
+        }
+    }.flowOn(ioDispatcher)
+
+    suspend fun channelExists(channelId: String?): Boolean {
+        if (channelId.isNullOrBlank()) return false
+        return try {
+            val response = amplifyApi.query(
+                ModelQuery.get(Channel::class.java, channelId)
+            )
+            response.data != null
+        } catch (e: Exception) {
+            false
+        }
     }
 }

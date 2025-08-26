@@ -11,6 +11,7 @@ import com.mccartycarclub.pigeon.ChatHostApi
 import com.mccartycarclub.pigeon.PigeonFlutterApi
 import com.mccartycarclub.repository.ChatRepository
 import com.mccartycarclub.repository.ContactsRepository
+import com.mccartycarclub.repository.LocalRepository
 import dagger.hilt.android.HiltAndroidApp
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
@@ -36,6 +37,9 @@ class CarClubApplication : Application() {
 
     @Inject
     lateinit var contactsRepository: ContactsRepository
+
+    @Inject
+    lateinit var localRepository: LocalRepository
 
     override fun onCreate() {
         super.onCreate()
@@ -63,7 +67,12 @@ class CarClubApplication : Application() {
         // Register Android to handle message through binaryMessenger
         CerqaHostApi.setUp(
             chatEngine.dartExecutor.binaryMessenger,
-            ChatHostApi(chatRepository, contactsRepository, ioDispatcher),
+            ChatHostApi(
+                chatRepository,
+                contactsRepository,
+                localRepository,
+                ioDispatcher,
+            ),
         )
 
         // Initialize the Pigeon Flutter API in order to send data from Android to Flutter

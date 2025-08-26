@@ -19,6 +19,7 @@ import com.mccartycarclub.pigeon.PigeonFlutterApi
 import com.mccartycarclub.receiver.AblyBroadcastReceiver
 import com.mccartycarclub.repository.ChatRepository
 import com.mccartycarclub.repository.ContactsRepository
+import com.mccartycarclub.repository.LocalRepository
 import com.mccartycarclub.repository.datastore.UserPreferences
 import dagger.Module
 import dagger.Provides
@@ -120,8 +121,9 @@ object AppModule {
     fun provideChatHostApi(
         chatRepository: ChatRepository,
         contactsRepository: ContactsRepository,
+        localRepository: LocalRepository,
         ioDispatcher: CoroutineDispatcher,
     ): ChatHostApi {
-        return ChatHostApi(chatRepository, contactsRepository, ioDispatcher)
+        return ChatHostApi(chatRepository, contactsRepository, localRepository, ioDispatcher)
     }
 }

@@ -156,7 +156,8 @@ data class Group (
 data class Chat (
   val chatId: String? = null,
   val userName: String? = null,
-  val avatarUri: String? = null
+  val avatarUri: String? = null,
+  val userId: String? = null
 )
  {
   companion object {
@@ -164,7 +165,8 @@ data class Chat (
       val chatId = pigeonVar_list[0] as String?
       val userName = pigeonVar_list[1] as String?
       val avatarUri = pigeonVar_list[2] as String?
-      return Chat(chatId, userName, avatarUri)
+      val userId = pigeonVar_list[3] as String?
+      return Chat(chatId, userName, avatarUri, userId)
     }
   }
   fun toList(): List<Any?> {
@@ -172,6 +174,7 @@ data class Chat (
       chatId,
       userName,
       avatarUri,
+      userId,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -188,21 +191,30 @@ data class Chat (
 
 /** Generated class from Pigeon that represents data sent in messages. */
 data class Message (
+  val id: String? = null,
   val messageId: String? = null,
-  val message: String? = null
+  val content: String? = null,
+  val senderId: String? = null,
+  val createdAt: String? = null
 )
  {
   companion object {
     fun fromList(pigeonVar_list: List<Any?>): Message {
-      val messageId = pigeonVar_list[0] as String?
-      val message = pigeonVar_list[1] as String?
-      return Message(messageId, message)
+      val id = pigeonVar_list[0] as String?
+      val messageId = pigeonVar_list[1] as String?
+      val content = pigeonVar_list[2] as String?
+      val senderId = pigeonVar_list[3] as String?
+      val createdAt = pigeonVar_list[4] as String?
+      return Message(id, messageId, content, senderId, createdAt)
     }
   }
   fun toList(): List<Any?> {
     return listOf(
+      id,
       messageId,
-      message,
+      content,
+      senderId,
+      createdAt,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -269,8 +281,8 @@ private open class ChatHostPigeonCodec : StandardMessageCodec() {
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface CerqaHostApi {
   fun fetchChats(callback: (Result<List<Chat>>) -> Unit)
-  fun fetchDirectConversation(receiverUserId: String, callback: (Result<List<Message>>) -> Unit)
-  fun createMessage()
+  fun fetchDirectMessages(receiverUserId: String, callback: (Result<List<Message>>) -> Unit)
+  fun createMessage(message: String, receiverUserId: String, callback: (Result<Boolean>) -> Unit)
   fun deleteMessage()
   fun createChat(receiverUserId: String)
   fun deleteChat()
@@ -312,12 +324,12 @@ interface CerqaHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.fetchDirectConversation$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.fetchDirectMessages$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val receiverUserIdArg = args[0] as String
-            api.fetchDirectConversation(receiverUserIdArg) { result: Result<List<Message>> ->
+            api.fetchDirectMessages(receiverUserIdArg) { result: Result<List<Message>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(ChatHostPigeonUtils.wrapError(error))
@@ -334,14 +346,19 @@ interface CerqaHostApi {
       run {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.createMessage$separatedMessageChannelSuffix", codec)
         if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              api.createMessage()
-              listOf(null)
-            } catch (exception: Throwable) {
-              ChatHostPigeonUtils.wrapError(exception)
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val messageArg = args[0] as String
+            val receiverUserIdArg = args[1] as String
+            api.createMessage(messageArg, receiverUserIdArg) { result: Result<Boolean> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(ChatHostPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(ChatHostPigeonUtils.wrapResult(data))
+              }
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)

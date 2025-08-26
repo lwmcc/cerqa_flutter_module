@@ -1,11 +1,15 @@
 package com.mccartycarclub.pigeon
 
+import com.mccartycarclub.domain.helpers.createChannelId
 import com.mccartycarclub.domain.helpers.toPigeonContact
 import com.mccartycarclub.repository.ChatRepository
 import com.mccartycarclub.repository.ContactsRepository
+import com.mccartycarclub.repository.LocalRepository
 import com.mccartycarclub.repository.NetworkResponse
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Named
@@ -15,6 +19,7 @@ import javax.inject.Named
 class ChatHostApi @Inject constructor(
     private val chatRepository: ChatRepository,
     private val contactsRepository: ContactsRepository,
+    private val localRepository: LocalRepository,
     @param:Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
 ) : CerqaHostApi {
 
@@ -73,17 +78,44 @@ class ChatHostApi @Inject constructor(
         }
     }
 
-    override fun fetchDirectConversation(
+    override fun fetchDirectMessages(
         receiverUserId: String,
-        callback: (
-            Result<List<Message>>,
-        ) -> Unit
+        callback: (Result<List<Message>>) -> Unit
     ) {
-        TODO("Not yet implemented")
+        scope.launch {
+            chatRepository.fetchDirectMessages(receiverUserId).collect { messages ->
+                callback(Result.success(messages))
+            }
+        }
     }
 
-    override fun createMessage() {
-        TODO("Not yet implemented")
+    override fun createMessage(
+        message: String,
+        receiverUserId: String,
+        callback: (
+            Result<Boolean>
+        ) -> Unit
+    ) {
+        scope.launch {
+            try {
+                val sender = localRepository.getUserId().firstOrNull()
+
+                if (sender.isNullOrBlank()) {
+                    callback(Result.failure(IllegalStateException("senderUserId is missing")))
+                    return@launch
+                }
+                val channelId = sender.createChannelId(receiverUserId)
+
+                val success = chatRepository.createMessage(channelId, message, sender).first()
+                if (success) {
+                    callback(Result.success(success))
+                } else {
+                    callback(Result.failure(Exception("Message could not be sent")))
+                }
+            } catch (e: Exception) {
+                callback(Result.failure(e))
+            }
+        }
     }
 
     override fun deleteMessage() {
