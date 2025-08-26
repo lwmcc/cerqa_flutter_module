@@ -4,20 +4,61 @@ import '../src/chat.g.dart';
 
 class DirectMessageScreen extends StatefulWidget {
   final String header;
+  final String userId;
 
-  const DirectMessageScreen({super.key, required this.header});
+  const DirectMessageScreen({super.key, required this.header, required this.userId});
 
   @override
   State<DirectMessageScreen> createState() => _DirectMessageScreen();
 }
 
 class _DirectMessageScreen extends State<DirectMessageScreen> {
+  final CerqaHostApi _hostApi = CerqaHostApi();
   late final String header;
+  late final String userId;
+  bool hasFocus = false;
+  late FocusNode messageFocusNode;
+  late TextEditingController controller;
+  List<Message> messages = [];
 
   @override
   void initState() {
     super.initState();
     header = widget.header;
+    userId = widget.userId;
+    messageFocusNode = FocusNode();
+    controller = TextEditingController();
+
+    messageFocusNode.addListener(() {
+      setState(() {
+        hasFocus = messageFocusNode.hasFocus;
+      });
+    });
+
+    _fetchDirectMessages(userId);
+  }
+
+  @override
+  void dispose() {
+    messageFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _sendMessage() {
+    final message = controller.text.trim();
+
+    Future<bool> sent = _hostApi.createMessage(message, userId);
+
+    if (message.isNotEmpty) {
+      controller.clear();
+    }
+  }
+
+  Future<void> _fetchDirectMessages(String receiverUserId) async {
+    final result = await _hostApi.fetchDirectMessages(receiverUserId);
+    setState(() {
+      messages = result;
+    });
   }
 
   @override
@@ -28,20 +69,43 @@ class _DirectMessageScreen extends State<DirectMessageScreen> {
         children: [
           Expanded(
             child: ListView.builder(
-              itemCount: 20,
+              itemCount: messages.length,
+              reverse: true,
               itemBuilder: (context, index) {
-                return ListTile(title: Text('Message ${index + 1}'));
+                return ListTile(title: Text(messages[index].content ?? "No Name Found")); // TODO: fix this
               },
             ),
           ),
 
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Send a message',
-              ),
+            child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      minLines: 1,
+                      maxLines: 5,
+                      focusNode: messageFocusNode,
+                      controller: controller,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: 'Send a message',
+                      ),
+                    ),
+                  ),
+
+                  Visibility(
+                    visible: hasFocus,
+                    maintainSize: true,
+                    maintainAnimation: true,
+                    maintainState: true,
+                    child: IconButton(
+                      icon: const Icon(Icons.send),
+                      color: Colors.indigo,
+                      onPressed: _sendMessage,
+                    ),
+                  ),
+                ]
             ),
           ),
         ],
@@ -64,17 +128,17 @@ class GroupConversationScreen extends StatelessWidget {
           Expanded(
             child: true
                 ? Center(
-              child: Text(
-                'No chats yet...',
-                style: TextStyle(color: Colors.grey),
-              ),
-            )
+                    child: Text(
+                      'No chats yet...',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
                 : ListView.builder(
-              itemCount: 0,
-              itemBuilder: (context, index) {
-                return ListTile(title: Text('test'));
-              },
-            ),
+                    itemCount: 0,
+                    itemBuilder: (context, index) {
+                      return ListTile(title: Text('test'));
+                    },
+                  ),
           ),
 
           Padding(
@@ -116,8 +180,9 @@ class NewChatScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute<void>(
                   builder: (context) => DirectMessageScreen(
-                        header: contacts[index].userName ?? "Chat",
-                      ),
+                    header: contacts[index].userName ?? "Chat",
+                    userId: contacts[index].userId ?? "",
+                  ),
                 ),
               );
             },
@@ -158,19 +223,19 @@ class _NewGroupChatScreenState extends State<NewGroupChat> {
         title: const Text('New Group'),
         actions: selectedContacts.isNotEmpty
             ? [
-          IconButton(
-            icon: const Icon(Icons.navigate_next),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (context) =>
-                      CreateGroupNameScreen(header: 'Group Name',),
+                IconButton(
+                  icon: const Icon(Icons.navigate_next),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (context) =>
+                            CreateGroupNameScreen(header: 'Group Name'),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
-        ]
+              ]
             : null,
       ),
       body: ListView.builder(

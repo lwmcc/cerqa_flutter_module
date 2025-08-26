@@ -356,6 +356,7 @@ class _MyHomePageState extends State<MyHomePage>
                     MaterialPageRoute<void>(
                       builder: (context) => DirectMessageScreen(
                             header: chats[index].userName ?? "Chat",
+                            userId: chats[index].userId ?? "",
                           ),
                     ),
                   );

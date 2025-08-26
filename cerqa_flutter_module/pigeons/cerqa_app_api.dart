@@ -26,11 +26,15 @@ class Chat {
   String? chatId;
   String? userName;
   String? avatarUri;
+  String? userId;
 }
 
 class Message {
+  String? id;
   String? messageId;
-  String? message;
+  String? content;
+  String? senderId;
+  String? createdAt;
 }
 
 @HostApi()
@@ -40,9 +44,10 @@ abstract class CerqaHostApi {
   List<Chat> fetchChats();
 
   @async
-  List<Message> fetchDirectConversation(String receiverUserId);
+  List<Message> fetchDirectMessages(String receiverUserId);
 
-  void createMessage();
+  @async
+  bool createMessage(String message, String receiverUserId);
 
   void deleteMessage();
 

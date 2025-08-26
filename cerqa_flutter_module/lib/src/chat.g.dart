@@ -151,6 +151,7 @@ class Chat {
     this.chatId,
     this.userName,
     this.avatarUri,
+    this.userId,
   });
 
   String? chatId;
@@ -159,11 +160,14 @@ class Chat {
 
   String? avatarUri;
 
+  String? userId;
+
   List<Object?> _toList() {
     return <Object?>[
       chatId,
       userName,
       avatarUri,
+      userId,
     ];
   }
 
@@ -176,6 +180,7 @@ class Chat {
       chatId: result[0] as String?,
       userName: result[1] as String?,
       avatarUri: result[2] as String?,
+      userId: result[3] as String?,
     );
   }
 
@@ -199,18 +204,30 @@ class Chat {
 
 class Message {
   Message({
+    this.id,
     this.messageId,
-    this.message,
+    this.content,
+    this.senderId,
+    this.createdAt,
   });
+
+  String? id;
 
   String? messageId;
 
-  String? message;
+  String? content;
+
+  String? senderId;
+
+  String? createdAt;
 
   List<Object?> _toList() {
     return <Object?>[
+      id,
       messageId,
-      message,
+      content,
+      senderId,
+      createdAt,
     ];
   }
 
@@ -220,8 +237,11 @@ class Message {
   static Message decode(Object result) {
     result as List<Object?>;
     return Message(
-      messageId: result[0] as String?,
-      message: result[1] as String?,
+      id: result[0] as String?,
+      messageId: result[1] as String?,
+      content: result[2] as String?,
+      senderId: result[3] as String?,
+      createdAt: result[4] as String?,
     );
   }
 
@@ -326,8 +346,8 @@ class CerqaHostApi {
     }
   }
 
-  Future<List<Message>> fetchDirectConversation(String receiverUserId) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.fetchDirectConversation$pigeonVar_messageChannelSuffix';
+  Future<List<Message>> fetchDirectMessages(String receiverUserId) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.fetchDirectMessages$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -354,14 +374,14 @@ class CerqaHostApi {
     }
   }
 
-  Future<void> createMessage() async {
+  Future<bool> createMessage(String message, String receiverUserId) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.createMessage$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[message, receiverUserId]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -372,8 +392,13 @@ class CerqaHostApi {
         message: pigeonVar_replyList[1] as String?,
         details: pigeonVar_replyList[2],
       );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
     } else {
-      return;
+      return (pigeonVar_replyList[0] as bool?)!;
     }
   }
 
