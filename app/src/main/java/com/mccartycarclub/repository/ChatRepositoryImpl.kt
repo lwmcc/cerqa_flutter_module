@@ -1,6 +1,8 @@
 package com.mccartycarclub.repository
 
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.api.graphql.GraphQLRequest
+import com.amplifyframework.api.graphql.SimpleGraphQLRequest
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.core.model.LazyModelReference
@@ -34,6 +36,10 @@ class ChatRepositoryImpl @Inject constructor(
 ) : ChatRepository {
 
     override suspend fun fetchChats(): List<Chat> = withContext(ioDispatcher) {
+
+
+        // TODO: testing
+        fetchDirectChatsTest(localRepository.getUserId().first().toString())
 
         try {
             val predicate = UserChannel.USER.eq(localRepository.getUserId().first())
@@ -188,6 +194,50 @@ class ChatRepositoryImpl @Inject constructor(
             emit(false)
         }
     }.flowOn(ioDispatcher)
+
+
+    // TODO: testing
+    suspend fun fetchDirectChatsTest(userId: String): List<Chat> = withContext(ioDispatcher) {
+        try {
+            val document = """
+                        query FetchDirectChats(${'$'}userId: ID!) {
+                          fetchDirectChats(userId: ${'$'}userId) {
+                            chatId
+                            userName
+                            avatarUri
+                            lastMessage
+                          }
+                        }
+                        """.trimIndent()
+
+            val request: GraphQLRequest<String> = SimpleGraphQLRequest(
+                document,
+                mapOf("userId" to userId),
+                String::class.java,
+                null,
+            )
+
+            println("ChatRepositoryImpl ***** fetchDirectChatsTest REQUEST $request")
+
+            val response = amplifyApi.query(request)
+
+            println("ChatRepositoryImpl ***** fetchDirectChatsTest RESPONSE $response")
+
+            val json = response.data
+
+            println("ChatRepositoryImpl ***** fetchDirectChatsTest JSON $json")
+
+            emptyList()
+        }  catch (ae: AmplifyException) {
+            println("ChatRepositoryImpl ***** fetchDirectChatsTest AMPLIFY ERROR ${ae.message}")
+            emptyList()
+        }
+
+        catch (e: Exception) {
+            println("ChatRepositoryImpl ***** fetchDirectChatsTest ERROR ${e.message}")
+            emptyList()
+        }
+    }
 
     suspend fun channelExists(channelId: String?): Boolean {
         if (channelId.isNullOrBlank()) return false
