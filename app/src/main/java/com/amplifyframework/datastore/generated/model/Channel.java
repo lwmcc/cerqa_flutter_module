@@ -34,16 +34,11 @@ public final class Channel implements Model {
   public static final ChannelPath rootPath = new ChannelPath("root", false, null);
   public static final QueryField ID = field("Channel", "id");
   public static final QueryField NAME = field("Channel", "name");
-  public static final QueryField CREATOR = field("Channel", "createdByUserId");
-  public static final QueryField IS_GROUP = field("Channel", "isGroup");
-  public static final QueryField IS_PUBLIC = field("Channel", "isPublic");
+  public static final QueryField USER = field("Channel", "userId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
-  private final @ModelField(targetType="User") @BelongsTo(targetName = "createdByUserId", targetNames = {"createdByUserId"}, type = User.class) ModelReference<User> creator;
+  private final @ModelField(targetType="User") @BelongsTo(targetName = "userId", targetNames = {"userId"}, type = User.class) ModelReference<User> user;
   private final @ModelField(targetType="Message") @HasMany(associatedWith = "channel", type = Message.class) ModelList<Message> messages = null;
-  private final @ModelField(targetType="Boolean") Boolean isGroup;
-  private final @ModelField(targetType="Boolean") Boolean isPublic;
-  private final @ModelField(targetType="UserChannel") @HasMany(associatedWith = "channel", type = UserChannel.class) ModelList<UserChannel> channels = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -60,24 +55,12 @@ public final class Channel implements Model {
       return name;
   }
   
-  public ModelReference<User> getCreator() {
-      return creator;
+  public ModelReference<User> getUser() {
+      return user;
   }
   
   public ModelList<Message> getMessages() {
       return messages;
-  }
-  
-  public Boolean getIsGroup() {
-      return isGroup;
-  }
-  
-  public Boolean getIsPublic() {
-      return isPublic;
-  }
-  
-  public ModelList<UserChannel> getChannels() {
-      return channels;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -88,12 +71,10 @@ public final class Channel implements Model {
       return updatedAt;
   }
   
-  private Channel(String id, String name, ModelReference<User> creator, Boolean isGroup, Boolean isPublic) {
+  private Channel(String id, String name, ModelReference<User> user) {
     this.id = id;
     this.name = name;
-    this.creator = creator;
-    this.isGroup = isGroup;
-    this.isPublic = isPublic;
+    this.user = user;
   }
   
   @Override
@@ -106,9 +87,7 @@ public final class Channel implements Model {
       Channel channel = (Channel) obj;
       return ObjectsCompat.equals(getId(), channel.getId()) &&
               ObjectsCompat.equals(getName(), channel.getName()) &&
-              ObjectsCompat.equals(getCreator(), channel.getCreator()) &&
-              ObjectsCompat.equals(getIsGroup(), channel.getIsGroup()) &&
-              ObjectsCompat.equals(getIsPublic(), channel.getIsPublic()) &&
+              ObjectsCompat.equals(getUser(), channel.getUser()) &&
               ObjectsCompat.equals(getCreatedAt(), channel.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), channel.getUpdatedAt());
       }
@@ -119,9 +98,7 @@ public final class Channel implements Model {
     return new StringBuilder()
       .append(getId())
       .append(getName())
-      .append(getCreator())
-      .append(getIsGroup())
-      .append(getIsPublic())
+      .append(getUser())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -134,9 +111,7 @@ public final class Channel implements Model {
       .append("Channel {")
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
-      .append("creator=" + String.valueOf(getCreator()) + ", ")
-      .append("isGroup=" + String.valueOf(getIsGroup()) + ", ")
-      .append("isPublic=" + String.valueOf(getIsPublic()) + ", ")
+      .append("user=" + String.valueOf(getUser()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
@@ -159,8 +134,6 @@ public final class Channel implements Model {
     return new Channel(
       id,
       null,
-      null,
-      null,
       null
     );
   }
@@ -168,36 +141,28 @@ public final class Channel implements Model {
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
       name,
-      creator,
-      isGroup,
-      isPublic);
+      user);
   }
   public interface BuildStep {
     Channel build();
     BuildStep id(String id);
     BuildStep name(String name);
-    BuildStep creator(User creator);
-    BuildStep isGroup(Boolean isGroup);
-    BuildStep isPublic(Boolean isPublic);
+    BuildStep user(User user);
   }
   
 
   public static class Builder implements BuildStep {
     private String id;
     private String name;
-    private ModelReference<User> creator;
-    private Boolean isGroup;
-    private Boolean isPublic;
+    private ModelReference<User> user;
     public Builder() {
       
     }
     
-    private Builder(String id, String name, ModelReference<User> creator, Boolean isGroup, Boolean isPublic) {
+    private Builder(String id, String name, ModelReference<User> user) {
       this.id = id;
       this.name = name;
-      this.creator = creator;
-      this.isGroup = isGroup;
-      this.isPublic = isPublic;
+      this.user = user;
     }
     
     @Override
@@ -207,9 +172,7 @@ public final class Channel implements Model {
         return new Channel(
           id,
           name,
-          creator,
-          isGroup,
-          isPublic);
+          user);
     }
     
     @Override
@@ -219,20 +182,8 @@ public final class Channel implements Model {
     }
     
     @Override
-     public BuildStep creator(User creator) {
-        this.creator = new LoadedModelReferenceImpl<>(creator);
-        return this;
-    }
-    
-    @Override
-     public BuildStep isGroup(Boolean isGroup) {
-        this.isGroup = isGroup;
-        return this;
-    }
-    
-    @Override
-     public BuildStep isPublic(Boolean isPublic) {
-        this.isPublic = isPublic;
+     public BuildStep user(User user) {
+        this.user = new LoadedModelReferenceImpl<>(user);
         return this;
     }
     
@@ -248,8 +199,8 @@ public final class Channel implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, ModelReference<User> creator, Boolean isGroup, Boolean isPublic) {
-      super(id, name, creator, isGroup, isPublic);
+    private CopyOfBuilder(String id, String name, ModelReference<User> user) {
+      super(id, name, user);
       
     }
     
@@ -259,18 +210,8 @@ public final class Channel implements Model {
     }
     
     @Override
-     public CopyOfBuilder creator(User creator) {
-      return (CopyOfBuilder) super.creator(creator);
-    }
-    
-    @Override
-     public CopyOfBuilder isGroup(Boolean isGroup) {
-      return (CopyOfBuilder) super.isGroup(isGroup);
-    }
-    
-    @Override
-     public CopyOfBuilder isPublic(Boolean isPublic) {
-      return (CopyOfBuilder) super.isPublic(isPublic);
+     public CopyOfBuilder user(User user) {
+      return (CopyOfBuilder) super.user(user);
     }
   }
   
