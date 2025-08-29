@@ -182,8 +182,8 @@
                 ]
               }
             },
-            "channelsCreated": {
-              "name": "channelsCreated",
+            "createdChannels": {
+              "name": "createdChannels",
               "isArray": true,
               "type": {
                 "model": "Channel"
@@ -194,7 +194,23 @@
               "association": {
                 "connectionType": "HAS_MANY",
                 "associatedWith": [
-                  "createdByUserId"
+                  "creatorId"
+                ]
+              }
+            },
+            "receivedChannels": {
+              "name": "receivedChannels",
+              "isArray": true,
+              "type": {
+                "model": "Channel"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "receiverId"
                 ]
               }
             },
@@ -676,28 +692,6 @@
               "isRequired": false,
               "attributes": []
             },
-            "createdByUserId": {
-              "name": "createdByUserId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": true,
-              "attributes": []
-            },
-            "creator": {
-              "name": "creator",
-              "isArray": false,
-              "type": {
-                "model": "User"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "association": {
-                "connectionType": "BELONGS_TO",
-                "targetNames": [
-                  "createdByUserId"
-                ]
-              }
-            },
             "messages": {
               "name": "messages",
               "isArray": true,
@@ -741,6 +735,50 @@
                 "connectionType": "HAS_MANY",
                 "associatedWith": [
                   "channelId"
+                ]
+              }
+            },
+            "creatorId": {
+              "name": "creatorId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "creator": {
+              "name": "creator",
+              "isArray": false,
+              "type": {
+                "model": "User"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "creatorId"
+                ]
+              }
+            },
+            "receiverId": {
+              "name": "receiverId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "receiver": {
+              "name": "receiver",
+              "isArray": false,
+              "type": {
+                "model": "User"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "receiverId"
                 ]
               }
             },
@@ -1031,6 +1069,39 @@
       },
       "enums": {},
       "nonModels": {
+        "DirectChat": {
+          "name": "DirectChat",
+          "fields": {
+            "chatId": {
+              "name": "chatId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "userName": {
+              "name": "userName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "avatarUri": {
+              "name": "avatarUri",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "lastMessage": {
+              "name": "lastMessage",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            }
+          }
+        },
         "FetchAblyJwtReturnType": {
           "name": "FetchAblyJwtReturnType",
           "fields": {

@@ -205,23 +205,27 @@ class ChatRepositoryImpl @Inject constructor(
             return@flow
         }
 
-        val user = User.justId(senderUserId)
+        val creatorUser = User.justId(senderUserId)
+        val receiverUser = User.justId(senderUserId)
 
         val channel = Channel.builder()
             .id(channelId)
+            .receiver(receiverUser)
             .name("NAME-NOT-NEEDED-FOR-PRIVATE-v2")
-           // .isGroup(false)
+            //.isGroup(false)
             //.isPublic(false)
-         //   .creator(user)
+            .creator(receiverUser)
             .build()
 
         val chatMessage = RepositoryMessage.builder()
             .content(message)
             .channel(channel)
-            .sender(user)
+            .sender(creatorUser)
             .build()
 
         try {
+
+            amplifyApi.mutate(ModelMutation.create(channel))
 
             if (channelExists(channelId)) {
                 amplifyApi.mutate(ModelMutation.create(chatMessage))
@@ -233,7 +237,7 @@ class ChatRepositoryImpl @Inject constructor(
                     return@flow
                 }
                 val userChannel = UserChannel.builder()
-                    .user(user)
+                    .user(creatorUser)
                     .channel(channelResponse.data)
                     .build()
 
