@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,6 +30,9 @@ import com.mccartycarclub.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.core.net.toUri
+import com.amplifyframework.api.graphql.model.ModelMutation
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.pigeon.CerqaFlutterApi
 import com.mccartycarclub.pigeon.Chat
 import com.mccartycarclub.pigeon.PigeonFlutterApi
@@ -68,10 +72,7 @@ class MainActivity : ComponentActivity() {
                         state = stateProvider.provide(),
                         modifier = Modifier.fillMaxHeight(),
                     ) { state ->
-                        mainViewModel.setLoggedInUserId(
-                            userId = state.user.userId,
-                            userName = state.user.username,
-                        )
+                        mainViewModel.setLoggedInUserId(userId = state.user.userId)
                         StartScreen(
                             mainViewModel,
                             state = state,
@@ -99,6 +100,28 @@ class MainActivity : ComponentActivity() {
         //pigeonFlutterApi.flutterApi?.sendChats(chatsToSend) { result ->
         //uer    println("_CerqaFlutterApi ***** PIGEON RESULT SUCCESS ${result.isSuccess}")
         //}
+
+        // TODO: create user for testing
+/*        Amplify.Auth.fetchUserAttributes({ attributes ->
+            val userId =
+                attributes.firstOrNull { it.key.keyString == "sub" }?.value
+
+            // TODO: move just for testing
+            Amplify.API.mutate(
+                ModelMutation.create(testUser1(userId!!)),
+                { response -> // TODO: response?
+                    // This is were userId is added to prefs
+                    mainViewModel.setLoggedInUserId(userId)
+                },
+                { error ->
+                    Log.e("MainActivity *****", "User creation failed", error)
+                }
+            )
+        }, { error ->
+            Log.e(
+                "MainActivity *****", "Failed to fetch user attributes", error
+            )
+        })*/
     }
 
     // TODO: pigeon flutter test
@@ -246,3 +269,46 @@ class MainActivity : ComponentActivity() {
         const val NOTIFICATIONS_SCREEN = "notifications_screen"
     }
 }
+
+// TODO: remove just to test
+fun testUser1(userId: String): User {
+    return User.builder()
+        // .userId(userId)
+        .firstName("Larry")
+        .lastName("McCarty")
+        .userName("LarryM")
+        //.userId(userId)
+        .email("lwmccarty@gmail.com")
+        .phone("+14808104545")
+        .name("LM")
+        .avatarUri("https://www.google.com")
+        .build()
+}
+
+fun testUser2(userId: String): User {
+    return User.builder()
+        // .userId(userId)
+        .firstName("Lebron")
+        .lastName("James")
+        .userName("KingJames")
+        .email("lmccarty@outlook.com")
+        .phone("+14805554545")
+        .name("Bron")
+        .avatarUri("https://example.com/avatar.png")
+        .build()
+}
+
+fun testUser3(userId: String): User {
+    return User.builder()
+        // .userId(userId)
+        .firstName("Luka")
+        .lastName("Doncic")
+        .id(userId)
+        .userName("Luka")
+        .email("luka@gmail.com")
+        .phone("+14805553211")
+        .name("Luka")
+        .avatarUri("https://example.com/luka/avatar.png")
+        .build()
+}
+

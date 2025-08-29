@@ -87,7 +87,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun setLoggedInUserId(userId: String, userName: String) {
+    fun setLoggedInUserId(userId: String) {
         viewModelScope.launch {
             localRepo.setLocalUserId(userId)
             _userId.value = userId

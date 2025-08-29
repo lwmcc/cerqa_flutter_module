@@ -28,6 +28,7 @@ import com.mccartycarclub.domain.helpers.toPigeonMessage
 import com.mccartycarclub.pigeon.Chat
 import com.mccartycarclub.pigeon.Group
 import com.mccartycarclub.pigeon.Contact
+import com.mccartycarclub.repository.AmplifyDbRepo.Companion.USER_ID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -37,6 +38,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.String
 import kotlin.collections.emptyList
 
 class ChatRepositoryImpl @Inject constructor(
@@ -45,88 +47,49 @@ class ChatRepositoryImpl @Inject constructor(
     @param:Named("IoDispatcher") private val ioDispatcher: CoroutineDispatcher,
 ) : ChatRepository {
 
-    override suspend fun fetchChats(): List<Chat> = withContext(ioDispatcher) {
+    override suspend fun fetchChats(): List<Chat>  {
+        val userId = localRepository.getUserId().first()
 
-        try {
+        val document = """
+                        query FetchUserChannels(${'$'}userId: ID!) {
+                          fetchUserChannels(userId: ${'$'}userId) {
+                            id
+                            name
+                            creator {
+                              id
+                              userName
+                            }
+                            receiver {
+                              id
+                              userName
+                            }
+                            members {
+                              id
+                              userName
+                            }
+                          }
+                        }
+                    """.trimIndent()
 
+        val request = SimpleGraphQLRequest<String>(
+            document,
+            mapOf(USER_ID to userId),
+            String::class.java,
+            GsonVariablesSerializer()
+        )
 
-            val predicateC = Channel.CREATOR.eq(
-                localRepository.getUserId().first()
-            )
-                .or(
-                    Channel.RECEIVER.eq(localRepository.getUserId().first())
-                )
-            val response = amplifyApi.query(ModelQuery.list(Channel::class.java, predicateC))
-
-            val channels = response.data.items as? LoadedModelList<Channel>
-            channels?.items?.forEach {
-                val c: ModelReference<User> = it.receiver
-                println("ChatRepositoryImpl ***** ${c}")
+        Amplify.API.query(
+            request,
+            { response ->
+                println("ChatRepositoryImpl ***** MESSAGE CREATED: ${response.data}")
+            },
+            { error ->
+                println("ChatRepositoryImpl ***** ERROR MESSAGE CREATED: ${error.message}")
             }
+        )
 
 
-/*            channels.forEach {
-
-                val c: ModelReference<User> = it.receiver
-                println("ChatRepositoryImpl ***** ${c}")
-            }*/
-/*            val result = amplifyApi.query(
-                ModelQuery.get<User, UserPath>(
-                    User::class.java,
-                    User.UserIdentifier(localRepository.getUserId().first())
-                ) { includes(it.channels) }
-            )
-
-            val ch =
-                (result.data.channels as? LoadedModelList<Channel>)?.items
-                    ?: emptyList()
-
-            ch.forEach { channel ->
-                val name = when (val reference = channel.name) {
-                    is LazyModelReference<User> -> {
-                        reference.fetchModel()
-                    }
-
-                    is LoadedModelReference<User> -> {
-                        reference.value
-                    }
-
-                    else -> {
-                        null
-                    }
-                }
-
-                println("ChatRepositoryImpl ***** NAME ${name}")
-            }*/
-
-
-            emptyList()
-/*            val predicate = UserChannel.USER.eq(localRepository.getUserId().first())
-            val response = amplifyApi.query(ModelQuery.list(UserChannel::class.java, predicate))
-
-            if (response.hasData()) {
-                val chats = response.data.items.mapNotNull { userChannel ->
-                    val userRef = userChannel.user ?: return@mapNotNull null
-                    val userObj = when (userRef) {
-                        is LazyModelReference<*> -> userRef.fetchModel()
-                        is LoadedModelReference<*> -> userRef
-                    } as? User ?: return@mapNotNull null
-
-                    Chat(
-                        chatId = userObj.id,
-                        userName = userObj.userName ?: "Unknown",
-                        avatarUri = userObj.avatarUri ?: ""
-                    )
-                }
-
-                chats
-            } else {
-                emptyList()
-            }*/
-
-        } catch (ae: AmplifyException) {
-            emptyList()
-        }
+        return emptyList()
     }
 
     override fun fetchContacts(): List<Contact> {
@@ -181,73 +144,50 @@ class ChatRepositoryImpl @Inject constructor(
 
     override fun fetchDirectMessages(receiverUserId: String): Flow<List<PigeonMessage>> = flow {
 
-        val loggedInUserId = localRepository.getUserId().firstOrNull()
+        val userId = localRepository.getUserId().first()
 
-        fetchDirectChatsTest(loggedInUserId.toString())
+        val document = """
+                        query FetchUserChannels(${'$'}userId: ID!) {
+                          fetchUserChannels(userId: ${'$'}userId) {
+                            id
+                            name
+                            creator {
+                              id
+                              userName
+                            }
+                            receiver {
+                              id
+                              userName
+                            }
+                            members {
+                              id
+                              userName
+                            }
+                          }
+                        }
+                    """.trimIndent()
 
-/*        Amplify.API.query(
-            get<User, UserPath>(
-                User::class.java,
-                User.UserIdentifier(loggedInUserId)
-            ) { userPath -> includes(userPath.channels) },
-            {
-                val channels = (it.data.channels as? LoadedModelList<*>)?.items
-                println("ChatRepositoryImpl ***** GET CHANNELS FETCH ${channels?.size} ")
-                channels?.forEach { channel ->
-                    println("ChatRepositoryImpl ***** GET CHANNELS FETCH CHANNEL ${channel} ")
-                }
-            },
-            {
-                println("ChatRepositoryImpl ***** ERROR ")
-            }
-        )*/
-/*
-        val response = Amplify.API.query(
+        val request = SimpleGraphQLRequest<String>(
+            document,
+            mapOf(USER_ID to userId),
+            String::class.java,
+            GsonVariablesSerializer()
+        )
+
+        Amplify.API.query(
             request,
-            { result ->
-                val gson = Gson()
-                val json = gson.fromJson(result.data, FetchDirectChatsResponse::class.java)
-
-                println("ChatRepositoryImpl ***** RESPONSE ${json.fetchDirectChats}")
-*//*                response.fetchDirectChats.forEach {
-                    println("Chat with ${it.userName}: ${it.lastMessage}")
-                }*//*
+            { response ->
+                println("ChatRepositoryImpl ***** MESSAGE CREATED: ${response.data}")
             },
-            { error -> println("Error: $error") }
-        )*/
-
-/*
-        if (response2.hasData()) {
-            if (response2.hasErrors()) {
-                println("ChatRepositoryImpl ***** RESPONSE ERRORS ${response2.errors}")
-            } else {
-                println("ChatRepositoryImpl ***** RESPONSE ${response2.data}")
+            { error ->
+                println("ChatRepositoryImpl ***** ERROR MESSAGE CREATED: ${error.message}")
             }
-        } else {
-            println("ChatRepositoryImpl ***** RESPONSE NO DATA}")
-        }
-*/
+        )
+
 
 
 
         emit(emptyList<PigeonMessage>())
-/*        val loggedInUserId = localRepository.getUserId().firstOrNull()
-
-        val messageId = loggedInUserId?.createChannelId(receiverUserId)
-
-        val response = amplifyApi.query(
-            ModelQuery.list(
-                RepositoryMessage::class.java,
-                RepositoryMessage.CHANNEL.eq(messageId)
-            )
-        )
-
-        if (response.hasData()) {
-            val messages = response.data.items.toList().sortedBy { it.createdAt }
-            emit(toPigeonMessage(messages))
-        } else {
-            emit(emptyList())
-        }*/
     }.flowOn(ioDispatcher)
 
     override fun createMessage(
@@ -345,81 +285,6 @@ class ChatRepositoryImpl @Inject constructor(
             { err -> println("ChatRepositoryImpl ***** CHANNEL FAILED: ${err.message}") }
         )
 
-    }
-
-    // TODO: testing
-    suspend fun fetchDirectChatsTest(userId: String): List<Chat> = withContext(ioDispatcher) {
-
-/*        val document = """
-                        query FetchDirectChats(${'$'}userId: String!) {
-                            fetchDirectChats(userId: ${'$'}userId) {
-                                chatId
-                                userName
-                                avatarUri
-                                lastMessage
-                            }
-                        }
-                    """.trimIndent()
-
-        val request = SimpleGraphQLRequest<String>(
-            document,
-            mapOf("userId" to userId),
-            String::class.java,
-            GsonVariablesSerializer()
-        )
-
-        Amplify.API.query(
-            request,
-            { result ->
-                val gson = Gson()
-                val response = gson.fromJson(result.data, FetchDirectChatsResponse::class.java)
-                response.fetchDirectChats.forEach {
-                    println("ChatRepositoryImpl ***** ${it.userName}: ${it.lastMessage}")
-                }
-            },
-            { error -> println("ChatRepositoryImpl *****Error: $error") }
-        )*/
-
-        emptyList()
-/*        try {
-            val document = """
-                        query FetchDirectChats(${'$'}userId: ID!) {
-                          fetchDirectChats(userId: ${'$'}userId) {
-                            chatId
-                            userName
-                            avatarUri
-                            lastMessage
-                          }
-                        }
-                        """.trimIndent()
-
-            val request: GraphQLRequest<String> = SimpleGraphQLRequest(
-                document,
-                mapOf("userId" to userId),
-                String::class.java,
-                null,
-            )
-
-            println("ChatRepositoryImpl ***** fetchDirectChatsTest REQUEST $request")
-
-            val response = amplifyApi.query(request)
-
-            println("ChatRepositoryImpl ***** fetchDirectChatsTest RESPONSE $response")
-
-            val json = response.data
-
-            println("ChatRepositoryImpl ***** fetchDirectChatsTest JSON $json")
-
-            emptyList()
-        }  catch (ae: AmplifyException) {
-            println("ChatRepositoryImpl ***** fetchDirectChatsTest AMPLIFY ERROR ${ae.message}")
-            emptyList()
-        }
-
-        catch (e: Exception) {
-            println("ChatRepositoryImpl ***** fetchDirectChatsTest ERROR ${e.message}")
-            emptyList()
-        }*/
     }
 
     suspend fun channelExists(channelId: String?): Boolean {
