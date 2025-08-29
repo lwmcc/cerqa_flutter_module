@@ -104,9 +104,10 @@ class ChatHostApi @Inject constructor(
                     callback(Result.failure(IllegalStateException("senderUserId is missing")))
                     return@launch
                 }
+                // TODO: move to repo
                 val channelId = sender.createChannelId(receiverUserId)
 
-                val success = chatRepository.createMessage(channelId, message, sender).first()
+                val success = chatRepository.createMessage(channelId, message, receiverUserId).first()
                 if (success) {
                     callback(Result.success(success))
                 } else {

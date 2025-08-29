@@ -12,5 +12,5 @@ interface ChatRepository {
     fun fetchDirectConversation()
     fun fetchGroups(): List<Group>
     fun fetchDirectMessages(receiverUserId: String): Flow<List<Message>>
-    fun createMessage(channelId: String?, message: String?, senderUserId: String): Flow<Boolean>
+    fun createMessage(channelId: String?, message: String?, receiverUserId: String): Flow<Boolean>
 }

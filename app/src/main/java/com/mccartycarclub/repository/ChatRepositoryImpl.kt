@@ -196,25 +196,27 @@ class ChatRepositoryImpl @Inject constructor(
 
     override fun createMessage(
         channelId: String?,
-        message: String?,
-        senderUserId: String,
+        message: String?, // TODO: no nulls
+        receiverUserId: String,
     ): Flow<Boolean> = flow {
 
-        if (channelId == null || message == null) {
+        val sender = localRepository.getUserId().firstOrNull()
+
+        if (channelId == null || message == null) { // TODO: no nulls
             emit(false)
             return@flow
         }
 
-        val creatorUser = User.justId(senderUserId)
-        val receiverUser = User.justId(senderUserId)
+        val creatorUser = User.justId(sender)
+        val receiverUser = User.justId(receiverUserId)
 
         val channel = Channel.builder()
             .id(channelId)
+            .name("NAME-NOT-NEEDED-FOR-PRIVATE-testing-relationship")
+            .isGroup(false)
+            .isPublic(false)
+            .creator(creatorUser)
             .receiver(receiverUser)
-            .name("NAME-NOT-NEEDED-FOR-PRIVATE-v2")
-            //.isGroup(false)
-            //.isPublic(false)
-            .creator(receiverUser)
             .build()
 
         val chatMessage = RepositoryMessage.builder()
