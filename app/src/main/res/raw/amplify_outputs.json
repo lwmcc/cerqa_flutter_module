@@ -742,7 +742,7 @@
               "name": "creatorId",
               "isArray": false,
               "type": "ID",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "creator": {
@@ -764,7 +764,7 @@
               "name": "receiverId",
               "isArray": false,
               "type": "ID",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "receiver": {

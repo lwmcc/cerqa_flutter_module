@@ -11,12 +11,15 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.LoadedModelReference
+import com.amplifyframework.core.model.ModelReference
 import com.amplifyframework.core.model.includes
 import com.amplifyframework.datastore.generated.model.Channel
+import com.amplifyframework.datastore.generated.model.ChannelPath
 import com.amplifyframework.datastore.generated.model.Message as RepositoryMessage
 import com.mccartycarclub.pigeon.Message as PigeonMessage
 import com.amplifyframework.datastore.generated.model.User
 import com.amplifyframework.datastore.generated.model.UserChannel
+import com.amplifyframework.datastore.generated.model.UserContact
 import com.amplifyframework.datastore.generated.model.UserPath
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.google.gson.Gson
@@ -45,7 +48,60 @@ class ChatRepositoryImpl @Inject constructor(
     override suspend fun fetchChats(): List<Chat> = withContext(ioDispatcher) {
 
         try {
-            val predicate = UserChannel.USER.eq(localRepository.getUserId().first())
+
+
+            val predicateC = Channel.CREATOR.eq(
+                localRepository.getUserId().first()
+            )
+                .or(
+                    Channel.RECEIVER.eq(localRepository.getUserId().first())
+                )
+            val response = amplifyApi.query(ModelQuery.list(Channel::class.java, predicateC))
+
+            val channels = response.data.items as? LoadedModelList<Channel>
+            channels?.items?.forEach {
+                val c: ModelReference<User> = it.receiver
+                println("ChatRepositoryImpl ***** ${c}")
+            }
+
+
+/*            channels.forEach {
+
+                val c: ModelReference<User> = it.receiver
+                println("ChatRepositoryImpl ***** ${c}")
+            }*/
+/*            val result = amplifyApi.query(
+                ModelQuery.get<User, UserPath>(
+                    User::class.java,
+                    User.UserIdentifier(localRepository.getUserId().first())
+                ) { includes(it.channels) }
+            )
+
+            val ch =
+                (result.data.channels as? LoadedModelList<Channel>)?.items
+                    ?: emptyList()
+
+            ch.forEach { channel ->
+                val name = when (val reference = channel.name) {
+                    is LazyModelReference<User> -> {
+                        reference.fetchModel()
+                    }
+
+                    is LoadedModelReference<User> -> {
+                        reference.value
+                    }
+
+                    else -> {
+                        null
+                    }
+                }
+
+                println("ChatRepositoryImpl ***** NAME ${name}")
+            }*/
+
+
+            emptyList()
+/*            val predicate = UserChannel.USER.eq(localRepository.getUserId().first())
             val response = amplifyApi.query(ModelQuery.list(UserChannel::class.java, predicate))
 
             if (response.hasData()) {
@@ -66,7 +122,7 @@ class ChatRepositoryImpl @Inject constructor(
                 chats
             } else {
                 emptyList()
-            }
+            }*/
 
         } catch (ae: AmplifyException) {
             emptyList()
