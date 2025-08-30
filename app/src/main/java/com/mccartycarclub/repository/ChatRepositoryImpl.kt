@@ -211,8 +211,6 @@ class ChatRepositoryImpl @Inject constructor(
             .name("NAME-NOT-NEEDED-FOR-PRIVATE-testing-relationship")
             .isGroup(false)
             .isPublic(false)
-            .creator(creatorUser)
-            .receiver(receiverUser)
             .build()
 
         val chatMessage = RepositoryMessage.builder()

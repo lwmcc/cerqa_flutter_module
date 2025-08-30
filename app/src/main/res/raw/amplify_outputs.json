@@ -182,54 +182,6 @@
                 ]
               }
             },
-            "createdChannels": {
-              "name": "createdChannels",
-              "isArray": true,
-              "type": {
-                "model": "Channel"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "isArrayNullable": true,
-              "association": {
-                "connectionType": "HAS_MANY",
-                "associatedWith": [
-                  "creatorId"
-                ]
-              }
-            },
-            "receivedChannels": {
-              "name": "receivedChannels",
-              "isArray": true,
-              "type": {
-                "model": "Channel"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "isArrayNullable": true,
-              "association": {
-                "connectionType": "HAS_MANY",
-                "associatedWith": [
-                  "receiverId"
-                ]
-              }
-            },
-            "messagesSent": {
-              "name": "messagesSent",
-              "isArray": true,
-              "type": {
-                "model": "Message"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "isArrayNullable": true,
-              "association": {
-                "connectionType": "HAS_MANY",
-                "associatedWith": [
-                  "senderId"
-                ]
-              }
-            },
             "createdAt": {
               "name": "createdAt",
               "isArray": false,
@@ -738,50 +690,6 @@
                 ]
               }
             },
-            "creatorId": {
-              "name": "creatorId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": false,
-              "attributes": []
-            },
-            "creator": {
-              "name": "creator",
-              "isArray": false,
-              "type": {
-                "model": "User"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "association": {
-                "connectionType": "BELONGS_TO",
-                "targetNames": [
-                  "creatorId"
-                ]
-              }
-            },
-            "receiverId": {
-              "name": "receiverId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": false,
-              "attributes": []
-            },
-            "receiver": {
-              "name": "receiver",
-              "isArray": false,
-              "type": {
-                "model": "User"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "association": {
-                "connectionType": "BELONGS_TO",
-                "targetNames": [
-                  "receiverId"
-                ]
-              }
-            },
             "createdAt": {
               "name": "createdAt",
               "isArray": false,
@@ -988,21 +896,6 @@
               "isRequired": true,
               "attributes": []
             },
-            "sender": {
-              "name": "sender",
-              "isArray": false,
-              "type": {
-                "model": "User"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "association": {
-                "connectionType": "BELONGS_TO",
-                "targetNames": [
-                  "senderId"
-                ]
-              }
-            },
             "channel": {
               "name": "channel",
               "isArray": false,
@@ -1206,23 +1099,6 @@
               "isArray": false,
               "type": "String",
               "isRequired": false
-            }
-          }
-        },
-        "fetchUserChannels": {
-          "name": "fetchUserChannels",
-          "isArray": true,
-          "type": {
-            "model": "Channel"
-          },
-          "isRequired": false,
-          "isArrayNullable": true,
-          "arguments": {
-            "userId": {
-              "name": "userId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": true
             }
           }
         }
