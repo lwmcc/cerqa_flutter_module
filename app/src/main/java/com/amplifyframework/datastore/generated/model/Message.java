@@ -31,12 +31,12 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 public final class Message implements Model {
   public static final MessagePath rootPath = new MessagePath("root", false, null);
   public static final QueryField ID = field("Message", "id");
+  public static final QueryField SENDER_ID = field("Message", "senderId");
   public static final QueryField CONTENT = field("Message", "content");
-  public static final QueryField SENDER = field("Message", "senderId");
   public static final QueryField CHANNEL = field("Message", "channelId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
+  private final @ModelField(targetType="ID", isRequired = true) String senderId;
   private final @ModelField(targetType="String", isRequired = true) String content;
-  private final @ModelField(targetType="User") @BelongsTo(targetName = "senderId", targetNames = {"senderId"}, type = User.class) ModelReference<User> sender;
   private final @ModelField(targetType="Channel") @BelongsTo(targetName = "channelId", targetNames = {"channelId"}, type = Channel.class) ModelReference<Channel> channel;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
@@ -50,12 +50,12 @@ public final class Message implements Model {
       return id;
   }
   
-  public String getContent() {
-      return content;
+  public String getSenderId() {
+      return senderId;
   }
   
-  public ModelReference<User> getSender() {
-      return sender;
+  public String getContent() {
+      return content;
   }
   
   public ModelReference<Channel> getChannel() {
@@ -70,10 +70,10 @@ public final class Message implements Model {
       return updatedAt;
   }
   
-  private Message(String id, String content, ModelReference<User> sender, ModelReference<Channel> channel) {
+  private Message(String id, String senderId, String content, ModelReference<Channel> channel) {
     this.id = id;
+    this.senderId = senderId;
     this.content = content;
-    this.sender = sender;
     this.channel = channel;
   }
   
@@ -86,8 +86,8 @@ public final class Message implements Model {
       } else {
       Message message = (Message) obj;
       return ObjectsCompat.equals(getId(), message.getId()) &&
+              ObjectsCompat.equals(getSenderId(), message.getSenderId()) &&
               ObjectsCompat.equals(getContent(), message.getContent()) &&
-              ObjectsCompat.equals(getSender(), message.getSender()) &&
               ObjectsCompat.equals(getChannel(), message.getChannel()) &&
               ObjectsCompat.equals(getCreatedAt(), message.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), message.getUpdatedAt());
@@ -98,8 +98,8 @@ public final class Message implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
+      .append(getSenderId())
       .append(getContent())
-      .append(getSender())
       .append(getChannel())
       .append(getCreatedAt())
       .append(getUpdatedAt())
@@ -112,8 +112,8 @@ public final class Message implements Model {
     return new StringBuilder()
       .append("Message {")
       .append("id=" + String.valueOf(getId()) + ", ")
+      .append("senderId=" + String.valueOf(getSenderId()) + ", ")
       .append("content=" + String.valueOf(getContent()) + ", ")
-      .append("sender=" + String.valueOf(getSender()) + ", ")
       .append("channel=" + String.valueOf(getChannel()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
@@ -121,7 +121,7 @@ public final class Message implements Model {
       .toString();
   }
   
-  public static ContentStep builder() {
+  public static SenderIdStep builder() {
       return new Builder();
   }
   
@@ -144,10 +144,15 @@ public final class Message implements Model {
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
+      senderId,
       content,
-      sender,
       channel);
   }
+  public interface SenderIdStep {
+    ContentStep senderId(String senderId);
+  }
+  
+
   public interface ContentStep {
     BuildStep content(String content);
   }
@@ -156,24 +161,23 @@ public final class Message implements Model {
   public interface BuildStep {
     Message build();
     BuildStep id(String id);
-    BuildStep sender(User sender);
     BuildStep channel(Channel channel);
   }
   
 
-  public static class Builder implements ContentStep, BuildStep {
+  public static class Builder implements SenderIdStep, ContentStep, BuildStep {
     private String id;
+    private String senderId;
     private String content;
-    private ModelReference<User> sender;
     private ModelReference<Channel> channel;
     public Builder() {
       
     }
     
-    private Builder(String id, String content, ModelReference<User> sender, ModelReference<Channel> channel) {
+    private Builder(String id, String senderId, String content, ModelReference<Channel> channel) {
       this.id = id;
+      this.senderId = senderId;
       this.content = content;
-      this.sender = sender;
       this.channel = channel;
     }
     
@@ -183,21 +187,22 @@ public final class Message implements Model {
         
         return new Message(
           id,
+          senderId,
           content,
-          sender,
           channel);
+    }
+    
+    @Override
+     public ContentStep senderId(String senderId) {
+        Objects.requireNonNull(senderId);
+        this.senderId = senderId;
+        return this;
     }
     
     @Override
      public BuildStep content(String content) {
         Objects.requireNonNull(content);
         this.content = content;
-        return this;
-    }
-    
-    @Override
-     public BuildStep sender(User sender) {
-        this.sender = new LoadedModelReferenceImpl<>(sender);
         return this;
     }
     
@@ -219,19 +224,20 @@ public final class Message implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String content, ModelReference<User> sender, ModelReference<Channel> channel) {
-      super(id, content, sender, channel);
+    private CopyOfBuilder(String id, String senderId, String content, ModelReference<Channel> channel) {
+      super(id, senderId, content, channel);
+      Objects.requireNonNull(senderId);
       Objects.requireNonNull(content);
+    }
+    
+    @Override
+     public CopyOfBuilder senderId(String senderId) {
+      return (CopyOfBuilder) super.senderId(senderId);
     }
     
     @Override
      public CopyOfBuilder content(String content) {
       return (CopyOfBuilder) super.content(content);
-    }
-    
-    @Override
-     public CopyOfBuilder sender(User sender) {
-      return (CopyOfBuilder) super.sender(sender);
     }
     
     @Override

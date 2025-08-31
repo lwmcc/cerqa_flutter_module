@@ -53,9 +53,6 @@ public final class User implements Model {
   private final @ModelField(targetType="UserGroup") @HasMany(associatedWith = "user", type = UserGroup.class) ModelList<UserGroup> groups = null;
   private final @ModelField(targetType="Invite") @HasMany(associatedWith = "user", type = Invite.class) ModelList<Invite> invites = null;
   private final @ModelField(targetType="UserChannel") @HasMany(associatedWith = "user", type = UserChannel.class) ModelList<UserChannel> channels = null;
-  private final @ModelField(targetType="Channel") @HasMany(associatedWith = "creator", type = Channel.class) ModelList<Channel> createdChannels = null;
-  private final @ModelField(targetType="Channel") @HasMany(associatedWith = "receiver", type = Channel.class) ModelList<Channel> receivedChannels = null;
-  private final @ModelField(targetType="Message") @HasMany(associatedWith = "sender", type = Message.class) ModelList<Message> messagesSent = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -118,18 +115,6 @@ public final class User implements Model {
   
   public ModelList<UserChannel> getChannels() {
       return channels;
-  }
-  
-  public ModelList<Channel> getCreatedChannels() {
-      return createdChannels;
-  }
-  
-  public ModelList<Channel> getReceivedChannels() {
-      return receivedChannels;
-  }
-  
-  public ModelList<Message> getMessagesSent() {
-      return messagesSent;
   }
   
   public Temporal.DateTime getCreatedAt() {

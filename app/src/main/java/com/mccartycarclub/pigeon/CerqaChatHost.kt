@@ -2,6 +2,7 @@ package com.mccartycarclub.pigeon
 
 import com.mccartycarclub.domain.helpers.createChannelId
 import com.mccartycarclub.domain.helpers.toPigeonContact
+import com.mccartycarclub.pigeon.Contact
 import com.mccartycarclub.repository.ChatRepository
 import com.mccartycarclub.repository.ContactsRepository
 import com.mccartycarclub.repository.LocalRepository
@@ -26,8 +27,7 @@ class ChatHostApi @Inject constructor(
     private val scope = MainScope()
 
     override fun createChat(receiverUserId: String) {
-        // loggedInUser and participant
-        //  println("ChatHostApi ***** CREATE CHAT $receiverUserId")
+
     }
 
     override fun deleteChat() {
@@ -39,7 +39,8 @@ class ChatHostApi @Inject constructor(
     }
 
     override fun fetchGroupChats(callback: (Result<List<Group>>) -> Unit) {
-        callback(Result.success(chatRepository.fetchGroups()))
+        //callback(Result.success(chatRepository.fetchGroups()))
+        callback(Result.success(emptyList<Group>()))
     }
 
     override fun fetchGroupConversation() {
@@ -65,7 +66,8 @@ class ChatHostApi @Inject constructor(
                     }
 
                     is NetworkResponse.Success -> {
-                        callback(Result.success(toPigeonContact(result.data)))
+                        //callback(Result.success(toPigeonContact(result.data)))
+                        callback(Result.success(emptyList<Contact>()))
                     }
                 }
             }
@@ -74,7 +76,8 @@ class ChatHostApi @Inject constructor(
 
     override fun fetchChats(callback: (Result<List<Chat>>) -> Unit) {
         scope.launch {
-            callback(Result.success(chatRepository.fetchChats()))
+            // callback(Result.success(chatRepository.fetchChats()))
+            callback(Result.success(emptyList()))
         }
     }
 
@@ -84,7 +87,8 @@ class ChatHostApi @Inject constructor(
     ) {
         scope.launch {
             chatRepository.fetchDirectMessages(receiverUserId).collect { messages ->
-                callback(Result.success(messages))
+                //callback(Result.success(messages))
+                callback(Result.success(emptyList()))
             }
         }
     }
