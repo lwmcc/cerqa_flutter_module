@@ -250,6 +250,7 @@ class _MyHomePageState extends State<MyHomePage>
   List<Chat> chats = [];
   List<Group> groupChats = [];
   List<Contact> contacts = [];
+  List<Message> directMessages = [];
 
   void _incrementCounter() {
     setState(() {
@@ -277,6 +278,7 @@ class _MyHomePageState extends State<MyHomePage>
     _loadChats();
     _loadGroups();
     _loadContacts();
+    _loadDirectMessages();
   }
 
   @override
@@ -287,7 +289,6 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   Widget build(BuildContext context) {
-    print("_CerqaFlutterApi ***** LENGTH ${chats.length}");
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.titles[_currentTabIndex]),
@@ -297,7 +298,8 @@ class _MyHomePageState extends State<MyHomePage>
             onPressed: () {
               switch (_currentTabIndex) {
                 case 0:
-                  //_loadContacts();
+
+                  // _loadContacts();
 
                   Navigator.push(
                     context,
@@ -412,6 +414,13 @@ class _MyHomePageState extends State<MyHomePage>
     final result = await _hostApi.fetchContacts();
     setState(() {
       contacts = result;
+    });
+  }
+
+  Future<void> _loadDirectMessages() async {
+    final result = await _hostApi.fetchDirectMessages();
+    setState(() {
+      directMessages = result;
     });
   }
 }

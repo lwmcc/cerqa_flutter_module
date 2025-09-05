@@ -34,8 +34,6 @@ class _DirectMessageScreen extends State<DirectMessageScreen> {
         hasFocus = messageFocusNode.hasFocus;
       });
     });
-
-    _fetchDirectMessages(userId);
   }
 
   @override
@@ -52,13 +50,6 @@ class _DirectMessageScreen extends State<DirectMessageScreen> {
     if (message.isNotEmpty) {
       controller.clear();
     }
-  }
-
-  Future<void> _fetchDirectMessages(String receiverUserId) async {
-    final result = await _hostApi.fetchDirectMessages(receiverUserId);
-    setState(() {
-      messages = result;
-    });
   }
 
   @override

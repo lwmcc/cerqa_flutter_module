@@ -44,7 +44,7 @@ abstract class CerqaHostApi {
   List<Chat> fetchChats();
 
   @async
-  List<Message> fetchDirectMessages(String receiverUserId);
+  List<Message> fetchDirectMessages();
 
   @async
   bool createMessage(String message, String receiverUserId);
