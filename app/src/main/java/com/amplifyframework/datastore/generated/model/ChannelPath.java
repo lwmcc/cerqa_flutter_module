@@ -8,10 +8,17 @@ import com.amplifyframework.core.model.PropertyPath;
 
 /** This is an auto generated class representing the ModelPath for the Channel type in your schema. */
 public final class ChannelPath extends ModelPath<Channel> {
+  private UserPath user;
   private MessagePath messages;
-  private UserChannelPath channels;
   ChannelPath(@NonNull String name, @NonNull Boolean isCollection, @Nullable PropertyPath parent) {
     super(name, isCollection, parent, Channel.class);
+  }
+  
+  public synchronized UserPath getUser() {
+    if (user == null) {
+      user = new UserPath("user", false, this);
+    }
+    return user;
   }
   
   public synchronized MessagePath getMessages() {
@@ -19,12 +26,5 @@ public final class ChannelPath extends ModelPath<Channel> {
       messages = new MessagePath("messages", true, this);
     }
     return messages;
-  }
-  
-  public synchronized UserChannelPath getChannels() {
-    if (channels == null) {
-      channels = new UserChannelPath("channels", true, this);
-    }
-    return channels;
   }
 }
