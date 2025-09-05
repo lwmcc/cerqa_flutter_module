@@ -281,7 +281,7 @@ private open class ChatHostPigeonCodec : StandardMessageCodec() {
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface CerqaHostApi {
   fun fetchChats(callback: (Result<List<Chat>>) -> Unit)
-  fun fetchDirectMessages(receiverUserId: String, callback: (Result<List<Message>>) -> Unit)
+  fun fetchDirectMessages(callback: (Result<List<Message>>) -> Unit)
   fun createMessage(message: String, receiverUserId: String, callback: (Result<Boolean>) -> Unit)
   fun deleteMessage()
   fun createChat(receiverUserId: String)
@@ -326,10 +326,8 @@ interface CerqaHostApi {
       run {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.fetchDirectMessages$separatedMessageChannelSuffix", codec)
         if (api != null) {
-          channel.setMessageHandler { message, reply ->
-            val args = message as List<Any?>
-            val receiverUserIdArg = args[0] as String
-            api.fetchDirectMessages(receiverUserIdArg) { result: Result<List<Message>> ->
+          channel.setMessageHandler { _, reply ->
+            api.fetchDirectMessages{ result: Result<List<Message>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(ChatHostPigeonUtils.wrapError(error))

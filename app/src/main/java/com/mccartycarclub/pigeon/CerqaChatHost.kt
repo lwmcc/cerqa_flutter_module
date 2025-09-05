@@ -39,8 +39,8 @@ class ChatHostApi @Inject constructor(
     }
 
     override fun fetchGroupChats(callback: (Result<List<Group>>) -> Unit) {
-        //callback(Result.success(chatRepository.fetchGroups()))
-        callback(Result.success(emptyList<Group>()))
+        callback(Result.success(chatRepository.fetchGroups()))
+        //callback(Result.success(emptyList<Group>()))
     }
 
     override fun fetchGroupConversation() {
@@ -66,8 +66,8 @@ class ChatHostApi @Inject constructor(
                     }
 
                     is NetworkResponse.Success -> {
-                        //callback(Result.success(toPigeonContact(result.data)))
-                        callback(Result.success(emptyList<Contact>()))
+                        callback(Result.success(toPigeonContact(result.data)))
+                        //callback(Result.success(emptyList<Contact>()))
                     }
                 }
             }
@@ -76,19 +76,16 @@ class ChatHostApi @Inject constructor(
 
     override fun fetchChats(callback: (Result<List<Chat>>) -> Unit) {
         scope.launch {
-            // callback(Result.success(chatRepository.fetchChats()))
+            //callback(Result.success(chatRepository.fetchChats()))
             callback(Result.success(emptyList()))
         }
     }
 
-    override fun fetchDirectMessages(
-        receiverUserId: String,
-        callback: (Result<List<Message>>) -> Unit
-    ) {
+    override fun fetchDirectMessages(callback: (Result<List<Message>>) -> Unit) {
         scope.launch {
-            chatRepository.fetchDirectMessages(receiverUserId).collect { messages ->
-                //callback(Result.success(messages))
-                callback(Result.success(emptyList()))
+            chatRepository.fetchDirectMessages().collect { messages ->
+                callback(Result.success(messages))
+                //callback(Result.success(emptyList()))
             }
         }
     }

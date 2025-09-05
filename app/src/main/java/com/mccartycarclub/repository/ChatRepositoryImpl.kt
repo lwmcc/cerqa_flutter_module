@@ -13,6 +13,7 @@ import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.ModelReference
 import com.amplifyframework.core.model.includes
+import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.datastore.generated.model.Channel
 import com.amplifyframework.datastore.generated.model.ChannelPath
 import com.amplifyframework.datastore.generated.model.Message as RepositoryMessage
@@ -142,7 +143,7 @@ class ChatRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun fetchDirectMessages(receiverUserId: String): Flow<List<PigeonMessage>> = flow {
+/*    override fun fetchDirectMessages(): Flow<List<PigeonMessage>> = flow {
 
         val userId = localRepository.getUserId().first()
 
@@ -184,7 +185,15 @@ class ChatRepositoryImpl @Inject constructor(
             }
         )
 
+        emit(emptyList<PigeonMessage>())
+    }.flowOn(ioDispatcher)*/
 
+    override suspend fun fetchDirectMessages(): Flow<List<PigeonMessage>> = flow {
+
+        val userId = localRepository.getUserId().first()
+
+        val predicate = QueryField.field("userId").eq(localRepository.getUserId().first())
+        val response = amplifyApi.query(ModelQuery.list(UserChannel::class.java, predicate))
 
 
         emit(emptyList<PigeonMessage>())
@@ -214,9 +223,12 @@ class ChatRepositoryImpl @Inject constructor(
             .build()
 
         val chatMessage = RepositoryMessage.builder()
-            .content(message)
+            .senderId(sender)
+            .content("my message is new")
             .channel(channel)
-            .sender(creatorUser)
+            //.content(message)
+            //.channel(channel)
+            ///.sender(creatorUser)
             .build()
 
         try {
@@ -265,9 +277,12 @@ class ChatRepositoryImpl @Inject constructor(
                 val savedChannel = channelResult.data
 
                 val message = RepositoryMessage.builder()
-                    .content("my-fake-message")
-                    .sender(currentUser)
-                    .channel(savedChannel)
+                    .senderId("")
+                    .content("new message")
+                    .channel(channel)
+                    //.content("my-fake-message")
+                    //.sender(currentUser)
+                    //.channel(savedChannel)
                     .build()
 
                 Amplify.API.mutate(

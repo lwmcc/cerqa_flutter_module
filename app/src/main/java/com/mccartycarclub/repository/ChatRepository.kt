@@ -8,9 +8,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface ChatRepository {
     suspend fun fetchChats(): List<Chat>
+    suspend fun fetchDirectMessages(): Flow<List<Message>>
+
     fun fetchContacts(): List<Contact>
     fun fetchDirectConversation()
     fun fetchGroups(): List<Group>
-    fun fetchDirectMessages(receiverUserId: String): Flow<List<Message>>
     fun createMessage(channelId: String?, message: String?, receiverUserId: String): Flow<Boolean>
 }
