@@ -195,6 +195,7 @@ class ChatRepositoryImpl @Inject constructor(
         val predicate = QueryField.field("userId").eq(localRepository.getUserId().first())
         val response = amplifyApi.query(ModelQuery.list(UserChannel::class.java, predicate))
 
+        println("ChatRepositoryImpl ***** RESPONSE ${response.data.toList()}")
 
         emit(emptyList<PigeonMessage>())
     }.flowOn(ioDispatcher)
@@ -218,8 +219,8 @@ class ChatRepositoryImpl @Inject constructor(
         val channel = Channel.builder()
             .id(channelId)
             .name("NAME-NOT-NEEDED-FOR-PRIVATE-testing-relationship")
-            .isGroup(false)
-            .isPublic(false)
+            //.isGroup(false)
+            //.isPublic(false)
             .build()
 
         val chatMessage = RepositoryMessage.builder()

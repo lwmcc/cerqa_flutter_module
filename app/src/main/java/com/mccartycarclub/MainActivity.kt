@@ -271,7 +271,7 @@ class MainActivity : ComponentActivity() {
 }
 
 // TODO: remove just to test
-fun testUser1(userId: String): User {
+/*fun testUser1(userId: String): User {
     return User.builder()
         // .userId(userId)
         .firstName("Larry")
@@ -309,6 +309,6 @@ fun testUser3(userId: String): User {
         .phone("+14805553211")
         .name("Luka")
         .avatarUri("https://example.com/luka/avatar.png")
-        .build()
-}
+        .build()*/
+//}
 

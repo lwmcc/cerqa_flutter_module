@@ -182,6 +182,38 @@
                 ]
               }
             },
+            "createdChannels": {
+              "name": "createdChannels",
+              "isArray": true,
+              "type": {
+                "model": "Channel"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "creatorId"
+                ]
+              }
+            },
+            "receivedChannels": {
+              "name": "receivedChannels",
+              "isArray": true,
+              "type": {
+                "model": "Channel"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "receiverId"
+                ]
+              }
+            },
             "createdAt": {
               "name": "createdAt",
               "isArray": false,
@@ -643,6 +675,50 @@
               "type": "String",
               "isRequired": false,
               "attributes": []
+            },
+            "creatorId": {
+              "name": "creatorId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "receiverId": {
+              "name": "receiverId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "creator": {
+              "name": "creator",
+              "isArray": false,
+              "type": {
+                "model": "User"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "creatorId"
+                ]
+              }
+            },
+            "receiver": {
+              "name": "receiver",
+              "isArray": false,
+              "type": {
+                "model": "User"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "receiverId"
+                ]
+              }
             },
             "messages": {
               "name": "messages",

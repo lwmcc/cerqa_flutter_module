@@ -478,7 +478,7 @@ fun SearchSection(
 }
 
 // TODO: remove just to test
-fun testUser1(userId: String): User {
+/*fun testUser1(userId: String): User {
     return User.builder()
        // .userId(userId)
         .firstName("Larry")
@@ -517,7 +517,7 @@ fun testUser3(userId: String): User {
         .name("Luka")
         .avatarUri("https://example.com/luka/avatar.png")
         .build()
-}
+}*/
 
 data class Ids(
     val rowId: String,
