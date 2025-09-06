@@ -39,7 +39,7 @@ public final class Channel implements Model {
   public static final QueryField IS_GROUP = field("Channel", "isGroup");
   public static final QueryField IS_PUBLIC = field("Channel", "isPublic");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="String") String name;
+  private final @ModelField(targetType="String", isRequired = true) String name;
   private final @ModelField(targetType="User") @BelongsTo(targetName = "creatorId", targetNames = {"creatorId"}, type = User.class) ModelReference<User> creator;
   private final @ModelField(targetType="User") @BelongsTo(targetName = "receiverId", targetNames = {"receiverId"}, type = User.class) ModelReference<User> receiver;
   private final @ModelField(targetType="Message") @HasMany(associatedWith = "channel", type = Message.class) ModelList<Message> messages = null;
@@ -153,7 +153,7 @@ public final class Channel implements Model {
       .toString();
   }
   
-  public static BuildStep builder() {
+  public static NameStep builder() {
       return new Builder();
   }
   
@@ -184,10 +184,14 @@ public final class Channel implements Model {
       isGroup,
       isPublic);
   }
+  public interface NameStep {
+    BuildStep name(String name);
+  }
+  
+
   public interface BuildStep {
     Channel build();
     BuildStep id(String id);
-    BuildStep name(String name);
     BuildStep creator(User creator);
     BuildStep receiver(User receiver);
     BuildStep isGroup(Boolean isGroup);
@@ -195,7 +199,7 @@ public final class Channel implements Model {
   }
   
 
-  public static class Builder implements BuildStep {
+  public static class Builder implements NameStep, BuildStep {
     private String id;
     private String name;
     private ModelReference<User> creator;
@@ -230,6 +234,7 @@ public final class Channel implements Model {
     
     @Override
      public BuildStep name(String name) {
+        Objects.requireNonNull(name);
         this.name = name;
         return this;
     }
@@ -272,7 +277,7 @@ public final class Channel implements Model {
   public final class CopyOfBuilder extends Builder {
     private CopyOfBuilder(String id, String name, ModelReference<User> creator, ModelReference<User> receiver, Boolean isGroup, Boolean isPublic) {
       super(id, name, creator, receiver, isGroup, isPublic);
-      
+      Objects.requireNonNull(name);
     }
     
     @Override
