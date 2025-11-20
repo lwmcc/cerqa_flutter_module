@@ -8,7 +8,6 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,9 +29,6 @@ import com.mccartycarclub.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.core.net.toUri
-import com.amplifyframework.api.graphql.model.ModelMutation
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.pigeon.CerqaFlutterApi
 import com.mccartycarclub.pigeon.Chat
 import com.mccartycarclub.pigeon.PigeonFlutterApi
@@ -51,11 +47,11 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var stateProvider: AuthenticatorStateProvider
 
-    @Inject
-    lateinit var cerqaFlutterApi: CerqaFlutterApi
+     @Inject
+     lateinit var cerqaFlutterApi: CerqaFlutterApi
 
-    @Inject
-    lateinit var pigeonFlutterApi: PigeonFlutterApi
+     @Inject
+     lateinit var pigeonFlutterApi: PigeonFlutterApi
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -123,18 +119,6 @@ class MainActivity : ComponentActivity() {
             )
         })*/
     }
-
-    // TODO: pigeon flutter test
-    val chat1 = Chat(
-        userName = "LarryM",
-        avatarUri = "https://www.fakeurl.com/larrym",
-    )
-    val chat2 = Chat(
-        userName = "Bron",
-        avatarUri = "http://www.fakeurl.com/bron",
-    )
-
-    val chatsToSend = listOf(chat1, chat2)
 
     private fun registerReceiver() {
         LocalBroadcastManager.getInstance(this)
@@ -271,9 +255,10 @@ class MainActivity : ComponentActivity() {
 }
 
 // TODO: remove just to test
+// Create profile creation screen
 /*fun testUser1(userId: String): User {
     return User.builder()
-        // .userId(userId)
+        .userId(userId)
         .firstName("Larry")
         .lastName("McCarty")
         .userName("LarryM")
@@ -282,12 +267,13 @@ class MainActivity : ComponentActivity() {
         .phone("+14808104545")
         .name("LM")
         .avatarUri("https://www.google.com")
+        .id(userId)
         .build()
 }
 
 fun testUser2(userId: String): User {
     return User.builder()
-        // .userId(userId)
+         .userId(userId)
         .firstName("Lebron")
         .lastName("James")
         .userName("KingJames")
@@ -295,10 +281,11 @@ fun testUser2(userId: String): User {
         .phone("+14805554545")
         .name("Bron")
         .avatarUri("https://example.com/avatar.png")
+        .id(userId)
         .build()
-}
+}*/
 
-fun testUser3(userId: String): User {
+/*fun testUser3(userId: String): User {
     return User.builder()
         // .userId(userId)
         .firstName("Luka")
@@ -311,4 +298,3 @@ fun testUser3(userId: String): User {
         .avatarUri("https://example.com/luka/avatar.png")
         .build()*/
 //}
-

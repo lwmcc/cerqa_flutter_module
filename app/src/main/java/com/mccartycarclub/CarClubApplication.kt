@@ -23,8 +23,8 @@ import javax.inject.Named
 @HiltAndroidApp
 class CarClubApplication : Application() {
 
-    lateinit var chatEngine: FlutterEngine
-    lateinit var inboxEngine: FlutterEngine
+    private var chatEngine: FlutterEngine? = null
+    private var inboxEngine: FlutterEngine? = null
 
     lateinit var pigeonFlutterApi: PigeonFlutterApi
 
@@ -50,51 +50,58 @@ class CarClubApplication : Application() {
 
             val amplifyOutputs = AmplifyOutputs(resourceId = R.raw.amplify_outputs)
             Amplify.configure(amplifyOutputs, applicationContext)
+            println("CarClubApplication ***** Amplify configured successfully")
         } catch (error: AmplifyException) {
-            // TODO: log
-            println("CarClubApplication ***** Error Starting Amplify")
+            println("CarClubApplication ***** Error Starting Amplify: ${error.message}")
+            error.printStackTrace()
         }
 
-        // Chat Engine
-        chatEngine = FlutterEngine(this)
-        chatEngine.navigationChannel.setInitialRoute(CHAT_INITIAL_ROUTE);
-        chatEngine.dartExecutor.executeDartEntrypoint(
-            DartExecutor.DartEntrypoint.createDefault()
-        )
-        FlutterEngineCache.getInstance().put(CHAT_ENGINE_ID, chatEngine)
-
-
-        // Register Android to handle message through binaryMessenger
-        CerqaHostApi.setUp(
-            chatEngine.dartExecutor.binaryMessenger,
-            ChatHostApi(
-                chatRepository,
-                contactsRepository,
-                localRepository,
-                ioDispatcher,
-            ),
-        )
-
-        // Initialize the Pigeon Flutter API in order to send data from Android to Flutter
-        //pigeonFlutterApi = PigeonFlutterApi(chatEngine.dartExecutor.binaryMessenger)
-
-        // Register the Android implementation of CerqaHostApi to handle calls
-        // coming from Flutter and the binary messenger of the Flutter engine.
-        // Letting Flutter invoke Android methods through Pigeon.
-        // CerqaHostApi.setUp(chatEngine.dartExecutor.binaryMessenger, ChatHostApi())
-
-        // Inbox Engine
-        inboxEngine = FlutterEngine(this)
-        inboxEngine.navigationChannel.setInitialRoute(INBOX_INITIAL_ROUTE);
-        inboxEngine.dartExecutor.executeDartEntrypoint(
-            DartExecutor.DartEntrypoint.createDefault()
-        )
-        FlutterEngineCache.getInstance().put(INBOX_ENGINE_ID, inboxEngine)
+        // Flutter engines will be initialized lazily when needed to reduce memory usage
+        // See getChatEngine() and getInboxEngine() methods
 
         //MethodChannel(
         //    chatEngine.dartExecutor.binaryMessenger,
         //    "chat_method_channel"
         //).invokeMethod("amplifyToken", "message-flutter")
+    }
+
+    fun getChatEngine(): FlutterEngine {
+        if (chatEngine == null) {
+            chatEngine = FlutterEngine(this).apply {
+                navigationChannel.setInitialRoute(CHAT_INITIAL_ROUTE)
+
+                // Register Android to handle message through binaryMessenger BEFORE executing Dart
+                CerqaHostApi.setUp(
+                    dartExecutor.binaryMessenger,
+                    ChatHostApi(
+                        chatRepository,
+                        contactsRepository,
+                        localRepository,
+                        ioDispatcher,
+                    ),
+                )
+
+                // Now execute Dart entrypoint after message handlers are registered
+                dartExecutor.executeDartEntrypoint(
+                    DartExecutor.DartEntrypoint.createDefault()
+                )
+            }
+            FlutterEngineCache.getInstance().put(CHAT_ENGINE_ID, chatEngine!!)
+        }
+        return chatEngine!!
+    }
+
+    fun getInboxEngine(): FlutterEngine {
+        if (inboxEngine == null) {
+            inboxEngine = FlutterEngine(this).apply {
+                navigationChannel.setInitialRoute(INBOX_INITIAL_ROUTE)
+                dartExecutor.executeDartEntrypoint(
+                    DartExecutor.DartEntrypoint.createDefault()
+                )
+            }
+            FlutterEngineCache.getInstance().put(INBOX_ENGINE_ID, inboxEngine!!)
+        }
+        return inboxEngine!!
     }
 
     companion object {

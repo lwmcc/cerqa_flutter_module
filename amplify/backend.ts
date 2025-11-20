@@ -10,7 +10,6 @@ import { fetchPendingSentInviteStatus } from './functions/fetchPendingSentInvite
 const backend = defineBackend({
   auth,
   data,
-  sayHello,
   fetchAblyJwt,
   fetchUserWithContactInfo,
   fetchPendingSentInviteStatus,

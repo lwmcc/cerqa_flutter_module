@@ -1,5 +1,8 @@
 package com.mccartycarclub.pigeon
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.mccartycarclub.domain.helpers.createChannelId
 import com.mccartycarclub.domain.helpers.toPigeonContact
 import com.mccartycarclub.pigeon.Contact
@@ -7,14 +10,22 @@ import com.mccartycarclub.repository.ChatRepository
 import com.mccartycarclub.repository.ContactsRepository
 import com.mccartycarclub.repository.LocalRepository
 import com.mccartycarclub.repository.NetworkResponse
+import com.mccartycarclub.viewmodels.ChatViewModel
+import com.mccartycarclub.viewmodels.UiState
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Named
 
+
+data class ChatUiState(
+    val chats: List<Chat> = emptyList(),
+)
 
 // TODO: split this up
 class ChatHostApi @Inject constructor(
@@ -26,8 +37,11 @@ class ChatHostApi @Inject constructor(
 
     private val scope = MainScope()
 
-    override fun createChat(receiverUserId: String) {
+    var chatUiState by mutableStateOf(ChatUiState())
+        private set
 
+    override fun createChat(receiverUserId: String) {
+        TODO("Not yet implemented")
     }
 
     override fun deleteChat() {
@@ -51,41 +65,62 @@ class ChatHostApi @Inject constructor(
         TODO("Not yet implemented")
     }
 
+    init {
+        scope.launch {
+            chatRepository.fetchChats().collect { chats ->
+                chatUiState = chatUiState.copy(chats = chats)
+            }
+
+            // TODO: push updates to flutter
+        }
+    }
+
     override fun fetchContacts(callback: (Result<List<Contact>>) -> Unit) {
         scope.launch {
-            contactsRepository.fetchAllContacts().collect { result ->
-                when(result) {
-                    is NetworkResponse.Error -> {
-                        // TODO: handle error
-                        println("ChatHostApi ***** ERROR")
-                    }
+            try {
+                // Check if user is authenticated before fetching contacts
+                val userId = localRepository.getUserId().firstOrNull()
+                if (userId.isNullOrBlank()) {
+                    // Return empty list if not authenticated
+                    callback(Result.success(emptyList()))
+                    return@launch
+                }
 
-                    NetworkResponse.NoInternet -> {
-                        // TODO: handle error
-                        println("ChatHostApi ***** NO INTERNET")
-                    }
+                contactsRepository.fetchAllContacts().collect { result ->
+                    when(result) {
+                        is NetworkResponse.Error -> {
+                            // Return empty list on error instead of crashing
+                            callback(Result.success(emptyList()))
+                        }
 
-                    is NetworkResponse.Success -> {
-                        callback(Result.success(toPigeonContact(result.data)))
-                        //callback(Result.success(emptyList<Contact>()))
+                        NetworkResponse.NoInternet -> {
+                            // Return empty list when no internet
+                            callback(Result.success(emptyList()))
+                        }
+
+                        is NetworkResponse.Success -> {
+                            callback(Result.success(toPigeonContact(result.data)))
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                // Catch any unexpected errors and return empty list
+                callback(Result.success(emptyList()))
             }
         }
     }
 
     override fun fetchChats(callback: (Result<List<Chat>>) -> Unit) {
         scope.launch {
-            //callback(Result.success(chatRepository.fetchChats()))
-            callback(Result.success(emptyList()))
+            callback(Result.success(chatUiState.chats))
         }
     }
 
-    override fun fetchDirectMessages(callback: (Result<List<Message>>) -> Unit) {
+    // TODO: this is not correct, redo for direct messages
+    override fun fetchDirectMessages(callback: (Result<List<ChannelsItem>>) -> Unit) {
         scope.launch {
             chatRepository.fetchDirectMessages().collect { messages ->
                 callback(Result.success(messages))
-                //callback(Result.success(emptyList()))
             }
         }
     }

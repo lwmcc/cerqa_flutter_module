@@ -228,6 +228,43 @@ data class Message (
 
   override fun hashCode(): Int = toList().hashCode()
 }
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class ChannelsItem (
+  val id: String? = null,
+  val receiverId: String? = null,
+  val userName: String? = null,
+  val avatarUri: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): ChannelsItem {
+      val id = pigeonVar_list[0] as String?
+      val receiverId = pigeonVar_list[1] as String?
+      val userName = pigeonVar_list[2] as String?
+      val avatarUri = pigeonVar_list[3] as String?
+      return ChannelsItem(id, receiverId, userName, avatarUri)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      id,
+      receiverId,
+      userName,
+      avatarUri,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other !is ChannelsItem) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return ChatHostPigeonUtils.deepEquals(toList(), other.toList())  }
+
+  override fun hashCode(): Int = toList().hashCode()
+}
 private open class ChatHostPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
@@ -251,6 +288,11 @@ private open class ChatHostPigeonCodec : StandardMessageCodec() {
           Message.fromList(it)
         }
       }
+      133.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          ChannelsItem.fromList(it)
+        }
+      }
       else -> super.readValueOfType(type, buffer)
     }
   }
@@ -272,6 +314,10 @@ private open class ChatHostPigeonCodec : StandardMessageCodec() {
         stream.write(132)
         writeValue(stream, value.toList())
       }
+      is ChannelsItem -> {
+        stream.write(133)
+        writeValue(stream, value.toList())
+      }
       else -> super.writeValue(stream, value)
     }
   }
@@ -281,7 +327,7 @@ private open class ChatHostPigeonCodec : StandardMessageCodec() {
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface CerqaHostApi {
   fun fetchChats(callback: (Result<List<Chat>>) -> Unit)
-  fun fetchDirectMessages(callback: (Result<List<Message>>) -> Unit)
+  fun fetchDirectMessages(callback: (Result<List<ChannelsItem>>) -> Unit)
   fun createMessage(message: String, receiverUserId: String, callback: (Result<Boolean>) -> Unit)
   fun deleteMessage()
   fun createChat(receiverUserId: String)
@@ -327,7 +373,7 @@ interface CerqaHostApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cerqa_flutter_module.CerqaHostApi.fetchDirectMessages$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.fetchDirectMessages{ result: Result<List<Message>> ->
+            api.fetchDirectMessages{ result: Result<List<ChannelsItem>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(ChatHostPigeonUtils.wrapError(error))

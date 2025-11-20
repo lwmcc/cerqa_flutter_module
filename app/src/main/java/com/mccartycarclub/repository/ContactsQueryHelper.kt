@@ -48,14 +48,14 @@ class ContactsQueryHelper @Inject constructor(
                     }
 
                     val sentInvites = async {
-                        getContactsFromInvites(loggedInUserId = userId, isSender = true)
+                      //  getContactsFromInvites(loggedInUserId = userId, isSender = true)
                     }
 
                     val contacts = async {
                         fetchCurrentContacts(userId)
                     }
 
-                    val (received, sent, current) = awaitAll(receivedInvites, sentInvites, contacts)
+                    val (received, sent, current) = awaitAll(receivedInvites,/* sentInvites,*/ contacts)
 
                     emit(NetworkResponse.Success(received + sent + current))
                 } catch (no: NoInternetException) { // TODO: log this
@@ -275,7 +275,9 @@ class ContactsQueryHelper @Inject constructor(
             if (e.cause is IOException || e.cause is UnknownHostException) {
                 throw NoInternetException("No Internet") // TODO: move to constant
             } else {
-                throw ResponseException("A response error occurred")// TODO: move to constant
+                // TODO: temporary
+            return emptyList<Invite>()
+            //throw ResponseException("A response error occurred")// TODO: move to constant
             }
         }
     }
@@ -300,6 +302,7 @@ class ContactsQueryHelper @Inject constructor(
         } catch (e: ApiException) {
             if (e.cause is IOException || e.cause is UnknownHostException) {
                 // TODO: handle no internet properly
+                // TODO: why does this happen with pixel 6 pro emulator?
                 throw NoInternetException("Send message") // TODO: no message needed
             } else {
                 throw ResponseException("Send message")

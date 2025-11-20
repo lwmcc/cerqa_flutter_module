@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.amplifyframework.kotlin.core.Amplify
-import com.mccartycarclub.CarClubApplication.Companion.CHAT_INITIAL_ROUTE
+import com.mccartycarclub.CarClubApplication
 import com.mccartycarclub.data.websocket.AblyRealtimeProvider
 import com.mccartycarclub.data.websocket.AblyService
 import com.mccartycarclub.domain.UserPreferencesManager
@@ -21,6 +21,7 @@ import com.mccartycarclub.repository.ChatRepository
 import com.mccartycarclub.repository.ContactsRepository
 import com.mccartycarclub.repository.LocalRepository
 import com.mccartycarclub.repository.datastore.UserPreferences
+import com.mccartycarclub.viewmodels.ChatViewModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -87,17 +88,12 @@ object AppModule {
 
     /**
      * Cached Flutter Engine which enables chat to start up faster than using a new
-     * engine each time chat is started
+     * engine each time chat is started. Uses lazy initialization from Application.
      */
     @Provides
     @Singleton
     fun provideFlutterEngine(@ApplicationContext context: Context): FlutterEngine {
-        return FlutterEngine(context).apply {
-            navigationChannel.setInitialRoute(CHAT_INITIAL_ROUTE);
-            dartExecutor.executeDartEntrypoint(
-                DartExecutor.DartEntrypoint.createDefault()
-            )
-        }
+        return (context.applicationContext as CarClubApplication).getChatEngine()
     }
 
     /**
@@ -124,6 +120,11 @@ object AppModule {
         localRepository: LocalRepository,
         ioDispatcher: CoroutineDispatcher,
     ): ChatHostApi {
-        return ChatHostApi(chatRepository, contactsRepository, localRepository, ioDispatcher)
+        return ChatHostApi(
+            chatRepository,
+            contactsRepository,
+            localRepository,
+            ioDispatcher,
+        )
     }
 }
