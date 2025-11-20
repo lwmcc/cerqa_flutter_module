@@ -37,6 +37,13 @@ class Message {
   String? createdAt;
 }
 
+class ChannelsItem {
+  String? id;
+  String? receiverId;
+  String? userName;
+  String? avatarUri;
+}
+
 @HostApi()
 abstract class CerqaHostApi {
 
@@ -44,7 +51,7 @@ abstract class CerqaHostApi {
   List<Chat> fetchChats();
 
   @async
-  List<Message> fetchDirectMessages();
+  List<ChannelsItem> fetchDirectMessages();
 
   @async
   bool createMessage(String message, String receiverUserId);

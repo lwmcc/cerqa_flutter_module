@@ -250,7 +250,7 @@ class _MyHomePageState extends State<MyHomePage>
   List<Chat> chats = [];
   List<Group> groupChats = [];
   List<Contact> contacts = [];
-  List<Message> directMessages = [];
+  List<ChannelsItem> directMessages = [];
 
   void _incrementCounter() {
     setState(() {
@@ -278,7 +278,7 @@ class _MyHomePageState extends State<MyHomePage>
     _loadChats();
     _loadGroups();
     _loadContacts();
-    _loadDirectMessages();
+    //_loadDirectMessages();
   }
 
   @override
