@@ -55,6 +55,9 @@ class ChatRepositoryImpl @Inject constructor(
             emit(chats)
         } catch (ae: AmplifyException) {
             emit(emptyList())
+        } catch (ise: IllegalStateException) {
+            // Amplify not configured yet, return empty list
+            emit(emptyList())
         }
     }
 

@@ -48,16 +48,20 @@ class ContactsQueryHelper @Inject constructor(
                     }
 
                     val sentInvites = async {
-                      //  getContactsFromInvites(loggedInUserId = userId, isSender = true)
+                        getContactsFromInvites(loggedInUserId = userId, isSender = true)
                     }
 
                     val contacts = async {
                         fetchCurrentContacts(userId)
                     }
 
-                    val (received, sent, current) = awaitAll(receivedInvites,/* sentInvites,*/ contacts)
+                    val (received, sent, current) = awaitAll(receivedInvites, sentInvites, contacts)
 
                     emit(NetworkResponse.Success(received + sent + current))
+                } catch (ise: IllegalStateException) {
+                    // TODO: revisit this and make corrections
+                    // Amplify not configured yet, return empty list
+                    emit(NetworkResponse.Success(emptyList()))
                 } catch (no: NoInternetException) { // TODO: log this
                     emit(NetworkResponse.NoInternet)
                 } catch (re: ResponseException) {

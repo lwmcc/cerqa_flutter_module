@@ -29,8 +29,8 @@ import com.mccartycarclub.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.core.net.toUri
+import com.amplifyframework.datastore.generated.model.User
 import com.mccartycarclub.pigeon.CerqaFlutterApi
-import com.mccartycarclub.pigeon.Chat
 import com.mccartycarclub.pigeon.PigeonFlutterApi
 import com.mccartycarclub.ui.start.StartScreen
 import com.mccartycarclub.viewmodels.MainViewModel
@@ -104,7 +104,7 @@ class MainActivity : ComponentActivity() {
 
             // TODO: move just for testing
             Amplify.API.mutate(
-                ModelMutation.create(testUser1(userId!!)),
+                ModelMutation.create(testUser2(userId!!)),
                 { response -> // TODO: response?
                     // This is were userId is added to prefs
                     mainViewModel.setLoggedInUserId(userId)
@@ -256,14 +256,14 @@ class MainActivity : ComponentActivity() {
 
 // TODO: remove just to test
 // Create profile creation screen
-/*fun testUser1(userId: String): User {
+fun testUser1(userId: String): User {
     return User.builder()
         .userId(userId)
         .firstName("Larry")
         .lastName("McCarty")
         .userName("LarryM")
         //.userId(userId)
-        .email("lwmccarty@gmail.com")
+        .email("larry@cerqa.net")
         .phone("+14808104545")
         .name("LM")
         .avatarUri("https://www.google.com")
@@ -277,13 +277,13 @@ fun testUser2(userId: String): User {
         .firstName("Lebron")
         .lastName("James")
         .userName("KingJames")
-        .email("lmccarty@outlook.com")
+        .email("admin@cerqa.com")
         .phone("+14805554545")
         .name("Bron")
         .avatarUri("https://example.com/avatar.png")
         .id(userId)
         .build()
-}*/
+}
 
 /*fun testUser3(userId: String): User {
     return User.builder()
@@ -292,7 +292,7 @@ fun testUser2(userId: String): User {
         .lastName("Doncic")
         .id(userId)
         .userName("Luka")
-        .email("luka@gmail.com")
+        .email("finance@cerqa.net")
         .phone("+14805553211")
         .name("Luka")
         .avatarUri("https://example.com/luka/avatar.png")
