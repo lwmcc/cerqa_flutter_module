@@ -1,4 +1,5 @@
 [versions]
+ablyAblyAndroid = "1.4.2"
 ablyAndroid = "1.2.40"
 ablyAndroidVersion = "1.2.20"
 activityCompose = "1.10.0"
@@ -107,8 +108,6 @@ androidxCore = "1.5.0"
 
 [libraries]
 ably-android = { module = "io.ably:ably-android", version.ref = "ablyAndroid" }
-ably-android-v1220 = { module = "io.ably:ably-android", version.ref = "ablyAndroidVersion" }
-amplify-android-generated = { module = "com.amplifyframework:amplify-android-generated", version.ref = "amplifyAndroidGenerated" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 androidx-activity-compose-v190 = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
 androidx-animation = { module = "androidx.compose.animation:animation", version.ref = "animation" }

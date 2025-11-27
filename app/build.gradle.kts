@@ -182,7 +182,7 @@ dependencies {
     implementation(project(":flutter"))
     debugImplementation("io.flutter:flutter_embedding_debug:1.0.0-<hash>")
     releaseImplementation("io.flutter:flutter_embedding_release:1.0.0-<hash>")
-
+    implementation(project(":shared"))
 }
 
 kapt {

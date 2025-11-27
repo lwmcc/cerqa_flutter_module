@@ -34,6 +34,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "CarClub"
 include(":app")
+include(":shared")
 
 include(":flutter")
 project(":flutter").projectDir = file("cerqa_flutter_module/.android")

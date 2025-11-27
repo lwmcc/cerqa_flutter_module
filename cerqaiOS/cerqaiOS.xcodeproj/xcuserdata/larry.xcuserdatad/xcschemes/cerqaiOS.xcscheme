@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
+   LastUpgradeVersion = "2610"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -13,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "462F594F2E1B58AF0072728C"
+               BlueprintIdentifier = "A1000024000000000000001"
                BuildableName = "cerqaiOS.app"
                BlueprintName = "cerqaiOS"
                ReferencedContainer = "container:cerqaiOS.xcodeproj">
@@ -42,7 +43,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "462F594F2E1B58AF0072728C"
+            BlueprintIdentifier = "A1000024000000000000001"
             BuildableName = "cerqaiOS.app"
             BlueprintName = "cerqaiOS"
             ReferencedContainer = "container:cerqaiOS.xcodeproj">
