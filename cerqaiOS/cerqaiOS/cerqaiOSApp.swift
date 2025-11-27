@@ -15,7 +15,10 @@ import Shared
 @main
 struct cerqaiOSApp: App {
     init() {
+        // Initialize Koin for shared KMP module
+        // KoinHelperKt.initKoin()
         KoinHelperKt.doInitKoin()
+
         do {
             try Amplify.add(plugin: AWSCognitoAuthPlugin())
             // try Amplify.add(plugin: AWSAPIPlugin(modelRegistration: AmplifyModels()))

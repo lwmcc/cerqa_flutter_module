@@ -6,6 +6,7 @@ import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.kotlin.core.Amplify
+import com.cerqa.di.initKoin
 import com.mccartycarclub.pigeon.CerqaHostApi
 import com.mccartycarclub.pigeon.ChatHostApi
 import com.mccartycarclub.pigeon.PigeonFlutterApi
@@ -17,6 +18,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
 import kotlinx.coroutines.CoroutineDispatcher
+import org.koin.android.ext.koin.androidContext
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -43,6 +45,11 @@ class CarClubApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        // Init Koin for shared KMP module
+        initKoin {
+            androidContext(this@CarClubApplication)
+        }
 
         try {
             Amplify.addPlugin(AWSCognitoAuthPlugin())
