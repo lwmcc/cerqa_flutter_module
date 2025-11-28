@@ -34,21 +34,14 @@ kotlin {
     // https://developer.android.com/kotlin/multiplatform/migrate
     val xcfName = "Shared"
 
-    iosX64 {
-        binaries.framework {
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
             baseName = xcfName
-        }
-    }
-
-    iosArm64 {
-        binaries.framework {
-            baseName = xcfName
-        }
-    }
-
-    iosSimulatorArm64 {
-        binaries.framework {
-            baseName = xcfName
+            isStatic = true
         }
     }
 
@@ -76,6 +69,11 @@ kotlin {
                 implementation(libs.koin.core)
                 implementation(libs.koin.core)
                 implementation(libs.koin.androidx.compose)
+
+                implementation("io.ktor:ktor-client-core:3.3.2")
+
+                // kotlinx.coroutines will be available in all source sets
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
             }
         }
 
@@ -132,9 +130,7 @@ kotlin {
     }
 
     tasks.matching { it.name == "syncComposeResourcesForIos" }.configureEach {
-        onlyIf {
-            System.getenv("SDK_NAME") != null // set by Xcode
-        }
+        enabled = false // Disable this task - we'll handle resources differently
     }
 
 }

@@ -11,11 +11,11 @@ xcodebuild -project cerqaiOS.xcodeproj \
     -scheme cerqaiOS \
     -configuration Debug \
     -destination 'platform=iOS Simulator,id=2C600CC4-3651-4DCC-A3FC-D39C5F0CB9DB' \
-    -derivedDataPath build \
     clean build | xcpretty || cat
 
-# Get the app path
-APP_PATH="build/Build/Products/Debug-iphonesimulator/cerqaiOS.app"
+# Get the app path (using default derived data location)
+DERIVED_DATA=$(xcodebuild -project cerqaiOS.xcodeproj -scheme cerqaiOS -showBuildSettings | grep -m 1 "BUILD_DIR" | grep -oE "/.*")
+APP_PATH="${DERIVED_DATA}/Debug-iphonesimulator/cerqaiOS.app"
 
 if [ -d "$APP_PATH" ]; then
     echo "Launching app in simulator..."
