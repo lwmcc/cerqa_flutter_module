@@ -10,7 +10,7 @@ cd "$(dirname "$0")/cerqaiOS"
 xcodebuild -project cerqaiOS.xcodeproj \
     -scheme cerqaiOS \
     -configuration Debug \
-    -destination 'platform=iOS Simulator,name=iPhone 15' \
+    -destination 'platform=iOS Simulator,id=2C600CC4-3651-4DCC-A3FC-D39C5F0CB9DB' \
     -derivedDataPath build \
     clean build | xcpretty || cat
 
@@ -19,8 +19,8 @@ APP_PATH="build/Build/Products/Debug-iphonesimulator/cerqaiOS.app"
 
 if [ -d "$APP_PATH" ]; then
     echo "Launching app in simulator..."
-    # Boot simulator if not already running
-    xcrun simctl boot "iPhone 15" 2>/dev/null || true
+    # Boot simulator if not already running (using device ID)
+    xcrun simctl boot "2C600CC4-3651-4DCC-A3FC-D39C5F0CB9DB" 2>/dev/null || true
     # Open simulator
     open -a Simulator
     # Install and launch app

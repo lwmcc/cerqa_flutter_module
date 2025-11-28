@@ -18,3 +18,10 @@ detekt {
     config.setFrom(files("$rootDir/detekt.yml"))
     buildUponDefaultConfig = false
 }
+
+tasks.register<Exec>("runIOS") {
+    group = "application"
+    description = "Build and run iOS app in simulator"
+    workingDir = rootDir
+    commandLine("bash", "run-ios.sh")
+}
