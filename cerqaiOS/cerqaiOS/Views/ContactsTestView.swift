@@ -13,15 +13,21 @@ import Combine
 @MainActor
 class SharedContactsViewModelWrapper: ObservableObject {
     private let kotlinViewModel: ContactsViewModel
+    private let testDataSeeder: TestDataSeeder
     @Published var contacts: [Contact] = []
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
+    @Published var seedMessage: String?
+    @Published var isSeeding: Bool = false
 
     private var cancellables = Set<AnyCancellable>()
 
     init() {
         // Get the ContactsViewModel from Koin
         self.kotlinViewModel = KoinKt.koin.get(objCClass: ContactsViewModel.self) as! ContactsViewModel
+
+        // Get the TestDataSeeder from Koin
+        self.testDataSeeder = KoinKt.koin.get(objCClass: TestDataSeeder.self) as! TestDataSeeder
 
         // Observe the Kotlin StateFlows
         observeContacts()
@@ -64,12 +70,43 @@ class SharedContactsViewModelWrapper: ObservableObject {
     func clearError() {
         kotlinViewModel.clearError()
     }
+
+    func seedTestData() {
+        isSeeding = true
+        seedMessage = nil
+
+        Task {
+            do {
+                // Call the Kotlin suspend function
+                let result = try await testDataSeeder.seedTestData()
+
+                // Get the success message
+                if let message = result.getOrNull() as? String {
+                    seedMessage = message
+                } else if let error = result.exceptionOrNull() {
+                    errorMessage = error.localizedDescription
+                }
+
+                // Refresh contacts after seeding
+                await MainActor.run {
+                    kotlinViewModel.fetchContacts()
+                    isSeeding = false
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Failed to seed test data: \(error.localizedDescription)"
+                    isSeeding = false
+                }
+            }
+        }
+    }
 }
 
 struct ContactsTestView: View {
     @StateObject private var viewModel = SharedContactsViewModelWrapper()
     @State private var searchText = ""
     @State private var showingError = false
+    @State private var showingSeedMessage = false
 
     var body: some View {
         NavigationView {
@@ -121,6 +158,15 @@ struct ContactsTestView: View {
             }
             .navigationTitle("Contacts Test")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        viewModel.seedTestData()
+                    }) {
+                        Label("Seed Data", systemImage: "leaf.fill")
+                    }
+                    .disabled(viewModel.isLoading || viewModel.isSeeding)
+                }
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         viewModel.fetchContacts()
@@ -140,6 +186,16 @@ struct ContactsTestView: View {
             }
             .onChange(of: viewModel.errorMessage) { newValue in
                 showingError = newValue != nil
+            }
+            .alert("Test Data Seeded", isPresented: $showingSeedMessage) {
+                Button("OK") {
+                    viewModel.seedMessage = nil
+                }
+            } message: {
+                Text(viewModel.seedMessage ?? "Test data created successfully")
+            }
+            .onChange(of: viewModel.seedMessage) { newValue in
+                showingSeedMessage = newValue != nil
             }
             .onAppear {
                 // Fetch contacts when view appears
