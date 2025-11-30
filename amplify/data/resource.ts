@@ -70,7 +70,10 @@ export const schema = a.schema({
                    .queryField("listByPhone")
                    .name("userIndexPhone")
                ])
-         .authorization((allow) => [allow.publicApiKey()]),
+         .authorization((allow) => [
+           allow.authenticated(), // Allow any authenticated user
+           allow.publicApiKey() // Keep API key for backwards compatibility
+         ]),
 
    Group: a
      .model({
@@ -96,7 +99,10 @@ export const schema = a.schema({
        user: a.belongsTo('User', 'userId'),
        contact: a.belongsTo('User', 'contactId'),
      })
-     .authorization((allow) => [allow.publicApiKey()]),
+     .authorization((allow) => [
+       allow.authenticated(), // Allow any authenticated user
+       allow.publicApiKey() // Keep API key for backwards compatibility
+     ]),
 
    UserGroup: a
      .model({
@@ -160,7 +166,7 @@ export const data = defineData({
     schema,
     secrets: ["ably_key", "ably_secret"],
     authorizationModes: {
-    defaultAuthorizationMode: "apiKey",
+        defaultAuthorizationMode: "userPool", // Changed to Cognito User Pools
         apiKeyAuthorizationMode: {
           expiresInDays: 30,
         },
