@@ -21,16 +21,19 @@ class TestDataSeeder(
             val currentUserId = authTokenProvider.getCurrentUserId()
                 ?: return Result.failure(Exception("Not signed in"))
 
-            val currentUserEmail = authTokenProvider.getCurrentUserEmail() ?: ""
+            println("🌱 Seeding test data for user ID: $currentUserId")
 
-            println("🌱 Seeding test data for: $currentUserEmail (ID: $currentUserId)")
+            // Known user IDs - update these with your actual Cognito user IDs
+            // For now, we'll use the current user's real ID and placeholders for others
+            val knownLarryId = "larry-cognito-id"  // Replace with actual Cognito ID after first login
+            val knownLeBronId = "lebron-cognito-id"  // Replace with actual Cognito ID after first login
 
-            // Detect which user is logged in
-            val isLarry = currentUserEmail.contains("larry@cerqa.net", ignoreCase = true)
-            val isLeBron = currentUserEmail.contains("admin@cerqa.com", ignoreCase = true)
+            // Detect which user is logged in based on ID
+            val isLarry = currentUserId == knownLarryId || currentUserId != knownLeBronId
+            val isLeBron = currentUserId == knownLeBronId
 
             // testUser1 - Larry McCarty
-            val larryId = if (isLarry) currentUserId else "larry-placeholder-id"
+            val larryId = if (isLarry && currentUserId != knownLeBronId) currentUserId else knownLarryId
             createUser(
                 id = larryId,
                 firstName = "Larry",
@@ -43,7 +46,7 @@ class TestDataSeeder(
             )
 
             // testUser2 - LeBron James
-            val lebronId = if (isLeBron) currentUserId else "lebron-placeholder-id"
+            val lebronId = if (isLeBron) currentUserId else knownLeBronId
             createUser(
                 id = lebronId,
                 firstName = "Lebron",
@@ -59,15 +62,10 @@ class TestDataSeeder(
             createUserContact(userId = larryId, contactId = lebronId)
             createUserContact(userId = lebronId, contactId = larryId)
 
-            val message = when {
-                isLarry -> "✅ Larry's User record created with REAL Cognito ID!\n" +
-                          "✅ LeBron created as contact (placeholder ID for now)\n" +
-                          "💡 Sign in as LeBron next to update with real Cognito ID"
-                isLeBron -> "✅ LeBron's User record created with REAL Cognito ID!\n" +
-                           "✅ Larry created as contact (placeholder ID for now)\n" +
-                           "💡 Sign in as Larry next to update with real Cognito ID"
-                else -> "✅ Both users created\n⚠️ Unknown user logged in"
-            }
+            val message = "✅ Test data seeded successfully!\n" +
+                         "✅ Larry and LeBron created as contacts\n" +
+                         "✅ Current user ID: ${currentUserId.take(8)}...\n" +
+                         "💡 Sign in as both users and run seed to update with real IDs"
 
             Result.success(message)
         } catch (e: Exception) {

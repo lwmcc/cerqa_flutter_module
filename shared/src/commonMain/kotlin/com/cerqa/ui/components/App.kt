@@ -18,7 +18,9 @@ import org.koin.compose.koinInject
 @Composable
 fun App() {
     MaterialTheme {
-        ContactsScreen()
+        Scaffold {
+            ContactsScreen()
+        }
     }
 }
 
