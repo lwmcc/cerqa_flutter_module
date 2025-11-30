@@ -9,8 +9,8 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import com.cerqa.navigation.AppDestination
-import com.cerqa.ui.BottomNavItem
-import com.cerqa.ui.TopNavItem
+import com.cerqa.ui.Navigation.BottomNavItem
+import com.cerqa.ui.Navigation.TopNavItem
 
 /**
  * Main bottom navigation bar items

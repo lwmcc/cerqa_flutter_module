@@ -1,5 +1,6 @@
 package com.mccartycarclub
 
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -35,7 +37,7 @@ import com.mccartycarclub.pigeon.PigeonFlutterApi
 import com.mccartycarclub.ui.start.StartScreen
 import com.mccartycarclub.viewmodels.MainViewModel
 import kotlin.String
-import com.cerqa.ui.components.App as SharedApp
+import com.cerqa.ui.screens.App as SharedApp
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -77,6 +79,10 @@ class MainActivity : ComponentActivity() {
                         checkPermissions()
 
                         /* Original Android-specific UI (commented out):
+
+                        // TODO: just moving code down
+                        StartScreen()
+
                         StartScreen(
                             mainViewModel,
                             state = state,
@@ -152,13 +158,13 @@ class MainActivity : ComponentActivity() {
     private fun checkPermissions() {
         when {
             ContextCompat.checkSelfPermission(
-                this@MainActivity, android.Manifest.permission.READ_CONTACTS
+                this@MainActivity, Manifest.permission.READ_CONTACTS
             ) == PackageManager.PERMISSION_GRANTED -> {
              //   loadUserData()
             }
 
             ActivityCompat.shouldShowRequestPermissionRationale(
-                this@MainActivity, android.Manifest.permission.READ_CONTACTS
+                this@MainActivity, Manifest.permission.READ_CONTACTS
             ) -> {
                 // In an educational UI, explain to the user why your app requires this
                 // permission for a specific feature to behave as expected, and what
@@ -173,7 +179,7 @@ class MainActivity : ComponentActivity() {
                 // You can directly ask for the permission.
                 // The registered ActivityResultCallback gets the result of this request.
                 requestPermissionLauncher.launch(
-                    android.Manifest.permission.READ_CONTACTS
+                    Manifest.permission.READ_CONTACTS
                 )
                 println("MainActivity ***** ASK FOR PERMISSION")
             }
@@ -182,12 +188,12 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
-                    android.Manifest.permission.POST_NOTIFICATIONS
+                    Manifest.permission.POST_NOTIFICATIONS
                 ) ==
                 PackageManager.PERMISSION_GRANTED
             ) {
                 println("MainActivity *** CAN POST NOTIFICATIONS")
-            } else if (shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)) {
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
                 println("MainActivity *** SHOW REASONS FOR REQUEST")
 
                 // TODO: display an educational UI explaining to the user the features that will be enabled
@@ -196,7 +202,7 @@ class MainActivity : ComponentActivity() {
                 //       If the user selects "No thanks," allow the user to continue without notifications.
             } else {
                 println("MainActivity *** REQUST PERMISSION LAUNCHER")
-                requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
@@ -261,6 +267,25 @@ class MainActivity : ComponentActivity() {
         const val NOTIFICATIONS_SCREEN = "notifications_screen"
     }
 }
+
+/*@Composable
+fun StartScreen() {
+    StartScreen(
+        mainViewModel,
+        state = state,
+        topBarClick = {
+
+        },
+        sendSms = { message ->
+            sendSms(
+                context = this@MainActivity,
+                message = message.message,
+                title = message.title,
+                phoneNumber = message.phoneNumber,
+            )
+        },
+    )
+}*/
 
 // TODO: remove just to test
 // Create profile creation screen

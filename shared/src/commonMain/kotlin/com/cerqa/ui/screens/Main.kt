@@ -1,8 +1,19 @@
 package com.cerqa.ui.screens
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 
 @Composable
-fun MainScreen() {
-
+fun Main() {
+    // Main content - no scaffold here, it's in App.kt
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Main Screen Content")
+    }
 }
