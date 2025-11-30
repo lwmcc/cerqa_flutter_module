@@ -1,5 +1,6 @@
 package com.cerqa.di
 
+import com.cerqa.data.TestDataSeeder
 import com.cerqa.network.createApolloClient
 import com.cerqa.network.createHttpClient
 import com.cerqa.repository.ApolloContactsRepository
@@ -25,6 +26,9 @@ val commonModule = module {
     single { ContactsRepository(get(), get()) }
     single { ApolloContactsRepository(apolloClient = get(), tokenProvider = get()) }
     single { MockContactsRepository() }
+
+    // Test Data Seeder (for development)
+    single { TestDataSeeder(apolloClient = get(), authTokenProvider = get()) }
 
     // ViewModels
     factory { ContactsViewModel(get()) }
