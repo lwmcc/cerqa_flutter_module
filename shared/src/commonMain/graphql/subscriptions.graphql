@@ -1,0 +1,94 @@
+# GraphQL subscriptions for your actual Amplify schema
+# AppSync subscriptions work over WebSocket
+
+# Subscribe to new users being created
+subscription OnCreateUser($filter: ModelSubscriptionUserFilterInput) {
+  onCreateUser(filter: $filter) {
+    id
+    userId
+    firstName
+    lastName
+    name
+    phone
+    userName
+    email
+    avatarUri
+    createdAt
+    updatedAt
+  }
+}
+
+# Subscribe to user updates
+subscription OnUpdateUser($filter: ModelSubscriptionUserFilterInput) {
+  onUpdateUser(filter: $filter) {
+    id
+    userId
+    firstName
+    lastName
+    name
+    phone
+    userName
+    email
+    avatarUri
+    createdAt
+    updatedAt
+  }
+}
+
+# Subscribe to user deletions
+subscription OnDeleteUser($filter: ModelSubscriptionUserFilterInput) {
+  onDeleteUser(filter: $filter) {
+    id
+    firstName
+    lastName
+  }
+}
+
+# Subscribe to new UserContact being created (someone adds a contact)
+subscription OnCreateUserContact($filter: ModelSubscriptionUserContactFilterInput) {
+  onCreateUserContact(filter: $filter) {
+    id
+    userId
+    contactId
+    user {
+      id
+      firstName
+      lastName
+      name
+      phone
+      userName
+      email
+    }
+    contact {
+      id
+      firstName
+      lastName
+      name
+      phone
+      userName
+      email
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+# Subscribe to UserContact updates
+subscription OnUpdateUserContact($filter: ModelSubscriptionUserContactFilterInput) {
+  onUpdateUserContact(filter: $filter) {
+    id
+    userId
+    contactId
+    createdAt
+    updatedAt
+  }
+}
+
+# Subscribe to UserContact deletions (someone removes a contact)
+subscription OnDeleteUserContact($filter: ModelSubscriptionUserContactFilterInput) {
+  onDeleteUserContact(filter: $filter) {
+    id
+    userId
+    contactId
+  }
+}

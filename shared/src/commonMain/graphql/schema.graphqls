@@ -1,0 +1,553 @@
+# GraphQL schema generated from Amplify resource.ts
+# This matches your actual AppSync schema
+
+type Query {
+  getUser(id: ID!): User
+  listUsers(filter: ModelUserFilterInput, limit: Int, nextToken: String): ModelUserConnection
+  listUserContacts(filter: ModelUserContactFilterInput, limit: Int, nextToken: String): ModelUserContactConnection
+  listByPhone(phone: String!, userName: ModelStringKeyConditionInput, sortDirection: ModelSortDirection, filter: ModelUserFilterInput, limit: Int, nextToken: String): ModelUserConnection
+  getChannel(id: ID!): Channel
+  listChannels(filter: ModelChannelFilterInput, limit: Int, nextToken: String): ModelChannelConnection
+  getMessage(id: ID!): Message
+  listMessages(filter: ModelMessageFilterInput, limit: Int, nextToken: String): ModelMessageConnection
+  getGroup(id: ID!): Group
+  listGroups(filter: ModelGroupFilterInput, limit: Int, nextToken: String): ModelGroupConnection
+  getInvite(id: ID!): Invite
+  listInvites(filter: ModelInviteFilterInput, limit: Int, nextToken: String): ModelInviteConnection
+  getUserGroup(id: ID!): UserGroup
+  listUserGroups(filter: ModelUserGroupFilterInput, limit: Int, nextToken: String): ModelUserGroupConnection
+  getUserContact(id: ID!): UserContact
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!, condition: ModelUserConditionInput): User
+  updateUser(input: UpdateUserInput!, condition: ModelUserConditionInput): User
+  deleteUser(input: DeleteUserInput!, condition: ModelUserConditionInput): User
+  createUserContact(input: CreateUserContactInput!, condition: ModelUserContactConditionInput): UserContact
+  updateUserContact(input: UpdateUserContactInput!, condition: ModelUserContactConditionInput): UserContact
+  deleteUserContact(input: DeleteUserContactInput!, condition: ModelUserContactConditionInput): UserContact
+  createChannel(input: CreateChannelInput!, condition: ModelChannelConditionInput): Channel
+  updateChannel(input: UpdateChannelInput!, condition: ModelChannelConditionInput): Channel
+  deleteChannel(input: DeleteChannelInput!, condition: ModelChannelConditionInput): Channel
+  createMessage(input: CreateMessageInput!, condition: ModelMessageConditionInput): Message
+  updateMessage(input: UpdateMessageInput!, condition: ModelMessageConditionInput): Message
+  deleteMessage(input: DeleteMessageInput!, condition: ModelMessageConditionInput): Message
+  createGroup(input: CreateGroupInput!, condition: ModelGroupConditionInput): Group
+  updateGroup(input: UpdateGroupInput!, condition: ModelGroupConditionInput): Group
+  deleteGroup(input: DeleteGroupInput!, condition: ModelGroupConditionInput): Group
+  createInvite(input: CreateInviteInput!, condition: ModelInviteConditionInput): Invite
+  updateInvite(input: UpdateInviteInput!, condition: ModelInviteConditionInput): Invite
+  deleteInvite(input: DeleteInviteInput!, condition: ModelInviteConditionInput): Invite
+  createUserGroup(input: CreateUserGroupInput!, condition: ModelUserGroupConditionInput): UserGroup
+  updateUserGroup(input: UpdateUserGroupInput!, condition: ModelUserGroupConditionInput): UserGroup
+  deleteUserGroup(input: DeleteUserGroupInput!, condition: ModelUserGroupConditionInput): UserGroup
+}
+
+type Subscription {
+  onCreateUser(filter: ModelSubscriptionUserFilterInput): User @aws_subscribe(mutations: ["createUser"])
+  onUpdateUser(filter: ModelSubscriptionUserFilterInput): User @aws_subscribe(mutations: ["updateUser"])
+  onDeleteUser(filter: ModelSubscriptionUserFilterInput): User @aws_subscribe(mutations: ["deleteUser"])
+  onCreateUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_subscribe(mutations: ["createUserContact"])
+  onUpdateUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_subscribe(mutations: ["updateUserContact"])
+  onDeleteUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_subscribe(mutations: ["deleteUserContact"])
+}
+
+type User {
+  id: ID!
+  userId: ID
+  firstName: String!
+  lastName: String!
+  name: String
+  phone: String
+  userName: String
+  email: String
+  avatarUri: String
+  contacts: ModelUserContactConnection
+  asContact: ModelUserContactConnection
+  createdAt: String!
+  updatedAt: String!
+}
+
+type UserContact {
+  id: ID!
+  userId: ID!
+  contactId: ID!
+  user: User
+  contact: User
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Channel {
+  id: ID!
+  name: String
+  userId: ID!
+  user: User
+  messages: ModelMessageConnection
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Message {
+  id: ID!
+  content: String!
+  channelId: ID!
+  channel: Channel
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Group {
+  id: ID!
+  groupId: ID!
+  name: String!
+  users: ModelUserGroupConnection
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Invite {
+  id: ID!
+  userId: ID!
+  senderId: String
+  receiverId: String
+  user: User
+  createdAt: String!
+  updatedAt: String!
+}
+
+type UserGroup {
+  id: ID!
+  userId: ID!
+  groupId: ID!
+  user: User
+  group: Group
+  createdAt: String!
+  updatedAt: String!
+}
+
+type ModelUserConnection {
+  items: [User]
+  nextToken: String
+}
+
+type ModelUserContactConnection {
+  items: [UserContact]
+  nextToken: String
+}
+
+type ModelChannelConnection {
+  items: [Channel]
+  nextToken: String
+}
+
+type ModelMessageConnection {
+  items: [Message]
+  nextToken: String
+}
+
+type ModelGroupConnection {
+  items: [Group]
+  nextToken: String
+}
+
+type ModelInviteConnection {
+  items: [Invite]
+  nextToken: String
+}
+
+type ModelUserGroupConnection {
+  items: [UserGroup]
+  nextToken: String
+}
+
+# Input types
+input CreateUserInput {
+  id: ID
+  userId: ID
+  firstName: String!
+  lastName: String!
+  name: String
+  phone: String
+  userName: String
+  email: String
+  avatarUri: String
+}
+
+input UpdateUserInput {
+  id: ID!
+  userId: ID
+  firstName: String
+  lastName: String
+  name: String
+  phone: String
+  userName: String
+  email: String
+  avatarUri: String
+}
+
+input DeleteUserInput {
+  id: ID!
+}
+
+input CreateUserContactInput {
+  id: ID
+  userId: ID!
+  contactId: ID!
+}
+
+input UpdateUserContactInput {
+  id: ID!
+  userId: ID
+  contactId: ID
+}
+
+input DeleteUserContactInput {
+  id: ID!
+}
+
+input CreateChannelInput {
+  id: ID
+  name: String
+  userId: ID!
+}
+
+input UpdateChannelInput {
+  id: ID!
+  name: String
+  userId: ID
+}
+
+input DeleteChannelInput {
+  id: ID!
+}
+
+input CreateMessageInput {
+  id: ID
+  content: String!
+  channelId: ID!
+}
+
+input UpdateMessageInput {
+  id: ID!
+  content: String
+  channelId: ID
+}
+
+input DeleteMessageInput {
+  id: ID!
+}
+
+input CreateGroupInput {
+  id: ID
+  groupId: ID!
+  name: String!
+}
+
+input UpdateGroupInput {
+  id: ID!
+  groupId: ID
+  name: String
+}
+
+input DeleteGroupInput {
+  id: ID!
+}
+
+input CreateInviteInput {
+  id: ID
+  userId: ID!
+  senderId: String
+  receiverId: String
+}
+
+input UpdateInviteInput {
+  id: ID!
+  userId: ID
+  senderId: String
+  receiverId: String
+}
+
+input DeleteInviteInput {
+  id: ID!
+}
+
+input CreateUserGroupInput {
+  id: ID
+  userId: ID!
+  groupId: ID!
+}
+
+input UpdateUserGroupInput {
+  id: ID!
+  userId: ID
+  groupId: ID
+}
+
+input DeleteUserGroupInput {
+  id: ID!
+}
+
+input ModelUserFilterInput {
+  id: ModelIDInput
+  userId: ModelIDInput
+  firstName: ModelStringInput
+  lastName: ModelStringInput
+  name: ModelStringInput
+  phone: ModelStringInput
+  userName: ModelStringInput
+  email: ModelStringInput
+  avatarUri: ModelStringInput
+  and: [ModelUserFilterInput]
+  or: [ModelUserFilterInput]
+  not: ModelUserFilterInput
+}
+
+input ModelUserContactFilterInput {
+  id: ModelIDInput
+  userId: ModelIDInput
+  contactId: ModelIDInput
+  and: [ModelUserContactFilterInput]
+  or: [ModelUserContactFilterInput]
+  not: ModelUserContactFilterInput
+}
+
+input ModelChannelFilterInput {
+  id: ModelIDInput
+  name: ModelStringInput
+  userId: ModelIDInput
+  and: [ModelChannelFilterInput]
+  or: [ModelChannelFilterInput]
+  not: ModelChannelFilterInput
+}
+
+input ModelMessageFilterInput {
+  id: ModelIDInput
+  content: ModelStringInput
+  channelId: ModelIDInput
+  and: [ModelMessageFilterInput]
+  or: [ModelMessageFilterInput]
+  not: ModelMessageFilterInput
+}
+
+input ModelGroupFilterInput {
+  id: ModelIDInput
+  groupId: ModelIDInput
+  name: ModelStringInput
+  and: [ModelGroupFilterInput]
+  or: [ModelGroupFilterInput]
+  not: ModelGroupFilterInput
+}
+
+input ModelInviteFilterInput {
+  id: ModelIDInput
+  userId: ModelIDInput
+  senderId: ModelStringInput
+  receiverId: ModelStringInput
+  and: [ModelInviteFilterInput]
+  or: [ModelInviteFilterInput]
+  not: ModelInviteFilterInput
+}
+
+input ModelUserGroupFilterInput {
+  id: ModelIDInput
+  userId: ModelIDInput
+  groupId: ModelIDInput
+  and: [ModelUserGroupFilterInput]
+  or: [ModelUserGroupFilterInput]
+  not: ModelUserGroupFilterInput
+}
+
+input ModelIDInput {
+  ne: ID
+  eq: ID
+  le: ID
+  lt: ID
+  ge: ID
+  gt: ID
+  contains: ID
+  notContains: ID
+  between: [ID]
+  beginsWith: ID
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  size: ModelSizeInput
+}
+
+input ModelStringInput {
+  ne: String
+  eq: String
+  le: String
+  lt: String
+  ge: String
+  gt: String
+  contains: String
+  notContains: String
+  between: [String]
+  beginsWith: String
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  size: ModelSizeInput
+}
+
+input ModelStringKeyConditionInput {
+  eq: String
+  le: String
+  lt: String
+  ge: String
+  gt: String
+  between: [String]
+  beginsWith: String
+}
+
+input ModelSizeInput {
+  ne: Int
+  eq: Int
+  le: Int
+  lt: Int
+  ge: Int
+  gt: Int
+  between: [Int]
+}
+
+input ModelUserConditionInput {
+  firstName: ModelStringInput
+  lastName: ModelStringInput
+  name: ModelStringInput
+  phone: ModelStringInput
+  userName: ModelStringInput
+  email: ModelStringInput
+  avatarUri: ModelStringInput
+  and: [ModelUserConditionInput]
+  or: [ModelUserConditionInput]
+  not: ModelUserConditionInput
+}
+
+input ModelUserContactConditionInput {
+  userId: ModelIDInput
+  contactId: ModelIDInput
+  and: [ModelUserContactConditionInput]
+  or: [ModelUserContactConditionInput]
+  not: ModelUserContactConditionInput
+}
+
+input ModelChannelConditionInput {
+  name: ModelStringInput
+  userId: ModelIDInput
+  and: [ModelChannelConditionInput]
+  or: [ModelChannelConditionInput]
+  not: ModelChannelConditionInput
+}
+
+input ModelMessageConditionInput {
+  content: ModelStringInput
+  channelId: ModelIDInput
+  and: [ModelMessageConditionInput]
+  or: [ModelMessageConditionInput]
+  not: ModelMessageConditionInput
+}
+
+input ModelGroupConditionInput {
+  groupId: ModelIDInput
+  name: ModelStringInput
+  and: [ModelGroupConditionInput]
+  or: [ModelGroupConditionInput]
+  not: ModelGroupConditionInput
+}
+
+input ModelInviteConditionInput {
+  userId: ModelIDInput
+  senderId: ModelStringInput
+  receiverId: ModelStringInput
+  and: [ModelInviteConditionInput]
+  or: [ModelInviteConditionInput]
+  not: ModelInviteConditionInput
+}
+
+input ModelUserGroupConditionInput {
+  userId: ModelIDInput
+  groupId: ModelIDInput
+  and: [ModelUserGroupConditionInput]
+  or: [ModelUserGroupConditionInput]
+  not: ModelUserGroupConditionInput
+}
+
+input ModelSubscriptionUserFilterInput {
+  id: ModelSubscriptionIDInput
+  userId: ModelSubscriptionIDInput
+  firstName: ModelSubscriptionStringInput
+  lastName: ModelSubscriptionStringInput
+  name: ModelSubscriptionStringInput
+  phone: ModelSubscriptionStringInput
+  userName: ModelSubscriptionStringInput
+  email: ModelSubscriptionStringInput
+  avatarUri: ModelSubscriptionStringInput
+}
+
+input ModelSubscriptionUserContactFilterInput {
+  id: ModelSubscriptionIDInput
+  userId: ModelSubscriptionIDInput
+  contactId: ModelSubscriptionIDInput
+}
+
+input ModelSubscriptionIDInput {
+  ne: ID
+  eq: ID
+  le: ID
+  lt: ID
+  ge: ID
+  gt: ID
+  contains: ID
+  notContains: ID
+  between: [ID]
+  beginsWith: ID
+  in: [ID]
+  notIn: [ID]
+}
+
+input ModelSubscriptionStringInput {
+  ne: String
+  eq: String
+  le: String
+  lt: String
+  ge: String
+  gt: String
+  contains: String
+  notContains: String
+  between: [String]
+  beginsWith: String
+  in: [String]
+  notIn: [String]
+}
+
+enum ModelAttributeTypes {
+  binary
+  binarySet
+  bool
+  list
+  map
+  number
+  numberSet
+  string
+  stringSet
+  _null
+}
+
+enum ModelSortDirection {
+  ASC
+  DESC
+}
+
+# AWS AppSync directives
+directive @aws_subscribe(mutations: [String!]!) on FIELD_DEFINITION
+directive @aws_auth(cognito_groups: [String!]!) on FIELD_DEFINITION
+directive @aws_api_key on FIELD_DEFINITION | OBJECT
+directive @aws_iam on FIELD_DEFINITION | OBJECT
+directive @aws_oidc on FIELD_DEFINITION | OBJECT
+directive @aws_cognito_user_pools(cognito_groups: [String!]) on FIELD_DEFINITION | OBJECT
+
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}

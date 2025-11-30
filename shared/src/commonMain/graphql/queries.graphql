@@ -1,0 +1,94 @@
+# GraphQL queries for your actual Amplify schema
+
+# Get a specific user by ID
+query GetUser($id: ID!) {
+  getUser(id: $id) {
+    id
+    userId
+    firstName
+    lastName
+    name
+    phone
+    userName
+    email
+    avatarUri
+    createdAt
+    updatedAt
+  }
+}
+
+# List all users
+query ListUsers($filter: ModelUserFilterInput, $limit: Int, $nextToken: String) {
+  listUsers(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      id
+      userId
+      firstName
+      lastName
+      name
+      phone
+      userName
+      email
+      avatarUri
+      createdAt
+      updatedAt
+    }
+    nextToken
+  }
+}
+
+# List UserContacts (the join table connecting users to their contacts)
+query ListUserContacts($filter: ModelUserContactFilterInput, $limit: Int, $nextToken: String) {
+  listUserContacts(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      id
+      userId
+      contactId
+      user {
+        id
+        userId
+        firstName
+        lastName
+        name
+        phone
+        userName
+        email
+        avatarUri
+      }
+      contact {
+        id
+        userId
+        firstName
+        lastName
+        name
+        phone
+        userName
+        email
+        avatarUri
+      }
+      createdAt
+      updatedAt
+    }
+    nextToken
+  }
+}
+
+# Find user by phone number (uses secondary index)
+query ListByPhone($phone: String!, $userName: ModelStringKeyConditionInput, $sortDirection: ModelSortDirection, $filter: ModelUserFilterInput, $limit: Int, $nextToken: String) {
+  listByPhone(phone: $phone, userName: $userName, sortDirection: $sortDirection, filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      id
+      userId
+      firstName
+      lastName
+      name
+      phone
+      userName
+      email
+      avatarUri
+      createdAt
+      updatedAt
+    }
+    nextToken
+  }
+}
