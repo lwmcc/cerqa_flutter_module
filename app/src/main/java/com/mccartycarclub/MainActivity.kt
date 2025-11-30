@@ -35,6 +35,7 @@ import com.mccartycarclub.pigeon.PigeonFlutterApi
 import com.mccartycarclub.ui.start.StartScreen
 import com.mccartycarclub.viewmodels.MainViewModel
 import kotlin.String
+import com.cerqa.ui.components.App as SharedApp
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -69,6 +70,13 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxHeight(),
                     ) { state ->
                         mainViewModel.setLoggedInUserId(userId = state.user.userId)
+
+                        // Use shared KMP Compose UI (same as iOS)
+                        SharedApp()
+
+                        checkPermissions()
+
+                        /* Original Android-specific UI (commented out):
                         StartScreen(
                             mainViewModel,
                             state = state,
@@ -84,7 +92,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             },
                         )
-                        checkPermissions()
+                        */
                     }
                 }
             }

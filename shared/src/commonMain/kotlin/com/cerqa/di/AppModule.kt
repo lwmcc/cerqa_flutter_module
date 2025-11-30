@@ -10,8 +10,7 @@ import kotlinx.coroutines.IO
 import org.koin.dsl.module
 
 val appModule = module {
-    single<StoreDefaults> { provideStoreDefaults() }
-    single<Preferences> { UserPreferences(get()) }
+    // Platform-specific StoreDefaults and Preferences are provided by platformModule
     single { Dispatchers.IO }
     single { Dispatchers.Main }
     single { MainViewModel(get(), get(), get()) }

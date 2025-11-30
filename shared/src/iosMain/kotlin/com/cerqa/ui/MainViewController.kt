@@ -5,6 +5,11 @@ import com.cerqa.ui.components.App
 import platform.UIKit.UIViewController
 
 fun createComposeViewController(): UIViewController =
-    ComposeUIViewController {
+    ComposeUIViewController(
+        configure = {
+            // Disable strict plist check for high refresh rate devices
+            enforceStrictPlistSanityCheck = false
+        }
+    ) {
         App()
     }

@@ -10,12 +10,12 @@ struct ContentView: View {
                 ComposeAppView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-               /*  Button("Sign out") {
+                Button("Sign out") {
                     Task {
                         await state.signOut()
                     }
                 }
-                .padding() */
+                .padding()
             }
         }
     }

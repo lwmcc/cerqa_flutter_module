@@ -3,9 +3,15 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
     id("org.jetbrains.compose") version "1.8.2"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.0"
+    id("com.apollographql.apollo") version "4.1.0"
 }
 
 kotlin {
+    // Suppress expect/actual classes warning
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
 
     // Target declarations - add or remove as needed below. These define
     // which platforms this KMP module supports.
@@ -70,7 +76,19 @@ kotlin {
                 implementation(libs.koin.core)
                 implementation(libs.koin.androidx.compose)
 
+                // Ktor client for API calls
                 implementation("io.ktor:ktor-client-core:3.3.2")
+                implementation("io.ktor:ktor-client-content-negotiation:3.3.2")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:3.3.2")
+                implementation("io.ktor:ktor-client-auth:3.3.2")
+                implementation("io.ktor:ktor-client-logging:3.3.2")
+
+                // Apollo GraphQL client
+                implementation("com.apollographql.apollo:apollo-runtime:4.1.0")
+                implementation("com.apollographql.apollo:apollo-normalized-cache:4.1.0")
+
+                // Serialization
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
                 // kotlinx.coroutines will be available in all source sets
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
@@ -96,6 +114,13 @@ kotlin {
                 implementation(libs.koin.android)
                 implementation(libs.androidx.core.ktx)
                 implementation(libs.koin.androidx.compose)
+
+                // Ktor Android engine
+                implementation("io.ktor:ktor-client-okhttp:3.3.2")
+
+                // Amplify Android SDK for authentication
+                implementation("com.amplifyframework:core:2.14.+")
+                implementation("com.amplifyframework:aws-auth-cognito:2.14.+")
             }
         }
 
@@ -117,7 +142,7 @@ kotlin {
             dependencies {
                 // Add iOS-specific dependencies here. This a source set created by Kotlin Gradle
                 // Plugin (KGP) that each specific iOS target (e.g., iosX64) depends on as
-                // part of KMP’s default source set hierarchy. Note that this source set depends
+                // part of KMP's default source set hierarchy. Note that this source set depends
                 // on common by default and will correctly pull the iOS artifacts of any
                 // KMP dependencies declared in commonMain.
                 kotlin("multiplatform")
@@ -125,6 +150,9 @@ kotlin {
                 implementation(compose.foundation)
                 implementation(compose.material)
                 implementation(compose.ui)
+
+                // Ktor iOS engine
+                implementation("io.ktor:ktor-client-darwin:3.3.2")
             }
         }
     }
@@ -133,4 +161,26 @@ kotlin {
         enabled = false // Disable this task - we'll handle resources differently
     }
 
+}
+
+apollo {
+    service("cerqa") {
+        packageName.set("com.cerqa.graphql")
+
+        // Configure Apollo to use Ktor's HTTP engine
+        generateKotlinModels.set(true)
+
+        // Enable normalized cache support
+        generateApolloMetadata.set(true)
+
+        // AppSync-specific configuration
+        // This tells Apollo to add __typename to all queries for normalized cache
+        addTypename.set("always")
+
+        // Schema location - you'll download this from AppSync
+        schemaFile.set(file("src/commonMain/graphql/schema.graphqls"))
+
+        // Where to find your GraphQL queries/mutations/subscriptions
+        srcDir("src/commonMain/graphql")
+    }
 }

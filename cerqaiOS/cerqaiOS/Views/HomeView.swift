@@ -1,10 +1,3 @@
-//
-// HomeView.swift
-// cerqaiOS
-//
-// Home screen - mirrors Android MainScreen
-//
-
 import SwiftUI
 
 struct HomeView: View {

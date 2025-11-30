@@ -18,6 +18,7 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
         appDeclaration()
         modules(
             appModule,
+            commonModule,
             platformModule()
         )
     }
