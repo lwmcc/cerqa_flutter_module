@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -43,8 +44,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.cerqa.navigation.AppDestination
 import com.cerqa.models.Contact
 import com.cerqa.ui.Navigation.AppNavigationActions
 import com.cerqa.ui.Navigation.BottomBar
@@ -77,10 +81,10 @@ fun App(
                     // Custom top bar for Main screen
                     TopAppBar(
                         navigationIcon = {
-                            // Profile icon on the left (replacing back arrow)
+                            // Profile icon on the left
                             IconButton(
                                 onClick = {
-                                    // TODO: Navigate to profile
+                                    navActions.navigateToMain()
                                 },
                                 modifier = Modifier
                                     .size(48.dp)
@@ -94,25 +98,18 @@ fun App(
                             }
                         },
                         title = {
-                            // Search box in the center
-                            TextField(
-                                value = searchText,
-                                onValueChange = { searchText = it },
-                                placeholder = { Text("Search...") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                shape = RoundedCornerShape(3.dp),
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color(0xFFE0E0E0),
-                                    unfocusedContainerColor = Color(0xFFE0E0E0),
-                                    disabledContainerColor = Color(0xFFE0E0E0),
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    disabledIndicatorColor = Color.Transparent,
-                                )
-                            )
+                            Text("Main")
                         },
                         actions = {
+                            // Search icon
+                            IconButton(onClick = { navActions.navigateToContactsSearch() }) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+
                             // Contacts icon
                             IconButton(onClick = { navActions.navigateToContacts() }) {
                                 Icon(
@@ -167,8 +164,29 @@ fun App(
                 )
             }
         ) { paddingValues ->
-            Box(modifier = Modifier.padding(paddingValues)) {
-                Main()
+            NavHost(
+                navController = navController,
+                startDestination = AppDestination.Main.route,
+                modifier = Modifier.padding(paddingValues)
+            ) {
+                composable(AppDestination.Main.route) {
+                    Main()
+                }
+                composable(AppDestination.Contacts.route) {
+                    ContactsScreen()
+                }
+                composable(AppDestination.ContactsSearch.route) {
+                    Search()
+                }
+                composable(AppDestination.Groups.route) {
+                    Groups()
+                }
+                composable(AppDestination.Chat.route) {
+                    Chat()
+                }
+                composable(AppDestination.Notifications.route) {
+                    Inbox()
+                }
             }
         }
     }

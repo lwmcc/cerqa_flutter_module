@@ -89,15 +89,14 @@ fun TopBar(
                         if (clearSearchVisible) {
                             Icon(
                                 Icons.Filled.Clear,
-                                // contentDescription = stringResource(id = R.string.text_field_clear),
+                                contentDescription = "Clear search",
                                 modifier = Modifier
                                     .align(Alignment.CenterEnd)
                                     .clickable {
                                         input = ""
                                         // searchViewModel.onQueryChange("")
                                     },
-                                contentDescription = TODO(),
-                                tint = TODO(),
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }

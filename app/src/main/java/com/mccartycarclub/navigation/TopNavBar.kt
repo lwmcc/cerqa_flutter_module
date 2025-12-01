@@ -31,6 +31,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mccartycarclub.R
 import com.mccartycarclub.viewmodels.SearchViewModel
+import com.cerqa.navigation.AppDestination
+import com.cerqa.ui.Navigation.TopNavItem
 import kotlin.collections.forEach
 
 @OptIn(ExperimentalMaterial3Api::class)

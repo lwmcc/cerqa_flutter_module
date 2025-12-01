@@ -44,6 +44,7 @@ fun BottomBar(
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface // equivalent to backgroundColor
     ) {
+
         items.forEach { item ->
             NavigationBarItem(
                 icon = {

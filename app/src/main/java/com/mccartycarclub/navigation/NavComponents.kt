@@ -6,20 +6,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
-import androidx.compose.ui.graphics.vector.ImageVector
-
-data class BottomNavItem(
-    val route: String,
-    val icon: ImageVector,
-    val label: String,
-    val contentDescription: String
-)
-
-data class TopNavItem(
-    val route: String,
-    val icon: ImageVector,
-    val contentDescription: String,
-)
+import com.cerqa.ui.components.topNavItemsContacts
+import com.cerqa.ui.components.topNavItemsGroups
+import com.cerqa.ui.components.topNavItemsMain
+import com.cerqa.navigation.AppDestination
+import com.cerqa.ui.BottomNavItem
+import com.cerqa.ui.Navigation.TopNavItem
 
 fun getTopNavItems(route: String?): List<TopNavItem> {
     return when (route) {
