@@ -35,5 +35,5 @@ val commonModule = module {
     factory { ContactsViewModel(get()) }
     factory { ApolloContactsViewModel(get()) }
     factory { MockContactsViewModel(get()) }
-    factory { SearchViewModel() }
+    factory { SearchViewModel(get()) }
 }

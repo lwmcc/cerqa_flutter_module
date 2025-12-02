@@ -1,6 +1,7 @@
 package com.cerqa.repository
 
 import com.cerqa.models.Contact
+import com.cerqa.models.CurrentContact
 import kotlinx.coroutines.delay
 
 /**
@@ -16,44 +17,32 @@ class MockContactsRepository {
         delay(1000)
 
         val mockContacts = listOf(
-            Contact(
-                id = "1",
+            CurrentContact(
+                contactId = "1",
                 userId = "user-1",
-                firstName = "John",
-                lastName = "Doe",
-                name = "John Doe",
-                phone = "+1-555-0100",
-                email = "john.doe@example.com",
                 userName = "johndoe",
+                name = "John Doe",
+                phoneNumber = "+1-555-0100",
                 avatarUri = null,
-                createdAt = "2024-01-01T00:00:00Z",
-                updatedAt = "2024-01-01T00:00:00Z"
+                createdAt = "2024-01-01T00:00:00Z"
             ),
-            Contact(
-                id = "2",
+            CurrentContact(
+                contactId = "2",
                 userId = "user-2",
-                firstName = "Jane",
-                lastName = "Smith",
-                name = "Jane Smith",
-                phone = "+1-555-0101",
-                email = "jane.smith@example.com",
                 userName = "janesmith",
+                name = "Jane Smith",
+                phoneNumber = "+1-555-0101",
                 avatarUri = null,
-                createdAt = "2024-01-01T00:00:00Z",
-                updatedAt = "2024-01-01T00:00:00Z"
+                createdAt = "2024-01-01T00:00:00Z"
             ),
-            Contact(
-                id = "3",
+            CurrentContact(
+                contactId = "3",
                 userId = "user-3",
-                firstName = "Bob",
-                lastName = "Johnson",
-                name = "Bob Johnson",
-                phone = "+1-555-0102",
-                email = "bob.johnson@example.com",
                 userName = "bobjohnson",
+                name = "Bob Johnson",
+                phoneNumber = "+1-555-0102",
                 avatarUri = null,
-                createdAt = "2024-01-01T00:00:00Z",
-                updatedAt = "2024-01-01T00:00:00Z"
+                createdAt = "2024-01-01T00:00:00Z"
             )
         )
 

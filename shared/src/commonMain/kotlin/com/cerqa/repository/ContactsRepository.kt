@@ -1,14 +1,31 @@
 package com.cerqa.repository
 
 import com.cerqa.auth.AuthTokenProvider
-import com.cerqa.models.Contact
-import com.cerqa.models.UserContact
+import com.cerqa.models.*
 import com.cerqa.network.GraphQLRequest
 import com.cerqa.network.GraphQLResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import kotlinx.serialization.Serializable
+
+/**
+ * Network response wrapper for consistent error handling
+ */
+sealed class NetworkResponse<out T> {
+    data object NoInternet : NetworkResponse<Nothing>()
+    data class Success<out T>(val data: T?) : NetworkResponse<T>()
+    data class Error(val exception: Throwable) : NetworkResponse<Nothing>()
+}
+
+/**
+ * Delete/Mutation result wrapper
+ */
+sealed class NetDeleteResult {
+    data object NoInternet : NetDeleteResult()
+    data object Success : NetDeleteResult()
+    data class Error(val exception: Throwable) : NetDeleteResult()
+}
 
 /**
  * Repository for fetching and managing contacts.
@@ -73,10 +90,21 @@ class ContactsRepository(
                 return Result.failure(Exception("GraphQL errors: $errorMessages"))
             }
 
-            // Extract contacts from the UserContact join table
+            // Extract contacts from the UserContact join table and map to CurrentContact
             val contacts = graphQLResponse.data?.listUserContacts?.items
-                ?.mapNotNull { it.contact } // Get the contact User from each UserContact
-                ?: emptyList()
+                ?.mapNotNull { userContact ->
+                    userContact.contact?.let { contact ->
+                        CurrentContact(
+                            contactId = userContact.id,
+                            userId = contact.userId ?: "",
+                            userName = contact.userName,
+                            name = contact.name,
+                            avatarUri = contact.avatarUri,
+                            createdAt = contact.createdAt,
+                            phoneNumber = contact.phone
+                        )
+                    }
+                } ?: emptyList()
 
             Result.success(contacts)
         } catch (e: Exception) {
@@ -93,10 +121,8 @@ class ContactsRepository(
         // You could implement a custom Lambda query if needed
         return fetchContacts().map { contacts ->
             contacts.filter { contact ->
-                contact.firstName.contains(query, ignoreCase = true) ||
-                contact.lastName.contains(query, ignoreCase = true) ||
                 contact.name?.contains(query, ignoreCase = true) == true ||
-                contact.phone?.contains(query) == true ||
+                contact.phoneNumber?.contains(query) == true ||
                 contact.userName?.contains(query, ignoreCase = true) == true
             }
         }
@@ -205,7 +231,7 @@ class ContactsRepository(
     /**
      * Find a user by phone number to add as contact.
      */
-    suspend fun findUserByPhone(phone: String): Result<Contact?> {
+    suspend fun findUserByPhone(phone: String): Result<User?> {
         return try {
             val query = """
                 query ListByPhone(${"$"}phone: String!) {
@@ -248,6 +274,582 @@ class ContactsRepository(
             Result.failure(e)
         }
     }
+
+    /**
+     * Fetch all contacts including current contacts, sent invites, and received invites.
+     * Returns a combined list of Contact objects with different states.
+     */
+    suspend fun fetchAllContactsWithInvites(): Result<List<Contact>> {
+        return try {
+            val currentUserId = tokenProvider.getCurrentUserId()
+                ?: return Result.failure(Exception("User not authenticated"))
+
+            // Fetch current contacts, sent invites, and received invites in parallel
+            val currentContacts = fetchCurrentContacts(currentUserId)
+            val sentInvites = fetchSentInvites(currentUserId)
+            val receivedInvites = fetchReceivedInvites(currentUserId)
+
+            // Combine all contacts
+            val allContacts = mutableListOf<Contact>()
+            currentContacts.getOrNull()?.let { allContacts.addAll(it) }
+            sentInvites.getOrNull()?.let { allContacts.addAll(it) }
+            receivedInvites.getOrNull()?.let { allContacts.addAll(it) }
+
+            Result.success(allContacts)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Fetch current (accepted) contacts for the user.
+     */
+    private suspend fun fetchCurrentContacts(userId: String): Result<List<CurrentContact>> {
+        return try {
+            val query = """
+                query ListUserContacts(${"$"}userId: ID!) {
+                    listUserContacts(filter: { userId: { eq: ${"$"}userId } }) {
+                        items {
+                            id
+                            contact {
+                                id
+                                userId
+                                firstName
+                                lastName
+                                name
+                                phone
+                                userName
+                                email
+                                avatarUri
+                                createdAt
+                            }
+                        }
+                    }
+                }
+            """.trimIndent()
+
+            val request = GraphQLRequest(
+                query = query,
+                variables = mapOf("userId" to kotlinx.serialization.json.JsonPrimitive(userId))
+            )
+
+            val response = httpClient.post {
+                bearerAuth(tokenProvider.getAccessToken())
+                setBody(request)
+            }
+
+            val graphQLResponse: GraphQLResponse<ListUserContactsData> = response.body()
+
+            if (graphQLResponse.errors != null) {
+                val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errorMessages"))
+            }
+
+            val contacts = graphQLResponse.data?.listUserContacts?.items
+                ?.mapNotNull { userContact ->
+                    userContact.contact?.let { contact ->
+                        CurrentContact(
+                            contactId = userContact.id,
+                            userId = contact.userId ?: "",
+                            userName = contact.userName,
+                            name = contact.name,
+                            avatarUri = contact.avatarUri,
+                            createdAt = contact.createdAt,
+                            phoneNumber = contact.phone
+                        )
+                    }
+                } ?: emptyList()
+
+            Result.success(contacts)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Fetch sent connection invites.
+     */
+    private suspend fun fetchSentInvites(userId: String): Result<List<SentInviteContactInvite>> {
+        return try {
+            val query = """
+                query ListInvites(${"$"}senderId: ID!) {
+                    listInvites(filter: { senderId: { eq: ${"$"}senderId } }) {
+                        items {
+                            id
+                            senderId
+                            receiverId
+                            createdAt
+                        }
+                    }
+                }
+            """.trimIndent()
+
+            val request = GraphQLRequest(
+                query = query,
+                variables = mapOf("senderId" to kotlinx.serialization.json.JsonPrimitive(userId))
+            )
+
+            val response = httpClient.post {
+                bearerAuth(tokenProvider.getAccessToken())
+                setBody(request)
+            }
+
+            val graphQLResponse: GraphQLResponse<ListInvitesData> = response.body()
+
+            if (graphQLResponse.errors != null) {
+                val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errorMessages"))
+            }
+
+            val invites = graphQLResponse.data?.listInvites?.items ?: emptyList()
+
+            // Fetch user details for each receiverId
+            val sentInviteContacts = invites.mapNotNull { invite ->
+                val userResult = fetchUserById(invite.receiverId)
+                userResult.getOrNull()?.let { user ->
+                    SentInviteContactInvite(
+                        senderUserId = invite.senderId,
+                        contactId = invite.id,
+                        userId = user.userId ?: "",
+                        userName = user.userName,
+                        name = user.name,
+                        avatarUri = user.avatarUri,
+                        createdAt = invite.createdAt,
+                        phoneNumber = user.phone
+                    )
+                }
+            }
+
+            Result.success(sentInviteContacts)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Fetch received connection invites.
+     */
+    private suspend fun fetchReceivedInvites(userId: String): Result<List<ReceivedContactInvite>> {
+        return try {
+            val query = """
+                query ListInvites(${"$"}receiverId: ID!) {
+                    listInvites(filter: { receiverId: { eq: ${"$"}receiverId } }) {
+                        items {
+                            id
+                            senderId
+                            receiverId
+                            createdAt
+                        }
+                    }
+                }
+            """.trimIndent()
+
+            val request = GraphQLRequest(
+                query = query,
+                variables = mapOf("receiverId" to kotlinx.serialization.json.JsonPrimitive(userId))
+            )
+
+            val response = httpClient.post {
+                bearerAuth(tokenProvider.getAccessToken())
+                setBody(request)
+            }
+
+            val graphQLResponse: GraphQLResponse<ListInvitesData> = response.body()
+
+            if (graphQLResponse.errors != null) {
+                val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errorMessages"))
+            }
+
+            val invites = graphQLResponse.data?.listInvites?.items ?: emptyList()
+
+            // Fetch user details for each senderId
+            val receivedInviteContacts = invites.mapNotNull { invite ->
+                val userResult = fetchUserById(invite.senderId)
+                userResult.getOrNull()?.let { user ->
+                    ReceivedContactInvite(
+                        contactId = invite.id,
+                        userId = user.userId ?: "",
+                        userName = user.userName,
+                        name = user.name,
+                        avatarUri = user.avatarUri,
+                        createdAt = invite.createdAt,
+                        phoneNumber = user.phone
+                    )
+                }
+            }
+
+            Result.success(receivedInviteContacts)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Fetch a user by their ID.
+     */
+    private suspend fun fetchUserById(userId: String): Result<User?> {
+        return try {
+            val query = """
+                query GetUser(${"$"}userId: ID!) {
+                    getUser(userId: ${"$"}userId) {
+                        id
+                        userId
+                        firstName
+                        lastName
+                        name
+                        phone
+                        userName
+                        email
+                        avatarUri
+                        createdAt
+                    }
+                }
+            """.trimIndent()
+
+            val request = GraphQLRequest(
+                query = query,
+                variables = mapOf("userId" to kotlinx.serialization.json.JsonPrimitive(userId))
+            )
+
+            val response = httpClient.post {
+                bearerAuth(tokenProvider.getAccessToken())
+                setBody(request)
+            }
+
+            val graphQLResponse: GraphQLResponse<GetUserData> = response.body()
+
+            if (graphQLResponse.errors != null) {
+                val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errorMessages"))
+            }
+
+            Result.success(graphQLResponse.data?.getUser)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Send a connection invite to another user.
+     */
+    suspend fun sendInviteToConnect(receiverUserId: String): Result<String> {
+        return try {
+            val currentUserId = tokenProvider.getCurrentUserId()
+                ?: return Result.failure(Exception("User not authenticated"))
+
+            val mutation = """
+                mutation CreateInvite(${"$"}senderId: ID!, ${"$"}receiverId: ID!) {
+                    createInvite(input: {
+                        senderId: ${"$"}senderId,
+                        receiverId: ${"$"}receiverId
+                    }) {
+                        id
+                        senderId
+                        receiverId
+                        createdAt
+                    }
+                }
+            """.trimIndent()
+
+            val request = GraphQLRequest(
+                query = mutation,
+                variables = mapOf(
+                    "senderId" to kotlinx.serialization.json.JsonPrimitive(currentUserId),
+                    "receiverId" to kotlinx.serialization.json.JsonPrimitive(receiverUserId)
+                )
+            )
+
+            val response = httpClient.post {
+                bearerAuth(tokenProvider.getAccessToken())
+                setBody(request)
+            }
+
+            val graphQLResponse: GraphQLResponse<CreateInviteData> = response.body()
+
+            if (graphQLResponse.errors != null) {
+                val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errorMessages"))
+            }
+
+            val inviteId = graphQLResponse.data?.createInvite?.id
+                ?: return Result.failure(Exception("No invite ID returned"))
+
+            Result.success(inviteId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Cancel a sent connection invite.
+     */
+    suspend fun cancelInviteToConnect(receiverUserId: String): Result<Unit> {
+        return try {
+            val currentUserId = tokenProvider.getCurrentUserId()
+                ?: return Result.failure(Exception("User not authenticated"))
+
+            // First find the invite ID
+            val inviteId = findInviteId(currentUserId, receiverUserId).getOrNull()
+                ?: return Result.failure(Exception("Invite not found"))
+
+            val mutation = """
+                mutation DeleteInvite(${"$"}id: ID!) {
+                    deleteInvite(input: { id: ${"$"}id }) {
+                        id
+                    }
+                }
+            """.trimIndent()
+
+            val request = GraphQLRequest(
+                query = mutation,
+                variables = mapOf("id" to kotlinx.serialization.json.JsonPrimitive(inviteId))
+            )
+
+            val response = httpClient.post {
+                bearerAuth(tokenProvider.getAccessToken())
+                setBody(request)
+            }
+
+            val graphQLResponse: GraphQLResponse<DeleteInviteData> = response.body()
+
+            if (graphQLResponse.errors != null) {
+                val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errorMessages"))
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Accept a received connection invite (creates contact relationship).
+     */
+    suspend fun acceptInvite(senderUserId: String): Result<UserContact> {
+        return try {
+            val currentUserId = tokenProvider.getCurrentUserId()
+                ?: return Result.failure(Exception("User not authenticated"))
+
+            // Find the invite ID
+            val inviteId = findInviteId(senderUserId, currentUserId).getOrNull()
+                ?: return Result.failure(Exception("Invite not found"))
+
+            // Create the contact relationship
+            val createContactResult = addContact(senderUserId)
+            if (createContactResult.isFailure) {
+                return Result.failure(createContactResult.exceptionOrNull() ?: Exception("Failed to create contact"))
+            }
+
+            // Delete the invite
+            deleteInvite(inviteId)
+
+            createContactResult
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Reject/delete a received connection invite.
+     */
+    suspend fun deleteReceivedInvite(senderUserId: String): Result<Unit> {
+        return try {
+            val currentUserId = tokenProvider.getCurrentUserId()
+                ?: return Result.failure(Exception("User not authenticated"))
+
+            val inviteId = findInviteId(senderUserId, currentUserId).getOrNull()
+                ?: return Result.failure(Exception("Invite not found"))
+
+            deleteInvite(inviteId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Helper to find an invite ID by sender and receiver.
+     */
+    private suspend fun findInviteId(senderId: String, receiverId: String): Result<String> {
+        return try {
+            val query = """
+                query ListInvites(${"$"}senderId: ID!, ${"$"}receiverId: ID!) {
+                    listInvites(filter: {
+                        senderId: { eq: ${"$"}senderId },
+                        receiverId: { eq: ${"$"}receiverId }
+                    }) {
+                        items {
+                            id
+                        }
+                    }
+                }
+            """.trimIndent()
+
+            val request = GraphQLRequest(
+                query = query,
+                variables = mapOf(
+                    "senderId" to kotlinx.serialization.json.JsonPrimitive(senderId),
+                    "receiverId" to kotlinx.serialization.json.JsonPrimitive(receiverId)
+                )
+            )
+
+            val response = httpClient.post {
+                bearerAuth(tokenProvider.getAccessToken())
+                setBody(request)
+            }
+
+            val graphQLResponse: GraphQLResponse<ListInvitesData> = response.body()
+
+            if (graphQLResponse.errors != null) {
+                val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errorMessages"))
+            }
+
+            val inviteId = graphQLResponse.data?.listInvites?.items?.firstOrNull()?.id
+                ?: return Result.failure(Exception("Invite not found"))
+
+            Result.success(inviteId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Helper to delete an invite by ID.
+     */
+    private suspend fun deleteInvite(inviteId: String): Result<Unit> {
+        return try {
+            val mutation = """
+                mutation DeleteInvite(${"$"}id: ID!) {
+                    deleteInvite(input: { id: ${"$"}id }) {
+                        id
+                    }
+                }
+            """.trimIndent()
+
+            val request = GraphQLRequest(
+                query = mutation,
+                variables = mapOf("id" to kotlinx.serialization.json.JsonPrimitive(inviteId))
+            )
+
+            val response = httpClient.post {
+                bearerAuth(tokenProvider.getAccessToken())
+                setBody(request)
+            }
+
+            val graphQLResponse: GraphQLResponse<DeleteInviteData> = response.body()
+
+            if (graphQLResponse.errors != null) {
+                val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errorMessages"))
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Search users by username.
+     */
+    suspend fun searchUsersByUserName(userName: String): Result<List<User>> {
+        return try {
+            val currentUserId = tokenProvider.getCurrentUserId()
+                ?: return Result.failure(Exception("User not authenticated"))
+
+            val query = """
+                query ListUsers(${"$"}userName: String!, ${"$"}currentUserId: ID!) {
+                    listUsers(filter: {
+                        userName: { contains: ${"$"}userName },
+                        userId: { ne: ${"$"}currentUserId }
+                    }) {
+                        items {
+                            id
+                            userId
+                            firstName
+                            lastName
+                            name
+                            phone
+                            userName
+                            email
+                            avatarUri
+                        }
+                    }
+                }
+            """.trimIndent()
+
+            val request = GraphQLRequest(
+                query = query,
+                variables = mapOf(
+                    "userName" to kotlinx.serialization.json.JsonPrimitive(userName),
+                    "currentUserId" to kotlinx.serialization.json.JsonPrimitive(currentUserId)
+                )
+            )
+
+            val response = httpClient.post {
+                bearerAuth(tokenProvider.getAccessToken())
+                setBody(request)
+            }
+
+            val graphQLResponse: GraphQLResponse<ListUsersData> = response.body()
+
+            if (graphQLResponse.errors != null) {
+                val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errorMessages"))
+            }
+
+            val users = graphQLResponse.data?.listUsers?.items ?: emptyList()
+            Result.success(users)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Check if a contact relationship exists between two users.
+     */
+    suspend fun contactExists(senderUserId: String, receiverUserId: String): Result<Boolean> {
+        return try {
+            val query = """
+                query ListUserContacts(${"$"}userId: ID!, ${"$"}contactId: ID!) {
+                    listUserContacts(filter: {
+                        userId: { eq: ${"$"}userId },
+                        contactId: { eq: ${"$"}contactId }
+                    }) {
+                        items {
+                            id
+                        }
+                    }
+                }
+            """.trimIndent()
+
+            val request = GraphQLRequest(
+                query = query,
+                variables = mapOf(
+                    "userId" to kotlinx.serialization.json.JsonPrimitive(senderUserId),
+                    "contactId" to kotlinx.serialization.json.JsonPrimitive(receiverUserId)
+                )
+            )
+
+            val response = httpClient.post {
+                bearerAuth(tokenProvider.getAccessToken())
+                setBody(request)
+            }
+
+            val graphQLResponse: GraphQLResponse<ListUserContactsData> = response.body()
+
+            if (graphQLResponse.errors != null) {
+                return Result.success(false)
+            }
+
+            val exists = graphQLResponse.data?.listUserContacts?.items?.isNotEmpty() ?: false
+            Result.success(exists)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
 
 // GraphQL response data classes
@@ -268,7 +870,8 @@ private data class DeleteUserContactData(
 
 @Serializable
 private data class ListUsersData(
-    val listByPhone: UsersConnection
+    val listByPhone: UsersConnection? = null,
+    val listUsers: UsersConnection? = null
 )
 
 @Serializable
@@ -278,10 +881,40 @@ private data class UserContactsConnection(
 
 @Serializable
 private data class UsersConnection(
-    val items: List<Contact>
+    val items: List<User>
 )
 
 @Serializable
 private data class UserContactIdOnly(
     val id: String
+)
+
+@Serializable
+private data class ListInvitesData(
+    val listInvites: InvitesConnection
+)
+
+@Serializable
+private data class InvitesConnection(
+    val items: List<Invite>
+)
+
+@Serializable
+private data class CreateInviteData(
+    val createInvite: Invite
+)
+
+@Serializable
+private data class DeleteInviteData(
+    val deleteInvite: InviteIdOnly
+)
+
+@Serializable
+private data class InviteIdOnly(
+    val id: String
+)
+
+@Serializable
+private data class GetUserData(
+    val getUser: User?
 )

@@ -284,13 +284,13 @@ fun ContactCard(contact: Contact) {
                 .padding(16.dp)
         ) {
             Text(
-                text = contact.name ?: "${contact.firstName} ${contact.lastName}",
+                text = contact.name ?: contact.userName ?: "Unknown",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
 
-            contact.phone?.let { phone ->
+            contact.phoneNumber?.let { phone ->
                 Text(
                     text = phone,
                     fontSize = 14.sp,
@@ -299,9 +299,9 @@ fun ContactCard(contact: Contact) {
                 )
             }
 
-            contact.email?.let { email ->
+            contact.userName?.let { userName ->
                 Text(
-                    text = email,
+                    text = "@$userName",
                     fontSize = 14.sp,
                     color = Color.Gray,
                     modifier = Modifier.padding(top = 2.dp)

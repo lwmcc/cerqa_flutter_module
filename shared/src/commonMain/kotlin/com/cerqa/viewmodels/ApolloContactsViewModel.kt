@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel for managing contacts using Apollo GraphQL.
+ * ViewModel for managing contacts using Apollo GraphQL
  */
 class ApolloContactsViewModel(
     private val repository: ApolloContactsRepository
@@ -19,7 +19,6 @@ class ApolloContactsViewModel(
     private val viewModelJob = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.Main + viewModelJob)
 
-    // State
     private val _contacts = MutableStateFlow<List<Contact>>(emptyList())
     val contacts: StateFlow<List<Contact>> = _contacts.asStateFlow()
 
@@ -30,7 +29,7 @@ class ApolloContactsViewModel(
     val error: StateFlow<String?> = _error.asStateFlow()
 
     /**
-     * Fetch contacts from AppSync using Apollo.
+     * Fetch contacts from AppSync using Apollo GraphQL
      */
     fun fetchContacts() {
         scope.launch {
@@ -47,19 +46,5 @@ class ApolloContactsViewModel(
 
             _isLoading.value = false
         }
-    }
-
-    /**
-     * Clear any error messages.
-     */
-    fun clearError() {
-        _error.value = null
-    }
-
-    /**
-     * Clean up when ViewModel is no longer needed.
-     */
-    fun onCleared() {
-        viewModelJob.cancel()
     }
 }

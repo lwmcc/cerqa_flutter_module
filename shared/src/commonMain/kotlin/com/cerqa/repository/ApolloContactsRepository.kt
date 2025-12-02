@@ -6,6 +6,7 @@ import com.cerqa.graphql.ListUserContactsQuery
 import com.cerqa.graphql.type.ModelUserContactFilterInput
 import com.cerqa.graphql.type.ModelIDInput
 import com.cerqa.models.Contact
+import com.cerqa.models.CurrentContact
 
 /**
  * Repository for fetching contacts using Apollo GraphQL client.
@@ -50,21 +51,17 @@ class ApolloContactsRepository(
 
             val userContacts = response.data?.listUserContacts?.items ?: emptyList()
 
-            // Extract the contact User from each UserContact
+            // Extract the contact User from each UserContact and map to CurrentContact
             val contacts = userContacts.mapNotNull { userContact ->
                 userContact?.contact?.let { contact ->
-                    Contact(
-                        id = contact.id,
-                        userId = contact.userId,
-                        firstName = contact.firstName,
-                        lastName = contact.lastName,
-                        name = contact.name,
-                        phone = contact.phone,
+                    CurrentContact(
+                        contactId = userContact.id,
+                        userId = contact.userId ?: "",
                         userName = contact.userName,
-                        email = contact.email,
+                        name = contact.name,
+                        phoneNumber = contact.phone,
                         avatarUri = contact.avatarUri,
-                        createdAt = userContact.createdAt,
-                        updatedAt = userContact.updatedAt
+                        createdAt = userContact.createdAt
                     )
                 }
             }
