@@ -173,7 +173,7 @@ fun App(
                     Main()
                 }
                 composable(AppDestination.Contacts.route) {
-                    ContactsScreen()
+                    Contacts(searchViewModel = searchViewModel)
                 }
                 composable(AppDestination.ContactsSearch.route) {
                     Search()

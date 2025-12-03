@@ -10,12 +10,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -126,25 +131,49 @@ fun ContactsSearchScreen(
                 }
             }
 
-            Box(
+            // Search TextField
+            OutlinedTextField(
+                value = input,
+                onValueChange = { newValue ->
+                    input = newValue
+                    searchViewModel.onQueryChange(newValue)
+                    clearSearchVisible = newValue.isNotEmpty()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background),
-            ) {
-
-                if (clearSearchVisible) {
+                    .padding(horizontal = dimensionResource(R.dimen.card_padding_start)),
+                placeholder = {
+                    Text(text = stringResource(R.string.user_search))
+                },
+                leadingIcon = {
                     Icon(
-                        Icons.Filled.Clear,
-                        contentDescription = stringResource(id = R.string.text_field_clear),
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .clickable {
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = stringResource(R.string.connect_content_description_search)
+                    )
+                },
+                trailingIcon = {
+                    if (clearSearchVisible) {
+                        Icon(
+                            Icons.Filled.Clear,
+                            contentDescription = stringResource(id = R.string.text_field_clear),
+                            modifier = Modifier.clickable {
                                 input = ""
                                 searchViewModel.onQueryChange("")
+                                clearSearchVisible = false
                             },
-                    )
-                }
-            }
+                        )
+                    }
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Search
+                ),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        // Search is triggered automatically via onQueryChange
+                    }
+                )
+            )
 
             Spacer(
                 modifier = Modifier

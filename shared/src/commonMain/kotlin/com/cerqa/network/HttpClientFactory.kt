@@ -56,7 +56,7 @@ fun createHttpClient(tokenProvider: AuthTokenProvider): HttpClient {
 
         // Default request configuration for AppSync GraphQL
         defaultRequest {
-            url("https://wsfjluq6hnaszkwcciqxao7i6m.appsync-api.us-east-2.amazonaws.com/graphql")
+            url("https://74k2mnj3lfejrl5lxsgsll6oje.appsync-api.us-east-2.amazonaws.com/graphql")
         }
     }
 }

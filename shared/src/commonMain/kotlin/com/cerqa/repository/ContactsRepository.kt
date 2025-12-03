@@ -7,6 +7,7 @@ import com.cerqa.network.GraphQLResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.http.*
 import kotlinx.serialization.Serializable
 
 /**
@@ -38,6 +39,84 @@ class ContactsRepository(
     private val httpClient: HttpClient,
     private val tokenProvider: AuthTokenProvider
 ) {
+    /**
+     * Create a new user in the backend (for testing purposes)
+     * Gets the current user ID from auth and uses the provided user details
+     */
+    suspend fun createCurrentUserWithDetails(
+        firstName: String,
+        lastName: String,
+        name: String?,
+        phone: String?,
+        userName: String?,
+        email: String?,
+        avatarUri: String?
+    ): Result<User> {
+        return try {
+            // Get current user ID from auth
+            val userId = tokenProvider.getCurrentUserId()
+                ?: return Result.failure(Exception("User not authenticated"))
+
+            val mutation = """
+                mutation CreateUser(${"$"}input: CreateUserInput!) {
+                    createUser(input: ${"$"}input) {
+                        id
+                        userId
+                        firstName
+                        lastName
+                        name
+                        phone
+                        userName
+                        email
+                        avatarUri
+                        createdAt
+                        updatedAt
+                    }
+                }
+            """.trimIndent()
+
+            val request = GraphQLRequest(
+                query = mutation,
+                variables = mapOf(
+                    "input" to kotlinx.serialization.json.buildJsonObject {
+                        put("id", kotlinx.serialization.json.JsonPrimitive(userId))
+                        put("userId", kotlinx.serialization.json.JsonPrimitive(userId))
+                        put("firstName", kotlinx.serialization.json.JsonPrimitive(firstName))
+                        put("lastName", kotlinx.serialization.json.JsonPrimitive(lastName))
+                        name?.let { put("name", kotlinx.serialization.json.JsonPrimitive(it)) }
+                        phone?.let { put("phone", kotlinx.serialization.json.JsonPrimitive(it)) }
+                        userName?.let { put("userName", kotlinx.serialization.json.JsonPrimitive(it)) }
+                        email?.let { put("email", kotlinx.serialization.json.JsonPrimitive(it)) }
+                        avatarUri?.let { put("avatarUri", kotlinx.serialization.json.JsonPrimitive(it)) }
+                    }
+                )
+            )
+
+            val response = httpClient.post {
+                bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            val graphQLResponse: GraphQLResponse<CreateUserData> = response.body()
+
+            if (graphQLResponse.errors != null) {
+                val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errorMessages"))
+            }
+
+            val user = graphQLResponse.data?.createUser
+                ?: return Result.failure(Exception("No user returned from mutation"))
+
+            println("ContactsRepository: User created successfully: ${user.userName}")
+            Result.success(user)
+        } catch (e: Exception) {
+            println("ContactsRepository: createCurrentUserWithDetails failed: ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
     /**
      * Fetch all contacts for the current user from AppSync.
      * Queries UserContact where userId = currentUser, then expands the contact field.
@@ -80,6 +159,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -173,6 +253,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -212,6 +293,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -258,6 +340,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -335,6 +418,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -391,6 +475,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -451,6 +536,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -514,6 +600,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -562,6 +649,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -608,6 +696,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -696,6 +785,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -735,6 +825,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -790,6 +881,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -835,6 +927,7 @@ class ContactsRepository(
 
             val response = httpClient.post {
                 bearerAuth(tokenProvider.getAccessToken())
+                contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
@@ -917,4 +1010,9 @@ private data class InviteIdOnly(
 @Serializable
 private data class GetUserData(
     val getUser: User?
+)
+
+@Serializable
+private data class CreateUserData(
+    val createUser: User
 )
