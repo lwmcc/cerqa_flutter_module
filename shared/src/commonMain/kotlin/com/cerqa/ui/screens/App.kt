@@ -56,6 +56,7 @@ import com.cerqa.ui.Navigation.TopBar
 import com.cerqa.ui.Navigation.getTopNavItems
 import com.cerqa.ui.components.navItems
 import com.cerqa.viewmodels.ApolloContactsViewModel
+import com.cerqa.viewmodels.ContactsViewModel
 import com.cerqa.viewmodels.SearchViewModel
 import org.koin.compose.koinInject
 
@@ -67,6 +68,7 @@ fun App(
         AppNavigationActions(navController)
     },
     searchViewModel: SearchViewModel = koinInject(),
+    contactsViewModel: ContactsViewModel = koinInject(),
 ) {
     var searchText by remember { mutableStateOf("") }
 
@@ -172,7 +174,10 @@ fun App(
                     Main()
                 }
                 composable(AppDestination.Contacts.route) {
-                    Contacts(searchViewModel = searchViewModel)
+                    Contacts(
+                        searchViewModel = searchViewModel,
+                        contactsViewModel = contactsViewModel
+                    )
                 }
                 composable(AppDestination.ContactsSearch.route) {
                     Search()

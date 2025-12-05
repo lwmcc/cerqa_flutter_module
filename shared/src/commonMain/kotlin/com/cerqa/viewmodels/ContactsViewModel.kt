@@ -70,10 +70,19 @@ class ContactsViewModel(
      * Fetch all contacts, current contacts, and invites
      */
     fun fetchAllContacts() {
+        println("ContactsViewModel: fetchAllContacts called")
         _uiState.value = _uiState.value.copy(pending = true)
         scope.launch {
             repository.fetchAllContactsWithInvites()
                 .onSuccess { contactsList ->
+                    println("ContactsViewModel: fetchAllContacts SUCCESS - received ${contactsList.size} contacts")
+                    contactsList.forEach { contact ->
+                        when (contact) {
+                            is ReceivedContactInvite -> println("  - ReceivedInvite from: ${contact.userName}")
+                            is SentInviteContactInvite -> println("  - SentInvite to: ${contact.userName}")
+                            is CurrentContact -> println("  - CurrentContact: ${contact.userName}")
+                        }
+                    }
                     _uiState.value = _uiState.value.copy(
                         pending = false,
                         contacts = contactsList
@@ -81,6 +90,8 @@ class ContactsViewModel(
                     _contacts.value = contactsList
                 }
                 .onFailure { exception ->
+                    println("ContactsViewModel: fetchAllContacts FAILURE - ${exception.message}")
+                    exception.printStackTrace()
                     _uiState.value = _uiState.value.copy(
                         pending = false,
                         message = MessageType.ERROR
@@ -129,8 +140,8 @@ class ContactsViewModel(
     private suspend fun deleteReceivedInviteToConnect(userId: String) {
         repository.deleteReceivedInvite(userId)
             .onSuccess {
-                val contacts = _uiState.value.contacts.filterNot { it.userId == userId }
-                _uiState.value = _uiState.value.copy(contacts = contacts, pending = false)
+                // Refresh contacts to show updated list
+                fetchAllContacts()
             }
             .onFailure {
                 _uiState.value = _uiState.value.copy(pending = false, message = MessageType.ERROR)
@@ -157,11 +168,8 @@ class ContactsViewModel(
     private suspend fun deleteContact(contactId: String) {
         repository.deleteContact(contactId)
             .onSuccess {
-                val contacts = _uiState.value.contacts.filterNot {
-                    it.contactId == contactId || (it as? CurrentContact)?.contactId == contactId
-                }
-                _uiState.value = _uiState.value.copy(contacts = contacts, pending = false)
-                _contacts.value = contacts
+                // Refresh contacts to show updated list
+                fetchAllContacts()
             }
             .onFailure {
                 _uiState.value = _uiState.value.copy(pending = false, message = MessageType.ERROR)
@@ -171,8 +179,8 @@ class ContactsViewModel(
     private suspend fun cancelInviteToConnect(receiverUserId: String) {
         repository.cancelInviteToConnect(receiverUserId)
             .onSuccess {
-                val contacts = _uiState.value.contacts.filterNot { it.userId == receiverUserId }
-                _uiState.value = _uiState.value.copy(contacts = contacts, pending = false)
+                // Refresh contacts to show updated list
+                fetchAllContacts()
             }
             .onFailure {
                 _uiState.value = _uiState.value.copy(pending = false, message = MessageType.ERROR)

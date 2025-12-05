@@ -15,17 +15,45 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import com.cerqa.models.ContactType
-import com.cerqa.models.SearchUser
+import com.cerqa.models.*
+import com.cerqa.viewmodels.ContactCardEvent
+import com.cerqa.viewmodels.ContactsViewModel
 import com.cerqa.viewmodels.MessageType
 import com.cerqa.viewmodels.SearchViewModel
 
 @Composable
-fun Contacts(searchViewModel: SearchViewModel) {
+fun Contacts(
+    searchViewModel: SearchViewModel,
+    contactsViewModel: ContactsViewModel
+) {
     val uiState by searchViewModel.uiState.collectAsState()
+    val contactsUiState by contactsViewModel.uiState.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     var showInviteDialog by remember { mutableStateOf(false) }
     var selectedUser by remember { mutableStateOf<SearchUser?>(null) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    var confirmDialogData by remember { mutableStateOf<ConfirmDialogData?>(null) }
+
+    // Fetch contacts on init
+    LaunchedEffect(Unit) {
+        contactsViewModel.fetchAllContacts()
+    }
+
+    // Refresh contacts when an invite is sent successfully
+    LaunchedEffect(uiState.message) {
+        if (uiState.message == MessageType.INVITE_SENT) {
+            // Refresh contacts to show the newly sent invite
+            contactsViewModel.fetchAllContacts()
+        }
+    }
+
+    // Refresh contacts when returning to idle state (cleared search)
+    LaunchedEffect(uiState.idle) {
+        if (uiState.idle && searchQuery.isEmpty()) {
+            // Refresh to show any updates from sent/received invites
+            contactsViewModel.fetchAllContacts()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -139,13 +167,10 @@ fun Contacts(searchViewModel: SearchViewModel) {
 
             else -> {} // TODO:  what else?
         }
-
-        // Idle state - show when no search query
         if (uiState.idle && searchQuery.isEmpty()) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = "Search for users to connect",
@@ -201,21 +226,107 @@ fun Contacts(searchViewModel: SearchViewModel) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Text(
-                    text = "TODO: Display backend contacts list here",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "TODO: Display device contacts list here",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // Display all contacts from backend
+                if (contactsUiState.contacts.isNotEmpty()) {
+                    Text(
+                        text = "Your Contacts (${contactsUiState.contacts.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                } else if (!contactsUiState.pending) {
+                    Text(
+                        text = "No contacts yet. Search above to find users!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
-        // Search results - show when user is searching
+        // Contacts list - always show when not searching
+        if (uiState.idle && searchQuery.isEmpty() && contactsUiState.contacts.isNotEmpty()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(contactsUiState.contacts, key = { it.contactId }) { contact ->
+                    when (contact) {
+                        is ReceivedContactInvite -> {
+                            ReceivedInviteCard(
+                                contact = contact,
+                                onAccept = {
+                                    confirmDialogData = ConfirmDialogData(
+                                        title = "Accept Invite",
+                                        message = "Accept connection invite from ${contact.userName ?: "this user"}?",
+                                        onConfirm = {
+                                            contactsViewModel.userConnectionEvent(
+                                                0,
+                                                ContactCardEvent.AcceptConnection(contact.userId)
+                                            )
+                                        }
+                                    )
+                                    showConfirmDialog = true
+                                },
+                                onDeny = {
+                                    confirmDialogData = ConfirmDialogData(
+                                        title = "Deny Invite",
+                                        message = "Deny connection invite from ${contact.userName ?: "this user"}?",
+                                        onConfirm = {
+                                            contactsViewModel.userConnectionEvent(
+                                                0,
+                                                ContactCardEvent.DeleteReceivedInvite(contact.userId)
+                                            )
+                                        }
+                                    )
+                                    showConfirmDialog = true
+                                }
+                            )
+                        }
+
+                        is SentInviteContactInvite -> {
+                            SentInviteCard(
+                                contact = contact,
+                                onCancel = {
+                                    confirmDialogData = ConfirmDialogData(
+                                        title = "Cancel Invite",
+                                        message = "Cancel connection invite to ${contact.userName ?: "this user"}?",
+                                        onConfirm = {
+                                            contactsViewModel.userConnectionEvent(
+                                                0,
+                                                ContactCardEvent.CancelSentInvite(contact.userId)
+                                            )
+                                        }
+                                    )
+                                    showConfirmDialog = true
+                                }
+                            )
+                        }
+
+                        is CurrentContact -> {
+                            CurrentContactCard(
+                                contact = contact,
+                                onDelete = {
+                                    confirmDialogData = ConfirmDialogData(
+                                        title = "Delete Contact",
+                                        message = "Delete ${contact.userName ?: "this user"} from your contacts?",
+                                        onConfirm = {
+                                            contactsViewModel.userConnectionEvent(
+                                                0,
+                                                ContactCardEvent.DeleteContact(contact.contactId)
+                                            )
+                                        }
+                                    )
+                                    showConfirmDialog = true
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Search results, show when user is searching
         if (!uiState.idle && searchQuery.isNotEmpty()) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -239,6 +350,16 @@ fun Contacts(searchViewModel: SearchViewModel) {
                         onConnectClick = {
                             selectedUser = user
                             showInviteDialog = true
+                        },
+                        onCancelInvite = { userId ->
+                            confirmDialogData = ConfirmDialogData(
+                                title = "Cancel Invite",
+                                message = "Cancel your connection invite to ${user.userName ?: "this user"}?",
+                                onConfirm = {
+                                    searchViewModel.cancelInvite(userId)
+                                }
+                            )
+                            showConfirmDialog = true
                         }
                     )
                 }
@@ -296,12 +417,196 @@ fun Contacts(searchViewModel: SearchViewModel) {
             }
         )
     }
+
+    // Confirmation dialog for accept/deny/cancel/delete actions
+    if (showConfirmDialog && confirmDialogData != null) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text(confirmDialogData!!.title) },
+            text = { Text(confirmDialogData!!.message) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmDialogData!!.onConfirm()
+                        showConfirmDialog = false
+                    }
+                ) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+}
+
+data class ConfirmDialogData(
+    val title: String,
+    val message: String,
+    val onConfirm: () -> Unit
+)
+
+@Composable
+fun ReceivedInviteCard(
+    contact: ReceivedContactInvite,
+    onAccept: () -> Unit,
+    onDeny: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = contact.userName ?: "Unknown User",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = "Wants to connect",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    contact.phoneNumber?.let { phone ->
+                        Text(
+                            text = phone,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onDeny,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Deny")
+                }
+                Button(
+                    onClick = onAccept,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Accept")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SentInviteCard(
+    contact: SentInviteContactInvite,
+    onCancel: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = contact.userName ?: "Unknown User",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "Invite sent - waiting for response",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                contact.phoneNumber?.let { phone ->
+                    Text(
+                        text = phone,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+
+            OutlinedButton(onClick = onCancel) {
+                Text("Cancel")
+            }
+        }
+    }
+}
+
+@Composable
+fun CurrentContactCard(
+    contact: CurrentContact,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = contact.userName ?: contact.name ?: "Unknown User",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "Connected",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+                contact.phoneNumber?.let { phone ->
+                    Text(
+                        text = phone,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            OutlinedButton(onClick = onDelete) {
+                Text("Delete")
+            }
+        }
+    }
 }
 
 @Composable
 fun SearchUserCard(
     user: SearchUser,
-    onConnectClick: () -> Unit
+    onConnectClick: () -> Unit,
+    onCancelInvite: ((String) -> Unit)? = null
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -331,25 +636,27 @@ fun SearchUserCard(
             // Connection status or action button
             when (user.contactType) {
                 ContactType.RECEIVED -> {
-                    Text(
-                        text = "Invite Received",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Button(
+                        onClick = { /* Disabled */ },
+                        enabled = false
+                    ) {
+                        Text("Invite Received")
+                    }
                 }
                 ContactType.SENT -> {
-                    Text(
-                        text = "Invite Sent",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
+                    OutlinedButton(
+                        onClick = { onCancelInvite?.invoke(user.userId) }
+                    ) {
+                        Text("Cancel Invite")
+                    }
                 }
                 ContactType.CURRENT -> {
-                    Text(
-                        text = "Connected",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.tertiary
-                    )
+                    Button(
+                        onClick = { /* Disabled */ },
+                        enabled = false
+                    ) {
+                        Text("Connected")
+                    }
                 }
                 null -> {
                     Button(

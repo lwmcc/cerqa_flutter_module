@@ -168,13 +168,26 @@ class SearchViewModel(
                         repository.sendInviteToConnect(connectionEvent.receiverUserId)
                             .onSuccess {
                                 println("SharedSearchViewModel: Invite sent successfully!")
+
+                                // Immediately update the UI to show "Invite Sent" for this user
+                                val updatedResults = _uiState.value.results.map { user ->
+                                    if (user.userId == connectionEvent.receiverUserId) {
+                                        user.copy(
+                                            connectButtonEnabled = false,
+                                            contactType = ContactType.SENT
+                                        )
+                                    } else {
+                                        user
+                                    }
+                                }
+
                                 _uiState.value = _uiState.value.copy(
+                                    results = updatedResults,
                                     pending = false,
                                     isSendingInvite = false,
                                     inviteSent = true,
                                     message = MessageType.INVITE_SENT
                                 )
-                                enableButtons()
                             }
                             .onFailure { error ->
                                 println("SharedSearchViewModel: Failed to send invite: ${error.message}")
@@ -221,6 +234,36 @@ class SearchViewModel(
             it.copy(connectButtonEnabled = true)
         }
         _uiState.value = _uiState.value.copy(results = buttonsEnabled)
+    }
+
+    /**
+     * Cancel a sent invite
+     */
+    fun cancelInvite(receiverUserId: String) {
+        scope.launch {
+            _uiState.value = _uiState.value.copy(pending = true)
+
+            repository.cancelInviteToConnect(receiverUserId)
+                .onSuccess {
+                    // Refresh search results to show updated status
+                    _query.value?.let { currentQuery ->
+                        if (currentQuery.isNotEmpty()) {
+                            performSearch(currentQuery)
+                        }
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        pending = false,
+                        message = MessageType.SUCCESS
+                    )
+                }
+                .onFailure { error ->
+                    println("SearchViewModel: Failed to cancel invite: ${error.message}")
+                    _uiState.value = _uiState.value.copy(
+                        pending = false,
+                        message = MessageType.ERROR
+                    )
+                }
+        }
     }
 
     /**

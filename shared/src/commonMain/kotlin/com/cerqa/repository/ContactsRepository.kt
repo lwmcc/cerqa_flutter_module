@@ -449,11 +449,13 @@ class ContactsRepository(
      */
     private suspend fun fetchSentInvites(userId: String): Result<List<SentInviteContactInvite>> {
         return try {
+            println("ContactsRepository: fetchSentInvites for userId: $userId")
             val query = """
-                query ListInvites(${"$"}senderId: ID!) {
+                query ListInvites(${"$"}senderId: String!) {
                     listInvites(filter: { senderId: { eq: ${"$"}senderId } }) {
                         items {
                             id
+                            userId
                             senderId
                             receiverId
                             createdAt
@@ -476,13 +478,16 @@ class ContactsRepository(
 
             if (graphQLResponse.errors != null) {
                 val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                println("ContactsRepository: fetchSentInvites GraphQL errors: $errorMessages")
                 return Result.failure(Exception("GraphQL errors: $errorMessages"))
             }
 
             val invites = graphQLResponse.data?.listInvites?.items ?: emptyList()
+            println("ContactsRepository: fetchSentInvites found ${invites.size} invites")
 
             // Fetch user details for each receiverId
-            val sentInviteContacts = invites.mapNotNull { invite ->
+/*            val sentInviteContacts = invites.mapNotNull { invite ->
+                println("ContactsRepository: fetching receiver details for userId: ${invite.receiverId}")
                 val userResult = fetchUserById(invite.receiverId)
                 userResult.getOrNull()?.let { user ->
                     SentInviteContactInvite(
@@ -496,10 +501,30 @@ class ContactsRepository(
                         phoneNumber = user.phone
                     )
                 }
+            }*/
+            val sentInviteContacts = invites.map { invite ->
+                println("ContactsRepository: fetching receiver details for userId: ${invite.receiverId}")
+                val userResult = fetchUserById(invite.receiverId)
+                val user = userResult.getOrNull()
+
+                // If user is null, we create a placeholder instead of skipping it
+                SentInviteContactInvite(
+                    senderUserId = invite.senderId,
+                    contactId = invite.id,
+                    userId = user?.userId ?: invite.receiverId, // Use invite ID if user obj is null
+                    userName = user?.userName ?: "Unknown User",
+                    name = user?.name ?: "Pending...",
+                    avatarUri = user?.avatarUri,
+                    createdAt = invite.createdAt,
+                    phoneNumber = user?.phone ?: ""
+                )
             }
 
+            println("ContactsRepository: fetchSentInvites returning ${sentInviteContacts.size} sent invite contacts")
             Result.success(sentInviteContacts)
         } catch (e: Exception) {
+            println("ContactsRepository: fetchSentInvites exception: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -509,11 +534,13 @@ class ContactsRepository(
      */
     private suspend fun fetchReceivedInvites(userId: String): Result<List<ReceivedContactInvite>> {
         return try {
+            println("ContactsRepository: fetchReceivedInvites for userId: $userId")
             val query = """
-                query ListInvites(${"$"}receiverId: ID!) {
+                query ListInvites(${"$"}receiverId: String!) {
                     listInvites(filter: { receiverId: { eq: ${"$"}receiverId } }) {
                         items {
                             id
+                            userId
                             senderId
                             receiverId
                             createdAt
@@ -536,13 +563,16 @@ class ContactsRepository(
 
             if (graphQLResponse.errors != null) {
                 val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                println("ContactsRepository: fetchReceivedInvites GraphQL errors: $errorMessages")
                 return Result.failure(Exception("GraphQL errors: $errorMessages"))
             }
 
             val invites = graphQLResponse.data?.listInvites?.items ?: emptyList()
+            println("ContactsRepository: fetchReceivedInvites found ${invites.size} invites")
 
             // Fetch user details for each senderId
-            val receivedInviteContacts = invites.mapNotNull { invite ->
+/*            val receivedInviteContacts = invites.mapNotNull { invite ->
+                println("ContactsRepository: fetching sender details for userId: ${invite.senderId}")
                 val userResult = fetchUserById(invite.senderId)
                 userResult.getOrNull()?.let { user ->
                     ReceivedContactInvite(
@@ -555,10 +585,29 @@ class ContactsRepository(
                         phoneNumber = user.phone
                     )
                 }
+            }*/
+            val receivedInviteContacts = invites.map { invite ->
+                println("ContactsRepository: fetching sender details for userId: ${invite.senderId}")
+                val userResult = fetchUserById(invite.senderId)
+                val user = userResult.getOrNull()
+
+                // If user is null, we create a placeholder instead of skipping it
+                ReceivedContactInvite(
+                    contactId = invite.id,
+                    userId = user?.userId ?: invite.senderId, // Use invite ID if user obj is null
+                    userName = user?.userName ?: "Unknown User",
+                    name = user?.name ?: "Unknown Name",
+                    avatarUri = user?.avatarUri,
+                    createdAt = invite.createdAt,
+                    phoneNumber = user?.phone ?: ""
+                )
             }
 
+            println("ContactsRepository: fetchReceivedInvites returning ${receivedInviteContacts.size} received invite contacts")
             Result.success(receivedInviteContacts)
         } catch (e: Exception) {
+            println("ContactsRepository: fetchReceivedInvites exception: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
