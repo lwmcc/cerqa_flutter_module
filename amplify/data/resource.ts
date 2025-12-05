@@ -90,7 +90,10 @@ export const schema = a.schema({
       receiverId: a.string(),
       user: a.belongsTo('User', 'userId'),
     })
-    .authorization((allow) => [allow.publicApiKey()]),
+    .authorization((allow) => [
+      allow.authenticated(),
+      allow.publicApiKey(),
+    ]),
 
    UserContact: a
      .model({

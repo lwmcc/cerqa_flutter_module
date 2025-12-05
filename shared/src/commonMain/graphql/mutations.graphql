@@ -78,3 +78,15 @@ mutation DeleteUserContact($input: DeleteUserContactInput!, $condition: ModelUse
     id
   }
 }
+
+# Create an Invite
+mutation CreateInvite($input: CreateInviteInput!, $condition: ModelInviteConditionInput) {
+  createInvite(input: $input, condition: $condition) {
+    id
+    userId
+    senderId
+    receiverId
+    createdAt
+    updatedAt
+  }
+}

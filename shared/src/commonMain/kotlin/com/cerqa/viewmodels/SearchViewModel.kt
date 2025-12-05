@@ -143,12 +143,11 @@ class SearchViewModel(
         )
     }
 
-    /**
-     * Handle invite sent event
-     */
     fun inviteSentEvent(connectionEvent: ContactCardConnectionEvent) {
+        println("SharedSearchViewModel: inviteSentEvent called with event: $connectionEvent")
         when (connectionEvent) {
             is ContactCardConnectionEvent.InviteConnectEvent -> {
+                println("SharedSearchViewModel: Processing InviteConnectEvent for user: ${connectionEvent.receiverUserId}")
                 // Disable the button for this user
                 val updatedResults = _uiState.value.results.map { user ->
                     if (user.userId == connectionEvent.receiverUserId) {
@@ -161,25 +160,40 @@ class SearchViewModel(
 
                 // Send the invite
                 scope.launch {
+                    println("SharedSearchViewModel: Starting coroutine to send invite")
                     _uiState.value = _uiState.value.copy(pending = true, isSendingInvite = true)
 
-                    repository.sendInviteToConnect(connectionEvent.receiverUserId)
-                        .onSuccess {
-                            _uiState.value = _uiState.value.copy(
-                                pending = false,
-                                isSendingInvite = false,
-                                inviteSent = true,
-                                message = MessageType.INVITE_SENT
-                            )
-                            enableButtons()
-                        }
-                        .onFailure {
-                            _uiState.value = _uiState.value.copy(
-                                pending = false,
-                                isSendingInvite = false,
-                                message = MessageType.ERROR
-                            )
-                        }
+                    try {
+                        println("SharedSearchViewModel: Calling repository.sendInviteToConnect")
+                        repository.sendInviteToConnect(connectionEvent.receiverUserId)
+                            .onSuccess {
+                                println("SharedSearchViewModel: Invite sent successfully!")
+                                _uiState.value = _uiState.value.copy(
+                                    pending = false,
+                                    isSendingInvite = false,
+                                    inviteSent = true,
+                                    message = MessageType.INVITE_SENT
+                                )
+                                enableButtons()
+                            }
+                            .onFailure { error ->
+                                println("SharedSearchViewModel: Failed to send invite: ${error.message}")
+                                error.printStackTrace()
+                                _uiState.value = _uiState.value.copy(
+                                    pending = false,
+                                    isSendingInvite = false,
+                                    message = MessageType.ERROR
+                                )
+                            }
+                    } catch (e: Exception) {
+                        println("SharedSearchViewModel: Exception caught: ${e.message}")
+                        e.printStackTrace()
+                        _uiState.value = _uiState.value.copy(
+                            pending = false,
+                            isSendingInvite = false,
+                            message = MessageType.ERROR
+                        )
+                    }
                 }
             }
 

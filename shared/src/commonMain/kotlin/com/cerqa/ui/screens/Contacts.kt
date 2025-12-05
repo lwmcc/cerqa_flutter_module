@@ -74,7 +74,6 @@ fun Contacts(searchViewModel: SearchViewModel) {
             )
         )
 
-        // Loading indicator
         if (uiState.pending) {
             Box(
                 modifier = Modifier
@@ -86,7 +85,6 @@ fun Contacts(searchViewModel: SearchViewModel) {
             }
         }
 
-        // Message banner
         when (uiState.message) {
             MessageType.SUCCESS -> {
                 Card(
@@ -104,6 +102,7 @@ fun Contacts(searchViewModel: SearchViewModel) {
                     )
                 }
             }
+
             MessageType.INVITE_SENT -> {
                 Card(
                     modifier = Modifier
@@ -120,6 +119,7 @@ fun Contacts(searchViewModel: SearchViewModel) {
                     )
                 }
             }
+
             MessageType.ERROR -> {
                 Card(
                     modifier = Modifier
@@ -136,7 +136,8 @@ fun Contacts(searchViewModel: SearchViewModel) {
                     )
                 }
             }
-            else -> {}
+
+            else -> {} // TODO:  what else?
         }
 
         // Idle state - show when no search query

@@ -78,7 +78,6 @@ fun App(
         Scaffold(
             topBar = {
                 if (currentRoute == null || currentRoute == "main") {
-                    // Custom top bar for Main screen
                     TopAppBar(
                         navigationIcon = {
                             // Profile icon on the left

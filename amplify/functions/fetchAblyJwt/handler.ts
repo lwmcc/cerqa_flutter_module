@@ -3,6 +3,7 @@ import type { Handler } from 'aws-lambda';
 import { FunctionHandler } from 'aws-amplify-function-runtime-nodejs';
 import crypto from 'crypto';
 import { secret } from 'aws-amplify-function-runtime-nodejs';
+import { type Schema } from '../../data/resource';
 
 export const handler: Schema["fetchAblyJwt"]["functionHandler"] = async (event) => {
     const { userId } = event.arguments

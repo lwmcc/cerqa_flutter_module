@@ -93,7 +93,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -158,7 +157,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -252,7 +250,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -292,7 +289,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -339,7 +335,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -417,7 +412,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -474,7 +468,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -535,7 +528,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -599,7 +591,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -626,15 +617,14 @@ class ContactsRepository(
                 ?: return Result.failure(Exception("User not authenticated"))
 
             val mutation = """
-                mutation CreateInvite(${"$"}senderId: ID!, ${"$"}receiverId: ID!) {
-                    createInvite(input: {
-                        senderId: ${"$"}senderId,
-                        receiverId: ${"$"}receiverId
-                    }) {
+                mutation CreateInvite(${"$"}input: CreateInviteInput!) {
+                    createInvite(input: ${"$"}input) {
                         id
+                        userId
                         senderId
                         receiverId
                         createdAt
+                        updatedAt
                     }
                 }
             """.trimIndent()
@@ -642,21 +632,41 @@ class ContactsRepository(
             val request = GraphQLRequest(
                 query = mutation,
                 variables = mapOf(
-                    "senderId" to kotlinx.serialization.json.JsonPrimitive(currentUserId),
-                    "receiverId" to kotlinx.serialization.json.JsonPrimitive(receiverUserId)
+                    "input" to kotlinx.serialization.json.buildJsonObject {
+                        put("userId", kotlinx.serialization.json.JsonPrimitive(currentUserId))
+                        put("senderId", kotlinx.serialization.json.JsonPrimitive(currentUserId))
+                        put("receiverId", kotlinx.serialization.json.JsonPrimitive(receiverUserId))
+                    }
                 )
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
-            val graphQLResponse: GraphQLResponse<CreateInviteData> = response.body()
+            // Get raw response text for debugging
+            val responseText: String = response.body()
+            println("ContactsRepository ***** sendInviteToConnect response: $responseText")
+
+            val graphQLResponse: GraphQLResponse<CreateInviteData> = try {
+                kotlinx.serialization.json.Json.decodeFromString(responseText)
+            } catch (e: Exception) {
+                println("ContactsRepository *****  Failed to deserialize response: ${e.message}")
+                println("ContactsRepository ***** Raw response: $responseText")
+
+                // Try to parse just the errors
+                val errorRegex = """"message":"([^"]+)"""".toRegex()
+                val errorMessages = errorRegex.findAll(responseText)
+                    .map { it.groupValues[1] }
+                    .joinToString(", ")
+
+                return Result.failure(Exception("ContactsRepository***** GraphQL error: $errorMessages"))
+            }
 
             if (graphQLResponse.errors != null) {
                 val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                println("ContactsRepository ***** GraphQL errors: $errorMessages")
                 return Result.failure(Exception("GraphQL errors: $errorMessages"))
             }
 
@@ -695,7 +705,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -784,7 +793,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -824,7 +832,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -880,7 +887,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -926,7 +932,6 @@ class ContactsRepository(
             )
 
             val response = httpClient.post {
-                bearerAuth(tokenProvider.getAccessToken())
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }

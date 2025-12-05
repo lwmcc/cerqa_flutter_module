@@ -73,8 +73,10 @@ class SearchViewModel @Inject constructor(
     }
 
     fun inviteSentEvent(connectionEvent: ContactCardConnectionEvent) {
+        println("SearchViewModel: inviteSentEvent called with event: $connectionEvent")
         when (connectionEvent) {
             is ContactCardConnectionEvent.InviteConnectEvent -> {
+                println("SearchViewModel: Processing InviteConnectEvent for user: ${connectionEvent.receiverUserId}")
 
                 // TODO: push down into function
                 val updatedResults = uiState.results.map { user ->
@@ -88,6 +90,7 @@ class SearchViewModel @Inject constructor(
                 uiState = uiState.copy(results = updatedResults)
 
                 viewModelScope.launch {
+                    println("SearchViewModel: Starting coroutine to send invite")
                     uiState = uiState.copy(pending = true, isSendingInvite = true)
                     //val channelName =
                     //    ChannelModel.NotificationsDirect.getName(connectionEvent.receiverUserId)
@@ -95,23 +98,35 @@ class SearchViewModel @Inject constructor(
                     //realtimePublishRepo.publish(channelName)
                     //realTime.createReceiverInviteSubscription(_userId.value.toString(), channel)
 
-                    val data = repo.sendInviteToConnect(
-                        receiverUserId = connectionEvent.receiverUserId,
-                        rowId = connectionEvent.rowId,
-                    ).first()
+                    try {
+                        println("SearchViewModel: Calling repo.sendInviteToConnect")
+                        val data = repo.sendInviteToConnect(
+                            receiverUserId = connectionEvent.receiverUserId,
+                            rowId = connectionEvent.rowId,
+                        ).first()
 
-                    uiState = when (data) {
-                        is NetworkResponse.Error -> {
-                            uiState.copy(message = UiUserMessage.NETWORK_ERROR)
-                        }
+                        println("SearchViewModel: Received response: $data")
 
-                        NetworkResponse.NoInternet -> {
-                            uiState.copy(message = UiUserMessage.NO_INTERNET)
-                        }
+                        uiState = when (data) {
+                            is NetworkResponse.Error -> {
+                                println("SearchViewModel: Error response: ${data.exception.message}")
+                                uiState.copy(message = UiUserMessage.NETWORK_ERROR)
+                            }
 
-                        is NetworkResponse.Success -> {
-                            uiState.copy(pending = false, message = UiUserMessage.INVITE_SENT)
+                            NetworkResponse.NoInternet -> {
+                                println("SearchViewModel: No internet")
+                                uiState.copy(message = UiUserMessage.NO_INTERNET)
+                            }
+
+                            is NetworkResponse.Success -> {
+                                println("SearchViewModel: Success!")
+                                uiState.copy(pending = false, message = UiUserMessage.INVITE_SENT)
+                            }
                         }
+                    } catch (e: Exception) {
+                        println("SearchViewModel: Exception caught: ${e.message}")
+                        e.printStackTrace()
+                        uiState = uiState.copy(pending = false, message = UiUserMessage.NETWORK_ERROR)
                     }
                 }
             }

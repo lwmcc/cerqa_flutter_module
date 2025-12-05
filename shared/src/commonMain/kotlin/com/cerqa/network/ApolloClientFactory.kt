@@ -25,11 +25,12 @@ fun createApolloClient(
     httpClientEngine: HttpClientEngine
 ): ApolloClient {
     return ApolloClient.Builder()
-        .serverUrl("https://74k2mnj3lfejrl5lxsgsll6oje.appsync-api.us-east-2.amazonaws.com/graphql")
+        .serverUrl("https://bjkal2uenzfc5mfpceilwq6n3y.appsync-api.us-east-2.amazonaws.com/graphql")
         .addHttpHeader("Content-Type", "application/json")
         .addHttpHeader("Accept", "application/json")
-        // Add auth interceptor to inject tokens dynamically
-        .addHttpInterceptor(AuthInterceptor(tokenProvider))
+        .addHttpHeader("x-api-key", "da2-y34unktia5al3kquoqtsmoppca")
+        // Temporarily disabled - using API key auth instead of Cognito
+        // .addHttpInterceptor(AuthInterceptor(tokenProvider))
         .build()
 }
 

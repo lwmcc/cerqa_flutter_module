@@ -24,22 +24,22 @@ fun createHttpClient(tokenProvider: AuthTokenProvider): HttpClient {
             })
         }
 
-        // Authentication with automatic token refresh
-        install(Auth) {
-            bearer {
-                loadTokens {
-                    // Get token from platform-specific Amplify Auth
-                    val token = tokenProvider.getAccessToken()
-                    BearerTokens(accessToken = token, refreshToken = "")
-                }
-
-                refreshTokens {
-                    // Amplify handles token refresh automatically
-                    val token = tokenProvider.getAccessToken()
-                    BearerTokens(accessToken = token, refreshToken = "")
-                }
-            }
-        }
+        // Temporarily disabled - using API key auth instead of Cognito
+        // install(Auth) {
+        //     bearer {
+        //         loadTokens {
+        //             // Get token from platform-specific Amplify Auth
+        //             val token = tokenProvider.getAccessToken()
+        //             BearerTokens(accessToken = token, refreshToken = "")
+        //         }
+        //
+        //         refreshTokens {
+        //             // Amplify handles token refresh automatically
+        //             val token = tokenProvider.getAccessToken()
+        //             BearerTokens(accessToken = token, refreshToken = "")
+        //         }
+        //     }
+        // }
 
         // Logging
         install(Logging) {
@@ -55,8 +55,9 @@ fun createHttpClient(tokenProvider: AuthTokenProvider): HttpClient {
         }
 
         // Default request configuration for AppSync GraphQL
-        defaultRequest {
-            url("https://74k2mnj3lfejrl5lxsgsll6oje.appsync-api.us-east-2.amazonaws.com/graphql")
+        install(DefaultRequest) {
+            url("https://bjkal2uenzfc5mfpceilwq6n3y.appsync-api.us-east-2.amazonaws.com/graphql")
+            headers.append("x-api-key", "da2-y34unktia5al3kquoqtsmoppca")
         }
     }
 }
