@@ -141,6 +141,7 @@ data class ContactsWrapper(
 @Serializable
 data class Invite(
     val id: String,
+    val userId: String,
     val senderId: String,
     val receiverId: String,
     val createdAt: String? = null,
