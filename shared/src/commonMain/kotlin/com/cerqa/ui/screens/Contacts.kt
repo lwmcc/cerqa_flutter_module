@@ -343,7 +343,7 @@ fun Contacts(
                     }
                 }
 
-                // User search results from backend
+                // User search results
                 items(uiState.results, key = { it.id }) { user ->
                     SearchUserCard(
                         user = user,

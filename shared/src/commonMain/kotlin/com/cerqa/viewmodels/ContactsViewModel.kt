@@ -105,28 +105,33 @@ class ContactsViewModel(
      * Handle user connection events, accept, reject, cancel, delete
      */
     fun userConnectionEvent(listIndex: Int = 0, connectionEvent: ContactCardEvent) {
+        println("ContactsViewModel: userConnectionEvent - event: $connectionEvent")
         _uiState.value = _uiState.value.copy(pending = true)
 
         when (connectionEvent) {
             is ContactCardEvent.DeleteReceivedInvite -> {
+                println("ContactsViewModel: userConnectionEvent - DeleteReceivedInvite for userId: ${connectionEvent.userId}")
                 scope.launch {
                     deleteReceivedInviteToConnect(connectionEvent.userId)
                 }
             }
 
             is ContactCardEvent.AcceptConnection -> {
+                println("ContactsViewModel: userConnectionEvent - AcceptConnection for senderUserId: ${connectionEvent.senderUserId}")
                 scope.launch {
                     acceptConnection(listIndex, connectionEvent.senderUserId)
                 }
             }
 
             is ContactCardEvent.DeleteContact -> {
+                println("ContactsViewModel: userConnectionEvent - DeleteContact for contactId: ${connectionEvent.contactId}")
                 scope.launch {
                     deleteContact(connectionEvent.contactId)
                 }
             }
 
             is ContactCardEvent.CancelSentInvite -> {
+                println("ContactsViewModel: userConnectionEvent - CancelSentInvite for receiverUserId: ${connectionEvent.receiverUserId}")
                 scope.launch {
                     cancelInviteToConnect(connectionEvent.receiverUserId)
                 }
@@ -138,12 +143,16 @@ class ContactsViewModel(
      * Delete a received connection invite
      */
     private suspend fun deleteReceivedInviteToConnect(userId: String) {
+        println("ContactsViewModel: deleteReceivedInviteToConnect - userId: $userId")
         repository.deleteReceivedInvite(userId)
             .onSuccess {
+                println("ContactsViewModel: deleteReceivedInviteToConnect - SUCCESS, refreshing contacts")
                 // Refresh contacts to show updated list
                 fetchAllContacts()
             }
-            .onFailure {
+            .onFailure { error ->
+                println("ContactsViewModel: deleteReceivedInviteToConnect - FAILURE: ${error.message}")
+                error.printStackTrace()
                 _uiState.value = _uiState.value.copy(pending = false, message = MessageType.ERROR)
             }
     }
@@ -152,12 +161,16 @@ class ContactsViewModel(
      * Accept a connection invite
      */
     private suspend fun acceptConnection(listIndex: Int, senderUserId: String) {
+        println("ContactsViewModel: acceptConnection - senderUserId: $senderUserId")
         repository.acceptInvite(senderUserId)
             .onSuccess { userContact ->
+                println("ContactsViewModel: acceptConnection - SUCCESS, refreshing contacts")
                 // Refresh contacts to show the new contact
                 fetchAllContacts()
             }
-            .onFailure {
+            .onFailure { error ->
+                println("ContactsViewModel: acceptConnection - FAILURE: ${error.message}")
+                error.printStackTrace()
                 _uiState.value = _uiState.value.copy(pending = false, message = MessageType.ERROR)
             }
     }
@@ -166,23 +179,31 @@ class ContactsViewModel(
      * Delete contact
      */
     private suspend fun deleteContact(contactId: String) {
+        println("ContactsViewModel: deleteContact - contactId: $contactId")
         repository.deleteContact(contactId)
             .onSuccess {
+                println("ContactsViewModel: deleteContact - SUCCESS, refreshing contacts")
                 // Refresh contacts to show updated list
                 fetchAllContacts()
             }
-            .onFailure {
+            .onFailure { error ->
+                println("ContactsViewModel: deleteContact - FAILURE: ${error.message}")
+                error.printStackTrace()
                 _uiState.value = _uiState.value.copy(pending = false, message = MessageType.ERROR)
             }
     }
 
     private suspend fun cancelInviteToConnect(receiverUserId: String) {
+        println("ContactsViewModel: cancelInviteToConnect - receiverUserId: $receiverUserId")
         repository.cancelInviteToConnect(receiverUserId)
             .onSuccess {
+                println("ContactsViewModel: cancelInviteToConnect - SUCCESS, refreshing contacts")
                 // Refresh contacts to show updated list
                 fetchAllContacts()
             }
-            .onFailure {
+            .onFailure { error ->
+                println("ContactsViewModel: cancelInviteToConnect - FAILURE: ${error.message}")
+                error.printStackTrace()
                 _uiState.value = _uiState.value.copy(pending = false, message = MessageType.ERROR)
             }
     }

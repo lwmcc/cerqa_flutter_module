@@ -102,29 +102,11 @@ fun App(
                             Text("Main")
                         },
                         actions = {
-                            // Search icon
+                            // Search icon - only icon on home screen
                             IconButton(onClick = { navActions.navigateToContactsSearch() }) {
                                 Icon(
                                     imageVector = Icons.Default.Search,
                                     contentDescription = "Search",
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
-
-                            // Contacts icon
-                            IconButton(onClick = { navActions.navigateToContacts() }) {
-                                Icon(
-                                    imageVector = Icons.Default.Contacts,
-                                    contentDescription = "Contacts",
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
-
-                            // Groups icon
-                            IconButton(onClick = { navActions.navigateToGroups() }) {
-                                Icon(
-                                    imageVector = Icons.Default.Groups,
-                                    contentDescription = "Groups",
                                     modifier = Modifier.size(32.dp)
                                 )
                             }
@@ -159,7 +141,13 @@ fun App(
                     currentRoute = currentRoute,
                     onBottomNavClick = { route ->
                         navController.navigate(route) {
+                            // Clear back stack and navigate to home, then to the selected destination
+                            // This ensures clicking back always goes to home
+                            popUpTo(AppDestination.Main.route) {
+                                saveState = true
+                            }
                             launchSingleTop = true
+                            restoreState = true
                         }
                     },
                 )
@@ -186,7 +174,11 @@ fun App(
                     Groups()
                 }
                 composable(AppDestination.Chat.route) {
-                    Chat()
+                    Chat(
+                        onNavigateToContacts = {
+                            navActions.navigateToContacts()
+                        }
+                    )
                 }
                 composable(AppDestination.Notifications.route) {
                     Inbox()

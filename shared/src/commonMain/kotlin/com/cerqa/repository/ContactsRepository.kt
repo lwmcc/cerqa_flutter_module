@@ -212,8 +212,11 @@ class ContactsRepository(
      */
     suspend fun addContact(contactUserId: String): Result<UserContact> {
         return try {
+            println("ContactsRepository: addContact - contactUserId: $contactUserId")
             val currentUserId = tokenProvider.getCurrentUserId()
                 ?: return Result.failure(Exception("User not authenticated"))
+
+            println("ContactsRepository: addContact - currentUserId: $currentUserId")
 
             val mutation = """
                 mutation CreateUserContact(${"$"}userId: ID!, ${"$"}contactId: ID!) {
@@ -249,6 +252,8 @@ class ContactsRepository(
                 )
             )
 
+            println("ContactsRepository: addContact - sending createUserContact mutation")
+
             val response = httpClient.post {
                 contentType(ContentType.Application.Json)
                 setBody(request)
@@ -258,14 +263,91 @@ class ContactsRepository(
 
             if (graphQLResponse.errors != null) {
                 val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                println("ContactsRepository: addContact - GraphQL errors: $errorMessages")
                 return Result.failure(Exception("GraphQL errors: $errorMessages"))
             }
 
             val userContact = graphQLResponse.data?.createUserContact
-                ?: return Result.failure(Exception("No UserContact returned from mutation"))
+            if (userContact == null) {
+                println("ContactsRepository: addContact - No UserContact returned from mutation")
+                return Result.failure(Exception("No UserContact returned from mutation"))
+            }
 
+            println("ContactsRepository: addContact - SUCCESS - created UserContact with id: ${userContact.id}")
             Result.success(userContact)
         } catch (e: Exception) {
+            println("ContactsRepository: addContact - Exception: ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Create a contact relationship for a specific user (not necessarily the current user).
+     * This is used when accepting invites to create bidirectional relationships.
+     */
+    private suspend fun createContactForUser(userId: String, contactId: String): Result<UserContact> {
+        return try {
+            println("ContactsRepository: createContactForUser - userId: $userId, contactId: $contactId")
+
+            val mutation = """
+                mutation CreateUserContact(${"$"}userId: ID!, ${"$"}contactId: ID!) {
+                    createUserContact(input: {
+                        userId: ${"$"}userId,
+                        contactId: ${"$"}contactId
+                    }) {
+                        id
+                        userId
+                        contactId
+                        contact {
+                            id
+                            userId
+                            firstName
+                            lastName
+                            name
+                            phone
+                            userName
+                            email
+                            avatarUri
+                        }
+                        createdAt
+                        updatedAt
+                    }
+                }
+            """.trimIndent()
+
+            val request = GraphQLRequest(
+                query = mutation,
+                variables = mapOf(
+                    "userId" to kotlinx.serialization.json.JsonPrimitive(userId),
+                    "contactId" to kotlinx.serialization.json.JsonPrimitive(contactId)
+                )
+            )
+
+            val response = httpClient.post {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            val graphQLResponse: GraphQLResponse<CreateUserContactData> = response.body()
+
+            if (graphQLResponse.errors != null) {
+                val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                println("ContactsRepository: createContactForUser - GraphQL errors: $errorMessages")
+                return Result.failure(Exception("GraphQL errors: $errorMessages"))
+            }
+
+            val userContact = graphQLResponse.data?.createUserContact
+            if (userContact == null) {
+                println("ContactsRepository: createContactForUser - No UserContact returned")
+                return Result.failure(Exception("No UserContact returned from mutation"))
+            }
+
+            println("ContactsRepository: createContactForUser - SUCCESS - created UserContact with id: ${userContact.id}")
+            Result.success(userContact)
+        } catch (e: Exception) {
+            println("ContactsRepository: createContactForUser - Exception: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -356,25 +438,71 @@ class ContactsRepository(
     /**
      * Fetch all contacts including current contacts, sent invites, and received invites.
      * Returns a combined list of Contact objects with different states.
+     * Each contact type is fetched independently - if one type fails or is empty,
+     * the others will still be returned.
      */
     suspend fun fetchAllContactsWithInvites(): Result<List<Contact>> {
         return try {
             val currentUserId = tokenProvider.getCurrentUserId()
                 ?: return Result.failure(Exception("User not authenticated"))
 
-            // Fetch current contacts, sent invites, and received invites in parallel
-            val currentContacts = fetchCurrentContacts(currentUserId)
-            val sentInvites = fetchSentInvites(currentUserId)
-            val receivedInvites = fetchReceivedInvites(currentUserId)
-
-            // Combine all contacts
             val allContacts = mutableListOf<Contact>()
-            currentContacts.getOrNull()?.let { allContacts.addAll(it) }
-            sentInvites.getOrNull()?.let { allContacts.addAll(it) }
-            receivedInvites.getOrNull()?.let { allContacts.addAll(it) }
+            var hasAnyData = false
 
+            // Fetch current contacts - handle independently
+            try {
+                val currentContacts = fetchCurrentContacts(currentUserId)
+                currentContacts.onSuccess { contacts ->
+                    if (contacts.isNotEmpty()) {
+                        println("ContactsRepository: fetchAllContactsWithInvites - adding ${contacts.size} current contacts")
+                        allContacts.addAll(contacts)
+                        hasAnyData = true // TODO:  what is this
+                    }
+                }.onFailure { e ->
+                    println("ContactsRepository: fetchAllContactsWithInvites - current contacts failed: ${e.message}")
+                }
+            } catch (e: Exception) {
+                println("ContactsRepository: fetchAllContactsWithInvites - current contacts exception: ${e.message}")
+            }
+
+            // Fetch sent invites - handle independently
+            try {
+                val sentInvites = fetchSentInvites(currentUserId)
+                sentInvites.onSuccess { invites ->
+                    if (invites.isNotEmpty()) {
+                        println("ContactsRepository: fetchAllContactsWithInvites - adding ${invites.size} sent invites")
+                        allContacts.addAll(invites)
+                        hasAnyData = true
+                    }
+                }.onFailure { e ->
+                    println("ContactsRepository: fetchAllContactsWithInvites - sent invites failed: ${e.message}")
+                }
+            } catch (e: Exception) {
+                println("ContactsRepository: fetchAllContactsWithInvites - sent invites exception: ${e.message}")
+            }
+
+            // Fetch received invites - handle independently
+            try {
+                val receivedInvites = fetchReceivedInvites(currentUserId)
+                receivedInvites.onSuccess { invites ->
+                    if (invites.isNotEmpty()) {
+                        println("ContactsRepository: fetchAllContactsWithInvites - adding ${invites.size} received invites")
+                        allContacts.addAll(invites)
+                        hasAnyData = true
+                    }
+                }.onFailure { e ->
+                    println("ContactsRepository: fetchAllContactsWithInvites - received invites failed: ${e.message}")
+                }
+            } catch (e: Exception) {
+                println("ContactsRepository: fetchAllContactsWithInvites - received invites exception: ${e.message}")
+            }
+
+            // Return success with whatever data we have, even if it's empty
+            println("ContactsRepository: fetchAllContactsWithInvites - returning ${allContacts.size} total contacts")
             Result.success(allContacts)
         } catch (e: Exception) {
+            println("ContactsRepository: fetchAllContactsWithInvites - critical exception: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -389,6 +517,8 @@ class ContactsRepository(
                     listUserContacts(filter: { userId: { eq: ${"$"}userId } }) {
                         items {
                             id
+                            userId
+                            contactId
                             contact {
                                 id
                                 userId
@@ -401,6 +531,8 @@ class ContactsRepository(
                                 avatarUri
                                 createdAt
                             }
+                            createdAt
+                            updatedAt
                         }
                     }
                 }
@@ -426,6 +558,11 @@ class ContactsRepository(
             val contacts = graphQLResponse.data?.listUserContacts?.items
                 ?.mapNotNull { userContact ->
                     userContact.contact?.let { contact ->
+                        println("ContactsRepository: fetchCurrentContacts - mapping contact:")
+                        println("  - userId: ${contact.userId}")
+                        println("  - userName: ${contact.userName}")
+                        println("  - name: ${contact.name}")
+                        println("  - phone: ${contact.phone}")
                         CurrentContact(
                             contactId = userContact.id,
                             userId = contact.userId ?: "",
@@ -438,6 +575,10 @@ class ContactsRepository(
                     }
                 } ?: emptyList()
 
+            println("ContactsRepository: fetchCurrentContacts - returning ${contacts.size} contacts")
+            contacts.forEach { contact ->
+                println("  - Contact: userName=${contact.userName}, name=${contact.name}")
+            }
             Result.success(contacts)
         } catch (e: Exception) {
             Result.failure(e)
@@ -508,7 +649,7 @@ class ContactsRepository(
                 val user = userResult.getOrNull()
 
                 // If user is null, we create a placeholder instead of skipping it
-                SentInviteContactInvite(
+                val sentInvite = SentInviteContactInvite(
                     senderUserId = invite.senderId,
                     contactId = invite.id,
                     userId = user?.userId ?: invite.receiverId, // Use invite ID if user obj is null
@@ -518,6 +659,8 @@ class ContactsRepository(
                     createdAt = invite.createdAt,
                     phoneNumber = user?.phone ?: ""
                 )
+                println("ContactsRepository: created SentInviteContactInvite - userName: ${sentInvite.userName}, name: ${sentInvite.name}")
+                sentInvite
             }
 
             println("ContactsRepository: fetchSentInvites returning ${sentInviteContacts.size} sent invite contacts")
@@ -592,7 +735,7 @@ class ContactsRepository(
                 val user = userResult.getOrNull()
 
                 // If user is null, we create a placeholder instead of skipping it
-                ReceivedContactInvite(
+                val receivedInvite = ReceivedContactInvite(
                     contactId = invite.id,
                     userId = user?.userId ?: invite.senderId, // Use invite ID if user obj is null
                     userName = user?.userName ?: "Unknown User",
@@ -601,6 +744,8 @@ class ContactsRepository(
                     createdAt = invite.createdAt,
                     phoneNumber = user?.phone ?: ""
                 )
+                println("ContactsRepository: created ReceivedContactInvite - userName: ${receivedInvite.userName}, name: ${receivedInvite.name}")
+                receivedInvite
             }
 
             println("ContactsRepository: fetchReceivedInvites returning ${receivedInviteContacts.size} received invite contacts")
@@ -618,7 +763,7 @@ class ContactsRepository(
     private suspend fun fetchUserById(userId: String): Result<User?> {
         return try {
             val query = """
-                query ListUsers(${"$"}userId: String!) {
+                query ListUsers(${"$"}userId: ID!) {
                     listUsers(filter: { userId: { eq: ${"$"}userId } }) {
                         items {
                             id
@@ -658,7 +803,11 @@ class ContactsRepository(
             if (user == null) {
                 println("ContactsRepository: fetchUserById - no user found for userId: $userId")
             } else {
-                println("ContactsRepository: fetchUserById - found user: ${user.userName}, name: ${user.name}")
+                println("ContactsRepository: fetchUserById - found user:")
+                println("  - userId: ${user.userId}")
+                println("  - userName: ${user.userName}")
+                println("  - name: ${user.name}")
+                println("  - phone: ${user.phone}")
             }
             Result.success(user)
         } catch (e: Exception) {
@@ -744,12 +893,23 @@ class ContactsRepository(
      */
     suspend fun cancelInviteToConnect(receiverUserId: String): Result<Unit> {
         return try {
+            println("ContactsRepository: cancelInviteToConnect - receiverUserId: $receiverUserId")
             val currentUserId = tokenProvider.getCurrentUserId()
                 ?: return Result.failure(Exception("User not authenticated"))
 
+            println("ContactsRepository: cancelInviteToConnect - currentUserId: $currentUserId")
+
             // First find the invite ID
-            val inviteId = findInviteId(currentUserId, receiverUserId).getOrNull()
+            val inviteIdResult = findInviteId(currentUserId, receiverUserId)
+            if (inviteIdResult.isFailure) {
+                println("ContactsRepository: cancelInviteToConnect - failed to find invite: ${inviteIdResult.exceptionOrNull()?.message}")
+                return Result.failure(inviteIdResult.exceptionOrNull() ?: Exception("Invite not found"))
+            }
+
+            val inviteId = inviteIdResult.getOrNull()
                 ?: return Result.failure(Exception("Invite not found"))
+
+            println("ContactsRepository: cancelInviteToConnect - deleting invite with id: $inviteId")
 
             val mutation = """
                 mutation DeleteInvite(${"$"}id: ID!) {
@@ -773,11 +933,15 @@ class ContactsRepository(
 
             if (graphQLResponse.errors != null) {
                 val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                println("ContactsRepository: cancelInviteToConnect - delete mutation errors: $errorMessages")
                 return Result.failure(Exception("GraphQL errors: $errorMessages"))
             }
 
+            println("ContactsRepository: cancelInviteToConnect - SUCCESS")
             Result.success(Unit)
         } catch (e: Exception) {
+            println("ContactsRepository: cancelInviteToConnect - Exception: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -787,24 +951,58 @@ class ContactsRepository(
      */
     suspend fun acceptInvite(senderUserId: String): Result<UserContact> {
         return try {
+            println("ContactsRepository: acceptInvite - senderUserId: $senderUserId")
             val currentUserId = tokenProvider.getCurrentUserId()
                 ?: return Result.failure(Exception("User not authenticated"))
 
-            // Find the invite ID
-            val inviteId = findInviteId(senderUserId, currentUserId).getOrNull()
-                ?: return Result.failure(Exception("Invite not found"))
+            println("ContactsRepository: acceptInvite - currentUserId: $currentUserId")
 
-            // Create the contact relationship
-            val createContactResult = addContact(senderUserId)
-            if (createContactResult.isFailure) {
-                return Result.failure(createContactResult.exceptionOrNull() ?: Exception("Failed to create contact"))
+            // Find the invite ID
+            val inviteIdResult = findInviteId(senderUserId, currentUserId)
+            if (inviteIdResult.isFailure) {
+                println("ContactsRepository: acceptInvite - failed to find invite: ${inviteIdResult.exceptionOrNull()?.message}")
+                return Result.failure(inviteIdResult.exceptionOrNull() ?: Exception("Invite not found"))
             }
 
-            // Delete the invite
-            deleteInvite(inviteId)
+            val inviteId = inviteIdResult.getOrNull()
+                ?: return Result.failure(Exception("Invite not found"))
 
-            createContactResult
+            println("ContactsRepository: acceptInvite - found inviteId: $inviteId")
+
+            // Create bidirectional contact relationships
+            // 1. Current user (receiver) has sender as contact
+            println("ContactsRepository: acceptInvite - creating contact relationship (receiver -> sender)")
+            val receiverContactResult = addContact(senderUserId)
+            if (receiverContactResult.isFailure) {
+                println("ContactsRepository: acceptInvite - failed to create receiver contact: ${receiverContactResult.exceptionOrNull()?.message}")
+                return Result.failure(receiverContactResult.exceptionOrNull() ?: Exception("Failed to create contact"))
+            }
+
+            // 2. Sender has current user (receiver) as contact
+            println("ContactsRepository: acceptInvite - creating reciprocal contact relationship (sender -> receiver)")
+            val senderContactResult = createContactForUser(senderUserId, currentUserId)
+            if (senderContactResult.isFailure) {
+                println("ContactsRepository: acceptInvite - failed to create sender contact: ${senderContactResult.exceptionOrNull()?.message}")
+                // Note: receiver contact was created, but sender contact failed
+                // You might want to delete the receiver contact here to maintain consistency
+            }
+
+            println("ContactsRepository: acceptInvite - both contact relationships created, deleting invite")
+
+            // Delete the invite
+            val deleteResult = deleteInvite(inviteId)
+            if (deleteResult.isFailure) {
+                println("ContactsRepository: acceptInvite - WARNING: failed to delete invite: ${deleteResult.exceptionOrNull()?.message}")
+                // Continue anyway since the contact relationships were created successfully
+            } else {
+                println("ContactsRepository: acceptInvite - invite deleted successfully")
+            }
+
+            println("ContactsRepository: acceptInvite - SUCCESS")
+            receiverContactResult
         } catch (e: Exception) {
+            println("ContactsRepository: acceptInvite - Exception: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -814,14 +1012,34 @@ class ContactsRepository(
      */
     suspend fun deleteReceivedInvite(senderUserId: String): Result<Unit> {
         return try {
+            println("ContactsRepository: deleteReceivedInvite - senderUserId: $senderUserId")
             val currentUserId = tokenProvider.getCurrentUserId()
                 ?: return Result.failure(Exception("User not authenticated"))
 
-            val inviteId = findInviteId(senderUserId, currentUserId).getOrNull()
+            println("ContactsRepository: deleteReceivedInvite - currentUserId: $currentUserId")
+
+            val inviteIdResult = findInviteId(senderUserId, currentUserId)
+            if (inviteIdResult.isFailure) {
+                println("ContactsRepository: deleteReceivedInvite - failed to find invite: ${inviteIdResult.exceptionOrNull()?.message}")
+                return Result.failure(inviteIdResult.exceptionOrNull() ?: Exception("Invite not found"))
+            }
+
+            val inviteId = inviteIdResult.getOrNull()
                 ?: return Result.failure(Exception("Invite not found"))
 
-            deleteInvite(inviteId)
+            println("ContactsRepository: deleteReceivedInvite - deleting invite with id: $inviteId")
+            val result = deleteInvite(inviteId)
+
+            if (result.isSuccess) {
+                println("ContactsRepository: deleteReceivedInvite - SUCCESS")
+            } else {
+                println("ContactsRepository: deleteReceivedInvite - delete failed: ${result.exceptionOrNull()?.message}")
+            }
+
+            result
         } catch (e: Exception) {
+            println("ContactsRepository: deleteReceivedInvite - Exception: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -831,14 +1049,22 @@ class ContactsRepository(
      */
     private suspend fun findInviteId(senderId: String, receiverId: String): Result<String> {
         return try {
+            println("ContactsRepository: findInviteId - searching for invite")
+            println("  - senderId: $senderId")
+            println("  - receiverId: $receiverId")
+
             val query = """
-                query ListInvites(${"$"}senderId: ID!, ${"$"}receiverId: ID!) {
+                query ListInvites(${"$"}senderId: String!, ${"$"}receiverId: String!) {
                     listInvites(filter: {
                         senderId: { eq: ${"$"}senderId },
                         receiverId: { eq: ${"$"}receiverId }
                     }) {
                         items {
                             id
+                            userId
+                            senderId
+                            receiverId
+                            createdAt
                         }
                     }
                 }
@@ -861,14 +1087,27 @@ class ContactsRepository(
 
             if (graphQLResponse.errors != null) {
                 val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                println("ContactsRepository: findInviteId - GraphQL errors: $errorMessages")
                 return Result.failure(Exception("GraphQL errors: $errorMessages"))
             }
 
-            val inviteId = graphQLResponse.data?.listInvites?.items?.firstOrNull()?.id
-                ?: return Result.failure(Exception("Invite not found"))
+            val invites = graphQLResponse.data?.listInvites?.items
+            println("ContactsRepository: findInviteId - found ${invites?.size ?: 0} invites")
+            invites?.forEach { invite ->
+                println("  - Invite id: ${invite.id}, senderId: ${invite.senderId}, receiverId: ${invite.receiverId}")
+            }
 
+            val inviteId = invites?.firstOrNull()?.id
+            if (inviteId == null) {
+                println("ContactsRepository: findInviteId - No invite found with senderId=$senderId and receiverId=$receiverId")
+                return Result.failure(Exception("Invite not found"))
+            }
+
+            println("ContactsRepository: findInviteId - SUCCESS - found inviteId: $inviteId")
             Result.success(inviteId)
         } catch (e: Exception) {
+            println("ContactsRepository: findInviteId - Exception: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -878,6 +1117,8 @@ class ContactsRepository(
      */
     private suspend fun deleteInvite(inviteId: String): Result<Unit> {
         return try {
+            println("ContactsRepository: deleteInvite - deleting invite with id: $inviteId")
+
             val mutation = """
                 mutation DeleteInvite(${"$"}id: ID!) {
                     deleteInvite(input: { id: ${"$"}id }) {
@@ -900,11 +1141,15 @@ class ContactsRepository(
 
             if (graphQLResponse.errors != null) {
                 val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                println("ContactsRepository: deleteInvite - GraphQL errors: $errorMessages")
                 return Result.failure(Exception("GraphQL errors: $errorMessages"))
             }
 
+            println("ContactsRepository: deleteInvite - SUCCESS")
             Result.success(Unit)
         } catch (e: Exception) {
+            println("ContactsRepository: deleteInvite - Exception: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
