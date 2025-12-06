@@ -49,6 +49,9 @@ fun TopBar(
     var clearSearchVisible by remember { mutableStateOf(false) }
 
     TopAppBar(
+        colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ),
         navigationIcon = {
             if (currentRoute.equals( AppDestination.Main.route)) {
                 IconButton(onClick = onNavClick) {

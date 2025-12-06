@@ -1,5 +1,14 @@
 package com.cerqa.ui.screens
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -54,6 +64,8 @@ import com.cerqa.ui.Navigation.AppNavigationActions
 import com.cerqa.ui.Navigation.BottomBar
 import com.cerqa.ui.Navigation.TopBar
 import com.cerqa.ui.Navigation.getTopNavItems
+import com.cerqa.ui.animations.slideInFromRight
+import com.cerqa.ui.animations.slideOutToRight
 import com.cerqa.ui.components.navItems
 import com.cerqa.viewmodels.ApolloContactsViewModel
 import com.cerqa.viewmodels.ContactsViewModel
@@ -80,12 +92,15 @@ fun App(
         Scaffold(
             topBar = {
                 if (currentRoute == null || currentRoute == "main") {
-                    TopAppBar(
+                    TopAppBar( // TODO: move code to a function
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
                         navigationIcon = {
                             // Profile icon on the left
                             IconButton(
                                 onClick = {
-                                    navActions.navigateToMain()
+                                    navActions.navigateToProfile()
                                 },
                                 modifier = Modifier
                                     .size(48.dp)
@@ -94,7 +109,8 @@ fun App(
                                 Icon(
                                     imageVector = Icons.Default.AccountCircle,
                                     contentDescription = "Profile",
-                                    modifier = Modifier.size(40.dp)
+                                    modifier = Modifier.size(40.dp),
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         },
@@ -120,7 +136,7 @@ fun App(
                         text = "SEARCH FIELD", // TODO: stringResource(id = R.string.search_field),
                         items = topNavItems,
                         onNavClick = {
-                            // TODO: nav to profile
+                            navActions.navigateToProfile()
                         },
                         onBackClick = {
                             navActions.popBackStack()
@@ -156,23 +172,10 @@ fun App(
             NavHost(
                 navController = navController,
                 startDestination = AppDestination.Main.route,
-                modifier = Modifier.padding(paddingValues)
+                modifier = Modifier.padding(paddingValues),
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None }
             ) {
-                composable(AppDestination.Main.route) {
-                    Main()
-                }
-                composable(AppDestination.Contacts.route) {
-                    Contacts(
-                        searchViewModel = searchViewModel,
-                        contactsViewModel = contactsViewModel
-                    )
-                }
-                composable(AppDestination.ContactsSearch.route) {
-                    Search()
-                }
-                composable(AppDestination.Groups.route) {
-                    Groups()
-                }
                 composable(AppDestination.Chat.route) {
                     Chat(
                         onNavigateToContacts = {
@@ -180,8 +183,32 @@ fun App(
                         }
                     )
                 }
+                composable(AppDestination.Contacts.route) {
+                    Contacts(
+                        searchViewModel = searchViewModel,
+                        contactsViewModel = contactsViewModel
+                    )
+                }
+                composable(AppDestination.Groups.route) {
+                    Groups()
+                }
                 composable(AppDestination.Notifications.route) {
                     Inbox()
+                }
+                composable(AppDestination.Main.route) {
+                    Main()
+                }
+                composable(
+                    AppDestination.Profile.route,
+                    enterTransition = { slideInFromRight() },
+                    exitTransition = { slideOutToRight() }
+                ) {
+                    Profile(
+                        onDismiss = { navActions.popBackStack() }
+                    )
+                }
+                composable(AppDestination.ContactsSearch.route) {
+                    Search()
                 }
             }
         }

@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun Main() {
-    // Main content - no scaffold here, it's in App.kt
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

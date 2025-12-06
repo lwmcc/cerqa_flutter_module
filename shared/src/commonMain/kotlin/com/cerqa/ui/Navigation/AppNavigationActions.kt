@@ -47,6 +47,12 @@ class AppNavigationActions(private val navController: NavHostController) {
         }
     }
 
+    fun navigateToProfile() {
+        navController.navigate(AppDestination.Profile.route) {
+            launchSingleTop = true
+        }
+    }
+
     fun popBackStack() {
         navController.popBackStack()
     }

@@ -62,6 +62,7 @@ kotlin {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material)
+                implementation(compose.components.resources)
             }
         }
 
@@ -92,6 +93,10 @@ kotlin {
 
                 // kotlinx.coroutines will be available in all source sets
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+
+                // Coil for image loading (supports KMP)
+                implementation("io.coil-kt.coil3:coil-compose:3.0.4")
+                implementation("io.coil-kt.coil3:coil-network-ktor3:3.0.4")
             }
         }
 

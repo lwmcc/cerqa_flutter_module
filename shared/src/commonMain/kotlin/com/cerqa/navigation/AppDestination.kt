@@ -8,4 +8,5 @@ sealed class AppDestination(val route: String) {
     object ContactsSearch : AppDestination("contacts-search")
     object Groups : AppDestination("groups")
     object GroupsAdd : AppDestination("groups-add")
+    object Profile : AppDestination("profile")
 }
