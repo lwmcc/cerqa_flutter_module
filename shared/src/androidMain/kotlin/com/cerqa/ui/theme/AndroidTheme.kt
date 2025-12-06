@@ -21,17 +21,29 @@ actual fun PlatformThemeWrapper(content: @Composable () -> Unit) {
     val colorScheme = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
     } else {
-        if (darkTheme) darkScheme else lightScheme
+        // Use the color schemes defined in Theme.kt via AppTheme
+        null
     }
 
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb() // TODO: update this
-            WindowCompat.getInsetsController(window, view)
-                .isAppearanceLightStatusBars = !darkTheme
+    AppTheme(
+        darkTheme = darkTheme,
+        colorSchemeOverride = colorScheme,
+        content = {
+            // Capture the color scheme inside the theme
+            val currentColorScheme = androidx.compose.material3.MaterialTheme.colorScheme
+
+            // Set status bar color to match the surface/background
+            if (!view.isInEditMode) {
+                SideEffect {
+                    val window = (view.context as Activity).window
+                    window.statusBarColor = currentColorScheme.surface.toArgb()
+                    WindowCompat.getInsetsController(window, view)
+                        .isAppearanceLightStatusBars = !darkTheme
+                }
+            }
+
+            // Render the actual content
+            content()
         }
-    }
-
-    AppTheme(colorSchemeOverride = colorScheme, content = content)
+    )
 }

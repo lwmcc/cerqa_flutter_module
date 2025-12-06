@@ -613,23 +613,25 @@ class ContactsRepository(
     }
 
     /**
-     * Fetch a user by their ID.
+     * Fetch a user by their userId (not the table primary key).
      */
     private suspend fun fetchUserById(userId: String): Result<User?> {
         return try {
             val query = """
-                query GetUser(${"$"}userId: ID!) {
-                    getUser(userId: ${"$"}userId) {
-                        id
-                        userId
-                        firstName
-                        lastName
-                        name
-                        phone
-                        userName
-                        email
-                        avatarUri
-                        createdAt
+                query ListUsers(${"$"}userId: String!) {
+                    listUsers(filter: { userId: { eq: ${"$"}userId } }) {
+                        items {
+                            id
+                            userId
+                            firstName
+                            lastName
+                            name
+                            phone
+                            userName
+                            email
+                            avatarUri
+                            createdAt
+                        }
                     }
                 }
             """.trimIndent()
@@ -644,15 +646,24 @@ class ContactsRepository(
                 setBody(request)
             }
 
-            val graphQLResponse: GraphQLResponse<GetUserData> = response.body()
+            val graphQLResponse: GraphQLResponse<ListUsersData> = response.body()
 
             if (graphQLResponse.errors != null) {
                 val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                println("ContactsRepository: fetchUserById GraphQL errors: $errorMessages")
                 return Result.failure(Exception("GraphQL errors: $errorMessages"))
             }
 
-            Result.success(graphQLResponse.data?.getUser)
+            val user = graphQLResponse.data?.listUsers?.items?.firstOrNull()
+            if (user == null) {
+                println("ContactsRepository: fetchUserById - no user found for userId: $userId")
+            } else {
+                println("ContactsRepository: fetchUserById - found user: ${user.userName}, name: ${user.name}")
+            }
+            Result.success(user)
         } catch (e: Exception) {
+            println("ContactsRepository: fetchUserById exception: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -1059,11 +1070,6 @@ private data class DeleteInviteData(
 @Serializable
 private data class InviteIdOnly(
     val id: String
-)
-
-@Serializable
-private data class GetUserData(
-    val getUser: User?
 )
 
 @Serializable
