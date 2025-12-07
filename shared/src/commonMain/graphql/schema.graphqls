@@ -17,6 +17,15 @@ type Query {
   getUserGroup(id: ID!): UserGroup
   listUserGroups(filter: ModelUserGroupFilterInput, limit: Int, nextToken: String): ModelUserGroupConnection
   getUserContact(id: ID!): UserContact
+
+  # Lambda function - hasUserCreatedProfile
+  checkProfileComplete(userId: ID!): ProfileCompleteResponse
+}
+
+# Response type for checkProfileComplete Lambda function
+type ProfileCompleteResponse {
+  isProfileComplete: Boolean!
+  missingFields: [String!]!
 }
 
 type Mutation {

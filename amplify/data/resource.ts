@@ -1,9 +1,9 @@
 import { type ClientSchema, a, defineData, defineFunction } from "@aws-amplify/backend";
-//import { sayHello } from "../functions/sayhello/resource"
 import { fetchAblyJwt } from "../functions/fetchAblyJwt/resource";
 import { fetchUserWithContactInfo } from "../functions/fetchUserWithContactInfo/resource";
 import { fetchPendingSentInviteStatus } from "../functions/fetchPendingSentInviteStatus/resource";
 import { createInviteByPhoneNumber } from "../functions/createInviteByPhoneNumber/resource";
+import { hasUserCreatedProfile } from "../functions/hasUserCreatedProfile/resource";
 
 const AblyJwt = a.customType({
       keyName: a.string().required(),
@@ -161,6 +161,18 @@ export const schema = a.schema({
         .returns(a.string())
         .handler(a.handler.function(fetchPendingSentInviteStatus)),
 
+      ProfileCheckResult: a.customType({
+        isProfileComplete: a.boolean(),
+        missingFields: a.string().array(),
+      }),
+
+      checkProfileComplete: a.query()
+        .arguments({
+          userId: a.string().required()
+        })
+        .returns(a.ref('ProfileCheckResult'))
+        .authorization(allow => [allow.authenticated()])
+        .handler(a.handler.function(hasUserCreatedProfile)),
 });
 
 export type Schema = ClientSchema<typeof schema>;
@@ -169,7 +181,7 @@ export const data = defineData({
     schema,
     secrets: ["ably_key", "ably_secret"],
     authorizationModes: {
-        defaultAuthorizationMode: "userPool", // Changed to Cognito User Pools
+        defaultAuthorizationMode: "userPool",
         apiKeyAuthorizationMode: {
           expiresInDays: 30,
         },

@@ -9,6 +9,7 @@ import com.cerqa.repository.MockContactsRepository
 import com.cerqa.viewmodels.ApolloContactsViewModel
 import com.cerqa.viewmodels.ContactsViewModel
 import com.cerqa.viewmodels.MockContactsViewModel
+import com.cerqa.viewmodels.ProfileViewModel
 import com.cerqa.viewmodels.SearchViewModel
 import org.koin.dsl.module
 
@@ -36,4 +37,5 @@ val commonModule = module {
     factory { ApolloContactsViewModel(get()) }
     factory { MockContactsViewModel(get()) }
     factory { SearchViewModel(get()) }
+    factory { ProfileViewModel(get(), get()) }
 }
