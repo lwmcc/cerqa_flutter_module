@@ -1,14 +1,7 @@
 package com.cerqa.ui.screens
 
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.EaseIn
-import androidx.compose.animation.core.EaseOut
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,11 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Contacts
-import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,17 +25,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,6 +55,7 @@ import com.cerqa.ui.animations.slideOutToRight
 import com.cerqa.ui.components.navItems
 import com.cerqa.viewmodels.ApolloContactsViewModel
 import com.cerqa.viewmodels.ContactsViewModel
+import com.cerqa.viewmodels.MainViewModel
 import com.cerqa.viewmodels.SearchViewModel
 import org.koin.compose.koinInject
 
@@ -81,12 +68,16 @@ fun App(
     },
     searchViewModel: SearchViewModel = koinInject(),
     contactsViewModel: ContactsViewModel = koinInject(),
+    mainViewModel: MainViewModel = koinInject(),
 ) {
-    var searchText by remember { mutableStateOf("") }
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
     val topNavItems = getTopNavItems(currentRoute)
+
+    LaunchedEffect(Unit) {
+        mainViewModel.fetchUser()
+    }
 
     MaterialTheme {
         Scaffold(
@@ -129,7 +120,6 @@ fun App(
                         }
                     )
                 } else {
-                    // Regular TopBar for other screens
                     TopBar(
                         searchViewModel = searchViewModel,
                         currentRoute = currentRoute,
@@ -157,8 +147,6 @@ fun App(
                     currentRoute = currentRoute,
                     onBottomNavClick = { route ->
                         navController.navigate(route) {
-                            // Clear back stack and navigate to home, then to the selected destination
-                            // This ensures clicking back always goes to home
                             popUpTo(AppDestination.Main.route) {
                                 saveState = true
                             }

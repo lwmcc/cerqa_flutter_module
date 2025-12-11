@@ -179,13 +179,25 @@ apollo {
         generateApolloMetadata.set(true)
 
         // AppSync-specific configuration
-        // This tells Apollo to add __typename to all queries for normalized cache
-        addTypename.set("always")
+        // Only add __typename when explicitly requested in queries
+        // Setting to "ifPolymorphic" instead of "always" to avoid issues with Lambda responses
+        addTypename.set("ifPolymorphic")
 
         // Schema location - you'll download this from AppSync
         schemaFile.set(file("src/commonMain/graphql/schema.graphqls"))
 
         // Where to find your GraphQL queries/mutations/subscriptions
         srcDir("src/commonMain/graphql")
+
+        // Map AWS custom scalars to Kotlin types
+        mapScalar("AWSDate", "kotlin.String")
+        mapScalar("AWSTime", "kotlin.String")
+        mapScalar("AWSDateTime", "kotlin.String")
+        mapScalar("AWSTimestamp", "kotlin.Long")
+        mapScalar("AWSEmail", "kotlin.String")
+        mapScalar("AWSJSON", "kotlin.String")
+        mapScalar("AWSURL", "kotlin.String")
+        mapScalar("AWSPhone", "kotlin.String")
+        mapScalar("AWSIPAddress", "kotlin.String")
     }
 }

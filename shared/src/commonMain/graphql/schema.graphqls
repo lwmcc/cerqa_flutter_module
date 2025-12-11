@@ -1,535 +1,253 @@
-# GraphQL schema generated from Amplify resource.ts
-# This matches your actual AppSync schema
-
-type Query {
-  getUser(id: ID!): User
-  listUsers(filter: ModelUserFilterInput, limit: Int, nextToken: String): ModelUserConnection
-  listUserContacts(filter: ModelUserContactFilterInput, limit: Int, nextToken: String): ModelUserContactConnection
-  listByPhone(phone: String!, userName: ModelStringKeyConditionInput, sortDirection: ModelSortDirection, filter: ModelUserFilterInput, limit: Int, nextToken: String): ModelUserConnection
-  getChannel(id: ID!): Channel
-  listChannels(filter: ModelChannelFilterInput, limit: Int, nextToken: String): ModelChannelConnection
-  getMessage(id: ID!): Message
-  listMessages(filter: ModelMessageFilterInput, limit: Int, nextToken: String): ModelMessageConnection
-  getGroup(id: ID!): Group
-  listGroups(filter: ModelGroupFilterInput, limit: Int, nextToken: String): ModelGroupConnection
-  getInvite(id: ID!): Invite
-  listInvites(filter: ModelInviteFilterInput, limit: Int, nextToken: String): ModelInviteConnection
-  getUserGroup(id: ID!): UserGroup
-  listUserGroups(filter: ModelUserGroupFilterInput, limit: Int, nextToken: String): ModelUserGroupConnection
-  getUserContact(id: ID!): UserContact
-
-  # Lambda function - hasUserCreatedProfile
-  checkProfileComplete(userId: ID!): ProfileCompleteResponse
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
 }
 
-# Response type for checkProfileComplete Lambda function
-type ProfileCompleteResponse {
+type Channel @aws_api_key @aws_iam {
+  channels(filter: ModelUserChannelFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelUserChannelConnection
+  createdAt: AWSDateTime!
+  creator: User
+  creatorId: String!
+  id: ID!
+  isGroup: Boolean
+  isPublic: Boolean
+  messages(filter: ModelMessageFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelMessageConnection
+  name: String!
+  receiver: User
+  receiverId: String!
+  updatedAt: AWSDateTime!
+}
+
+type DirectChat {
+  avatarUri: String
+  chatId: String!
+  lastMessage: String
+  userName: String!
+}
+
+type FetchAblyJwtReturnType @aws_api_key {
+  clientId: String!
+  keyName: String!
+  mac: String!
+  nonce: String!
+  timestamp: Float!
+}
+
+type FetchUserWithContactInfoReturnType @aws_api_key {
+  id: String
+  userName: String
+}
+
+type Group @aws_api_key @aws_iam {
+  createdAt: AWSDateTime!
+  groupId: ID!
+  id: ID!
+  name: String!
+  updatedAt: AWSDateTime!
+  users(filter: ModelUserGroupFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelUserGroupConnection
+}
+
+type Invite @aws_api_key @aws_iam {
+  createdAt: AWSDateTime!
+  id: ID!
+  receiverId: String
+  senderId: String
+  updatedAt: AWSDateTime!
+  user: User
+  userId: ID!
+}
+
+type Message @aws_api_key @aws_iam {
+  channel: Channel
+  channelId: ID!
+  content: String!
+  createdAt: AWSDateTime!
+  id: ID!
+  senderId: ID!
+  updatedAt: AWSDateTime!
+}
+
+type ModelChannelConnection @aws_api_key @aws_iam {
+  items: [Channel]!
+  nextToken: String
+}
+
+type ModelGroupConnection @aws_api_key @aws_iam {
+  items: [Group]!
+  nextToken: String
+}
+
+type ModelInviteConnection @aws_api_key @aws_iam {
+  items: [Invite]!
+  nextToken: String
+}
+
+type ModelMessageConnection @aws_api_key @aws_iam {
+  items: [Message]!
+  nextToken: String
+}
+
+type ModelUserChannelConnection @aws_api_key @aws_iam {
+  items: [UserChannel]!
+  nextToken: String
+}
+
+type ModelUserConnection @aws_api_key @aws_iam {
+  items: [User]!
+  nextToken: String
+}
+
+type ModelUserContactConnection @aws_api_key @aws_iam {
+  items: [UserContact]!
+  nextToken: String
+}
+
+type ModelUserGroupConnection @aws_api_key @aws_iam {
+  items: [UserGroup]!
+  nextToken: String
+}
+
+type Mutation {
+  createChannel(condition: ModelChannelConditionInput, input: CreateChannelInput!): Channel @aws_api_key @aws_iam
+  createGroup(condition: ModelGroupConditionInput, input: CreateGroupInput!): Group @aws_api_key @aws_iam
+  createInvite(condition: ModelInviteConditionInput, input: CreateInviteInput!): Invite @aws_api_key @aws_iam
+  createMessage(condition: ModelMessageConditionInput, input: CreateMessageInput!): Message @aws_api_key @aws_iam
+  createUser(condition: ModelUserConditionInput, input: CreateUserInput!): User @aws_api_key @aws_iam
+  createUserChannel(condition: ModelUserChannelConditionInput, input: CreateUserChannelInput!): UserChannel @aws_api_key @aws_iam
+  createUserContact(condition: ModelUserContactConditionInput, input: CreateUserContactInput!): UserContact @aws_api_key @aws_iam
+  createUserGroup(condition: ModelUserGroupConditionInput, input: CreateUserGroupInput!): UserGroup @aws_api_key @aws_iam
+  deleteChannel(condition: ModelChannelConditionInput, input: DeleteChannelInput!): Channel @aws_api_key @aws_iam
+  deleteGroup(condition: ModelGroupConditionInput, input: DeleteGroupInput!): Group @aws_api_key @aws_iam
+  deleteInvite(condition: ModelInviteConditionInput, input: DeleteInviteInput!): Invite @aws_api_key @aws_iam
+  deleteMessage(condition: ModelMessageConditionInput, input: DeleteMessageInput!): Message @aws_api_key @aws_iam
+  deleteUser(condition: ModelUserConditionInput, input: DeleteUserInput!): User @aws_api_key @aws_iam
+  deleteUserChannel(condition: ModelUserChannelConditionInput, input: DeleteUserChannelInput!): UserChannel @aws_api_key @aws_iam
+  deleteUserContact(condition: ModelUserContactConditionInput, input: DeleteUserContactInput!): UserContact @aws_api_key @aws_iam
+  deleteUserGroup(condition: ModelUserGroupConditionInput, input: DeleteUserGroupInput!): UserGroup @aws_api_key @aws_iam
+  updateChannel(condition: ModelChannelConditionInput, input: UpdateChannelInput!): Channel @aws_api_key @aws_iam
+  updateGroup(condition: ModelGroupConditionInput, input: UpdateGroupInput!): Group @aws_api_key @aws_iam
+  updateInvite(condition: ModelInviteConditionInput, input: UpdateInviteInput!): Invite @aws_api_key @aws_iam
+  updateMessage(condition: ModelMessageConditionInput, input: UpdateMessageInput!): Message @aws_api_key @aws_iam
+  updateUser(condition: ModelUserConditionInput, input: UpdateUserInput!): User @aws_api_key @aws_iam
+  updateUserChannel(condition: ModelUserChannelConditionInput, input: UpdateUserChannelInput!): UserChannel @aws_api_key @aws_iam
+  updateUserContact(condition: ModelUserContactConditionInput, input: UpdateUserContactInput!): UserContact @aws_api_key @aws_iam
+  updateUserGroup(condition: ModelUserGroupConditionInput, input: UpdateUserGroupInput!): UserGroup @aws_api_key @aws_iam
+}
+
+type ProfileStatus {
   isProfileComplete: Boolean!
   missingFields: [String!]!
 }
 
-type Mutation {
-  createUser(input: CreateUserInput!, condition: ModelUserConditionInput): User
-  updateUser(input: UpdateUserInput!, condition: ModelUserConditionInput): User
-  deleteUser(input: DeleteUserInput!, condition: ModelUserConditionInput): User
-  createUserContact(input: CreateUserContactInput!, condition: ModelUserContactConditionInput): UserContact
-  updateUserContact(input: UpdateUserContactInput!, condition: ModelUserContactConditionInput): UserContact
-  deleteUserContact(input: DeleteUserContactInput!, condition: ModelUserContactConditionInput): UserContact
-  createChannel(input: CreateChannelInput!, condition: ModelChannelConditionInput): Channel
-  updateChannel(input: UpdateChannelInput!, condition: ModelChannelConditionInput): Channel
-  deleteChannel(input: DeleteChannelInput!, condition: ModelChannelConditionInput): Channel
-  createMessage(input: CreateMessageInput!, condition: ModelMessageConditionInput): Message
-  updateMessage(input: UpdateMessageInput!, condition: ModelMessageConditionInput): Message
-  deleteMessage(input: DeleteMessageInput!, condition: ModelMessageConditionInput): Message
-  createGroup(input: CreateGroupInput!, condition: ModelGroupConditionInput): Group
-  updateGroup(input: UpdateGroupInput!, condition: ModelGroupConditionInput): Group
-  deleteGroup(input: DeleteGroupInput!, condition: ModelGroupConditionInput): Group
-  createInvite(input: CreateInviteInput!, condition: ModelInviteConditionInput): Invite
-  updateInvite(input: UpdateInviteInput!, condition: ModelInviteConditionInput): Invite
-  deleteInvite(input: DeleteInviteInput!, condition: ModelInviteConditionInput): Invite
-  createUserGroup(input: CreateUserGroupInput!, condition: ModelUserGroupConditionInput): UserGroup
-  updateUserGroup(input: UpdateUserGroupInput!, condition: ModelUserGroupConditionInput): UserGroup
-  deleteUserGroup(input: DeleteUserGroupInput!, condition: ModelUserGroupConditionInput): UserGroup
+type Query {
+  fetchAblyJwt(userId: String): FetchAblyJwtReturnType @aws_api_key @aws_iam
+  fetchPendingSentInviteStatus(userName: String): String @aws_api_key @aws_iam
+  fetchUserByUserId(userId: ID!): User @aws_api_key @aws_iam
+  fetchUserWithContactInfo(userName: String): FetchUserWithContactInfoReturnType @aws_api_key @aws_iam
+  getChannel(id: ID!): Channel @aws_api_key @aws_iam
+  getGroup(id: ID!): Group @aws_api_key @aws_iam
+  getInvite(id: ID!): Invite @aws_api_key @aws_iam
+  getMessage(id: ID!): Message @aws_api_key @aws_iam
+  getUser(id: ID!): User @aws_api_key @aws_iam
+  getUserChannel(id: ID!): UserChannel @aws_api_key @aws_iam
+  getUserContact(id: ID!): UserContact @aws_api_key @aws_iam
+  getUserGroup(id: ID!): UserGroup @aws_api_key @aws_iam
+  hasUserCreatedProfile(userId: ID!): ProfileStatus @aws_api_key @aws_iam
+  listByPhone(filter: ModelUserFilterInput, limit: Int, nextToken: String, phone: String!, sortDirection: ModelSortDirection, userName: ModelStringKeyConditionInput): ModelUserConnection @aws_api_key @aws_iam
+  listChannels(filter: ModelChannelFilterInput, limit: Int, nextToken: String): ModelChannelConnection @aws_api_key @aws_iam
+  listGroups(filter: ModelGroupFilterInput, limit: Int, nextToken: String): ModelGroupConnection @aws_api_key @aws_iam
+  listInvites(filter: ModelInviteFilterInput, limit: Int, nextToken: String): ModelInviteConnection @aws_api_key @aws_iam
+  listMessages(filter: ModelMessageFilterInput, limit: Int, nextToken: String): ModelMessageConnection @aws_api_key @aws_iam
+  listUserChannelByUserIdAndChannelId(channelId: ModelIDKeyConditionInput, filter: ModelUserChannelFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection, userId: ID!): ModelUserChannelConnection @aws_api_key @aws_iam
+  listUserChannels(filter: ModelUserChannelFilterInput, limit: Int, nextToken: String): ModelUserChannelConnection @aws_api_key @aws_iam
+  listUserContacts(filter: ModelUserContactFilterInput, limit: Int, nextToken: String): ModelUserContactConnection @aws_api_key @aws_iam
+  listUserGroups(filter: ModelUserGroupFilterInput, limit: Int, nextToken: String): ModelUserGroupConnection @aws_api_key @aws_iam
+  listUsers(filter: ModelUserFilterInput, limit: Int, nextToken: String): ModelUserConnection @aws_api_key @aws_iam
 }
 
 type Subscription {
-  onCreateUser(filter: ModelSubscriptionUserFilterInput): User @aws_subscribe(mutations: ["createUser"])
-  onUpdateUser(filter: ModelSubscriptionUserFilterInput): User @aws_subscribe(mutations: ["updateUser"])
-  onDeleteUser(filter: ModelSubscriptionUserFilterInput): User @aws_subscribe(mutations: ["deleteUser"])
-  onCreateUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_subscribe(mutations: ["createUserContact"])
-  onUpdateUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_subscribe(mutations: ["updateUserContact"])
-  onDeleteUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_subscribe(mutations: ["deleteUserContact"])
+  onCreateChannel(filter: ModelSubscriptionChannelFilterInput): Channel @aws_api_key @aws_iam @aws_subscribe(mutations : ["createChannel"])
+  onCreateGroup(filter: ModelSubscriptionGroupFilterInput): Group @aws_api_key @aws_iam @aws_subscribe(mutations : ["createGroup"])
+  onCreateInvite(filter: ModelSubscriptionInviteFilterInput): Invite @aws_api_key @aws_iam @aws_subscribe(mutations : ["createInvite"])
+  onCreateMessage(filter: ModelSubscriptionMessageFilterInput): Message @aws_api_key @aws_iam @aws_subscribe(mutations : ["createMessage"])
+  onCreateUser(filter: ModelSubscriptionUserFilterInput): User @aws_api_key @aws_iam @aws_subscribe(mutations : ["createUser"])
+  onCreateUserChannel(filter: ModelSubscriptionUserChannelFilterInput): UserChannel @aws_api_key @aws_iam @aws_subscribe(mutations : ["createUserChannel"])
+  onCreateUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_api_key @aws_iam @aws_subscribe(mutations : ["createUserContact"])
+  onCreateUserGroup(filter: ModelSubscriptionUserGroupFilterInput): UserGroup @aws_api_key @aws_iam @aws_subscribe(mutations : ["createUserGroup"])
+  onDeleteChannel(filter: ModelSubscriptionChannelFilterInput): Channel @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteChannel"])
+  onDeleteGroup(filter: ModelSubscriptionGroupFilterInput): Group @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteGroup"])
+  onDeleteInvite(filter: ModelSubscriptionInviteFilterInput): Invite @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteInvite"])
+  onDeleteMessage(filter: ModelSubscriptionMessageFilterInput): Message @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteMessage"])
+  onDeleteUser(filter: ModelSubscriptionUserFilterInput): User @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteUser"])
+  onDeleteUserChannel(filter: ModelSubscriptionUserChannelFilterInput): UserChannel @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteUserChannel"])
+  onDeleteUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteUserContact"])
+  onDeleteUserGroup(filter: ModelSubscriptionUserGroupFilterInput): UserGroup @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteUserGroup"])
+  onUpdateChannel(filter: ModelSubscriptionChannelFilterInput): Channel @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateChannel"])
+  onUpdateGroup(filter: ModelSubscriptionGroupFilterInput): Group @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateGroup"])
+  onUpdateInvite(filter: ModelSubscriptionInviteFilterInput): Invite @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateInvite"])
+  onUpdateMessage(filter: ModelSubscriptionMessageFilterInput): Message @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateMessage"])
+  onUpdateUser(filter: ModelSubscriptionUserFilterInput): User @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateUser"])
+  onUpdateUserChannel(filter: ModelSubscriptionUserChannelFilterInput): UserChannel @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateUserChannel"])
+  onUpdateUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateUserContact"])
+  onUpdateUserGroup(filter: ModelSubscriptionUserGroupFilterInput): UserGroup @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateUserGroup"])
 }
 
-type User {
-  id: ID!
-  userId: ID
+type User @aws_api_key @aws_iam {
+  asContact(filter: ModelUserContactFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelUserContactConnection
+  avatarUri: AWSURL
+  channels(filter: ModelUserChannelFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelUserChannelConnection
+  contacts(filter: ModelUserContactFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelUserContactConnection
+  createdAt: AWSDateTime!
+  createdChannels(filter: ModelChannelFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelChannelConnection
+  email: AWSEmail
   firstName: String!
+  groups(filter: ModelUserGroupFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelUserGroupConnection
+  id: ID!
+  invites(filter: ModelInviteFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelInviteConnection
   lastName: String!
   name: String
   phone: String
+  receivedChannels(filter: ModelChannelFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelChannelConnection
+  updatedAt: AWSDateTime!
+  userId: ID
   userName: String
-  email: String
-  avatarUri: String
-  contacts: ModelUserContactConnection
-  asContact: ModelUserContactConnection
-  createdAt: String!
-  updatedAt: String!
 }
 
-type UserContact {
-  id: ID!
-  userId: ID!
-  contactId: ID!
-  user: User
-  contact: User
-  createdAt: String!
-  updatedAt: String!
-}
-
-type Channel {
-  id: ID!
-  name: String
-  userId: ID!
-  user: User
-  messages: ModelMessageConnection
-  createdAt: String!
-  updatedAt: String!
-}
-
-type Message {
-  id: ID!
-  content: String!
-  channelId: ID!
+type UserChannel @aws_api_key @aws_iam {
   channel: Channel
-  createdAt: String!
-  updatedAt: String!
-}
-
-type Group {
-  id: ID!
-  groupId: ID!
-  name: String!
-  users: ModelUserGroupConnection
-  createdAt: String!
-  updatedAt: String!
-}
-
-type Invite {
-  id: ID!
-  userId: ID!
-  senderId: String
-  receiverId: String
-  user: User
-  createdAt: String!
-  updatedAt: String!
-}
-
-type UserGroup {
-  id: ID!
-  userId: ID!
-  groupId: ID!
-  user: User
-  group: Group
-  createdAt: String!
-  updatedAt: String!
-}
-
-type ModelUserConnection {
-  items: [User]
-  nextToken: String
-}
-
-type ModelUserContactConnection {
-  items: [UserContact]
-  nextToken: String
-}
-
-type ModelChannelConnection {
-  items: [Channel]
-  nextToken: String
-}
-
-type ModelMessageConnection {
-  items: [Message]
-  nextToken: String
-}
-
-type ModelGroupConnection {
-  items: [Group]
-  nextToken: String
-}
-
-type ModelInviteConnection {
-  items: [Invite]
-  nextToken: String
-}
-
-type ModelUserGroupConnection {
-  items: [UserGroup]
-  nextToken: String
-}
-
-# Input types
-input CreateUserInput {
-  id: ID
-  userId: ID
-  firstName: String!
-  lastName: String!
-  name: String
-  phone: String
-  userName: String
-  email: String
-  avatarUri: String
-}
-
-input UpdateUserInput {
-  id: ID!
-  userId: ID
-  firstName: String
-  lastName: String
-  name: String
-  phone: String
-  userName: String
-  email: String
-  avatarUri: String
-}
-
-input DeleteUserInput {
-  id: ID!
-}
-
-input CreateUserContactInput {
-  id: ID
-  userId: ID!
-  contactId: ID!
-}
-
-input UpdateUserContactInput {
-  id: ID!
-  userId: ID
-  contactId: ID
-}
-
-input DeleteUserContactInput {
-  id: ID!
-}
-
-input CreateChannelInput {
-  id: ID
-  name: String
-  userId: ID!
-}
-
-input UpdateChannelInput {
-  id: ID!
-  name: String
-  userId: ID
-}
-
-input DeleteChannelInput {
-  id: ID!
-}
-
-input CreateMessageInput {
-  id: ID
-  content: String!
   channelId: ID!
-}
-
-input UpdateMessageInput {
+  createdAt: AWSDateTime!
   id: ID!
-  content: String
-  channelId: ID
-}
-
-input DeleteMessageInput {
-  id: ID!
-}
-
-input CreateGroupInput {
-  id: ID
-  groupId: ID!
-  name: String!
-}
-
-input UpdateGroupInput {
-  id: ID!
-  groupId: ID
-  name: String
-}
-
-input DeleteGroupInput {
-  id: ID!
-}
-
-input CreateInviteInput {
-  id: ID
+  isMuted: Boolean
+  role: String
+  updatedAt: AWSDateTime!
+  user: User
   userId: ID!
-  senderId: String
-  receiverId: String
 }
 
-input UpdateInviteInput {
+type UserContact @aws_api_key @aws_iam {
+  contact: User
+  contactId: ID!
+  createdAt: AWSDateTime!
   id: ID!
-  userId: ID
-  senderId: String
-  receiverId: String
-}
-
-input DeleteInviteInput {
-  id: ID!
-}
-
-input CreateUserGroupInput {
-  id: ID
+  updatedAt: AWSDateTime!
+  user: User
   userId: ID!
+}
+
+type UserGroup @aws_api_key @aws_iam {
+  createdAt: AWSDateTime!
+  group: Group
   groupId: ID!
-}
-
-input UpdateUserGroupInput {
   id: ID!
-  userId: ID
-  groupId: ID
-}
-
-input DeleteUserGroupInput {
-  id: ID!
-}
-
-input ModelUserFilterInput {
-  id: ModelIDInput
-  userId: ModelIDInput
-  firstName: ModelStringInput
-  lastName: ModelStringInput
-  name: ModelStringInput
-  phone: ModelStringInput
-  userName: ModelStringInput
-  email: ModelStringInput
-  avatarUri: ModelStringInput
-  and: [ModelUserFilterInput]
-  or: [ModelUserFilterInput]
-  not: ModelUserFilterInput
-}
-
-input ModelUserContactFilterInput {
-  id: ModelIDInput
-  userId: ModelIDInput
-  contactId: ModelIDInput
-  and: [ModelUserContactFilterInput]
-  or: [ModelUserContactFilterInput]
-  not: ModelUserContactFilterInput
-}
-
-input ModelChannelFilterInput {
-  id: ModelIDInput
-  name: ModelStringInput
-  userId: ModelIDInput
-  and: [ModelChannelFilterInput]
-  or: [ModelChannelFilterInput]
-  not: ModelChannelFilterInput
-}
-
-input ModelMessageFilterInput {
-  id: ModelIDInput
-  content: ModelStringInput
-  channelId: ModelIDInput
-  and: [ModelMessageFilterInput]
-  or: [ModelMessageFilterInput]
-  not: ModelMessageFilterInput
-}
-
-input ModelGroupFilterInput {
-  id: ModelIDInput
-  groupId: ModelIDInput
-  name: ModelStringInput
-  and: [ModelGroupFilterInput]
-  or: [ModelGroupFilterInput]
-  not: ModelGroupFilterInput
-}
-
-input ModelInviteFilterInput {
-  id: ModelIDInput
-  userId: ModelIDInput
-  senderId: ModelStringInput
-  receiverId: ModelStringInput
-  and: [ModelInviteFilterInput]
-  or: [ModelInviteFilterInput]
-  not: ModelInviteFilterInput
-}
-
-input ModelUserGroupFilterInput {
-  id: ModelIDInput
-  userId: ModelIDInput
-  groupId: ModelIDInput
-  and: [ModelUserGroupFilterInput]
-  or: [ModelUserGroupFilterInput]
-  not: ModelUserGroupFilterInput
-}
-
-input ModelIDInput {
-  ne: ID
-  eq: ID
-  le: ID
-  lt: ID
-  ge: ID
-  gt: ID
-  contains: ID
-  notContains: ID
-  between: [ID]
-  beginsWith: ID
-  attributeExists: Boolean
-  attributeType: ModelAttributeTypes
-  size: ModelSizeInput
-}
-
-input ModelStringInput {
-  ne: String
-  eq: String
-  le: String
-  lt: String
-  ge: String
-  gt: String
-  contains: String
-  notContains: String
-  between: [String]
-  beginsWith: String
-  attributeExists: Boolean
-  attributeType: ModelAttributeTypes
-  size: ModelSizeInput
-}
-
-input ModelStringKeyConditionInput {
-  eq: String
-  le: String
-  lt: String
-  ge: String
-  gt: String
-  between: [String]
-  beginsWith: String
-}
-
-input ModelSizeInput {
-  ne: Int
-  eq: Int
-  le: Int
-  lt: Int
-  ge: Int
-  gt: Int
-  between: [Int]
-}
-
-input ModelUserConditionInput {
-  firstName: ModelStringInput
-  lastName: ModelStringInput
-  name: ModelStringInput
-  phone: ModelStringInput
-  userName: ModelStringInput
-  email: ModelStringInput
-  avatarUri: ModelStringInput
-  and: [ModelUserConditionInput]
-  or: [ModelUserConditionInput]
-  not: ModelUserConditionInput
-}
-
-input ModelUserContactConditionInput {
-  userId: ModelIDInput
-  contactId: ModelIDInput
-  and: [ModelUserContactConditionInput]
-  or: [ModelUserContactConditionInput]
-  not: ModelUserContactConditionInput
-}
-
-input ModelChannelConditionInput {
-  name: ModelStringInput
-  userId: ModelIDInput
-  and: [ModelChannelConditionInput]
-  or: [ModelChannelConditionInput]
-  not: ModelChannelConditionInput
-}
-
-input ModelMessageConditionInput {
-  content: ModelStringInput
-  channelId: ModelIDInput
-  and: [ModelMessageConditionInput]
-  or: [ModelMessageConditionInput]
-  not: ModelMessageConditionInput
-}
-
-input ModelGroupConditionInput {
-  groupId: ModelIDInput
-  name: ModelStringInput
-  and: [ModelGroupConditionInput]
-  or: [ModelGroupConditionInput]
-  not: ModelGroupConditionInput
-}
-
-input ModelInviteConditionInput {
-  userId: ModelIDInput
-  senderId: ModelStringInput
-  receiverId: ModelStringInput
-  and: [ModelInviteConditionInput]
-  or: [ModelInviteConditionInput]
-  not: ModelInviteConditionInput
-}
-
-input ModelUserGroupConditionInput {
-  userId: ModelIDInput
-  groupId: ModelIDInput
-  and: [ModelUserGroupConditionInput]
-  or: [ModelUserGroupConditionInput]
-  not: ModelUserGroupConditionInput
-}
-
-input ModelSubscriptionUserFilterInput {
-  id: ModelSubscriptionIDInput
-  userId: ModelSubscriptionIDInput
-  firstName: ModelSubscriptionStringInput
-  lastName: ModelSubscriptionStringInput
-  name: ModelSubscriptionStringInput
-  phone: ModelSubscriptionStringInput
-  userName: ModelSubscriptionStringInput
-  email: ModelSubscriptionStringInput
-  avatarUri: ModelSubscriptionStringInput
-}
-
-input ModelSubscriptionUserContactFilterInput {
-  id: ModelSubscriptionIDInput
-  userId: ModelSubscriptionIDInput
-  contactId: ModelSubscriptionIDInput
-}
-
-input ModelSubscriptionIDInput {
-  ne: ID
-  eq: ID
-  le: ID
-  lt: ID
-  ge: ID
-  gt: ID
-  contains: ID
-  notContains: ID
-  between: [ID]
-  beginsWith: ID
-  in: [ID]
-  notIn: [ID]
-}
-
-input ModelSubscriptionStringInput {
-  ne: String
-  eq: String
-  le: String
-  lt: String
-  ge: String
-  gt: String
-  contains: String
-  notContains: String
-  between: [String]
-  beginsWith: String
-  in: [String]
-  notIn: [String]
+  updatedAt: AWSDateTime!
+  user: User
+  userId: ID!
 }
 
 enum ModelAttributeTypes {
+  _null
   binary
   binarySet
   bool
@@ -539,7 +257,6 @@ enum ModelAttributeTypes {
   numberSet
   string
   stringSet
-  _null
 }
 
 enum ModelSortDirection {
@@ -547,16 +264,614 @@ enum ModelSortDirection {
   DESC
 }
 
-# AWS AppSync directives
+input CreateChannelInput {
+  creatorId: String!
+  id: ID
+  isGroup: Boolean
+  isPublic: Boolean
+  name: String!
+  receiverId: String!
+}
+
+input CreateGroupInput {
+  groupId: ID!
+  id: ID
+  name: String!
+}
+
+input CreateInviteInput {
+  id: ID
+  receiverId: String
+  senderId: String
+  userId: ID!
+}
+
+input CreateMessageInput {
+  channelId: ID!
+  content: String!
+  id: ID
+  senderId: ID!
+}
+
+input CreateUserChannelInput {
+  channelId: ID!
+  id: ID
+  isMuted: Boolean
+  role: String
+  userId: ID!
+}
+
+input CreateUserContactInput {
+  contactId: ID!
+  id: ID
+  userId: ID!
+}
+
+input CreateUserGroupInput {
+  groupId: ID!
+  id: ID
+  userId: ID!
+}
+
+input CreateUserInput {
+  avatarUri: AWSURL
+  email: AWSEmail
+  firstName: String!
+  id: ID
+  lastName: String!
+  name: String
+  phone: String
+  userId: ID
+  userName: String
+}
+
+input DeleteChannelInput {
+  id: ID!
+}
+
+input DeleteGroupInput {
+  id: ID!
+}
+
+input DeleteInviteInput {
+  id: ID!
+}
+
+input DeleteMessageInput {
+  id: ID!
+}
+
+input DeleteUserChannelInput {
+  id: ID!
+}
+
+input DeleteUserContactInput {
+  id: ID!
+}
+
+input DeleteUserGroupInput {
+  id: ID!
+}
+
+input DeleteUserInput {
+  id: ID!
+}
+
+input ModelBooleanInput {
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  eq: Boolean
+  ne: Boolean
+}
+
+input ModelChannelConditionInput {
+  and: [ModelChannelConditionInput]
+  createdAt: ModelStringInput
+  creatorId: ModelStringInput
+  isGroup: ModelBooleanInput
+  isPublic: ModelBooleanInput
+  name: ModelStringInput
+  not: ModelChannelConditionInput
+  or: [ModelChannelConditionInput]
+  receiverId: ModelStringInput
+  updatedAt: ModelStringInput
+}
+
+input ModelChannelFilterInput {
+  and: [ModelChannelFilterInput]
+  createdAt: ModelStringInput
+  creatorId: ModelStringInput
+  id: ModelIDInput
+  isGroup: ModelBooleanInput
+  isPublic: ModelBooleanInput
+  name: ModelStringInput
+  not: ModelChannelFilterInput
+  or: [ModelChannelFilterInput]
+  receiverId: ModelStringInput
+  updatedAt: ModelStringInput
+}
+
+input ModelFloatInput {
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  between: [Float]
+  eq: Float
+  ge: Float
+  gt: Float
+  le: Float
+  lt: Float
+  ne: Float
+}
+
+input ModelGroupConditionInput {
+  and: [ModelGroupConditionInput]
+  createdAt: ModelStringInput
+  groupId: ModelIDInput
+  name: ModelStringInput
+  not: ModelGroupConditionInput
+  or: [ModelGroupConditionInput]
+  updatedAt: ModelStringInput
+}
+
+input ModelGroupFilterInput {
+  and: [ModelGroupFilterInput]
+  createdAt: ModelStringInput
+  groupId: ModelIDInput
+  id: ModelIDInput
+  name: ModelStringInput
+  not: ModelGroupFilterInput
+  or: [ModelGroupFilterInput]
+  updatedAt: ModelStringInput
+}
+
+input ModelIDInput {
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  beginsWith: ID
+  between: [ID]
+  contains: ID
+  eq: ID
+  ge: ID
+  gt: ID
+  le: ID
+  lt: ID
+  ne: ID
+  notContains: ID
+  size: ModelSizeInput
+}
+
+input ModelIDKeyConditionInput {
+  beginsWith: ID
+  between: [ID]
+  eq: ID
+  ge: ID
+  gt: ID
+  le: ID
+  lt: ID
+}
+
+input ModelIntInput {
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  between: [Int]
+  eq: Int
+  ge: Int
+  gt: Int
+  le: Int
+  lt: Int
+  ne: Int
+}
+
+input ModelInviteConditionInput {
+  and: [ModelInviteConditionInput]
+  createdAt: ModelStringInput
+  not: ModelInviteConditionInput
+  or: [ModelInviteConditionInput]
+  receiverId: ModelStringInput
+  senderId: ModelStringInput
+  updatedAt: ModelStringInput
+  userId: ModelIDInput
+}
+
+input ModelInviteFilterInput {
+  and: [ModelInviteFilterInput]
+  createdAt: ModelStringInput
+  id: ModelIDInput
+  not: ModelInviteFilterInput
+  or: [ModelInviteFilterInput]
+  receiverId: ModelStringInput
+  senderId: ModelStringInput
+  updatedAt: ModelStringInput
+  userId: ModelIDInput
+}
+
+input ModelMessageConditionInput {
+  and: [ModelMessageConditionInput]
+  channelId: ModelIDInput
+  content: ModelStringInput
+  createdAt: ModelStringInput
+  not: ModelMessageConditionInput
+  or: [ModelMessageConditionInput]
+  senderId: ModelIDInput
+  updatedAt: ModelStringInput
+}
+
+input ModelMessageFilterInput {
+  and: [ModelMessageFilterInput]
+  channelId: ModelIDInput
+  content: ModelStringInput
+  createdAt: ModelStringInput
+  id: ModelIDInput
+  not: ModelMessageFilterInput
+  or: [ModelMessageFilterInput]
+  senderId: ModelIDInput
+  updatedAt: ModelStringInput
+}
+
+input ModelSizeInput {
+  between: [Int]
+  eq: Int
+  ge: Int
+  gt: Int
+  le: Int
+  lt: Int
+  ne: Int
+}
+
+input ModelStringInput {
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  beginsWith: String
+  between: [String]
+  contains: String
+  eq: String
+  ge: String
+  gt: String
+  le: String
+  lt: String
+  ne: String
+  notContains: String
+  size: ModelSizeInput
+}
+
+input ModelStringKeyConditionInput {
+  beginsWith: String
+  between: [String]
+  eq: String
+  ge: String
+  gt: String
+  le: String
+  lt: String
+}
+
+input ModelSubscriptionBooleanInput {
+  eq: Boolean
+  ne: Boolean
+}
+
+input ModelSubscriptionChannelFilterInput {
+  and: [ModelSubscriptionChannelFilterInput]
+  createdAt: ModelSubscriptionStringInput
+  creatorId: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  isGroup: ModelSubscriptionBooleanInput
+  isPublic: ModelSubscriptionBooleanInput
+  name: ModelSubscriptionStringInput
+  or: [ModelSubscriptionChannelFilterInput]
+  receiverId: ModelSubscriptionStringInput
+  updatedAt: ModelSubscriptionStringInput
+}
+
+input ModelSubscriptionFloatInput {
+  between: [Float]
+  eq: Float
+  ge: Float
+  gt: Float
+  in: [Float]
+  le: Float
+  lt: Float
+  ne: Float
+  notIn: [Float]
+}
+
+input ModelSubscriptionGroupFilterInput {
+  and: [ModelSubscriptionGroupFilterInput]
+  createdAt: ModelSubscriptionStringInput
+  groupId: ModelSubscriptionIDInput
+  id: ModelSubscriptionIDInput
+  name: ModelSubscriptionStringInput
+  or: [ModelSubscriptionGroupFilterInput]
+  updatedAt: ModelSubscriptionStringInput
+}
+
+input ModelSubscriptionIDInput {
+  beginsWith: ID
+  between: [ID]
+  contains: ID
+  eq: ID
+  ge: ID
+  gt: ID
+  in: [ID]
+  le: ID
+  lt: ID
+  ne: ID
+  notContains: ID
+  notIn: [ID]
+}
+
+input ModelSubscriptionIntInput {
+  between: [Int]
+  eq: Int
+  ge: Int
+  gt: Int
+  in: [Int]
+  le: Int
+  lt: Int
+  ne: Int
+  notIn: [Int]
+}
+
+input ModelSubscriptionInviteFilterInput {
+  and: [ModelSubscriptionInviteFilterInput]
+  createdAt: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  or: [ModelSubscriptionInviteFilterInput]
+  receiverId: ModelSubscriptionStringInput
+  senderId: ModelSubscriptionStringInput
+  updatedAt: ModelSubscriptionStringInput
+  userId: ModelSubscriptionIDInput
+}
+
+input ModelSubscriptionMessageFilterInput {
+  and: [ModelSubscriptionMessageFilterInput]
+  channelId: ModelSubscriptionIDInput
+  content: ModelSubscriptionStringInput
+  createdAt: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  or: [ModelSubscriptionMessageFilterInput]
+  senderId: ModelSubscriptionIDInput
+  updatedAt: ModelSubscriptionStringInput
+}
+
+input ModelSubscriptionStringInput {
+  beginsWith: String
+  between: [String]
+  contains: String
+  eq: String
+  ge: String
+  gt: String
+  in: [String]
+  le: String
+  lt: String
+  ne: String
+  notContains: String
+  notIn: [String]
+}
+
+input ModelSubscriptionUserChannelFilterInput {
+  and: [ModelSubscriptionUserChannelFilterInput]
+  channelId: ModelSubscriptionIDInput
+  createdAt: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  isMuted: ModelSubscriptionBooleanInput
+  or: [ModelSubscriptionUserChannelFilterInput]
+  role: ModelSubscriptionStringInput
+  updatedAt: ModelSubscriptionStringInput
+  userId: ModelSubscriptionIDInput
+}
+
+input ModelSubscriptionUserContactFilterInput {
+  and: [ModelSubscriptionUserContactFilterInput]
+  contactId: ModelSubscriptionIDInput
+  createdAt: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  or: [ModelSubscriptionUserContactFilterInput]
+  updatedAt: ModelSubscriptionStringInput
+  userId: ModelSubscriptionIDInput
+}
+
+input ModelSubscriptionUserFilterInput {
+  and: [ModelSubscriptionUserFilterInput]
+  avatarUri: ModelSubscriptionStringInput
+  createdAt: ModelSubscriptionStringInput
+  email: ModelSubscriptionStringInput
+  firstName: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  lastName: ModelSubscriptionStringInput
+  name: ModelSubscriptionStringInput
+  or: [ModelSubscriptionUserFilterInput]
+  phone: ModelSubscriptionStringInput
+  updatedAt: ModelSubscriptionStringInput
+  userId: ModelSubscriptionIDInput
+  userName: ModelSubscriptionStringInput
+}
+
+input ModelSubscriptionUserGroupFilterInput {
+  and: [ModelSubscriptionUserGroupFilterInput]
+  createdAt: ModelSubscriptionStringInput
+  groupId: ModelSubscriptionIDInput
+  id: ModelSubscriptionIDInput
+  or: [ModelSubscriptionUserGroupFilterInput]
+  updatedAt: ModelSubscriptionStringInput
+  userId: ModelSubscriptionIDInput
+}
+
+input ModelUserChannelConditionInput {
+  and: [ModelUserChannelConditionInput]
+  channelId: ModelIDInput
+  createdAt: ModelStringInput
+  isMuted: ModelBooleanInput
+  not: ModelUserChannelConditionInput
+  or: [ModelUserChannelConditionInput]
+  role: ModelStringInput
+  updatedAt: ModelStringInput
+  userId: ModelIDInput
+}
+
+input ModelUserChannelFilterInput {
+  and: [ModelUserChannelFilterInput]
+  channelId: ModelIDInput
+  createdAt: ModelStringInput
+  id: ModelIDInput
+  isMuted: ModelBooleanInput
+  not: ModelUserChannelFilterInput
+  or: [ModelUserChannelFilterInput]
+  role: ModelStringInput
+  updatedAt: ModelStringInput
+  userId: ModelIDInput
+}
+
+input ModelUserConditionInput {
+  and: [ModelUserConditionInput]
+  avatarUri: ModelStringInput
+  createdAt: ModelStringInput
+  email: ModelStringInput
+  firstName: ModelStringInput
+  lastName: ModelStringInput
+  name: ModelStringInput
+  not: ModelUserConditionInput
+  or: [ModelUserConditionInput]
+  phone: ModelStringInput
+  updatedAt: ModelStringInput
+  userId: ModelIDInput
+  userName: ModelStringInput
+}
+
+input ModelUserContactConditionInput {
+  and: [ModelUserContactConditionInput]
+  contactId: ModelIDInput
+  createdAt: ModelStringInput
+  not: ModelUserContactConditionInput
+  or: [ModelUserContactConditionInput]
+  updatedAt: ModelStringInput
+  userId: ModelIDInput
+}
+
+input ModelUserContactFilterInput {
+  and: [ModelUserContactFilterInput]
+  contactId: ModelIDInput
+  createdAt: ModelStringInput
+  id: ModelIDInput
+  not: ModelUserContactFilterInput
+  or: [ModelUserContactFilterInput]
+  updatedAt: ModelStringInput
+  userId: ModelIDInput
+}
+
+input ModelUserFilterInput {
+  and: [ModelUserFilterInput]
+  avatarUri: ModelStringInput
+  createdAt: ModelStringInput
+  email: ModelStringInput
+  firstName: ModelStringInput
+  id: ModelIDInput
+  lastName: ModelStringInput
+  name: ModelStringInput
+  not: ModelUserFilterInput
+  or: [ModelUserFilterInput]
+  phone: ModelStringInput
+  updatedAt: ModelStringInput
+  userId: ModelIDInput
+  userName: ModelStringInput
+}
+
+input ModelUserGroupConditionInput {
+  and: [ModelUserGroupConditionInput]
+  createdAt: ModelStringInput
+  groupId: ModelIDInput
+  not: ModelUserGroupConditionInput
+  or: [ModelUserGroupConditionInput]
+  updatedAt: ModelStringInput
+  userId: ModelIDInput
+}
+
+input ModelUserGroupFilterInput {
+  and: [ModelUserGroupFilterInput]
+  createdAt: ModelStringInput
+  groupId: ModelIDInput
+  id: ModelIDInput
+  not: ModelUserGroupFilterInput
+  or: [ModelUserGroupFilterInput]
+  updatedAt: ModelStringInput
+  userId: ModelIDInput
+}
+
+input UpdateChannelInput {
+  creatorId: String
+  id: ID!
+  isGroup: Boolean
+  isPublic: Boolean
+  name: String
+  receiverId: String
+}
+
+input UpdateGroupInput {
+  groupId: ID
+  id: ID!
+  name: String
+}
+
+input UpdateInviteInput {
+  id: ID!
+  receiverId: String
+  senderId: String
+  userId: ID
+}
+
+input UpdateMessageInput {
+  channelId: ID
+  content: String
+  id: ID!
+  senderId: ID
+}
+
+input UpdateUserChannelInput {
+  channelId: ID
+  id: ID!
+  isMuted: Boolean
+  role: String
+  userId: ID
+}
+
+input UpdateUserContactInput {
+  contactId: ID
+  id: ID!
+  userId: ID
+}
+
+input UpdateUserGroupInput {
+  groupId: ID
+  id: ID!
+  userId: ID
+}
+
+input UpdateUserInput {
+  avatarUri: AWSURL
+  email: AWSEmail
+  firstName: String
+  id: ID!
+  lastName: String
+  name: String
+  phone: String
+  userId: ID
+  userName: String
+}
+
+# AWS AppSync scalar types
+scalar AWSDate
+scalar AWSTime
+scalar AWSDateTime
+scalar AWSTimestamp
+scalar AWSEmail
+scalar AWSJSON
+scalar AWSURL
+scalar AWSPhone
+scalar AWSIPAddress
+
+# AWS AppSync directive definitions
 directive @aws_subscribe(mutations: [String!]!) on FIELD_DEFINITION
 directive @aws_auth(cognito_groups: [String!]!) on FIELD_DEFINITION
 directive @aws_api_key on FIELD_DEFINITION | OBJECT
 directive @aws_iam on FIELD_DEFINITION | OBJECT
 directive @aws_oidc on FIELD_DEFINITION | OBJECT
 directive @aws_cognito_user_pools(cognito_groups: [String!]) on FIELD_DEFINITION | OBJECT
-
-schema {
-  query: Query
-  mutation: Mutation
-  subscription: Subscription
-}

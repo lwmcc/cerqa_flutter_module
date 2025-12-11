@@ -25,14 +25,48 @@ fun createApolloClient(
     httpClientEngine: HttpClientEngine
 ): ApolloClient {
     return ApolloClient.Builder()
-        .serverUrl("https://bjkal2uenzfc5mfpceilwq6n3y.appsync-api.us-east-2.amazonaws.com/graphql")
+        .serverUrl("https://qtjqzunv4rgbtkphmdz2f2ybrq.appsync-api.us-east-2.amazonaws.com/graphql")
         .addHttpHeader("Content-Type", "application/json")
         .addHttpHeader("Accept", "application/json")
-        .addHttpHeader("x-api-key", "da2-y34unktia5al3kquoqtsmoppca")
+        .addHttpHeader("x-api-key", "da2-zornpxxqrbfuzfccnh2wzabctm")
         // Temporarily disabled - using API key auth instead of Cognito
         // .addHttpInterceptor(AuthInterceptor(tokenProvider))
+        .addHttpInterceptor(LoggingInterceptor())
         .build()
 }
+
+/**
+ * HTTP interceptor that logs all GraphQL requests and responses for debugging.
+ */
+private class LoggingInterceptor : HttpInterceptor {
+    override suspend fun intercept(
+        request: HttpRequest,
+        chain: HttpInterceptorChain
+    ): HttpResponse {
+        println("ApolloClient ===== Making HTTP REQUEST")
+        println("ApolloClient ===== URL: ${request.url}")
+        println("ApolloClient ===== Method: ${request.method}")
+
+        return try {
+            val startTime = currentTimeMillis()
+            val response = chain.proceed(request)
+            val endTime = currentTimeMillis()
+
+            println("ApolloClient ===== HTTP RESPONSE received in ${endTime - startTime}ms")
+            println("ApolloClient ===== Status: ${response.statusCode}")
+            println("ApolloClient ===== Body exists: ${response.body != null}")
+
+            response
+        } catch (e: Exception) {
+            println("ApolloClient ===== ERROR during HTTP request: ${e.message}")
+            e.printStackTrace()
+            throw e
+        }
+    }
+}
+
+// Platform-specific function to get current time
+expect fun currentTimeMillis(): Long
 
 /**
  * HTTP interceptor that adds Cognito auth token to all AppSync requests.

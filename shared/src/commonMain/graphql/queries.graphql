@@ -94,8 +94,8 @@ query ListByPhone($phone: String!, $userName: ModelStringKeyConditionInput, $sor
 }
 
 # Check if user profile is complete (Lambda function: hasUserCreatedProfile)
-query CheckProfileComplete($userId: ID!) {
-  checkProfileComplete(userId: $userId) {
+query HasUserCreatedProfile($userId: ID!) {
+  hasUserCreatedProfile(userId: $userId) {
     isProfileComplete
     missingFields
   }

@@ -4,6 +4,7 @@ import { fetchUserWithContactInfo } from "../functions/fetchUserWithContactInfo/
 import { fetchPendingSentInviteStatus } from "../functions/fetchPendingSentInviteStatus/resource";
 import { createInviteByPhoneNumber } from "../functions/createInviteByPhoneNumber/resource";
 import { hasUserCreatedProfile } from "../functions/hasUserCreatedProfile/resource";
+import { getUserByUserId } from "../functions/getUserByUserId/resource";
 
 const AblyJwt = a.customType({
       keyName: a.string().required(),
@@ -44,6 +45,23 @@ const UserContactData = a.customType({
 
 const UserByPhone = a.customType({
       userName: a.string(),
+});
+
+const ProfileCheckResult = a.customType({
+      isProfileComplete: a.boolean().required(),
+      missingFields: a.string().array().required(),
+});
+
+const UserData = a.customType({
+      id: a.string(),
+      userId: a.string(),
+      userName: a.string(),
+      email: a.string(),
+      avatarUri: a.string(),
+      firstName: a.string(),
+      lastName: a.string(),
+      name: a.string(),
+      phone: a.string(),
 });
 
 export const schema = a.schema({
@@ -133,13 +151,6 @@ export const schema = a.schema({
      })
     .authorization((allow) => [allow.publicApiKey()]),
 
-/*     sayHello: a
-        .query()
-        .arguments({ name: a.string() })
-        .returns(a.string())
-        .authorization((allow) => [allow.publicApiKey()])
-        .handler(a.handler.function(sayHello)), */
-
     fetchAblyJwt: a
         .query()
         .arguments({userId: a.string()})
@@ -161,25 +172,26 @@ export const schema = a.schema({
         .returns(a.string())
         .handler(a.handler.function(fetchPendingSentInviteStatus)),
 
-      ProfileCheckResult: a.customType({
-        isProfileComplete: a.boolean(),
-        missingFields: a.string().array(),
-      }),
-
-      checkProfileComplete: a.query()
-        .arguments({
-          userId: a.string().required()
-        })
-        .returns(a.ref('ProfileCheckResult'))
-        .authorization(allow => [allow.authenticated()])
+    hasUserCreatedProfile: a
+        .query()
+        .arguments({userId: a.string().required()})
+        .returns(ProfileCheckResult)
+        .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
         .handler(a.handler.function(hasUserCreatedProfile)),
+
+    getUserByUserId: a
+        .query()
+        .arguments({userId: a.string().required()})
+        .returns(UserData)
+        .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
+        .handler(a.handler.function(getUserByUserId)),
 });
 
 export type Schema = ClientSchema<typeof schema>;
 
 export const data = defineData({
     schema,
-    secrets: ["ably_key", "ably_secret"],
+    //secrets: ["ably_key", "ably_secret"],
     authorizationModes: {
         defaultAuthorizationMode: "userPool",
         apiKeyAuthorizationMode: {

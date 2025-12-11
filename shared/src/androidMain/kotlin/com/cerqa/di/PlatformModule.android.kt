@@ -4,8 +4,10 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.cerqa.auth.AndroidAuthTokenProvider
 import com.cerqa.auth.AuthTokenProvider
+import com.cerqa.data.Preferences
 import com.cerqa.data.StoreDefaults
 import com.cerqa.data.StoreUserDefaults
+import com.cerqa.data.UserPreferences
 import io.ktor.client.engine.*
 import io.ktor.client.engine.okhttp.*
 import org.koin.android.ext.koin.androidContext
@@ -17,6 +19,7 @@ actual fun platformModule(): Module = module {
         androidContext().getSharedPreferences("preferences", Context.MODE_PRIVATE)
     }
     single<StoreDefaults> { StoreUserDefaults(get()) }
+    single<Preferences> { UserPreferences(get()) }
 
     // Auth and HTTP engine for Apollo (from androidModule)
     single<AuthTokenProvider> { AndroidAuthTokenProvider() }
