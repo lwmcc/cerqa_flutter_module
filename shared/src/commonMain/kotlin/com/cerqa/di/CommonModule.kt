@@ -1,5 +1,6 @@
 package com.cerqa.di
 
+import com.cerqa.auth.AuthService
 import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.data.TestDataSeeder
 import com.cerqa.data.UserProfileRepository
@@ -35,7 +36,9 @@ val commonModule = module {
             preferences = get(),
         )
     }
-    single<AuthRepository> { AuthRepositoryImpl(authService = get()) }
+    single<AuthRepository> {
+        AuthRepositoryImpl(authService = get<AuthService>())
+    }
 
     single { TestDataSeeder(apolloClient = get(), authTokenProvider = get()) }
 
@@ -43,6 +46,12 @@ val commonModule = module {
     factory { ApolloContactsViewModel(get()) }
     factory { MockContactsViewModel(get()) }
     factory { SearchViewModel(get()) }
-    factory { ProfileViewModel(get(), get(), get()) }
+    factory {
+        ProfileViewModel(
+            apolloClient = get(),
+            authTokenProvider = get(),
+            authRepository = get()
+        )
+    }
     factory { MainViewModel(preferences = get(), userRepository = get(), mainDispatcher = get()) }
 }
