@@ -17,14 +17,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -43,6 +49,7 @@ import com.cerqa.models.UserData
 import com.cerqa.viewmodels.ProfileViewModel
 import org.koin.compose.koinInject
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Profile(
     userImageUrl: String? = null,
@@ -57,17 +64,19 @@ fun Profile(
     var showCreateProfileForm by remember { mutableStateOf(false) }
     var newUserName by remember { mutableStateOf("") }
     var newFirstName by remember { mutableStateOf("") }
+    var newLastName by remember { mutableStateOf("") }
+    var newPhone by remember { mutableStateOf("") }
+    var newEmail by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.checkProfileComplete()
         userData = preferences.getUserData()
     }
 
-    Row(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Spacer(
             modifier = Modifier
-                .weight(0.1f)
-                .fillMaxHeight()
+                .fillMaxSize()
                 .clickable(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() }
@@ -76,107 +85,154 @@ fun Profile(
                 }
         )
 
-        Surface(
+        Box(
             modifier = Modifier
-                .weight(0.9f)
-                .fillMaxHeight(),
-            color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 8.dp
+                .fillMaxWidth(0.8f)
+                .fillMaxHeight()
+                .align(Alignment.CenterEnd)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                shadowElevation = 8.dp
             ) {
-
-                if (!userImageUrl.isNullOrBlank()) {
-                    AsyncImage(
-                        model = userImageUrl,
-                        contentDescription = "Profile",
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = { Text("Profile") },
+                            actions = {
+                                if (isProfileComplete == false) {
+                                    IconButton(onClick = {
+                                        // Reset fields on delete
+                                        newUserName = ""
+                                        newFirstName = ""
+                                        newLastName = ""
+                                        newPhone = ""
+                                        newEmail = ""
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete"
+                                        )
+                                    }
+                                    IconButton(onClick = {
+                                        viewModel.createUser(
+                                            userName = newUserName,
+                                            firstName = newFirstName,
+                                            lastName = newLastName,
+                                            phone = newPhone,
+                                            email = newEmail
+                                        )
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Save,
+                                            contentDescription = "Save"
+                                        )
+                                    }
+                                }
+                            }
+                        )
+                    }
+                ) { paddingValues ->
+                    Column(
                         modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.AccountCircle,
-                        contentDescription = "Profile",
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-                val currentUser = userData
-                if (isProfileComplete == true && currentUser != null) {
-                    Text(
-                        text = "${currentUser.userName}",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                } else if (isProfileComplete == false) {
-                    Text(
-                        text = "You",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    if (showCreateProfileForm) {
-                        OutlinedTextField(
-                            value = newUserName,
-                            onValueChange = { newUserName = it },
-                            label = { Text("Username") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        OutlinedTextField(
-                            value = newFirstName,
-                            onValueChange = { newFirstName = it },
-                            label = { Text("First Name") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (!userImageUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = userImageUrl,
+                                contentDescription = "Profile",
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = "Profile",
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            Button(
-                                onClick = {
-                                    showCreateProfileForm = false
-                                    // Reset fields on cancel if desired
-                                    newUserName = ""
-                                    newFirstName = ""
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.secondary
+                        val currentUser = userData
+                        if (isProfileComplete == true && currentUser != null) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = currentUser.userName ?: "Unknown",
+                                    style = MaterialTheme.typography.titleMedium
                                 )
-                            ) {
-                                Text("Cancel")
+                                Text(
+                                    text = currentUser.createdAt ?: "",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
                             }
+                        } else if (isProfileComplete == false) {
+                            OutlinedTextField(
+                                value = newUserName,
+                                onValueChange = { newUserName = it },
+                                label = { Text("Username") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
 
-                            Button(
-                                onClick = {
-                                    // TODO: Call ViewModel to save profile
-                                    // viewModel.createProfile(newUserName, newFirstName)
-                                    showCreateProfileForm = false
-                                }
-                            ) {
-                                Text("Save")
-                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = newFirstName,
+                                onValueChange = { newFirstName = it },
+                                label = { Text("First Name") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = newLastName,
+                                onValueChange = { newLastName = it },
+                                label = { Text("Last Name") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = newPhone,
+                                onValueChange = { newPhone = it },
+                                label = { Text("Phone") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = newEmail,
+                                onValueChange = { newEmail = it },
+                                label = { Text("Email") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        } else {
+                            Text(
+                                text = "Loading...",
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         }
-                    } else {
-                        // --- BUT
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        TextButton(
+                            onClick = {
+                                viewModel.logout()
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Logout")
+                        }
                     }
-                } else {
-                    Text(
-                        text = "Loading...",
-                        style = MaterialTheme.typography.bodySmall
-                    )
                 }
             }
         }

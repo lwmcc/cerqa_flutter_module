@@ -23,9 +23,19 @@ class MainViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    fun setUserData(userId: String, userName: String) {
+    fun setUserData(
+        userId: String,
+        userName: String,
+        createdAt: String,
+        avatarUri: String
+    ) {
         viewModelScope.launch {
-            preferences.setUserData(userId = userId, userName = userName)
+            preferences.setUserData(
+                userId = userId,
+                userName = userName,
+                createdAt = createdAt,
+                avatarUri = avatarUri
+            )
         }
     }
 

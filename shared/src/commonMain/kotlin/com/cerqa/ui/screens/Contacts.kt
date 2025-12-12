@@ -180,52 +180,6 @@ fun Contacts(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // TEMPORARY: Test user creation buttons
-                Card(
-                    modifier = Modifier.fillMaxWidth(0.9f),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Test User Creation (TEMPORARY)",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Click to add current logged-in user to backend",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            Button(
-                                onClick = { searchViewModel.createTestUser1() },
-                                modifier = Modifier.weight(1f).padding(end = 8.dp)
-                            ) {
-                                Text("Add as Larry")
-                            }
-                            Button(
-                                onClick = { searchViewModel.createTestUser2() },
-                                modifier = Modifier.weight(1f).padding(start = 8.dp)
-                            ) {
-                                Text("Add as LeBron")
-                            }
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
                 // Display all contacts from backend
                 if (contactsUiState.contacts.isNotEmpty()) {
                     Text(

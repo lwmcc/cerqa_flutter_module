@@ -2,11 +2,13 @@ package com.cerqa.models
 
 import kotlinx.serialization.Serializable
 
-data class UserData(val userId: String?, val userName: String?)
+data class UserData(
+    val userId: String?,
+    val userName: String?,
+    val createdAt: String?,
+    val avatarUri: String?,
+)
 
-/**
- * User model matching AppSync schema
- */
 @Serializable
 data class User(
     val id: String,

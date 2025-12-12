@@ -45,10 +45,15 @@ class UserRepositoryImpl(
                     return@withContext Result.failure(Exception("User not found"))
                 }
 
-                // Save username to preferences
+                // Save user data to preferences
                 user.userName?.let { userName ->
-                    preferences.setUserData(userId = userId, userName = userName)
-                    println("UserRepositoryImpl ===== Saved username to preferences: $userName")
+                    preferences.setUserData(
+                        userId = userId,
+                        userName = userName,
+                        createdAt = user.createdAt ?: "",
+                        avatarUri = user.avatarUri ?: ""
+                    )
+                    println("UserRepositoryImpl ===== Saved user data to preferences: $userName")
                 }
 
                 println("UserRepositoryImpl ===== Successfully fetched user: ${user.userName}")

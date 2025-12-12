@@ -38,7 +38,7 @@ fun createApolloClient(
 /**
  * HTTP interceptor that logs all GraphQL requests and responses for debugging.
  */
-private class LoggingInterceptor : HttpInterceptor {
+private class   LoggingInterceptor : HttpInterceptor {
     override suspend fun intercept(
         request: HttpRequest,
         chain: HttpInterceptorChain

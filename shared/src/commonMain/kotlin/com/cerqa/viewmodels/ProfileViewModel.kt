@@ -1,9 +1,13 @@
 package com.cerqa.viewmodels
 
 import com.apollographql.apollo.ApolloClient
+import com.cerqa.auth.AuthResult
 import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.data.UserProfileRepository
+import com.cerqa.graphql.CreateUserMutation
 import com.cerqa.graphql.HasUserCreatedProfileQuery
+import com.cerqa.graphql.type.CreateUserInput
+import com.cerqa.repository.AuthRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -21,7 +25,8 @@ data class ProfileUiState(
 
 class ProfileViewModel(
     private val apolloClient: ApolloClient,
-    private val authTokenProvider: AuthTokenProvider
+    private val authTokenProvider: AuthTokenProvider,
+    private val authRepository: AuthRepository
 ) { // TODO: inject this into repository
     private val viewModelJob = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.Main + viewModelJob)
@@ -70,6 +75,90 @@ class ProfileViewModel(
                 println("ProfileViewModel ===== Error calling checkProfileComplete: ${e.message}")
                 e.printStackTrace()
                 _error.value = e.message ?: "Failed to check profile"
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    fun createUser(
+        userName: String,
+        firstName: String,
+        lastName: String,
+        phone: String,
+        email: String
+    ) {
+        scope.launch {
+            _isLoading.value = true
+            _error.value = null
+
+            try {
+                val userId = authTokenProvider.getCurrentUserId()
+                if (userId == null) {
+                    println("ProfileViewModel ===== No user ID found - user not authenticated")
+                    _error.value = "User not authenticated"
+                    _isLoading.value = false
+                    return@launch
+                }
+
+                val input = CreateUserInput(
+                    userId = com.apollographql.apollo.api.Optional.presentIfNotNull(userId),
+                    userName = com.apollographql.apollo.api.Optional.present(userName),
+                    firstName = firstName,
+                    lastName = lastName,
+                    name = com.apollographql.apollo.api.Optional.present("$firstName $lastName"),
+                    phone = com.apollographql.apollo.api.Optional.present(phone),
+                    email = com.apollographql.apollo.api.Optional.present(email)
+                )
+
+                val response = apolloClient.mutation(CreateUserMutation(input)).execute()
+
+                if (response.hasErrors()) {
+                    val errors = response.errors?.joinToString { it.message }
+                    println("ProfileViewModel ===== GraphQL Errors creating user: $errors")
+                    _error.value = "Failed to create user: $errors"
+                } else {
+                    println("ProfileViewModel ===== User created successfully")
+                    // Refresh profile completion status
+                    checkProfileComplete()
+                }
+            } catch (e: Exception) {
+                println("ProfileViewModel ===== Error creating user: ${e.message}")
+                e.printStackTrace()
+                _error.value = e.message ?: "Failed to create user"
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    fun logout() {
+        scope.launch {
+            _isLoading.value = true
+            _error.value = null
+
+            try {
+                val result = authRepository.logout()
+                when (result) {
+                    is AuthResult.Success -> {
+                        println("ProfileViewModel ===== User logged out successfully")
+                        // Reset profile state
+                        _isProfileComplete.value = null
+                        _missingFields.value = emptyList()
+                    }
+                    is AuthResult.Error -> {
+                        println("ProfileViewModel ===== Logout failed: ${result.message}")
+                        _error.value = result.message
+                    }
+                    is AuthResult.RequiresConfirmation -> {
+                        println("ProfileViewModel ===== Unexpected confirmation required during logout")
+                        _error.value = "Unexpected state during logout"
+                    }
+                }
+            } catch (e: Exception) {
+                println("ProfileViewModel ===== Error during logout: ${e.message}")
+                e.printStackTrace()
+                _error.value = e.message ?: "Failed to logout"
             }
 
             _isLoading.value = false

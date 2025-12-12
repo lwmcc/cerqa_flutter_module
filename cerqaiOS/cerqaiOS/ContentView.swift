@@ -5,18 +5,9 @@ import Shared
 struct ContentView: View {
     var body: some View {
         Authenticator { state in
-            VStack {
-                // Compose Multiplatform UI
-                ComposeAppView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                Button("Sign out") {
-                    Task {
-                        await state.signOut()
-                    }
-                }
-                .padding()
-            }
+            // Compose Multiplatform UI
+            ComposeAppView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

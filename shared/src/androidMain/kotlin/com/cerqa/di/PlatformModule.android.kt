@@ -3,6 +3,7 @@ package com.cerqa.di
 import android.content.Context
 import android.content.SharedPreferences
 import com.cerqa.auth.AndroidAuthTokenProvider
+import com.cerqa.auth.AuthService
 import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.data.Preferences
 import com.cerqa.data.StoreDefaults
@@ -23,6 +24,7 @@ actual fun platformModule(): Module = module {
 
     // Auth and HTTP engine for Apollo (from androidModule)
     single<AuthTokenProvider> { AndroidAuthTokenProvider() }
+    single { AuthService() }
     single<HttpClientEngine> { OkHttp.create() }
 
     // FetchContacts implementation

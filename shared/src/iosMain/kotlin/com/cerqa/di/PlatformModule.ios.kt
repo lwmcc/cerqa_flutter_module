@@ -1,5 +1,6 @@
 package com.cerqa.di
 
+import com.cerqa.auth.AuthService
 import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.auth.IOSAuthTokenProvider
 import com.cerqa.data.Preferences
@@ -19,6 +20,7 @@ actual fun platformModule(): Module = module {
 
     // Auth and HTTP engine for Apollo (from iosModule)
     single<AuthTokenProvider> { IOSAuthTokenProvider() }
+    single { AuthService() }
     single<HttpClientEngine> { Darwin.create() }
 
     // FetchContacts implementation

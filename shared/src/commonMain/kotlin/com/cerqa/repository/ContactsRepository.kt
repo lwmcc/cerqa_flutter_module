@@ -1,5 +1,6 @@
 package com.cerqa.repository
 
+import com.apollographql.apollo.ApolloClient
 import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.models.*
 import com.cerqa.network.GraphQLRequest
@@ -37,85 +38,9 @@ sealed class NetDeleteResult {
  */
 class ContactsRepository(
     private val httpClient: HttpClient,
-    private val tokenProvider: AuthTokenProvider
+    private val tokenProvider: AuthTokenProvider,
+    private val apolloClient: ApolloClient
 ) {
-    /**
-     * Create a new user in the backend (for testing purposes)
-     * Gets the current user ID from auth and uses the provided user details
-     */
-    suspend fun createCurrentUserWithDetails(
-        firstName: String,
-        lastName: String,
-        name: String?,
-        phone: String?,
-        userName: String?,
-        email: String?,
-        avatarUri: String?
-    ): Result<User> {
-        return try {
-            // Get current user ID from auth
-            val userId = tokenProvider.getCurrentUserId()
-                ?: return Result.failure(Exception("User not authenticated"))
-
-            val mutation = """
-                mutation CreateUser(${"$"}input: CreateUserInput!) {
-                    createUser(input: ${"$"}input) {
-                        id
-                        userId
-                        firstName
-                        lastName
-                        name
-                        phone
-                        userName
-                        email
-                        avatarUri
-                        createdAt
-                        updatedAt
-                    }
-                }
-            """.trimIndent()
-
-            val request = GraphQLRequest(
-                query = mutation,
-                variables = mapOf(
-                    "input" to kotlinx.serialization.json.buildJsonObject {
-                        put("id", kotlinx.serialization.json.JsonPrimitive(userId))
-                        put("userId", kotlinx.serialization.json.JsonPrimitive(userId))
-                        put("firstName", kotlinx.serialization.json.JsonPrimitive(firstName))
-                        put("lastName", kotlinx.serialization.json.JsonPrimitive(lastName))
-                        name?.let { put("name", kotlinx.serialization.json.JsonPrimitive(it)) }
-                        phone?.let { put("phone", kotlinx.serialization.json.JsonPrimitive(it)) }
-                        userName?.let { put("userName", kotlinx.serialization.json.JsonPrimitive(it)) }
-                        email?.let { put("email", kotlinx.serialization.json.JsonPrimitive(it)) }
-                        avatarUri?.let { put("avatarUri", kotlinx.serialization.json.JsonPrimitive(it)) }
-                    }
-                )
-            )
-
-            val response = httpClient.post {
-                contentType(ContentType.Application.Json)
-                setBody(request)
-            }
-
-            val graphQLResponse: GraphQLResponse<CreateUserData> = response.body()
-
-            if (graphQLResponse.errors != null) {
-                val errorMessages = graphQLResponse.errors.joinToString { it.message }
-                return Result.failure(Exception("GraphQL errors: $errorMessages"))
-            }
-
-            val user = graphQLResponse.data?.createUser
-                ?: return Result.failure(Exception("No user returned from mutation"))
-
-            println("ContactsRepository: User created successfully: ${user.userName}")
-            Result.success(user)
-        } catch (e: Exception) {
-            println("ContactsRepository: createCurrentUserWithDetails failed: ${e.message}")
-            e.printStackTrace()
-            Result.failure(e)
-        }
-    }
-
     /**
      * Fetch all contacts for the current user from AppSync.
      * Queries UserContact where userId = currentUser, then expands the contact field.
@@ -1155,57 +1080,64 @@ class ContactsRepository(
     }
 
     /**
-     * Search users by username.
+     * Search users by username using Apollo Client.
      */
     suspend fun searchUsersByUserName(userName: String): Result<List<User>> {
         return try {
             val currentUserId = tokenProvider.getCurrentUserId()
                 ?: return Result.failure(Exception("User not authenticated"))
 
-            val query = """
-                query ListUsers(${"$"}userName: String!, ${"$"}currentUserId: ID!) {
-                    listUsers(filter: {
-                        userName: { contains: ${"$"}userName },
-                        userId: { ne: ${"$"}currentUserId }
-                    }) {
-                        items {
-                            id
-                            userId
-                            firstName
-                            lastName
-                            name
-                            phone
-                            userName
-                            email
-                            avatarUri
-                        }
-                    }
-                }
-            """.trimIndent()
-
-            val request = GraphQLRequest(
-                query = query,
-                variables = mapOf(
-                    "userName" to kotlinx.serialization.json.JsonPrimitive(userName),
-                    "currentUserId" to kotlinx.serialization.json.JsonPrimitive(currentUserId)
+            // Build filter for username contains search, excluding current user
+            val filter = com.cerqa.graphql.type.ModelUserFilterInput(
+                userName = com.apollographql.apollo.api.Optional.present(
+                    com.cerqa.graphql.type.ModelStringInput(
+                        contains = com.apollographql.apollo.api.Optional.present(userName)
+                    )
+                ),
+                userId = com.apollographql.apollo.api.Optional.present(
+                    com.cerqa.graphql.type.ModelIDInput(
+                        ne = com.apollographql.apollo.api.Optional.present(currentUserId)
+                    )
                 )
             )
 
-            val response = httpClient.post {
-                contentType(ContentType.Application.Json)
-                setBody(request)
+            val response = apolloClient.query(
+                com.cerqa.graphql.ListUsersQuery(
+                    filter = com.apollographql.apollo.api.Optional.present(filter),
+                    limit = com.apollographql.apollo.api.Optional.present(50),
+                    nextToken = com.apollographql.apollo.api.Optional.absent()
+                )
+            ).execute()
+
+            if (response.hasErrors()) {
+                val errors = response.errors?.joinToString { it.message }
+                println("ContactsRepository ===== GraphQL Errors: $errors")
+                return Result.failure(Exception("GraphQL errors: $errors"))
             }
 
-            val graphQLResponse: GraphQLResponse<ListUsersData> = response.body()
+            val items = response.data?.listUsers?.items ?: emptyList()
 
-            if (graphQLResponse.errors != null) {
-                val errorMessages = graphQLResponse.errors.joinToString { it.message }
-                return Result.failure(Exception("GraphQL errors: $errorMessages"))
+            // Map Apollo generated types to our User model
+            val users = items.mapNotNull { item ->
+                item?.let {
+                    User(
+                        id = it.id,
+                        userId = it.userId,
+                        firstName = it.firstName ?: "",
+                        lastName = it.lastName ?: "",
+                        name = it.name,
+                        phone = it.phone,
+                        userName = it.userName,
+                        email = it.email,
+                        avatarUri = it.avatarUri
+                    )
+                }
             }
 
-            val users = graphQLResponse.data?.listUsers?.items ?: emptyList()
             Result.success(users)
         } catch (e: Exception) {
+            println("ContactsRepository ===== Error searching users: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }

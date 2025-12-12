@@ -1,5 +1,6 @@
 package com.cerqa.di
 
+import com.cerqa.auth.AuthService
 import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.auth.IOSAuthTokenProvider
 import io.ktor.client.engine.*
@@ -14,6 +15,7 @@ import org.koin.dsl.module
  */
 val iosModule = module {
     single<AuthTokenProvider> { IOSAuthTokenProvider() }
+    single { AuthService() }
     single<HttpClientEngine> { Darwin.create() }
 }
 

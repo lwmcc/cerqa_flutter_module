@@ -1,6 +1,10 @@
 package com.cerqa.auth
 
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.Consumer
 import kotlinx.coroutines.flow.StateFlow
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 actual class AuthService {
     actual suspend fun initialize() {
@@ -21,8 +25,21 @@ actual class AuthService {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun signOut(): AuthResult {
-        TODO("Not yet implemented")
+    actual suspend fun signOut(): AuthResult = suspendCoroutine { continuation ->
+        Amplify.Auth.signOut(
+            Consumer { result ->
+                println("AuthService ===== Sign out succeeded")
+                continuation.resume(
+                    AuthResult.Success(
+                        AuthUser(
+                            userId = "",
+                            email = null,
+                            username = null
+                        )
+                    )
+                )
+            }
+        )
     }
 
     actual suspend fun getCurrentUser(): AuthUser? {

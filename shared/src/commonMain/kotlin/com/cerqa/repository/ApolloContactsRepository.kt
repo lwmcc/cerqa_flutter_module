@@ -51,7 +51,6 @@ class ApolloContactsRepository(
 
             val userContacts = response.data?.listUserContacts?.items ?: emptyList()
 
-            // Extract the contact User from each UserContact and map to CurrentContact
             val contacts = userContacts.mapNotNull { userContact ->
                 userContact?.contact?.let { contact ->
                     CurrentContact(
