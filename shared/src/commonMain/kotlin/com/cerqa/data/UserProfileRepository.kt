@@ -1,15 +1,17 @@
 package com.cerqa.data
 
 import com.apollographql.apollo.ApolloClient
+import com.cerqa.auth.AuthService
 import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.graphql.HasUserCreatedProfileQuery
 
 /**
  * Repository for checking user profile completion status
  */
+// TODO: us an interface
 class UserProfileRepository(
     private val apolloClient: ApolloClient,
-    private val authTokenProvider: AuthTokenProvider
+    private val authTokenProvider: AuthTokenProvider,
 ) {
 
     /**

@@ -168,8 +168,12 @@ fun Profile(
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    text = currentUser.createdAt ?: "",
-                                    style = MaterialTheme.typography.bodySmall
+                                    text = currentUser.userEmail ?: "Unknown",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    text = currentUser.createdAt ?: "Unknown",
+                                    style = MaterialTheme.typography.titleMedium
                                 )
                             }
                         } else if (isProfileComplete == false) {

@@ -6,8 +6,10 @@ interface StoreDefaults {
     suspend fun setUserData(
         userId: String,
         userName: String,
+        userEmail: String,
         createdAt: String,
         avatarUri: String
     )
+
     fun getUserData(): UserData
 }

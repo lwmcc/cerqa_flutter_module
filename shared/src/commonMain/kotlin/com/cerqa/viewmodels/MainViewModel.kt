@@ -26,6 +26,7 @@ class MainViewModel(
     fun setUserData(
         userId: String,
         userName: String,
+        userEmail: String,
         createdAt: String,
         avatarUri: String
     ) {
@@ -33,6 +34,7 @@ class MainViewModel(
             preferences.setUserData(
                 userId = userId,
                 userName = userName,
+                userEmail = userEmail,
                 createdAt = createdAt,
                 avatarUri = avatarUri
             )

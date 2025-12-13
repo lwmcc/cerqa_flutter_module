@@ -50,16 +50,13 @@ class UserRepositoryImpl(
                     preferences.setUserData(
                         userId = userId,
                         userName = userName,
-                        createdAt = user.createdAt ?: "",
+                        userEmail = user.email ?: "",
+                        createdAt = user.createdAt,
                         avatarUri = user.avatarUri ?: ""
                     )
-                    println("UserRepositoryImpl ===== Saved user data to preferences: $userName")
                 }
-
-                println("UserRepositoryImpl ===== Successfully fetched user: ${user.userName}")
                 Result.success(user)
             } catch (e: Exception) {
-                println("UserRepositoryImpl ===== Error: ${e.message}")
                 e.printStackTrace()
                 Result.failure(e)
             }

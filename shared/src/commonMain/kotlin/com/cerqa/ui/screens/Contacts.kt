@@ -238,7 +238,7 @@ fun Contacts(
                             )
                         }
 
-                        is SentInviteContactInvite -> {
+                        is SentInviteContactInvite -> { // TODO: change. name
                             SentInviteCard(
                                 contact = contact,
                                 onCancel = {

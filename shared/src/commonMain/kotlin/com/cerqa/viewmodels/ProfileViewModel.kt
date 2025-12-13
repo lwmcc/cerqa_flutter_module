@@ -26,8 +26,8 @@ data class ProfileUiState(
 class ProfileViewModel(
     private val apolloClient: ApolloClient,
     private val authTokenProvider: AuthTokenProvider,
-    private val authRepository: AuthRepository
-) { // TODO: inject this into repository
+    private val authRepository: AuthRepository,
+) {
     private val viewModelJob = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.Main + viewModelJob)
 
