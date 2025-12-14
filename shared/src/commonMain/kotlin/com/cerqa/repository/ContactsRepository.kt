@@ -2,6 +2,7 @@ package com.cerqa.repository
 
 import com.apollographql.apollo.ApolloClient
 import com.cerqa.auth.AuthTokenProvider
+import com.cerqa.graphql.DeleteInviteMutation
 import com.cerqa.models.*
 import com.cerqa.network.GraphQLRequest
 import com.cerqa.network.GraphQLResponse
@@ -10,6 +11,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.serialization.Serializable
+import com.cerqa.graphql.DeleteUserMutation
 
 /**
  * Network response wrapper for consistent error handling
@@ -51,64 +53,104 @@ class ContactsRepository(
             val currentUserId = tokenProvider.getCurrentUserId()
                 ?: return Result.failure(Exception("User not authenticated"))
 
-            val query = """
-                query ListUserContacts(${"$"}userId: ID!) {
-                    listUserContacts(filter: { userId: { eq: ${"$"}userId } }) {
-                        items {
-                            id
-                            userId
-                            contactId
-                            contact {
-                                id
-                                userId
-                                firstName
-                                lastName
-                                name
-                                phone
-                                userName
-                                email
-                                avatarUri
-                                createdAt
-                                updatedAt
-                            }
-                        }
-                    }
-                }
-            """.trimIndent()
-
-            val request = GraphQLRequest(
-                query = query,
-                variables = mapOf("userId" to kotlinx.serialization.json.JsonPrimitive(currentUserId))
+            // 1. Create the filter: userId == currentUserId
+            val filter = com.cerqa.graphql.type.ModelUserContactFilterInput(
+                userId = com.apollographql.apollo.api.Optional.present(
+                    com.cerqa.graphql.type.ModelIDInput(
+                        eq = com.apollographql.apollo.api.Optional.present(currentUserId)
+                    )
+                )
             )
 
-            val response = httpClient.post {
-                contentType(ContentType.Application.Json)
-                setBody(request)
-            }
+            val response = apolloClient.query(
+                com.cerqa.graphql.ListUserContactsQuery(
+                    filter = com.apollographql.apollo.api.Optional.present(filter),
+                    limit = com.apollographql.apollo.api.Optional.present(100),
+                    nextToken = com.apollographql.apollo.api.Optional.absent()
+                )
+            ).execute()
 
-            val graphQLResponse: GraphQLResponse<ListUserContactsData> = response.body()
-
-            if (graphQLResponse.errors != null) {
-                val errorMessages = graphQLResponse.errors.joinToString { it.message }
+            if (response.hasErrors()) {
+                val errorMessages = response.errors?.joinToString { it.message }
                 return Result.failure(Exception("GraphQL errors: $errorMessages"))
             }
 
-            // Extract contacts from the UserContact join table and map to CurrentContact
-            val contacts = graphQLResponse.data?.listUserContacts?.items
-                ?.mapNotNull { userContact ->
-                    userContact.contact?.let { contact ->
-                        CurrentContact(
-                            contactId = userContact.id,
-                            userId = contact.userId ?: "",
-                            userName = contact.userName,
-                            name = contact.name,
-                            avatarUri = contact.avatarUri,
-                            createdAt = contact.createdAt,
-                            phoneNumber = contact.phone
-                        )
-                    }
-                } ?: emptyList()
+            val items = response.data?.listUserContacts?.items ?: emptyList()
 
+            val contacts = items.filterNotNull().mapNotNull { userContact ->
+                // The 'contact' field contains the details of the other person
+                userContact.contact?.let { contact ->
+                    CurrentContact(
+                        contactId = userContact.id,
+                        userId = contact.userId.orEmpty(),
+                        userName = contact.userName,
+                        name = contact.name,
+                        avatarUri = contact.avatarUri,
+                        // createdAt = contact.createdAt.toString(), // Uncomment if needed
+                        phoneNumber = contact.phone
+                    )
+                }
+            }
+
+
+            /*   val query = """
+                   query ListUserContacts(${"$"}userId: ID!) {
+                       listUserContacts(filter: { userId: { eq: ${"$"}userId } }) {
+                           items {
+                               id
+                               userId
+                               contactId
+                               contact {
+                                   id
+                                   userId
+                                   firstName
+                                   lastName
+                                   name
+                                   phone
+                                   userName
+                                   email
+                                   avatarUri
+                                   createdAt
+                                   updatedAt
+                               }
+                           }
+                       }
+                   }
+               """.trimIndent()
+
+               val request = GraphQLRequest(
+                   query = query,
+                   variables = mapOf("userId" to kotlinx.serialization.json.JsonPrimitive(currentUserId))
+               )
+
+               val response = httpClient.post {
+                   contentType(ContentType.Application.Json)
+                   setBody(request)
+               }
+
+               val graphQLResponse: GraphQLResponse<ListUserContactsData> = response.body()
+
+               if (graphQLResponse.errors != null) {
+                   val errorMessages = graphQLResponse.errors.joinToString { it.message }
+                   return Result.failure(Exception("GraphQL errors: $errorMessages"))
+               }
+
+               // Extract contacts from the UserContact join table and map to CurrentContact
+               val contacts = graphQLResponse.data?.listUserContacts?.items
+                   ?.mapNotNull { userContact ->
+                       userContact.contact?.let { contact ->
+                           CurrentContact(
+                               contactId = userContact.id,
+                               userId = contact.userId ?: "",
+                               userName = contact.userName,
+                               name = contact.name,
+                               avatarUri = contact.avatarUri,
+                               //createdAt = contact.createdAt,
+                               phoneNumber = contact.phone
+                           )
+                       }
+                   } ?: emptyList()
+   */
             Result.success(contacts)
         } catch (e: Exception) {
             Result.failure(e)
@@ -136,7 +178,11 @@ class ContactsRepository(
      * This links the current user to another user by their ID.
      */
     suspend fun addContact(contactUserId: String): Result<UserContact> {
-        return try {
+        val currentUserId = tokenProvider.getCurrentUserId()
+            ?: return Result.failure(Exception("User not authenticated"))
+
+        return createContactForUser(currentUserId, contactUserId)
+/*        return try {
             println("ContactsRepository: addContact - contactUserId: $contactUserId")
             val currentUserId = tokenProvider.getCurrentUserId()
                 ?: return Result.failure(Exception("User not authenticated"))
@@ -204,7 +250,7 @@ class ContactsRepository(
             println("ContactsRepository: addContact - Exception: ${e.message}")
             e.printStackTrace()
             Result.failure(e)
-        }
+        }*/
     }
 
     /**
@@ -213,8 +259,7 @@ class ContactsRepository(
      */
     private suspend fun createContactForUser(userId: String, contactId: String): Result<UserContact> {
         return try {
-            println("ContactsRepository: createContactForUser - userId: $userId, contactId: $contactId")
-
+          /*  println("ContactsRepository: createContactForUser - userId: $userId, contactId: $contactId")
             val mutation = """
                 mutation CreateUserContact(${"$"}userId: ID!, ${"$"}contactId: ID!) {
                     createUserContact(input: {
@@ -269,7 +314,36 @@ class ContactsRepository(
             }
 
             println("ContactsRepository: createContactForUser - SUCCESS - created UserContact with id: ${userContact.id}")
-            Result.success(userContact)
+            Result.success(userContact)*/
+            val input = com.cerqa.graphql.type.CreateUserContactInput(
+                userId = userId,
+                contactId = contactId,
+                // Ensure your schema allows these to be empty or generated, otherwise add them
+            )
+
+            val response = apolloClient.mutation(
+                com.cerqa.graphql.CreateUserContactMutation(input = input)
+            ).execute()
+
+            if (response.hasErrors()) {
+                val errors = response.errors?.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errors"))
+            }
+
+            val item = response.data?.createUserContact
+            if (item != null) {
+                // Return a basic UserContact (mapping might depend on your exact UserContact class definition)
+                val userContact = UserContact(
+                    id = item.id,
+                    userId = item.userId,
+                    contactId = item.contactId,
+                    createdAt = item.createdAt.toString(),
+                    updatedAt = item.updatedAt.toString()
+                )
+                Result.success(userContact)
+            } else {
+                Result.failure(Exception("Created contact was null"))
+            }
         } catch (e: Exception) {
             println("ContactsRepository: createContactForUser - Exception: ${e.message}")
             e.printStackTrace()
@@ -437,68 +511,44 @@ class ContactsRepository(
      */
     private suspend fun fetchCurrentContacts(userId: String): Result<List<CurrentContact>> {
         return try {
-            val query = """
-                query ListUserContacts(${"$"}userId: ID!) {
-                    listUserContacts(filter: { userId: { eq: ${"$"}userId } }) {
-                        items {
-                            id
-                            userId
-                            contactId
-                            contact {
-                                id
-                                userId
-                                firstName
-                                lastName
-                                name
-                                phone
-                                userName
-                                email
-                                avatarUri
-                                createdAt
-                            }
-                            createdAt
-                            updatedAt
-                        }
-                    }
-                }
-            """.trimIndent()
-
-            val request = GraphQLRequest(
-                query = query,
-                variables = mapOf("userId" to kotlinx.serialization.json.JsonPrimitive(userId))
-            )
-
-            val response = httpClient.post {
-                contentType(ContentType.Application.Json)
-                setBody(request)
-            }
-
-            val graphQLResponse: GraphQLResponse<ListUserContactsData> = response.body()
-
-            if (graphQLResponse.errors != null) {
-                val errorMessages = graphQLResponse.errors.joinToString { it.message }
-                return Result.failure(Exception("GraphQL errors: $errorMessages"))
-            }
-
-            val contacts = graphQLResponse.data?.listUserContacts?.items
-                ?.mapNotNull { userContact ->
-                    userContact.contact?.let { contact ->
-                        println("ContactsRepository: fetchCurrentContacts - mapping contact:")
-                        println("  - userId: ${contact.userId}")
-                        println("  - userName: ${contact.userName}")
-                        println("  - name: ${contact.name}")
-                        println("  - phone: ${contact.phone}")
-                        CurrentContact(
-                            contactId = userContact.id,
-                            userId = contact.userId ?: "",
-                            userName = contact.userName,
-                            name = contact.name,
-                            avatarUri = contact.avatarUri,
-                            createdAt = contact.createdAt,
-                            phoneNumber = contact.phone
+            val response = apolloClient.query(
+                com.cerqa.graphql.ListUserContactsQuery(
+                    filter = com.apollographql.apollo.api.Optional.present(
+                        com.cerqa.graphql.type.ModelUserContactFilterInput(
+                            userId = com.apollographql.apollo.api.Optional.present(
+                                com.cerqa.graphql.type.ModelIDInput(
+                                    eq = com.apollographql.apollo.api.Optional.present(userId)
+                                )
+                            )
                         )
-                    }
-                } ?: emptyList()
+                    ),
+                    limit = com.apollographql.apollo.api.Optional.present(100),
+                    nextToken = com.apollographql.apollo.api.Optional.absent()
+                )
+            ).execute()
+
+            if (response.hasErrors()) {
+                val errors = response.errors?.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errors"))
+            }
+
+            // 2. Map results
+            val items = response.data?.listUserContacts?.items ?: emptyList()
+
+            val contacts = items.filterNotNull().mapNotNull { userContact ->
+                // The 'contact' field contains the details of the other person
+                userContact.contact?.let { contactDetails ->
+                    CurrentContact(
+                        contactId = userContact.id,
+                        userId = contactDetails.userId.orEmpty(),
+                        userName = contactDetails.userName,
+                        name = contactDetails.name,
+                        avatarUri = contactDetails.avatarUri,
+                        //createdAt = contactDetails.createdAt.toString(),
+                        phoneNumber = contactDetails.phone
+                    )
+                }
+            }
 
             println("ContactsRepository: fetchCurrentContacts - returning ${contacts.size} contacts")
             contacts.forEach { contact ->
@@ -515,7 +565,7 @@ class ContactsRepository(
      */
     private suspend fun fetchSentInvites(userId: String): Result<List<SentInviteContactInvite>> {
         return try {
-            println("ContactsRepository: fetchSentInvites for userId: $userId")
+/*            println("ContactsRepository: fetchSentInvites for userId: $userId")
             val query = """
                 query ListInvites(${"$"}senderId: String!) {
                     listInvites(filter: { senderId: { eq: ${"$"}senderId } }) {
@@ -528,9 +578,39 @@ class ContactsRepository(
                         }
                     }
                 }
-            """.trimIndent()
+            """.trimIndent()*/
 
-            val request = GraphQLRequest(
+            // 1. Create the filter input
+            val filter = com.cerqa.graphql.type.ModelInviteFilterInput(
+                senderId = com.apollographql.apollo.api.Optional.present(
+                    com.cerqa.graphql.type.ModelStringInput(
+                        eq = com.apollographql.apollo.api.Optional.present(userId)
+                    )
+                )
+            )
+
+            // 2. Execute the query using Apollo Client
+
+
+
+            val response = apolloClient.query(
+                com.cerqa.graphql.ListInvitesQuery(
+                    filter = com.apollographql.apollo.api.Optional.present(filter)//,
+                    //limit = com.apollographql.apollo.api.Optional.present(100) // Optional: limit results
+                )
+            ).execute()
+
+            // 3. Handle errors
+            if (response.hasErrors()) {
+                val errors = response.errors?.joinToString { it.message }
+                println("ContactsRepository: fetchSentInvites GraphQL errors: $errors")
+                return Result.failure(Exception("GraphQL errors: $errors"))
+            }
+
+            // 4. Extract items (Apollo handles the parsing safely)
+            val invites = response.data?.listInvites?.items ?: emptyList()
+
+/*            val request = GraphQLRequest(
                 query = query,
                 variables = mapOf("senderId" to kotlinx.serialization.json.JsonPrimitive(userId))
             )
@@ -549,7 +629,7 @@ class ContactsRepository(
             }
 
             val invites = graphQLResponse.data?.listInvites?.items ?: emptyList()
-            println("ContactsRepository: fetchSentInvites found ${invites.size} invites")
+            println("ContactsRepository: fetchSentInvites found ${invites.size} invites")*/
 
             // Fetch user details for each receiverId
 /*            val sentInviteContacts = invites.mapNotNull { invite ->
@@ -569,8 +649,8 @@ class ContactsRepository(
                 }
             }*/
             val sentInviteContacts = invites.map { invite ->
-                println("ContactsRepository: fetching receiver details for userId: ${invite.receiverId}")
-                val userResult = fetchUserById(invite.receiverId)
+                println("ContactsRepository: fetching receiver details for userId: ${invite?.receiverId}")
+/*                val userResult = fetchUserById(invite.receiverId)
                 val user = userResult.getOrNull()
 
                 // If user is null, we create a placeholder instead of skipping it
@@ -583,6 +663,31 @@ class ContactsRepository(
                     avatarUri = user?.avatarUri,
                     createdAt = invite.createdAt,
                     phoneNumber = user?.phone ?: ""
+                )*/
+                // Handle nullable fields from Apollo generated code
+                val receiverId = invite?.receiverId ?: ""
+                val senderId = invite?.senderId ?: ""
+                val inviteId = invite?.id.orEmpty()
+                // Apollo usually returns generated types for createdAt (e.g. Any or specific scalar), convert to String
+                val createdAtStr = invite?.createdAt.orEmpty()
+
+                println("ContactsRepository: fetching receiver details for userId: $receiverId")
+
+                // Fetch user details (Assuming fetchUserById is working/updated)
+                val userResult = fetchUserById(receiverId)
+                val user = userResult.getOrNull()
+
+                // Create the SentInviteContactInvite object
+                val sentInvite = SentInviteContactInvite(
+                    senderUserId = senderId,
+                    contactId = inviteId,
+                    // If user object is null, fallback to the raw receiverId
+                    userId = user?.userId ?: receiverId,
+                    userName = user?.userName ?: "Unknown User",
+                    name = user?.name ?: "Pending...",
+                    avatarUri = user?.avatarUri,
+                    //createdAt = createdAtStr,
+                    phoneNumber = user?.phone
                 )
                 println("ContactsRepository: created SentInviteContactInvite - userName: ${sentInvite.userName}, name: ${sentInvite.name}")
                 sentInvite
@@ -602,7 +707,7 @@ class ContactsRepository(
      */
     private suspend fun fetchReceivedInvites(userId: String): Result<List<ReceivedContactInvite>> {
         return try {
-            println("ContactsRepository: fetchReceivedInvites for userId: $userId")
+/*            println("ContactsRepository: fetchReceivedInvites for userId: $userId")
             val query = """
                 query ListInvites(${"$"}receiverId: String!) {
                     listInvites(filter: { receiverId: { eq: ${"$"}receiverId } }) {
@@ -639,7 +744,7 @@ class ContactsRepository(
             println("ContactsRepository: fetchReceivedInvites found ${invites.size} invites")
 
             // Fetch user details for each senderId
-/*            val receivedInviteContacts = invites.mapNotNull { invite ->
+*//*            val receivedInviteContacts = invites.mapNotNull { invite ->
                 println("ContactsRepository: fetching sender details for userId: ${invite.senderId}")
                 val userResult = fetchUserById(invite.senderId)
                 userResult.getOrNull()?.let { user ->
@@ -653,7 +758,7 @@ class ContactsRepository(
                         phoneNumber = user.phone
                     )
                 }
-            }*/
+            }*//*
             val receivedInviteContacts = invites.map { invite ->
                 println("ContactsRepository: fetching sender details for userId: ${invite.senderId}")
                 val userResult = fetchUserById(invite.senderId)
@@ -666,15 +771,57 @@ class ContactsRepository(
                     userName = user?.userName ?: "Unknown User",
                     name = user?.name ?: "Unknown Name",
                     avatarUri = user?.avatarUri,
-                    createdAt = invite.createdAt,
+                    //createdAt = invite.createdAt,
                     phoneNumber = user?.phone ?: ""
                 )
                 println("ContactsRepository: created ReceivedContactInvite - userName: ${receivedInvite.userName}, name: ${receivedInvite.name}")
                 receivedInvite
+            }*/
+            val response = apolloClient.query(
+                com.cerqa.graphql.ListInvitesQuery(
+                    filter = com.apollographql.apollo.api.Optional.present(
+                        com.cerqa.graphql.type.ModelInviteFilterInput(
+                            receiverId = com.apollographql.apollo.api.Optional.present(
+                                com.cerqa.graphql.type.ModelStringInput(
+                                    eq = com.apollographql.apollo.api.Optional.present(userId)
+                                )
+                            )
+                        )
+                    ),
+                    limit = com.apollographql.apollo.api.Optional.present(100),
+                    nextToken = com.apollographql.apollo.api.Optional.absent()
+                )
+            ).execute()
+
+            if (response.hasErrors()) {
+                val errors = response.errors?.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errors"))
             }
 
-            println("ContactsRepository: fetchReceivedInvites returning ${receivedInviteContacts.size} received invite contacts")
-            Result.success(receivedInviteContacts)
+            val items = response.data?.listInvites?.items ?: emptyList()
+
+            // 2. Map results
+            val receivedInvites = items.filterNotNull().map { invite ->
+                val senderId = invite.senderId ?: ""
+
+                // Fetch details of the person who sent the invite
+                // IMPORTANT: Ensure fetchUserById is also using Apollo (as per previous answer)
+                val userResult = fetchUserById(senderId)
+                val user = userResult.getOrNull()
+
+                ReceivedContactInvite(
+                    // senderUserId = senderId.orEmpty(),
+                    contactId = invite.id,
+                    userId = user?.userId ?: senderId,
+                    userName = user?.userName ?: "Unknown",
+                    name = user?.name ?: "Pending...",
+                    avatarUri = user?.avatarUri,
+                    // createdAt = invite.createdAt.toString(),
+                    phoneNumber = user?.phone ?: ""
+                )
+            }
+
+            Result.success(receivedInvites)
         } catch (e: Exception) {
             println("ContactsRepository: fetchReceivedInvites exception: ${e.message}")
             e.printStackTrace()
@@ -774,14 +921,43 @@ class ContactsRepository(
                 )
             )
 
-            val response = httpClient.post {
-                contentType(ContentType.Application.Json)
-                setBody(request)
+
+
+            // TODO: testing
+            val input = com.cerqa.graphql.type.CreateInviteInput(
+                senderId = com.apollographql.apollo.api.Optional.present(currentUserId),
+                receiverId = com.apollographql.apollo.api.Optional.present(receiverUserId),
+                userId = currentUserId, // Assuming userId corresponds to the owner/sender
+                // status = com.apollographql.apollo.api.Optional.present("PENDING") // Or whatever your status enum/string is
+            )
+
+            val response = apolloClient.mutation(
+                com.cerqa.graphql.CreateInviteMutation(input = input)
+            ).execute()
+
+            if (response.hasErrors()) {
+                val errors = response.errors?.joinToString { it.message }
+                println("ContactsRepository ===== GraphQL Errors: $errors")
+                return Result.failure(Exception("GraphQL errors: $errors"))
             }
+            println("ContactsRepository input test ***** sendInviteToConnect: ${response.errors}")
+            println("ContactsRepository input test ***** sendInviteToConnect: ${response.data}")
+            println("ContactsRepository input test ***** sendInviteToConnect: ${response.hasErrors()}")
+            // TODO: end test
+
+
+  /*          val response = httpClient.post {
+                contentType(ContentType.Application.Json)
+                header("Authorization", tokenProvider.getAccessToken())
+                setBody(request)
+            }*/
+
+            println("ContactsRepository ***** sendInviteToConnect response: $response")
 
             // Get raw response text for debugging
-            val responseText: String = response.body()
-            println("ContactsRepository ***** sendInviteToConnect response: $responseText")
+            //val responseText: String = response.body()
+            val responseText = ""
+            println("ContactsRepository ***** sendInviteToConnect responseText: $responseText")
 
             val graphQLResponse: GraphQLResponse<CreateInviteData> = try {
                 kotlinx.serialization.json.Json.decodeFromString(responseText)
@@ -809,6 +985,7 @@ class ContactsRepository(
 
             Result.success(inviteId)
         } catch (e: Exception) {
+            println("ContactsRepository ***** Exception: ${e.message}")
             Result.failure(e)
         }
     }
@@ -880,47 +1057,29 @@ class ContactsRepository(
             val currentUserId = tokenProvider.getCurrentUserId()
                 ?: return Result.failure(Exception("User not authenticated"))
 
-            println("ContactsRepository: acceptInvite - currentUserId: $currentUserId")
-
-            // Find the invite ID
+            // 1. Find the invite ID (Now uses Apollo)
             val inviteIdResult = findInviteId(senderUserId, currentUserId)
-            if (inviteIdResult.isFailure) {
-                println("ContactsRepository: acceptInvite - failed to find invite: ${inviteIdResult.exceptionOrNull()?.message}")
-                return Result.failure(inviteIdResult.exceptionOrNull() ?: Exception("Invite not found"))
-            }
-
             val inviteId = inviteIdResult.getOrNull()
-                ?: return Result.failure(Exception("Invite not found"))
+                ?: return Result.failure(inviteIdResult.exceptionOrNull() ?: Exception("Invite not found"))
 
-            println("ContactsRepository: acceptInvite - found inviteId: $inviteId")
-
-            // Create bidirectional contact relationships
-            // 1. Current user (receiver) has sender as contact
-            println("ContactsRepository: acceptInvite - creating contact relationship (receiver -> sender)")
-            val receiverContactResult = addContact(senderUserId)
+            // 2. Create bidirectional contact relationships (Now uses Apollo)
+            // A. Current user (receiver) -> Sender
+            val receiverContactResult = createContactForUser(currentUserId, senderUserId)
             if (receiverContactResult.isFailure) {
-                println("ContactsRepository: acceptInvite - failed to create receiver contact: ${receiverContactResult.exceptionOrNull()?.message}")
                 return Result.failure(receiverContactResult.exceptionOrNull() ?: Exception("Failed to create contact"))
             }
 
-            // 2. Sender has current user (receiver) as contact
-            println("ContactsRepository: acceptInvite - creating reciprocal contact relationship (sender -> receiver)")
+            // B. Sender -> Current user (receiver)
             val senderContactResult = createContactForUser(senderUserId, currentUserId)
             if (senderContactResult.isFailure) {
                 println("ContactsRepository: acceptInvite - failed to create sender contact: ${senderContactResult.exceptionOrNull()?.message}")
-                // Note: receiver contact was created, but sender contact failed
-                // You might want to delete the receiver contact here to maintain consistency
+                // Logic decision: Do we fail the whole thing? usually better to log and continue or retry later
             }
 
-            println("ContactsRepository: acceptInvite - both contact relationships created, deleting invite")
-
-            // Delete the invite
+            // 3. Delete the invite (Now uses Apollo)
             val deleteResult = deleteInvite(inviteId)
             if (deleteResult.isFailure) {
-                println("ContactsRepository: acceptInvite - WARNING: failed to delete invite: ${deleteResult.exceptionOrNull()?.message}")
-                // Continue anyway since the contact relationships were created successfully
-            } else {
-                println("ContactsRepository: acceptInvite - invite deleted successfully")
+                println("ContactsRepository: acceptInvite - WARNING: failed to delete invite")
             }
 
             println("ContactsRepository: acceptInvite - SUCCESS")
@@ -974,62 +1133,39 @@ class ContactsRepository(
      */
     private suspend fun findInviteId(senderId: String, receiverId: String): Result<String> {
         return try {
-            println("ContactsRepository: findInviteId - searching for invite")
-            println("  - senderId: $senderId")
-            println("  - receiverId: $receiverId")
-
-            val query = """
-                query ListInvites(${"$"}senderId: String!, ${"$"}receiverId: String!) {
-                    listInvites(filter: {
-                        senderId: { eq: ${"$"}senderId },
-                        receiverId: { eq: ${"$"}receiverId }
-                    }) {
-                        items {
-                            id
-                            userId
-                            senderId
-                            receiverId
-                            createdAt
-                        }
-                    }
-                }
-            """.trimIndent()
-
-            val request = GraphQLRequest(
-                query = query,
-                variables = mapOf(
-                    "senderId" to kotlinx.serialization.json.JsonPrimitive(senderId),
-                    "receiverId" to kotlinx.serialization.json.JsonPrimitive(receiverId)
+            val response = apolloClient.query(
+                com.cerqa.graphql.ListInvitesQuery(
+                    filter = com.apollographql.apollo.api.Optional.present(
+                        com.cerqa.graphql.type.ModelInviteFilterInput(
+                            senderId = com.apollographql.apollo.api.Optional.present(
+                                com.cerqa.graphql.type.ModelStringInput(
+                                    eq = com.apollographql.apollo.api.Optional.present(senderId)
+                                )
+                            ),
+                            receiverId = com.apollographql.apollo.api.Optional.present(
+                                com.cerqa.graphql.type.ModelStringInput(
+                                    eq = com.apollographql.apollo.api.Optional.present(receiverId)
+                                )
+                            )
+                        )
+                    ),
+                    limit = com.apollographql.apollo.api.Optional.present(1),
+                    nextToken = com.apollographql.apollo.api.Optional.absent()
                 )
-            )
+            ).execute()
 
-            val response = httpClient.post {
-                contentType(ContentType.Application.Json)
-                setBody(request)
+            if (response.hasErrors()) {
+                val errors = response.errors?.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errors"))
             }
 
-            val graphQLResponse: GraphQLResponse<ListInvitesData> = response.body()
+            val inviteId = response.data?.listInvites?.items?.firstOrNull()?.id
 
-            if (graphQLResponse.errors != null) {
-                val errorMessages = graphQLResponse.errors.joinToString { it.message }
-                println("ContactsRepository: findInviteId - GraphQL errors: $errorMessages")
-                return Result.failure(Exception("GraphQL errors: $errorMessages"))
+            if (inviteId != null) {
+                Result.success(inviteId)
+            } else {
+                Result.failure(Exception("Invite not found"))
             }
-
-            val invites = graphQLResponse.data?.listInvites?.items
-            println("ContactsRepository: findInviteId - found ${invites?.size ?: 0} invites")
-            invites?.forEach { invite ->
-                println("  - Invite id: ${invite.id}, senderId: ${invite.senderId}, receiverId: ${invite.receiverId}")
-            }
-
-            val inviteId = invites?.firstOrNull()?.id
-            if (inviteId == null) {
-                println("ContactsRepository: findInviteId - No invite found with senderId=$senderId and receiverId=$receiverId")
-                return Result.failure(Exception("Invite not found"))
-            }
-
-            println("ContactsRepository: findInviteId - SUCCESS - found inviteId: $inviteId")
-            Result.success(inviteId)
         } catch (e: Exception) {
             println("ContactsRepository: findInviteId - Exception: ${e.message}")
             e.printStackTrace()
@@ -1042,35 +1178,19 @@ class ContactsRepository(
      */
     private suspend fun deleteInvite(inviteId: String): Result<Unit> {
         return try {
-            println("ContactsRepository: deleteInvite - deleting invite with id: $inviteId")
-
-            val mutation = """
-                mutation DeleteInvite(${"$"}id: ID!) {
-                    deleteInvite(input: { id: ${"$"}id }) {
-                        id
-                    }
-                }
-            """.trimIndent()
-
-            val request = GraphQLRequest(
-                query = mutation,
-                variables = mapOf("id" to kotlinx.serialization.json.JsonPrimitive(inviteId))
+            val input = com.cerqa.graphql.type.DeleteInviteInput(
+                id = inviteId
             )
 
-            val response = httpClient.post {
-                contentType(ContentType.Application.Json)
-                setBody(request)
+            val response = apolloClient.mutation(
+                com.cerqa.graphql.DeleteInviteMutation(input = input)
+            ).execute()
+
+            if (response.hasErrors()) {
+                val errors = response.errors?.joinToString { it.message }
+                return Result.failure(Exception("GraphQL errors: $errors"))
             }
 
-            val graphQLResponse: GraphQLResponse<DeleteInviteData> = response.body()
-
-            if (graphQLResponse.errors != null) {
-                val errorMessages = graphQLResponse.errors.joinToString { it.message }
-                println("ContactsRepository: deleteInvite - GraphQL errors: $errorMessages")
-                return Result.failure(Exception("GraphQL errors: $errorMessages"))
-            }
-
-            println("ContactsRepository: deleteInvite - SUCCESS")
             Result.success(Unit)
         } catch (e: Exception) {
             println("ContactsRepository: deleteInvite - Exception: ${e.message}")

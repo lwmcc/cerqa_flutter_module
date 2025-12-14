@@ -84,19 +84,8 @@ actual class AuthService {
         }
     }
 
-    actual suspend fun signOut(): AuthResult =
-        suspendCancellableCoroutine { cont ->
-            amplifyBridge.signOut { success ->
-                if (success) {
-                    _authState.value = AuthState.Unauthenticated
-                    cont.resume(AuthResult.Success(emptyUser))
-                } else {
-                    cont.resume(AuthResult.Error("Sign out failed"))
-                }
-            }
-        }
 
-/*    actual suspend fun signOut(): AuthResult {
+    actual suspend fun signOut(): AuthResult {
         return try {
             amplifyBridge.signOut()
             _authState.value = AuthState.Unauthenticated
@@ -106,7 +95,7 @@ actual class AuthService {
         } catch (e: Exception) {
             AuthResult.Error("Sign out failed: ${e.message}", e)
         }
-    }*/
+    }
 
     actual suspend fun getCurrentUser(): AuthUser? {
         return try {

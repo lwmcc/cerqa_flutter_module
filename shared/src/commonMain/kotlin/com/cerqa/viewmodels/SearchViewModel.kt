@@ -160,14 +160,14 @@ class SearchViewModel(
 
                 // Send the invite
                 scope.launch {
-                    println("SharedSearchViewModel: Starting coroutine to send invite")
+                    println("SharedSearchViewModel ***** : Starting coroutine to send invite")
                     _uiState.value = _uiState.value.copy(pending = true, isSendingInvite = true)
 
                     try {
-                        println("SharedSearchViewModel: Calling repository.sendInviteToConnect")
+                        println("SharedSearchViewModel ***** : Calling repository.sendInviteToConnect")
                         repository.sendInviteToConnect(connectionEvent.receiverUserId)
                             .onSuccess {
-                                println("SharedSearchViewModel: Invite sent successfully!")
+                                println("SharedSearchViewModel ***** : Invite sent successfully!")
 
                                 // Immediately update the UI to show "Invite Sent" for this user
                                 val updatedResults = _uiState.value.results.map { user ->
@@ -190,7 +190,7 @@ class SearchViewModel(
                                 )
                             }
                             .onFailure { error ->
-                                println("SharedSearchViewModel: Failed to send invite: ${error.message}")
+                                println("SharedSearchViewModel ***** : Failed to send invite: ${error.message}")
                                 error.printStackTrace()
                                 _uiState.value = _uiState.value.copy(
                                     pending = false,
@@ -199,7 +199,7 @@ class SearchViewModel(
                                 )
                             }
                     } catch (e: Exception) {
-                        println("SharedSearchViewModel: Exception caught: ${e.message}")
+                        println("SharedSearchViewModel ***** : Exception caught: ${e.message}")
                         e.printStackTrace()
                         _uiState.value = _uiState.value.copy(
                             pending = false,

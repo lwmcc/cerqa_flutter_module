@@ -2,91 +2,98 @@
 
 # Create a new user
 mutation CreateUser($input: CreateUserInput!, $condition: ModelUserConditionInput) {
-  createUser(input: $input, condition: $condition) {
-    id
-    userId
-    firstName
-    lastName
-    name
-    phone
-    userName
-    email
-    avatarUri
-    createdAt
-    updatedAt
-  }
+    createUser(input: $input, condition: $condition) {
+        id
+        userId
+        firstName
+        lastName
+        name
+        phone
+        userName
+        email
+        avatarUri
+        createdAt
+        updatedAt
+    }
 }
 
 # Update a user
 mutation UpdateUser($input: UpdateUserInput!, $condition: ModelUserConditionInput) {
-  updateUser(input: $input, condition: $condition) {
-    id
-    userId
-    firstName
-    lastName
-    name
-    phone
-    userName
-    email
-    avatarUri
-    createdAt
-    updatedAt
-  }
+    updateUser(input: $input, condition: $condition) {
+        id
+        userId
+        firstName
+        lastName
+        name
+        phone
+        userName
+        email
+        avatarUri
+        createdAt
+        updatedAt
+    }
 }
 
 # Delete a user
 mutation DeleteUser($input: DeleteUserInput!, $condition: ModelUserConditionInput) {
-  deleteUser(input: $input, condition: $condition) {
-    id
-  }
+    deleteUser(input: $input, condition: $condition) {
+        id
+    }
 }
 
 # Create a UserContact (add someone to contacts)
 mutation CreateUserContact($input: CreateUserContactInput!, $condition: ModelUserContactConditionInput) {
-  createUserContact(input: $input, condition: $condition) {
-    id
-    userId
-    contactId
-    user {
-      id
-      firstName
-      lastName
-      name
-      phone
-      userName
-      email
-      avatarUri
+    createUserContact(input: $input, condition: $condition) {
+        id
+        userId
+        contactId
+        user {
+            id
+            firstName
+            lastName
+            name
+            phone
+            userName
+            email
+            avatarUri
+        }
+        contact {
+            id
+            firstName
+            lastName
+            name
+            phone
+            userName
+            email
+            avatarUri
+        }
+        createdAt
+        updatedAt
     }
-    contact {
-      id
-      firstName
-      lastName
-      name
-      phone
-      userName
-      email
-      avatarUri
-    }
-    createdAt
-    updatedAt
-  }
 }
 
 # Delete a UserContact (remove someone from contacts)
 mutation DeleteUserContact($input: DeleteUserContactInput!, $condition: ModelUserContactConditionInput) {
-  deleteUserContact(input: $input, condition: $condition) {
-    id
-  }
+    deleteUserContact(input: $input, condition: $condition) {
+        id
+    }
 }
 
 # Create an Invite
 mutation CreateInvite($input: CreateInviteInput!, $condition: ModelInviteConditionInput) {
-  createInvite(input: $input, condition: $condition) {
-    id
-    userId
-    senderId
-    receiverId
-    createdAt
-    updatedAt
-  }
+    createInvite(input: $input, condition: $condition) {
+        id
+        userId
+        senderId
+        receiverId
+        createdAt
+        updatedAt
+    }
 }
+
+mutation DeleteInvite($input: DeleteInviteInput!) {
+    deleteInvite(input: $input) {
+        id
+    }
+}
+

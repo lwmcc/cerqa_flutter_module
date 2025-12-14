@@ -49,7 +49,7 @@ sealed class Contact {
     abstract val userName: String?
     abstract val name: String?
     abstract val avatarUri: String?
-    abstract val createdAt: String?
+    // abstract val createdAt: String?
     abstract val phoneNumber: String?
 }
 
@@ -63,7 +63,7 @@ data class ReceivedContactInvite(
     override val userName: String?,
     override val name: String?,
     override val avatarUri: String?,
-    override val createdAt: String?,
+    // override val createdAt: String?,
     override val phoneNumber: String?,
 ) : Contact()
 
@@ -78,7 +78,7 @@ data class SentInviteContactInvite(
     override val userName: String?,
     override val name: String?,
     override val avatarUri: String?,
-    override val createdAt: String?,
+    // override val createdAt: String?,
     override val phoneNumber: String?,
 ) : Contact()
 
@@ -92,7 +92,7 @@ data class CurrentContact(
     override val userName: String?,
     override val name: String?,
     override val avatarUri: String?,
-    override val createdAt: String?,
+    // override val createdAt: String?,
     override val phoneNumber: String?,
 ) : Contact()
 

@@ -100,3 +100,18 @@ query HasUserCreatedProfile($userId: ID!) {
     missingFields
   }
 }
+
+# List Invites (for connection requests)
+query ListInvites($filter: ModelInviteFilterInput, $limit: Int, $nextToken: String) {
+  listInvites(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      id
+      userId
+      senderId
+      receiverId
+      createdAt
+      updatedAt
+    }
+    nextToken
+  }
+}

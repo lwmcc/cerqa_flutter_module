@@ -60,7 +60,7 @@ class ApolloContactsRepository(
                         name = contact.name,
                         phoneNumber = contact.phone,
                         avatarUri = contact.avatarUri,
-                        createdAt = userContact.createdAt
+                        //createdAt = userContact.createdA
                     )
                 }
             }

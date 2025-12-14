@@ -56,7 +56,8 @@ fun createHttpClient(tokenProvider: AuthTokenProvider): HttpClient {
 
         // Default request configuration for AppSync GraphQL
         install(DefaultRequest) {
-            url("https://bjkal2uenzfc5mfpceilwq6n3y.appsync-api.us-east-2.amazonaws.com/graphql")
+            // https://qtjqzunv4rgbtkphmdz2f2ybrq.appsync-api.us-east-2.amazonaws.com/graphql
+            url("https://qtjqzunv4rgbtkphmdz2f2ybrq.appsync-api.us-east-2.amazonaws.com/graphql")
             headers.append("x-api-key", "da2-y34unktia5al3kquoqtsmoppca")
         }
     }

@@ -24,7 +24,7 @@ class MockContactsRepository {
                 name = "John Doe",
                 phoneNumber = "+1-555-0100",
                 avatarUri = null,
-                createdAt = "2024-01-01T00:00:00Z"
+                //createdAt = "2024-01-01T00:00:00Z"
             ),
             CurrentContact(
                 contactId = "2",
@@ -33,7 +33,7 @@ class MockContactsRepository {
                 name = "Jane Smith",
                 phoneNumber = "+1-555-0101",
                 avatarUri = null,
-                createdAt = "2024-01-01T00:00:00Z"
+                //createdAt = "2024-01-01T00:00:00Z"
             ),
             CurrentContact(
                 contactId = "3",
@@ -42,7 +42,7 @@ class MockContactsRepository {
                 name = "Bob Johnson",
                 phoneNumber = "+1-555-0102",
                 avatarUri = null,
-                createdAt = "2024-01-01T00:00:00Z"
+                //createdAt = "2024-01-01T00:00:00Z"
             )
         )
 
