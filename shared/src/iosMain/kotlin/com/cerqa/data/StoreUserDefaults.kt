@@ -27,4 +27,12 @@ class StoreUserDefaults(private val defaults: NSUserDefaults) : StoreDefaults {
             avatarUri = defaults.stringForKey(defaultName = "user-avatar-uri"),
         )
     }
+
+    override suspend fun clearUserData() {
+        defaults.removeObjectForKey("user-id")
+        defaults.removeObjectForKey("user-name")
+        defaults.removeObjectForKey("user-email")
+        defaults.removeObjectForKey("user-created-at")
+        defaults.removeObjectForKey("user-avatar-uri")
+    }
 }

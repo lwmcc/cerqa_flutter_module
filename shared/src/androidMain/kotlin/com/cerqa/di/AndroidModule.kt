@@ -8,12 +8,13 @@ import io.ktor.client.engine.okhttp.*
 import org.koin.dsl.module
 
 /**
- * Android-specific Koin module.
- * Provides the Android implementation of AuthTokenProvider and HttpClientEngine.
+ * Android-specific Koin module (LEGACY - not used for DI initialization)
+ * The app now uses platformModule() from PlatformModule.android.kt
+ * This module is kept for backward compatibility
  */
 val androidModule = module {
     single<AuthTokenProvider> { AndroidAuthTokenProvider() }
-    single { AuthService() }
+    // AuthService is now defined in platformModule()
     single<HttpClientEngine> { OkHttp.create() }
 }
 

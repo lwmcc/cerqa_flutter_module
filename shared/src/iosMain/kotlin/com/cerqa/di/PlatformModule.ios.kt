@@ -20,7 +20,7 @@ actual fun platformModule(): Module = module {
 
     // Auth and HTTP engine for Apollo (from iosModule)
     single<AuthTokenProvider> { IOSAuthTokenProvider() }
-    single { AuthService() }
+    single { AuthService(get()) }
     single<HttpClientEngine> { Darwin.create() }
 
     // FetchContacts implementation

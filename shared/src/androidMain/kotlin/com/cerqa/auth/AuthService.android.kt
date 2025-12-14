@@ -2,11 +2,14 @@ package com.cerqa.auth
 
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
+import com.cerqa.data.Preferences
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-actual class AuthService {
+actual class AuthService(
+    private val preferences: Preferences
+) {
     actual suspend fun initialize() {
     }
 
@@ -25,21 +28,30 @@ actual class AuthService {
         TODO("Not yet implemented")
     }
 
-    actual suspend fun signOut(): AuthResult = suspendCoroutine { continuation ->
-        Amplify.Auth.signOut(
-            Consumer { result ->
-                println("AuthService ===== Sign out succeeded")
-                continuation.resume(
-                    AuthResult.Success(
-                        AuthUser(
-                            userId = "",
-                            email = null,
-                            username = null
+    actual suspend fun signOut(): AuthResult {
+        val result = suspendCoroutine<AuthResult> { continuation ->
+            Amplify.Auth.signOut(
+                Consumer { result ->
+                    println("AuthService ===== Sign out succeeded")
+                    continuation.resume(
+                        AuthResult.Success(
+                            AuthUser(
+                                userId = "",
+                                email = null,
+                                username = null
+                            )
                         )
                     )
-                )
-            }
-        )
+                }
+            )
+        }
+
+        // Clear user preferences after signing out
+        if (result is AuthResult.Success) {
+            preferences.clearUserData()
+        }
+
+        return result
     }
 
     actual suspend fun getCurrentUser(): AuthUser? {

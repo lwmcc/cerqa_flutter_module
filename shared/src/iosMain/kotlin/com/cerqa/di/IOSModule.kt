@@ -10,12 +10,13 @@ import org.koin.core.component.inject
 import org.koin.dsl.module
 
 /**
- * iOS-specific Koin module
- * Provides the iOS implementation of AuthTokenProvider and HttpClientEngine
+ * iOS-specific Koin module (LEGACY - not used for DI initialization)
+ * The app now uses platformModule() from PlatformModule.ios.kt
+ * This module is kept only for the getIOSAuthTokenProviderInstance() helper function
  */
 val iosModule = module {
     single<AuthTokenProvider> { IOSAuthTokenProvider() }
-    single { AuthService() }
+    // AuthService is now defined in platformModule()
     single<HttpClientEngine> { Darwin.create() }
 }
 

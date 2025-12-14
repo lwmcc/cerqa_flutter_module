@@ -28,4 +28,14 @@ class StoreUserDefaults(private val preferences: SharedPreferences) : StoreDefau
         createdAt = preferences.getString("user-created-at", null),
         avatarUri = preferences.getString("user-avatar-uri", null),
     )
+
+    override suspend fun clearUserData() {
+        preferences.edit {
+            remove("user-id")
+            remove("user-name")
+            remove("user-email")
+            remove("user-created-at")
+            remove("user-avatar-uri")
+        }
+    }
 }

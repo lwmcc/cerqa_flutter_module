@@ -24,7 +24,7 @@ actual fun platformModule(): Module = module {
 
     // Auth and HTTP engine for Apollo (from androidModule)
     single<AuthTokenProvider> { AndroidAuthTokenProvider() }
-    single { AuthService() }
+    single { AuthService(get()) }
     single<HttpClientEngine> { OkHttp.create() }
 
     // FetchContacts implementation

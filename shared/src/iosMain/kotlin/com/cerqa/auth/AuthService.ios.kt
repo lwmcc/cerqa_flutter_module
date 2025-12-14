@@ -1,5 +1,6 @@
 package com.cerqa.auth
 
+import com.cerqa.data.Preferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -8,7 +9,9 @@ import kotlinx.coroutines.flow.asStateFlow
  * iOS implementation of AuthService using Amplify Swift SDK
  * This class bridges Kotlin/Native with Swift Amplify code
  */
-actual class AuthService {
+actual class AuthService(
+    private val preferences: Preferences
+) {
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
     actual val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
@@ -88,6 +91,7 @@ actual class AuthService {
     actual suspend fun signOut(): AuthResult {
         return try {
             amplifyBridge.signOut()
+            preferences.clearUserData()
             _authState.value = AuthState.Unauthenticated
             AuthResult.Success(
                 AuthUser(userId = "", email = null, username = null)

@@ -12,4 +12,6 @@ interface Preferences {
     )
 
     fun getUserData(): UserData
+
+    suspend fun clearUserData()
 }

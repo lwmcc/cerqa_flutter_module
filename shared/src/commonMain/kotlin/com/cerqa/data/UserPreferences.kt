@@ -22,4 +22,8 @@ class UserPreferences(val defaults: StoreDefaults) : Preferences {
     override fun getUserData(): UserData {
         return defaults.getUserData()
     }
+
+    override suspend fun clearUserData() {
+        defaults.clearUserData()
+    }
 }

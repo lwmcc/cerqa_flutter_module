@@ -12,4 +12,6 @@ interface StoreDefaults {
     )
 
     fun getUserData(): UserData
+
+    suspend fun clearUserData()
 }
