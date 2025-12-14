@@ -73,8 +73,8 @@ mutation CreateUserContact($input: CreateUserContactInput!, $condition: ModelUse
 }
 
 # Delete a UserContact (remove someone from contacts)
-mutation DeleteUserContact($input: DeleteUserContactInput!, $condition: ModelUserContactConditionInput) {
-    deleteUserContact(input: $input, condition: $condition) {
+mutation DeleteUserContact($input: DeleteUserContactInput!) {
+    deleteUserContact(input: $input) {
         id
     }
 }
@@ -96,4 +96,3 @@ mutation DeleteInvite($input: DeleteInviteInput!) {
         id
     }
 }
-
