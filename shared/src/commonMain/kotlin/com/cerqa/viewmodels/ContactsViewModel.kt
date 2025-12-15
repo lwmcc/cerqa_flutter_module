@@ -144,16 +144,26 @@ class ContactsViewModel(
      */
     private suspend fun deleteReceivedInviteToConnect(userId: String) {
         println("ContactsViewModel: deleteReceivedInviteToConnect - userId: $userId")
+
+        // Optimistically remove the invite from UI immediately
+        val updatedContacts = _uiState.value.contacts.filter {
+            !(it is ReceivedContactInvite && it.userId == userId)
+        }
+        _uiState.value = _uiState.value.copy(contacts = updatedContacts, pending = true)
+        _contacts.value = updatedContacts
+
         repository.deleteReceivedInvite(userId)
             .onSuccess {
-                println("ContactsViewModel: deleteReceivedInviteToConnect - SUCCESS, refreshing contacts")
-                // Refresh contacts to show updated list
-                fetchAllContacts()
+                println("ContactsViewModel: deleteReceivedInviteToConnect - SUCCESS, keeping optimistic update")
+                // Just update pending state - the invite is already removed from UI
+                _uiState.value = _uiState.value.copy(pending = false)
             }
             .onFailure { error ->
                 println("ContactsViewModel: deleteReceivedInviteToConnect - FAILURE: ${error.message}")
                 error.printStackTrace()
-                _uiState.value = _uiState.value.copy(pending = false, message = MessageType.ERROR)
+                // Revert the optimistic update on failure by fetching fresh data
+                fetchAllContacts()
+                _uiState.value = _uiState.value.copy(message = MessageType.ERROR)
             }
     }
 
@@ -162,16 +172,54 @@ class ContactsViewModel(
      */
     private suspend fun acceptConnection(listIndex: Int, senderUserId: String) {
         println("ContactsViewModel: acceptConnection - senderUserId: $senderUserId")
+
+        // Optimistically convert the received invite to a current contact
+        val invite = _uiState.value.contacts.find {
+            it is ReceivedContactInvite && it.userId == senderUserId
+        } as? ReceivedContactInvite
+
+        if (invite == null) {
+            _uiState.value = _uiState.value.copy(message = MessageType.ERROR)
+            return
+        }
+
+        val updatedContacts = _uiState.value.contacts.map { contact ->
+            if (contact is ReceivedContactInvite && contact.userId == senderUserId) {
+                CurrentContact(
+                    contactId = contact.contactId,
+                    userId = contact.userId,
+                    userName = contact.userName,
+                    name = contact.name,
+                    avatarUri = contact.avatarUri,
+                    phoneNumber = contact.phoneNumber
+                )
+            } else {
+                contact
+            }
+        }
+        _uiState.value = _uiState.value.copy(contacts = updatedContacts, pending = true)
+        _contacts.value = updatedContacts
+
         repository.acceptInvite(senderUserId)
             .onSuccess { userContact ->
-                println("ContactsViewModel: acceptConnection - SUCCESS, refreshing contacts")
-                // Refresh contacts to show the new contact
-                fetchAllContacts()
+                println("ContactsViewModel: acceptConnection - SUCCESS, updating contact with backend ID")
+                // Update the contact with the real contactId from backend
+                val finalContacts = _uiState.value.contacts.map { contact ->
+                    if (contact is CurrentContact && contact.userId == senderUserId) {
+                        contact.copy(contactId = userContact.id ?: contact.contactId)
+                    } else {
+                        contact
+                    }
+                }
+                _uiState.value = _uiState.value.copy(contacts = finalContacts, pending = false)
+                _contacts.value = finalContacts
             }
             .onFailure { error ->
                 println("ContactsViewModel: acceptConnection - FAILURE: ${error.message}")
                 error.printStackTrace()
-                _uiState.value = _uiState.value.copy(pending = false, message = MessageType.ERROR)
+                // Revert the optimistic update on failure by fetching fresh data
+                fetchAllContacts()
+                _uiState.value = _uiState.value.copy(message = MessageType.ERROR)
             }
     }
 
@@ -180,44 +228,77 @@ class ContactsViewModel(
      */
     private suspend fun deleteContact(contactId: String) {
         println("ContactsViewModel: deleteContact - contactId: $contactId")
+
+        // Optimistically remove the contact from UI immediately
+        val updatedContacts = _uiState.value.contacts.filter { it.contactId != contactId }
+        _uiState.value = _uiState.value.copy(contacts = updatedContacts, pending = true)
+        _contacts.value = updatedContacts
+
         repository.deleteContact(contactId)
             .onSuccess {
-                println("ContactsViewModel: deleteContact - SUCCESS, refreshing contacts")
-                // Refresh contacts to show updated list
-                fetchAllContacts()
+                println("ContactsViewModel: deleteContact - SUCCESS, keeping optimistic update")
+                // Just update pending state - the contact is already removed from UI
+                _uiState.value = _uiState.value.copy(pending = false)
             }
             .onFailure { error ->
                 println("ContactsViewModel: deleteContact - FAILURE: ${error.message}")
                 error.printStackTrace()
-                _uiState.value = _uiState.value.copy(pending = false, message = MessageType.ERROR)
+                // Revert the optimistic update on failure by fetching fresh data
+                fetchAllContacts()
+                _uiState.value = _uiState.value.copy(message = MessageType.ERROR)
             }
     }
 
     private suspend fun cancelInviteToConnect(receiverUserId: String) {
         println("ContactsViewModel: cancelInviteToConnect - receiverUserId: $receiverUserId")
+
+        // Optimistically remove the sent invite from UI immediately
+        val updatedContacts = _uiState.value.contacts.filter {
+            !(it is SentInviteContactInvite && it.userId == receiverUserId)
+        }
+        _uiState.value = _uiState.value.copy(contacts = updatedContacts, pending = true)
+        _contacts.value = updatedContacts
+
         repository.cancelInviteToConnect(receiverUserId)
             .onSuccess {
-                println("ContactsViewModel: cancelInviteToConnect - SUCCESS, refreshing contacts")
-                // Refresh contacts to show updated list
-                fetchAllContacts()
+                println("ContactsViewModel: cancelInviteToConnect - SUCCESS, keeping optimistic update")
+                // Just update pending state - the invite is already removed from UI
+                _uiState.value = _uiState.value.copy(pending = false)
             }
             .onFailure { error ->
                 println("ContactsViewModel: cancelInviteToConnect - FAILURE: ${error.message}")
                 error.printStackTrace()
-                _uiState.value = _uiState.value.copy(pending = false, message = MessageType.ERROR)
+                // Revert the optimistic update on failure by fetching fresh data
+                fetchAllContacts()
+                _uiState.value = _uiState.value.copy(message = MessageType.ERROR)
             }
     }
 
-    fun sendInviteToConnect(receiverUserId: String) {
+    fun sendInviteToConnect(receiverUserId: String, receiverUserName: String? = null, receiverName: String? = null, senderUserId: String? = null) {
         _isSendingInvite.value = true
         scope.launch {
             repository.sendInviteToConnect(receiverUserId)
-                .onSuccess {
+                .onSuccess { inviteId ->
+                    println("ContactsViewModel: sendInviteToConnect - SUCCESS, adding to contacts list")
+                    // Add the new sent invite to the contacts list
+                    val newInvite = SentInviteContactInvite(
+                        senderUserId = senderUserId ?: "",
+                        contactId = inviteId,
+                        userId = receiverUserId,
+                        userName = receiverUserName,
+                        name = receiverName,
+                        avatarUri = null,
+                        phoneNumber = null
+                    )
+                    val updatedContacts = _uiState.value.contacts + newInvite
+
                     _inviteSentSuccess.value = true
                     _isSendingInvite.value = false
-                    _uiState.value = _uiState.value.copy(message = MessageType.INVITE_SENT)
-                    // Refresh contacts to show the new sent invite
-                    fetchAllContacts()
+                    _uiState.value = _uiState.value.copy(
+                        contacts = updatedContacts,
+                        message = MessageType.INVITE_SENT
+                    )
+                    _contacts.value = updatedContacts
                 }
                 .onFailure {
                     _isSendingInvite.value = false
@@ -260,7 +341,11 @@ class ContactsViewModel(
                 .onSuccess { user ->
                     if (user != null) {
                         // Then send them a connection invite
-                        sendInviteToConnect(user.userId ?: "")
+                        sendInviteToConnect(
+                            receiverUserId = user.userId ?: "",
+                            receiverUserName = user.userName,
+                            receiverName = user.name
+                        )
                     } else {
                         _error.value = "User with phone number $phone not found"
                     }

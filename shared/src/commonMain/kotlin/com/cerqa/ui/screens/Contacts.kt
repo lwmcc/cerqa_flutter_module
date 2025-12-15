@@ -42,7 +42,6 @@ fun Contacts(
     // Refresh contacts when an invite is sent successfully
     LaunchedEffect(uiState.message) {
         if (uiState.message == MessageType.INVITE_SENT) {
-            // Refresh contacts to show the newly sent invite
             contactsViewModel.fetchAllContacts()
         }
     }
@@ -50,7 +49,6 @@ fun Contacts(
     // Refresh contacts when returning to idle state (cleared search)
     LaunchedEffect(uiState.idle) {
         if (uiState.idle && searchQuery.isEmpty()) {
-            // Refresh to show any updates from sent/received invites
             contactsViewModel.fetchAllContacts()
         }
     }
