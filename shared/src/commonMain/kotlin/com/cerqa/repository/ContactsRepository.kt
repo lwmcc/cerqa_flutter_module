@@ -42,6 +42,12 @@ class ContactsRepository(
     private val apolloClient: ApolloClient
 ) {
     /**
+     * Get the current authenticated user's ID
+     */
+    suspend fun getCurrentUserId(): String? {
+        return tokenProvider.getCurrentUserId()
+    }
+    /**
      * Fetch all contacts for the current user from AppSync.
      * Queries UserContact where userId = currentUser, then expands the contact field.
      */

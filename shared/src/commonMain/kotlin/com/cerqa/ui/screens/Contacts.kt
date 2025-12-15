@@ -39,10 +39,17 @@ fun Contacts(
         contactsViewModel.fetchAllContacts()
     }
 
-    // Refresh contacts when an invite is sent successfully
-    LaunchedEffect(uiState.message) {
-        if (uiState.message == MessageType.INVITE_SENT) {
-            contactsViewModel.fetchAllContacts()
+    // Add sent invite to contacts when an invite is sent successfully from search
+    LaunchedEffect(uiState.lastSentInvite) {
+        uiState.lastSentInvite?.let { inviteData ->
+            println("Contacts: Detected new sent invite, adding to contacts list")
+            contactsViewModel.addSentInvite(
+                inviteId = inviteData.inviteId,
+                receiverUserId = inviteData.receiverUserId,
+                receiverUserName = inviteData.receiverUserName,
+                receiverName = inviteData.receiverName,
+                senderUserId = inviteData.senderUserId
+            )
         }
     }
 

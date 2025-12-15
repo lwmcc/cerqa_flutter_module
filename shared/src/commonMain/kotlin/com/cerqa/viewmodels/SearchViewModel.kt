@@ -20,6 +20,15 @@ data class SearchUiState(
     val results: List<SearchUser> = emptyList(),
     val appUsers: List<DeviceContact> = emptyList(),
     val nonAppUsers: List<DeviceContact> = emptyList(),
+    val lastSentInvite: SentInviteData? = null
+)
+
+data class SentInviteData(
+    val inviteId: String,
+    val receiverUserId: String,
+    val receiverUserName: String?,
+    val receiverName: String?,
+    val senderUserId: String
 )
 
 /**
@@ -166,8 +175,11 @@ class SearchViewModel(
                     try {
                         println("SharedSearchViewModel ***** : Calling repository.sendInviteToConnect")
                         repository.sendInviteToConnect(connectionEvent.receiverUserId)
-                            .onSuccess {
-                                println("SharedSearchViewModel ***** : Invite sent successfully!")
+                            .onSuccess { inviteId ->
+                                println("SharedSearchViewModel ***** : Invite sent successfully! InviteId: $inviteId")
+
+                                // Get the user details from search results
+                                val receiverUser = _uiState.value.results.find { it.userId == connectionEvent.receiverUserId }
 
                                 // Immediately update the UI to show "Invite Sent" for this user
                                 val updatedResults = _uiState.value.results.map { user ->
@@ -181,12 +193,25 @@ class SearchViewModel(
                                     }
                                 }
 
+                                // Store the invite details for ContactsViewModel to pick up
+                                // Note: senderUserId will be fetched from ContactsViewModel's repository when needed
+                                val sentInviteData = receiverUser?.let {
+                                    SentInviteData(
+                                        inviteId = inviteId,
+                                        receiverUserId = it.userId,
+                                        receiverUserName = it.userName,
+                                        receiverName = it.userName, // SearchUser only has userName, not separate name field
+                                        senderUserId = "" // Will be filled by ContactsViewModel
+                                    )
+                                }
+
                                 _uiState.value = _uiState.value.copy(
                                     results = updatedResults,
                                     pending = false,
                                     isSendingInvite = false,
                                     inviteSent = true,
-                                    message = MessageType.INVITE_SENT
+                                    message = MessageType.INVITE_SENT,
+                                    lastSentInvite = sentInviteData
                                 )
                             }
                             .onFailure { error ->

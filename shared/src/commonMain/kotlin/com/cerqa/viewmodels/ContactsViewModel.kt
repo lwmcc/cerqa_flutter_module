@@ -274,6 +274,45 @@ class ContactsViewModel(
             }
     }
 
+    /**
+     * Add a sent invite directly to the contacts list with full user details
+     * This is called when an invite is sent from search to avoid re-fetching
+     */
+    fun addSentInvite(
+        inviteId: String,
+        receiverUserId: String,
+        receiverUserName: String?,
+        receiverName: String?,
+        senderUserId: String
+    ) {
+        scope.launch {
+            println("ContactsViewModel: addSentInvite - inviteId: $inviteId, receiver: $receiverUserName")
+
+            // Get current user ID if not provided
+            val actualSenderUserId = if (senderUserId.isBlank()) {
+                repository.getCurrentUserId() ?: ""
+            } else {
+                senderUserId
+            }
+
+            val newInvite = SentInviteContactInvite(
+                senderUserId = actualSenderUserId,
+                contactId = inviteId,
+                userId = receiverUserId,
+                userName = receiverUserName,
+                name = receiverName,
+                avatarUri = null,
+                phoneNumber = null
+            )
+
+            val updatedContacts = _uiState.value.contacts + newInvite
+            _uiState.value = _uiState.value.copy(contacts = updatedContacts)
+            _contacts.value = updatedContacts
+
+            println("ContactsViewModel: addSentInvite - SUCCESS, contacts list now has ${updatedContacts.size} items")
+        }
+    }
+
     fun sendInviteToConnect(receiverUserId: String, receiverUserName: String? = null, receiverName: String? = null, senderUserId: String? = null) {
         _isSendingInvite.value = true
         scope.launch {
@@ -281,24 +320,17 @@ class ContactsViewModel(
                 .onSuccess { inviteId ->
                     println("ContactsViewModel: sendInviteToConnect - SUCCESS, adding to contacts list")
                     // Add the new sent invite to the contacts list
-                    val newInvite = SentInviteContactInvite(
-                        senderUserId = senderUserId ?: "",
-                        contactId = inviteId,
-                        userId = receiverUserId,
-                        userName = receiverUserName,
-                        name = receiverName,
-                        avatarUri = null,
-                        phoneNumber = null
+                    addSentInvite(
+                        inviteId = inviteId,
+                        receiverUserId = receiverUserId,
+                        receiverUserName = receiverUserName,
+                        receiverName = receiverName,
+                        senderUserId = senderUserId ?: ""
                     )
-                    val updatedContacts = _uiState.value.contacts + newInvite
 
                     _inviteSentSuccess.value = true
                     _isSendingInvite.value = false
-                    _uiState.value = _uiState.value.copy(
-                        contacts = updatedContacts,
-                        message = MessageType.INVITE_SENT
-                    )
-                    _contacts.value = updatedContacts
+                    _uiState.value = _uiState.value.copy(message = MessageType.INVITE_SENT)
                 }
                 .onFailure {
                     _isSendingInvite.value = false
