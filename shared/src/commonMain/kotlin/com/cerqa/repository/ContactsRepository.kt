@@ -395,34 +395,20 @@ class ContactsRepository(
             val invites = response.data?.listInvites?.items ?: emptyList()
             println("ContactsRepository: fetchSentInvites found ${invites.size} invites")
 
-            // Map invites to SentInviteContactInvite using the user relationship
+            // Map invites to SentInviteContactInvite
+            // Note: With userId pointing to sender, user relationship now contains sender details
+            // For sent invites we want to show receiver, so this won't work as expected
+            // TODO: Need to fetch receiver details separately or modify schema
             val sentInviteContacts = invites.mapNotNull { invite ->
                 // Handle nullable fields from Apollo generated code
                 val receiverId = invite?.receiverId ?: ""
                 val senderId = invite?.senderId ?: ""
                 val inviteId = invite?.id.orEmpty()
 
-                // Use the 'user' relationship field which now contains receiver details
-                val user = invite?.user
-
-                if (user == null) {
-                    println("ContactsRepository: WARNING - invite $inviteId has no user relationship data")
-                    // Skip invites without user data instead of showing "Unknown User"
-                    null
-                } else {
-                    // Create the SentInviteContactInvite object using the user relationship
-                    val sentInvite = SentInviteContactInvite(
-                        senderUserId = senderId,
-                        contactId = inviteId,
-                        userId = user.userId ?: receiverId,
-                        userName = user.userName,
-                        name = user.name,
-                        avatarUri = user.avatarUri,
-                        phoneNumber = user.phone
-                    )
-                    println("ContactsRepository: created SentInviteContactInvite - userName: ${sentInvite.userName}, name: ${sentInvite.name}")
-                    sentInvite
-                }
+                // The 'user' relationship now points to sender (not receiver)
+                // For sent invites, we'd want receiver details, so skip for now
+                println("ContactsRepository: WARNING - sent invites disabled until receiver details can be fetched")
+                null
             }
 
             println("ContactsRepository: fetchSentInvites returning ${sentInviteContacts.size} sent invite contacts")
@@ -464,16 +450,17 @@ class ContactsRepository(
             println("ContactsRepository: fetchReceivedInvites - found ${items.size} invites")
 
             // Map results using the user relationship data from the invite
+            // With userId pointing to sender, the user relationship contains sender details
             val receivedInvites = items.mapNotNull { invite ->
                 val senderId = invite?.senderId ?: ""
                 val inviteId = invite?.id.orEmpty()
 
-                // Use the 'user' relationship field which contains sender details
+                // Use the 'user' relationship field which now contains sender details
                 val user = invite?.user
 
                 if (user == null) {
                     println("ContactsRepository: WARNING - invite $inviteId has no user relationship data")
-                    // Skip invites without user data instead of showing "Unknown User"
+                    // Skip invites without user data
                     null
                 } else {
                     // Create the ReceivedContactInvite object using the user relationship
@@ -485,6 +472,7 @@ class ContactsRepository(
                         avatarUri = user.avatarUri,
                         phoneNumber = user.phone
                     )
+                    println("ContactsRepository: created ReceivedContactInvite - userName: ${receivedInvite.userName}, name: ${receivedInvite.name}")
                     receivedInvite
                 }
             }
@@ -581,7 +569,7 @@ class ContactsRepository(
             val input = com.cerqa.graphql.type.CreateInviteInput(
                 senderId = com.apollographql.apollo.api.Optional.present(currentUserId),
                 receiverId = com.apollographql.apollo.api.Optional.present(receiverUserId),
-                userId = receiverUserId // Point to receiver so the 'user' relationship contains receiver details
+                userId = currentUserId // Point to sender so received invites show who sent them
             )
 
             val response = apolloClient.mutation(
