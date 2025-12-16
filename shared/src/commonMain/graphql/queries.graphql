@@ -109,6 +109,17 @@ query ListInvites($filter: ModelInviteFilterInput, $limit: Int, $nextToken: Stri
       userId
       senderId
       receiverId
+      user {
+        id
+        userId
+        firstName
+        lastName
+        name
+        phone
+        userName
+        email
+        avatarUri
+      }
       createdAt
       updatedAt
     }

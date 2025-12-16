@@ -75,14 +75,6 @@ class ContactsViewModel(
         scope.launch {
             repository.fetchAllContactsWithInvites()
                 .onSuccess { contactsList ->
-                    println("ContactsViewModel: fetchAllContacts SUCCESS - received ${contactsList.size} contacts")
-                    contactsList.forEach { contact ->
-                        when (contact) {
-                            is ReceivedContactInvite -> println("  - ReceivedInvite from: ${contact.userName}")
-                            is SentInviteContactInvite -> println("  - SentInvite to: ${contact.userName}")
-                            is CurrentContact -> println("  - CurrentContact: ${contact.userName}")
-                        }
-                    }
                     _uiState.value = _uiState.value.copy(
                         pending = false,
                         contacts = contactsList

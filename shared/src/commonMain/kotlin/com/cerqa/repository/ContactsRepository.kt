@@ -261,15 +261,16 @@ class ContactsRepository(
                 val currentContacts = fetchCurrentContacts(currentUserId)
                 currentContacts.onSuccess { contacts ->
                     if (contacts.isNotEmpty()) {
-                        println("ContactsRepository: fetchAllContactsWithInvites - adding ${contacts.size} current contacts")
+                        println("ContactsRepository ***** fetchAllContactsWithInvites - adding ${contacts.size} current contacts")
+                        println("ContactsRepository ***** ${contacts}")
                         allContacts.addAll(contacts)
                         hasAnyData = true // TODO:  what is this
                     }
                 }.onFailure { e ->
-                    println("ContactsRepository: fetchAllContactsWithInvites - current contacts failed: ${e.message}")
+                    println("ContactsRepository ***** fetchAllContactsWithInvites - current contacts failed: ${e.message}")
                 }
             } catch (e: Exception) {
-                println("ContactsRepository: fetchAllContactsWithInvites - current contacts exception: ${e.message}")
+                println("ContactsRepository ***** fetchAllContactsWithInvites - current contacts exception: ${e.message}")
             }
 
             // Fetch sent invites - handle independently
@@ -293,7 +294,6 @@ class ContactsRepository(
                 val receivedInvites = fetchReceivedInvites(currentUserId)
                 receivedInvites.onSuccess { invites ->
                     if (invites.isNotEmpty()) {
-                        println("ContactsRepository: fetchAllContactsWithInvites - adding ${invites.size} received invites")
                         allContacts.addAll(invites)
                         hasAnyData = true
                     }
@@ -340,7 +340,6 @@ class ContactsRepository(
                 return Result.failure(Exception("GraphQL errors: $errors"))
             }
 
-            // 2. Map results
             val items = response.data?.listUserContacts?.items ?: emptyList()
 
             val contacts = items.filterNotNull().mapNotNull { userContact ->
@@ -396,36 +395,34 @@ class ContactsRepository(
             val invites = response.data?.listInvites?.items ?: emptyList()
             println("ContactsRepository: fetchSentInvites found ${invites.size} invites")
 
-            // Fetch user details for each receiverId
-            val sentInviteContacts = invites.map { invite ->
-                println("ContactsRepository: fetching receiver details for userId: ${invite?.receiverId}")
+            // Map invites to SentInviteContactInvite using the user relationship
+            val sentInviteContacts = invites.mapNotNull { invite ->
                 // Handle nullable fields from Apollo generated code
                 val receiverId = invite?.receiverId ?: ""
                 val senderId = invite?.senderId ?: ""
                 val inviteId = invite?.id.orEmpty()
-                // Apollo usually returns generated types for createdAt (e.g. Any or specific scalar), convert to String
-                val createdAtStr = invite?.createdAt.orEmpty()
 
-                println("ContactsRepository: fetching receiver details for userId: $receiverId")
+                // Use the 'user' relationship field which now contains receiver details
+                val user = invite?.user
 
-                // Fetch user details (Assuming fetchUserById is working/updated)
-                val userResult = fetchUserById(receiverId)
-                val user = userResult.getOrNull()
-
-                // Create the SentInviteContactInvite object
-                val sentInvite = SentInviteContactInvite(
-                    senderUserId = senderId,
-                    contactId = inviteId,
-                    // If user object is null, fallback to the raw receiverId
-                    userId = user?.userId ?: receiverId,
-                    userName = user?.userName ?: "Unknown User",
-                    name = user?.name ?: "Pending...",
-                    avatarUri = user?.avatarUri,
-                    //createdAt = createdAtStr,
-                    phoneNumber = user?.phone
-                )
-                println("ContactsRepository: created SentInviteContactInvite - userName: ${sentInvite.userName}, name: ${sentInvite.name}")
-                sentInvite
+                if (user == null) {
+                    println("ContactsRepository: WARNING - invite $inviteId has no user relationship data")
+                    // Skip invites without user data instead of showing "Unknown User"
+                    null
+                } else {
+                    // Create the SentInviteContactInvite object using the user relationship
+                    val sentInvite = SentInviteContactInvite(
+                        senderUserId = senderId,
+                        contactId = inviteId,
+                        userId = user.userId ?: receiverId,
+                        userName = user.userName,
+                        name = user.name,
+                        avatarUri = user.avatarUri,
+                        phoneNumber = user.phone
+                    )
+                    println("ContactsRepository: created SentInviteContactInvite - userName: ${sentInvite.userName}, name: ${sentInvite.name}")
+                    sentInvite
+                }
             }
 
             println("ContactsRepository: fetchSentInvites returning ${sentInviteContacts.size} sent invite contacts")
@@ -443,7 +440,7 @@ class ContactsRepository(
     private suspend fun fetchReceivedInvites(userId: String): Result<List<ReceivedContactInvite>> {
         return try {
             val response = apolloClient.query(
-                com.cerqa.graphql.ListInvitesQuery(
+                com.cerqa.graphql.ListInvitesQuery(// TODO: use aliasees
                     filter = com.apollographql.apollo.api.Optional.present(
                         com.cerqa.graphql.type.ModelInviteFilterInput(
                             receiverId = com.apollographql.apollo.api.Optional.present(
@@ -464,28 +461,33 @@ class ContactsRepository(
             }
 
             val items = response.data?.listInvites?.items ?: emptyList()
+            println("ContactsRepository: fetchReceivedInvites - found ${items.size} invites")
 
-            // 2. Map results
-            val receivedInvites = items.filterNotNull().map { invite ->
-                val senderId = invite.senderId ?: ""
+            // Map results using the user relationship data from the invite
+            val receivedInvites = items.mapNotNull { invite ->
+                val senderId = invite?.senderId ?: ""
+                val inviteId = invite?.id.orEmpty()
 
-                // Fetch details of the person who sent the invite
-                // IMPORTANT: Ensure fetchUserById is also using Apollo (as per previous answer)
-                val userResult = fetchUserById(senderId)
-                val user = userResult.getOrNull()
+                // Use the 'user' relationship field which contains sender details
+                val user = invite?.user
 
-                ReceivedContactInvite(
-                    // senderUserId = senderId.orEmpty(),
-                    contactId = invite.id,
-                    userId = user?.userId ?: senderId,
-                    userName = user?.userName ?: "Unknown",
-                    name = user?.name ?: "Pending...",
-                    avatarUri = user?.avatarUri,
-                    // createdAt = invite.createdAt.toString(),
-                    phoneNumber = user?.phone ?: ""
-                )
+                if (user == null) {
+                    println("ContactsRepository: WARNING - invite $inviteId has no user relationship data")
+                    // Skip invites without user data instead of showing "Unknown User"
+                    null
+                } else {
+                    // Create the ReceivedContactInvite object using the user relationship
+                    val receivedInvite = ReceivedContactInvite(
+                        contactId = inviteId,
+                        userId = user.userId ?: senderId,
+                        userName = user.userName,
+                        name = user.name,
+                        avatarUri = user.avatarUri,
+                        phoneNumber = user.phone
+                    )
+                    receivedInvite
+                }
             }
-
             Result.success(receivedInvites)
         } catch (e: Exception) {
             println("ContactsRepository: fetchReceivedInvites exception: ${e.message}")
@@ -497,55 +499,68 @@ class ContactsRepository(
     /**
      * Fetch a user by their userId (not the table primary key).
      */
-    // TODO: use apollo
     private suspend fun fetchUserById(userId: String): Result<User?> {
         return try {
-            val query = """
-                query ListUsers(${"$"}userId: ID!) {
-                    listUsers(filter: { userId: { eq: ${"$"}userId } }) {
-                        items {
-                            id
-                            userId
-                            firstName
-                            lastName
-                            name
-                            phone
-                            userName
-                            email
-                            avatarUri
-                            createdAt
-                        }
-                    }
-                }
-            """.trimIndent()
+            println("ContactsRepository: fetchUserById - SEARCHING for userId: '$userId'")
 
-            val request = GraphQLRequest(
-                query = query,
-                variables = mapOf("userId" to kotlinx.serialization.json.JsonPrimitive(userId))
-            )
+            // First, list ALL users to see what's actually in the database
+            val allUsersResponse = apolloClient.query(
+                com.cerqa.graphql.ListUsersQuery(
+                    filter = com.apollographql.apollo.api.Optional.absent(),
+                    limit = com.apollographql.apollo.api.Optional.present(10),
+                    nextToken = com.apollographql.apollo.api.Optional.absent()
+                )
+            ).execute()
 
-            val response = httpClient.post {
-                contentType(ContentType.Application.Json)
-                setBody(request)
+            println("ContactsRepository: fetchUserById - ALL USERS IN DATABASE:")
+            allUsersResponse.data?.listUsers?.items?.forEach { user ->
+                println("  - id: '${user?.id}', userId: '${user?.userId}', userName: '${user?.userName}'")
             }
 
-            val graphQLResponse: GraphQLResponse<ListUsersData> = response.body()
+            val filter = com.cerqa.graphql.type.ModelUserFilterInput(
+                userId = com.apollographql.apollo.api.Optional.present(
+                    com.cerqa.graphql.type.ModelIDInput(
+                        eq = com.apollographql.apollo.api.Optional.present(userId)
+                    )
+                )
+            )
 
-            if (graphQLResponse.errors != null) {
-                val errorMessages = graphQLResponse.errors.joinToString { it.message }
+            val response = apolloClient.query(
+                com.cerqa.graphql.ListUsersQuery(
+                    filter = com.apollographql.apollo.api.Optional.present(filter),
+                    limit = com.apollographql.apollo.api.Optional.present(1),
+                    nextToken = com.apollographql.apollo.api.Optional.absent()
+                )
+            ).execute()
+
+            if (response.hasErrors()) {
+                val errorMessages = response.errors?.joinToString { it.message }
                 println("ContactsRepository: fetchUserById GraphQL errors: $errorMessages")
                 return Result.failure(Exception("GraphQL errors: $errorMessages"))
             }
 
-            val user = graphQLResponse.data?.listUsers?.items?.firstOrNull()
+            val userItem = response.data?.listUsers?.items?.firstOrNull()
+            val user = userItem?.let {
+                User(
+                    id = it.id,
+                    userId = it.userId,
+                    firstName = it.firstName,
+                    lastName = it.lastName,
+                    name = it.name,
+                    phone = it.phone,
+                    userName = it.userName,
+                    email = it.email,
+                    avatarUri = it.avatarUri
+                )
+            }
+
             if (user == null) {
-                println("ContactsRepository: fetchUserById - no user found for userId: $userId")
+                println("ContactsRepository: fetchUserById - NO USER FOUND for userId: '$userId'")
             } else {
-                println("ContactsRepository: fetchUserById - found user:")
-                println("  - userId: ${user.userId}")
-                println("  - userName: ${user.userName}")
-                println("  - name: ${user.name}")
-                println("  - phone: ${user.phone}")
+                println("ContactsRepository: fetchUserById - FOUND user:")
+                println("  - userId: '${user.userId}'")
+                println("  - userName: '${user.userName}'")
+                println("  - name: '${user.name}'")
             }
             Result.success(user)
         } catch (e: Exception) {
@@ -566,7 +581,7 @@ class ContactsRepository(
             val input = com.cerqa.graphql.type.CreateInviteInput(
                 senderId = com.apollographql.apollo.api.Optional.present(currentUserId),
                 receiverId = com.apollographql.apollo.api.Optional.present(receiverUserId),
-                userId = currentUserId // Assuming strict schema where this is mandatory/String
+                userId = receiverUserId // Point to receiver so the 'user' relationship contains receiver details
             )
 
             val response = apolloClient.mutation(
@@ -824,8 +839,8 @@ class ContactsRepository(
                     User(
                         id = it.id,
                         userId = it.userId,
-                        firstName = it.firstName ?: "",
-                        lastName = it.lastName ?: "",
+                        firstName = it.firstName,
+                        lastName = it.lastName,
                         name = it.name,
                         phone = it.phone,
                         userName = it.userName,

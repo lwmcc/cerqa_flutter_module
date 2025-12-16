@@ -86,6 +86,17 @@ mutation CreateInvite($input: CreateInviteInput!, $condition: ModelInviteConditi
         userId
         senderId
         receiverId
+        user {
+            id
+            userId
+            firstName
+            lastName
+            name
+            phone
+            userName
+            email
+            avatarUri
+        }
         createdAt
         updatedAt
     }
