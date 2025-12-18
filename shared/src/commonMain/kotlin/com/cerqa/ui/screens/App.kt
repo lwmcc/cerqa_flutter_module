@@ -140,11 +140,46 @@ fun App(
                                     )
                                 }
                             },
-                            title = { Text("Chat") },
+                            title = {
+                                // TODO: set this up just copied and pasted from contacts
+                                TextField(
+                                    value = searchQuery,
+                                    onValueChange = { newValue ->
+                                        searchQuery = newValue
+                                        searchViewModel.onQueryChange(newValue)
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    placeholder = {
+                                        Text(text = "Search users")
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Filled.Search,
+                                            contentDescription = "Search"
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        if (searchQuery.isNotEmpty()) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Clear,
+                                                contentDescription = "Clear",
+                                                modifier = Modifier.clickable {
+                                                    searchQuery = ""
+                                                    searchViewModel.onQueryChange("")
+                                                }
+                                            )
+                                        }
+                                    },
+                                    singleLine = true,
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent
+                                    )
+                                )
+                            },
                             actions = {
-                                IconButton(onClick = { navActions.navigateToContactsSearch() }) {
-                                    Icon(Icons.Default.Search, contentDescription = "Search")
-                                }
                                 IconButton(onClick = { navActions.navigateToContacts() }) {
                                     Icon(Icons.Default.Add, contentDescription = "Add Contact")
                                 }
@@ -204,9 +239,6 @@ fun App(
                                 )
                             },
                             actions = {
-                                IconButton(onClick = { navActions.navigateToContactsSearch() }) {
-                                    Icon(Icons.Default.Search, contentDescription = "Search")
-                                }
                                 IconButton(onClick = { /* TODO: Add Contact Action */ }) {
                                     Icon(Icons.Default.Add, contentDescription = "Add Contact")
                                 }
