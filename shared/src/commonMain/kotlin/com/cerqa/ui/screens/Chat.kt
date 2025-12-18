@@ -38,63 +38,23 @@ data class GroupItem(
 fun Chat(onNavigateToContacts: () -> Unit = {}) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Chats", "Groups")
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Messages") },
-                actions = {
-                    // Search icon - always visible
-                    IconButton(onClick = { /* TODO: Implement search */ }) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search"
-                        )
-                    }
-
-                    // Different icon based on selected tab
-                    if (selectedTabIndex == 0) {
-                        // Contacts icon for Chats tab
-                        IconButton(onClick = onNavigateToContacts) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Contacts"
-                            )
-                        }
-                    } else {
-                        // Create group icon for Groups tab
-                        IconButton(onClick = { /* TODO: Implement create group */ }) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Create Group"
-                            )
-                        }
-                    }
-                }
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        TabRow(selectedTabIndex = selectedTabIndex) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = { Text(title) }
+                )
+            }
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Tab Row
-            TabRow(selectedTabIndex = selectedTabIndex) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        text = { Text(title) }
-                    )
-                }
-            }
 
-            // Content based on selected tab
-            when (selectedTabIndex) {
-                0 -> ChatsTab()
-                1 -> GroupsTab()
-            }
+        when (selectedTabIndex) {
+            0 -> ChatsTab()
+            1 -> GroupsTab()
         }
     }
 }

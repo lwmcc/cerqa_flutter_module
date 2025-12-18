@@ -73,32 +73,9 @@ class MainActivity : ComponentActivity() {
                     ) { state ->
                         mainViewModel.setLoggedInUserId(userId = state.user.userId)
 
-                        // Use shared KMP Compose UI (same as iOS)
                         SharedApp()
 
                         checkPermissions()
-
-                        /* Original Android-specific UI (commented out):
-
-                        // TODO: just moving code down
-                        StartScreen()
-
-                        StartScreen(
-                            mainViewModel,
-                            state = state,
-                            topBarClick = {
-
-                            },
-                            sendSms = { message ->
-                                sendSms(
-                                    context = this@MainActivity,
-                                    message = message.message,
-                                    title = message.title,
-                                    phoneNumber = message.phoneNumber,
-                                )
-                            },
-                        )
-                        */
                     }
                 }
             }
@@ -110,28 +87,6 @@ class MainActivity : ComponentActivity() {
         //pigeonFlutterApi.flutterApi?.sendChats(chatsToSend) { result ->
         //uer    println("_CerqaFlutterApi ***** PIGEON RESULT SUCCESS ${result.isSuccess}")
         //}
-
-        // TODO: create user for testing
-/*        Amplify.Auth.fetchUserAttributes({ attributes ->
-            val userId =
-                attributes.firstOrNull { it.key.keyString == "sub" }?.value
-
-            // TODO: move just for testing
-            Amplify.API.mutate(
-                ModelMutation.create(testUser2(userId!!)),
-                { response -> // TODO: response?
-                    // This is were userId is added to prefs
-                    mainViewModel.setLoggedInUserId(userId)
-                },
-                { error ->
-                    Log.e("MainActivity *****", "User creation failed", error)
-                }
-            )
-        }, { error ->
-            Log.e(
-                "MainActivity *****", "Failed to fetch user attributes", error
-            )
-        })*/
     }
 
     private fun registerReceiver() {
@@ -219,20 +174,6 @@ class MainActivity : ComponentActivity() {
             // TODO: show banner
         }
     }
-   // private fun loadUserData() = mainViewModel.getDeviceContacts()
-
-    /*    private fun sendConnectInvite(message: String, phoneNumber: String, rowId: String) {
-            val intent = Intent(Intent.ACTION_SENDTO).apply {
-                data = Uri.parse("mmsto:$phoneNumber")
-                putExtra("sms_body", message)
-                putExtra("row_id", rowId)
-                // putExtra(Intent.EXTRA_STREAM, attachment)
-            }
-            // TODO: does not get passed if
-            //if (intent.resolveActivity(packageManager) != null) {
-            startActivity(intent)
-            //}
-        }*/
 
     private fun handleIncomingIntentS(intent: Intent) {
         if (intent.action.equals(LinkActions.ACTION_VIEW.action)) {

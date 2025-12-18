@@ -1,5 +1,6 @@
 package com.mccartycarclub.ui.contacts
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -7,6 +8,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,28 +42,36 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mccartycarclub.R
 import com.mccartycarclub.navigation.ClickNavigation
+import com.mccartycarclub.repository.ContactType
 import com.mccartycarclub.repository.CurrentContact
 import com.mccartycarclub.repository.ReceivedContactInvite
 import com.mccartycarclub.repository.SentInviteContactInvite
 import com.mccartycarclub.ui.components.AlertDialogData
 import com.mccartycarclub.ui.components.AnimatedLoadingSpinner
+import com.mccartycarclub.ui.components.CardListButton
 import com.mccartycarclub.ui.components.ConfirmationDialog
+import com.mccartycarclub.ui.components.ContactCardConnectionEvent
 import com.mccartycarclub.ui.components.ContactCardEvent
 import com.mccartycarclub.ui.components.CurrentContactCard
+import com.mccartycarclub.ui.components.ListSection
 import com.mccartycarclub.ui.components.NoDataFound
 import com.mccartycarclub.ui.components.ReceivedInviteContactCard
 import com.mccartycarclub.ui.components.SentContactCard
 import com.mccartycarclub.viewmodels.ContactsViewModel
+import com.mccartycarclub.viewmodels.SearchViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Suppress("LongMethod")
 @Composable
 fun ContactsScreen(
     paddingValues: PaddingValues,
     contactsViewModel: ContactsViewModel = hiltViewModel(),
+    searchViewModel: SearchViewModel = hiltViewModel(),
     topBarClick: (ClickNavigation) -> Unit,
 ) {
     val contacts = contactsViewModel.uiState
     val userId by contactsViewModel.userId.collectAsStateWithLifecycle()
+    val searchUiState = searchViewModel.uiState
 
     var openAlertDialog by remember { mutableStateOf(false) }
     var selectedUserId by remember { mutableStateOf<String?>(null) }
@@ -53,6 +80,11 @@ fun ContactsScreen(
 
     var listIndex by remember { mutableIntStateOf(0) }
     var alertDialogData by remember { mutableStateOf<AlertDialogData?>(null) }
+
+    // Search state
+    var query by remember { mutableStateOf("") }
+    var clearSearchVisible by remember { mutableStateOf(false) }
+    var isSearching by remember { mutableStateOf(false) }
 
     val density = LocalDensity.current
 
@@ -77,33 +109,152 @@ fun ContactsScreen(
         }
     }
 
-    Box(modifier = Modifier
+    val displayContacts = if (isSearching && query.isNotEmpty()) {
+        emptyList() // We'll show search results separately
+    } else {
+        contacts.contacts
+    }
+
+    Scaffold(
+        modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues)) {
+            .padding(paddingValues),
+        topBar = {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { newValue ->
+                    query = newValue
+                    clearSearchVisible = newValue.isNotEmpty()
+                    isSearching = newValue.isNotEmpty()
+
+                    if (newValue.isNotEmpty()) {
+                        searchViewModel.onQueryChange(newValue)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                placeholder = {
+                    Text("Search users...")
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = "Search"
+                    )
+                },
+                trailingIcon = {
+                    if (clearSearchVisible) {
+                        Icon(
+                            Icons.Filled.Clear,
+                            contentDescription = "Clear",
+                            modifier = Modifier.clickable {
+                                query = ""
+                                clearSearchVisible = false
+                                isSearching = false
+                                searchViewModel.onQueryChange("")
+                            }
+                        )
+                    } else {
+                        IconButton(onClick = { topBarClick(ClickNavigation.NavToSearch) }) {
+                            Icon(Icons.Default.Add, contentDescription = "Add Contact")
+                        }
+                    }
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Search
+                ),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        // Search is triggered automatically via onValueChange
+                    }
+                )
+            )
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(innerPadding)
         ) {
-
             AnimatedLoadingSpinner(
                 density = density,
-                dataPending = contacts.pending,
+                dataPending = if (isSearching) searchUiState.pending else contacts.pending,
                 spinnerSize = R.dimen.card_pending_spinner,
                 slideIn = (-20).dp,
             )
 
             when {
+                isSearching && query.isNotEmpty() -> {
+                    if (searchUiState.results.isEmpty() && !searchUiState.pending && !searchUiState.idle) {
+                        NoDataFound(message = stringResource(R.string.user_search))
+                    } else if (!searchUiState.idle) {
+                        LazyColumn(modifier = Modifier.testTag("searchResultsTag")) {
+                            items(searchUiState.results.size) { index ->
+                                val item = searchUiState.results[index]
+                                ListSection(
+                                    image = R.drawable.ic_dashboard_black_24dp,
+                                    contentDescription = stringResource(id = R.string.user_avatar),
+                                    title = item.userName.toString(),
+                                    width = 60.dp,
+                                    content = {
+                                        when (item.contactType) {
+                                            ContactType.RECEIVED -> {
+                                                Text(
+                                                    text = stringResource(R.string.connect_invite_received),
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                )
+                                            }
+
+                                            ContactType.SENT -> {
+                                                Text(
+                                                    text = stringResource(R.string.connect_invite_sent),
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                )
+                                            }
+
+                                            ContactType.CURRENT -> {
+                                                Text(
+                                                    text = stringResource(R.string.connected),
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                )
+                                            }
+
+                                            null -> {
+                                                CardListButton(
+                                                    text = stringResource(id = R.string.connect_to_user),
+                                                    isEnabled = item.connectButtonEnabled,
+                                                    onClick = {
+                                                        // Send invite to connect
+                                                        val event: ContactCardConnectionEvent =
+                                                            ContactCardConnectionEvent.InviteConnectEvent(
+                                                                receiverUserId = item.userId,
+                                                                rowId = item.id
+                                                            )
+                                                        searchViewModel.inviteSentEvent(event)
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
                 contacts.message != null -> {
                     println("SharedComposables ***** CONTACTS MESSAGE ${contacts.message}")
                 }
 
-                contacts.contacts.isEmpty() && !contacts.pending -> {
+                displayContacts.isEmpty() && !contacts.pending -> {
                     NoDataFound(message = stringResource(id = R.string.connect_invite_users))
                 }
 
                 else -> {
                     LazyColumn(modifier = Modifier.testTag("contactsTag")) {
-                        contacts.contacts.forEachIndexed { index, contact ->
+                        displayContacts.forEachIndexed { index, contact ->
                             when (contact) {
                                 is ReceivedContactInvite -> {
                                     item {

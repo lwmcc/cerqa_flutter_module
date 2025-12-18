@@ -23,23 +23,21 @@ import com.cerqa.viewmodels.SearchViewModel
 
 @Composable
 fun Contacts(
+    searchQuery: String,
     searchViewModel: SearchViewModel,
     contactsViewModel: ContactsViewModel
 ) {
     val uiState by searchViewModel.uiState.collectAsState()
     val contactsUiState by contactsViewModel.uiState.collectAsState()
-    var searchQuery by remember { mutableStateOf("") }
     var showInviteDialog by remember { mutableStateOf(false) }
     var selectedUser by remember { mutableStateOf<SearchUser?>(null) }
     var showConfirmDialog by remember { mutableStateOf(false) }
     var confirmDialogData by remember { mutableStateOf<ConfirmDialogData?>(null) }
 
-    // Fetch contacts on init
     LaunchedEffect(Unit) {
         contactsViewModel.fetchAllContacts()
     }
 
-    // Add sent invite to contacts when an invite is sent successfully from search
     LaunchedEffect(uiState.lastSentInvite) {
         uiState.lastSentInvite?.let { inviteData ->
             println("Contacts: Detected new sent invite, adding to contacts list")
@@ -53,7 +51,6 @@ fun Contacts(
         }
     }
 
-    // Refresh contacts when returning to idle state (cleared search)
     LaunchedEffect(uiState.idle) {
         if (uiState.idle && searchQuery.isEmpty()) {
             contactsViewModel.fetchAllContacts()
@@ -65,49 +62,7 @@ fun Contacts(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Search TextField
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { newValue ->
-                searchQuery = newValue
-                searchViewModel.onQueryChange(newValue)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            placeholder = {
-                Text(text = "Search users by username")
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.Search,
-                    contentDescription = "Search icon"
-                )
-            },
-            trailingIcon = {
-                if (searchQuery.isNotEmpty()) {
-                    Icon(
-                        imageVector = Icons.Filled.Clear,
-                        contentDescription = "Clear search",
-                        modifier = Modifier.clickable {
-                            searchQuery = ""
-                            searchViewModel.onQueryChange("")
-                        }
-                    )
-                }
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Search
-            ),
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    // Search is triggered automatically via onQueryChange
-                }
-            )
-        )
-
-        if (uiState.pending) {
+        if (uiState.pending || contactsUiState.pending) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -172,7 +127,7 @@ fun Contacts(
 
             else -> {} // TODO:  what else?
         }
-        if (uiState.idle && searchQuery.isEmpty()) {
+        if (uiState.idle && contactsUiState.contacts.isEmpty() && !contactsUiState.pending) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -184,25 +139,9 @@ fun Contacts(
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
-
-                // Display all contacts from backend
-                if (contactsUiState.contacts.isNotEmpty()) {
-                    Text(
-                        text = "Your Contacts (${contactsUiState.contacts.size})",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                } else if (!contactsUiState.pending) {
-                    Text(
-                        text = "No contacts yet. Search above to find users!",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
         }
 
-        // Contacts list - always show when not searching
         if (uiState.idle && searchQuery.isEmpty() && contactsUiState.contacts.isNotEmpty()) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
@@ -414,61 +353,53 @@ fun ReceivedInviteCard(
     onAccept: () -> Unit,
     onDeny: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = contact.userName ?: "Unknown User",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "Wants to connect",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                contact.phoneNumber?.let { phone ->
                     Text(
-                        text = contact.userName ?: "Unknown User",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = "Wants to connect",
+                        text = phone,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    contact.phoneNumber?.let { phone ->
-                        Text(
-                            text = phone,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = onDeny,
+                modifier = Modifier.weight(1f)
             ) {
-                OutlinedButton(
-                    onClick = onDeny,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Deny")
-                }
-                Button(
-                    onClick = onAccept,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Accept")
-                }
+                Text("Deny")
+            }
+            Button(
+                onClick = onAccept,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Accept")
             }
         }
     }
@@ -479,42 +410,34 @@ fun SentInviteCard(
     contact: SentInviteContactInvite,
     onCancel: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = contact.userName ?: "Unknown User",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = "Invite sent - waiting for response",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            contact.phoneNumber?.let { phone ->
                 Text(
-                    text = contact.userName ?: "Unknown User",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = "Invite sent - waiting for response",
+                    text = phone,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
-                contact.phoneNumber?.let { phone ->
-                    Text(
-                        text = phone,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
             }
+        }
 
-            OutlinedButton(onClick = onCancel) {
-                Text("Cancel")
-            }
+        OutlinedButton(onClick = onCancel) {
+            Text("Cancel")
         }
     }
 }
@@ -524,39 +447,34 @@ fun CurrentContactCard(
     contact: CurrentContact,
     onDelete: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = contact.userName ?: contact.name ?: "Unknown User",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = "Connected",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+            contact.phoneNumber?.let { phone ->
                 Text(
-                    text = contact.userName ?: contact.name ?: "Unknown User",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = "Connected",
+                    text = phone,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.tertiary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                contact.phoneNumber?.let { phone ->
-                    Text(
-                        text = phone,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
+        }
 
-            OutlinedButton(onClick = onDelete) {
-                Text("Delete")
-            }
+        OutlinedButton(onClick = onDelete) {
+            Text("Delete")
         }
     }
 }
@@ -567,63 +485,61 @@ fun SearchUserCard(
     onConnectClick: () -> Unit,
     onCancelInvite: ((String) -> Unit)? = null
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = user.userName ?: "Unknown User",
+                style = MaterialTheme.typography.titleMedium
+            )
+            user.phone?.let { phone ->
                 Text(
-                    text = user.userName ?: "Unknown User",
-                    style = MaterialTheme.typography.titleMedium
+                    text = phone,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                user.phone?.let { phone ->
-                    Text(
-                        text = phone,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+            }
+        }
+
+        // Connection status or action button
+        when (user.contactType) {
+            ContactType.RECEIVED -> {
+                Button(
+                    onClick = { /* Disabled */ },
+                    enabled = false
+                ) {
+                    Text("Invite Received")
                 }
             }
 
-            // Connection status or action button
-            when (user.contactType) {
-                ContactType.RECEIVED -> {
-                    Button(
-                        onClick = { /* Disabled */ },
-                        enabled = false
-                    ) {
-                        Text("Invite Received")
-                    }
+            ContactType.SENT -> {
+                OutlinedButton(
+                    onClick = { onCancelInvite?.invoke(user.userId) }
+                ) {
+                    Text("Cancel Invite")
                 }
-                ContactType.SENT -> {
-                    OutlinedButton(
-                        onClick = { onCancelInvite?.invoke(user.userId) }
-                    ) {
-                        Text("Cancel Invite")
-                    }
+            }
+
+            ContactType.CURRENT -> {
+                Button(
+                    onClick = { /* Disabled */ },
+                    enabled = false
+                ) {
+                    Text("Connected")
                 }
-                ContactType.CURRENT -> {
-                    Button(
-                        onClick = { /* Disabled */ },
-                        enabled = false
-                    ) {
-                        Text("Connected")
-                    }
-                }
-                null -> {
-                    Button(
-                        onClick = onConnectClick,
-                        enabled = user.connectButtonEnabled
-                    ) {
-                        Text("Connect")
-                    }
+            }
+
+            null -> {
+                Button(
+                    onClick = onConnectClick,
+                    enabled = user.connectButtonEnabled
+                ) {
+                    Text("Connect")
                 }
             }
         }

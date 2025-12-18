@@ -3,6 +3,7 @@ package com.cerqa.ui.screens
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,13 +29,17 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,6 +83,9 @@ fun App(
     val currentRoute = currentBackStackEntry?.destination?.route
     val topNavItems = getTopNavItems(currentRoute)
 
+    var searchQuery by remember { mutableStateOf("") }
+    var active by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         mainViewModel.fetchUser()
     }
@@ -82,62 +93,139 @@ fun App(
     MaterialTheme {
         Scaffold(
             topBar = {
-                if (currentRoute == null || currentRoute == "main") {
-                    TopAppBar( // TODO: move code to a function
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer
-                        ),
-                        navigationIcon = {
-                            // Profile icon on the left
-                            IconButton(
-                                onClick = {
-                                    navActions.navigateToProfile()
-                                },
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AccountCircle,
-                                    contentDescription = "Profile",
-                                    modifier = Modifier.size(40.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
+                when (currentRoute) {
+                    null, AppDestination.Main.route -> {
+                        TopAppBar(
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                            ),
+                            navigationIcon = {
+                                IconButton(
+                                    onClick = { navActions.navigateToProfile() },
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(CircleShape)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AccountCircle,
+                                        contentDescription = "Profile",
+                                        modifier = Modifier.size(40.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            },
+                            title = { Text("Main") },
+                            actions = {
+                                IconButton(onClick = { navActions.navigateToContactsSearch() }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Search",
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
                             }
-                        },
-                        title = {
-                            Text("Main")
-                        },
-                        actions = {
-                            // Search icon - only icon on home screen
-                            IconButton(onClick = { navActions.navigateToContactsSearch() }) {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Search",
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
-                        }
-                    )
-                } else {
-                    TopBar(
-                        searchViewModel = searchViewModel,
-                        currentRoute = currentRoute,
-                        text = "SEARCH FIELD", // TODO: stringResource(id = R.string.search_field),
-                        items = topNavItems,
-                        onNavClick = {
-                            navActions.navigateToProfile()
-                        },
-                        onBackClick = {
-                            navActions.popBackStack()
-                        },
-                        onTopNavClick = { route ->
-                            // TODO: nav to route
-                        },
-                        onQueryChanged = { query ->
+                        )
+                    }
 
-                        },
-                    )
+                    AppDestination.Chat.route -> {
+                        TopAppBar(
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                            ),
+                            navigationIcon = {
+                                IconButton(onClick = { navActions.popBackStack() }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
+                                }
+                            },
+                            title = { Text("Chat") },
+                            actions = {
+                                IconButton(onClick = { navActions.navigateToContactsSearch() }) {
+                                    Icon(Icons.Default.Search, contentDescription = "Search")
+                                }
+                                IconButton(onClick = { navActions.navigateToContacts() }) {
+                                    Icon(Icons.Default.Add, contentDescription = "Add Contact")
+                                }
+                            }
+                        )
+                    }
+
+                    AppDestination.Contacts.route -> {
+                        TopAppBar(
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                            ),
+                            navigationIcon = {
+                                IconButton(onClick = { navActions.popBackStack() }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
+                                }
+                            },
+                            title = {
+                                TextField(
+                                    value = searchQuery,
+                                    onValueChange = { newValue ->
+                                        searchQuery = newValue
+                                        searchViewModel.onQueryChange(newValue)
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    placeholder = {
+                                        Text(text = "Search users")
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Filled.Search,
+                                            contentDescription = "Search"
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        if (searchQuery.isNotEmpty()) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Clear,
+                                                contentDescription = "Clear",
+                                                modifier = Modifier.clickable {
+                                                    searchQuery = ""
+                                                    searchViewModel.onQueryChange("")
+                                                }
+                                            )
+                                        }
+                                    },
+                                    singleLine = true,
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent
+                                    )
+                                )
+                            },
+                            actions = {
+                                IconButton(onClick = { navActions.navigateToContactsSearch() }) {
+                                    Icon(Icons.Default.Search, contentDescription = "Search")
+                                }
+                                IconButton(onClick = { /* TODO: Add Contact Action */ }) {
+                                    Icon(Icons.Default.Add, contentDescription = "Add Contact")
+                                }
+                            }
+                        )
+                    }
+
+                    else -> {
+                        TopBar(
+                            searchViewModel = searchViewModel,
+                            currentRoute = currentRoute,
+                            text = "SEARCH FIELD",
+                            items = topNavItems,
+                            onNavClick = { navActions.navigateToProfile() },
+                            onBackClick = { navActions.popBackStack() },
+                            onTopNavClick = { route -> /* TODO: nav to route */ },
+                            onQueryChanged = { query -> }
+                        )
+                    }
                 }
             },
 
@@ -173,6 +261,7 @@ fun App(
                 }
                 composable(AppDestination.Contacts.route) {
                     Contacts(
+                        searchQuery = searchQuery,
                         searchViewModel = searchViewModel,
                         contactsViewModel = contactsViewModel
                     )
