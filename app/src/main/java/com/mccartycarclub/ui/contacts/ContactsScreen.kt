@@ -248,7 +248,7 @@ fun ContactsScreen(
                     println("SharedComposables ***** CONTACTS MESSAGE ${contacts.message}")
                 }
 
-                displayContacts.isEmpty() && !contacts.pending -> {
+                displayContacts.isEmpty() && searchUiState.nonAppUsers.isEmpty() && !contacts.pending -> {
                     NoDataFound(message = stringResource(id = R.string.connect_invite_users))
                 }
 
@@ -328,6 +328,40 @@ fun ContactsScreen(
                                         )
                                     }
                                 }
+                            }
+                        }
+
+                        // Device contacts section
+                        if (searchUiState.nonAppUsers.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = stringResource(R.string.device_contacts_header),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
+                                )
+                            }
+
+                            items(searchUiState.nonAppUsers.size) { index ->
+                                val contact = searchUiState.nonAppUsers[index]
+                                ListSection(
+                                    image = R.drawable.ic_dashboard_black_24dp,
+                                    contentDescription = stringResource(id = R.string.user_avatar),
+                                    title = contact.name,
+                                    width = 60.dp,
+                                    content = {
+                                        CardListButton(
+                                            text = stringResource(id = R.string.invite_user),
+                                            isEnabled = true,
+                                            onClick = {
+                                                contact.phoneNumbers.firstOrNull()?.let { phoneNumber ->
+                                                    searchViewModel.inviteSentEvent(
+                                                        ContactCardConnectionEvent.InvitePhoneNumberConnectEvent(phoneNumber)
+                                                    )
+                                                }
+                                            }
+                                        )
+                                    }
+                                )
                             }
                         }
                     }

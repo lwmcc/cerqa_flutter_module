@@ -59,6 +59,13 @@ class SearchViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            loadDeviceContacts()
+            userSearch()
+        }
+    }
+
+    fun loadDeviceContacts() {
+        viewModelScope.launch {
             uiState = uiState.copy(pending = true)
             val contactsWrapper = contactsRepository.getDeviceContacts()
 
@@ -67,8 +74,6 @@ class SearchViewModel @Inject constructor(
                 appUsers = contactsWrapper.appUsers,
                 nonAppUsers = contactsWrapper.nonAppUsers,
             )
-
-            userSearch()
         }
     }
 

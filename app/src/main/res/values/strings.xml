@@ -30,6 +30,8 @@
     <string name="connect_view_invite_received">Received invite from user</string>
     <string name="connections_using_app">Connections</string>
     <string name="connections_not_using_app">Contacts</string>
+    <string name="device_contacts_header">Device Contacts</string>
+    <string name="invite_user">Invite</string>
 
     <string name="connect_content_description_avatar">User avatar</string>
     <string name="connect_content_description_search">User search</string>

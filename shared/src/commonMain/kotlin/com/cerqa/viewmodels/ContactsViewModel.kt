@@ -1,5 +1,6 @@
 package com.cerqa.viewmodels
 
+import androidx.lifecycle.viewModelScope
 import com.cerqa.models.*
 import com.cerqa.repository.ContactsRepository
 import com.cerqa.platform.DeviceContactsProvider
@@ -42,8 +43,8 @@ sealed class ContactCardEvent {
  * Uses JWT-authenticated API calls via the ContactsRepository
  */
 class ContactsViewModel(
-    private val repository: ContactsRepository,
-    private val deviceContactsProvider: DeviceContactsProvider? = null
+    private val contactsRepository: ContactsRepository,
+    private val deviceContactsProvider: DeviceContactsProvider? = null,
 ) {
     private val viewModelJob = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.Main + viewModelJob)
@@ -73,7 +74,7 @@ class ContactsViewModel(
         println("ContactsViewModel: fetchAllContacts called")
         _uiState.value = _uiState.value.copy(pending = true)
         scope.launch {
-            repository.fetchAllContactsWithInvites()
+            contactsRepository.fetchAllContactsWithInvites()
                 .onSuccess { contactsList ->
                     _uiState.value = _uiState.value.copy(
                         pending = false,
@@ -144,7 +145,7 @@ class ContactsViewModel(
         _uiState.value = _uiState.value.copy(contacts = updatedContacts, pending = true)
         _contacts.value = updatedContacts
 
-        repository.deleteReceivedInvite(userId)
+        contactsRepository.deleteReceivedInvite(userId)
             .onSuccess {
                 println("ContactsViewModel: deleteReceivedInviteToConnect - SUCCESS, keeping optimistic update")
                 // Just update pending state - the invite is already removed from UI
@@ -192,7 +193,7 @@ class ContactsViewModel(
         _uiState.value = _uiState.value.copy(contacts = updatedContacts, pending = true)
         _contacts.value = updatedContacts
 
-        repository.acceptInvite(senderUserId)
+        contactsRepository.acceptInvite(senderUserId)
             .onSuccess { userContact ->
                 println("ContactsViewModel: acceptConnection - SUCCESS, updating contact with backend ID")
                 // Update the contact with the real contactId from backend
@@ -226,7 +227,7 @@ class ContactsViewModel(
         _uiState.value = _uiState.value.copy(contacts = updatedContacts, pending = true)
         _contacts.value = updatedContacts
 
-        repository.deleteContact(contactId)
+        contactsRepository.deleteContact(contactId)
             .onSuccess {
                 println("ContactsViewModel: deleteContact - SUCCESS, keeping optimistic update")
                 // Just update pending state - the contact is already removed from UI
@@ -251,7 +252,7 @@ class ContactsViewModel(
         _uiState.value = _uiState.value.copy(contacts = updatedContacts, pending = true)
         _contacts.value = updatedContacts
 
-        repository.cancelInviteToConnect(receiverUserId)
+        contactsRepository.cancelInviteToConnect(receiverUserId)
             .onSuccess {
                 println("ContactsViewModel: cancelInviteToConnect - SUCCESS, keeping optimistic update")
                 // Just update pending state - the invite is already removed from UI
@@ -282,7 +283,7 @@ class ContactsViewModel(
 
             // Get current user ID if not provided
             val actualSenderUserId = if (senderUserId.isBlank()) {
-                repository.getCurrentUserId() ?: ""
+                contactsRepository.getCurrentUserId() ?: ""
             } else {
                 senderUserId
             }
@@ -308,7 +309,7 @@ class ContactsViewModel(
     fun sendInviteToConnect(receiverUserId: String, receiverUserName: String? = null, receiverName: String? = null, senderUserId: String? = null) {
         _isSendingInvite.value = true
         scope.launch {
-            repository.sendInviteToConnect(receiverUserId)
+            contactsRepository.sendInviteToConnect(receiverUserId)
                 .onSuccess { inviteId ->
                     println("ContactsViewModel: sendInviteToConnect - SUCCESS, adding to contacts list")
                     // Add the new sent invite to the contacts list
@@ -339,7 +340,7 @@ class ContactsViewModel(
             _isLoading.value = true
             _error.value = null
 
-            repository.addContact(contactUserId)
+            contactsRepository.addContact(contactUserId)
                 .onSuccess {
                     // Refresh the contacts list
                     fetchAllContacts()
@@ -361,7 +362,7 @@ class ContactsViewModel(
             _error.value = null
 
             // First find the user by phone
-            repository.findUserByPhone(phone)
+            contactsRepository.findUserByPhone(phone)
                 .onSuccess { user ->
                     if (user != null) {
                         // Then send them a connection invite
@@ -417,6 +418,19 @@ class ContactsViewModel(
 
             ContactsWrapper(appUsers = appUsers, nonAppUsers = nonAppUsers)
         } ?: ContactsWrapper(emptyList(), emptyList())
+    }
+
+    fun loadDeviceContacts() {
+        scope.launch {
+/*            uiState = uiState.copy(pending = true)
+            val contactsWrapper = contactsRepository.getDeviceContacts()
+
+            uiState = uiState.copy(
+                pending = false,
+                appUsers = contactsWrapper.appUsers,
+                nonAppUsers = contactsWrapper.nonAppUsers,
+            )*/
+        }
     }
 
     companion object {

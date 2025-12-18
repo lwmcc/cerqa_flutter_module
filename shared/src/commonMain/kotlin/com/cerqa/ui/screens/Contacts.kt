@@ -4,18 +4,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.cerqa.models.*
+import com.cerqa.viewmodels.ContactCardConnectionEvent
 import com.cerqa.viewmodels.ContactCardEvent
 import com.cerqa.viewmodels.ContactsViewModel
 import com.cerqa.viewmodels.MessageType
@@ -36,6 +31,7 @@ fun Contacts(
 
     LaunchedEffect(Unit) {
         contactsViewModel.fetchAllContacts()
+        searchViewModel.loadDeviceContacts()
     }
 
     LaunchedEffect(uiState.lastSentInvite) {
@@ -127,7 +123,7 @@ fun Contacts(
 
             else -> {} // TODO:  what else?
         }
-        if (uiState.idle && contactsUiState.contacts.isEmpty() && !contactsUiState.pending) {
+        if (uiState.idle && contactsUiState.contacts.isEmpty() && uiState.nonAppUsers.isEmpty() && !contactsUiState.pending) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -142,7 +138,7 @@ fun Contacts(
             }
         }
 
-        if (uiState.idle && searchQuery.isEmpty() && contactsUiState.contacts.isNotEmpty()) {
+        if (uiState.idle && searchQuery.isEmpty() && (contactsUiState.contacts.isNotEmpty() || uiState.nonAppUsers.isNotEmpty())) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
                     .weight(1f),
@@ -219,6 +215,29 @@ fun Contacts(
                                 }
                             )
                         }
+                    }
+                }
+
+                // Device contacts section
+                if (uiState.nonAppUsers.isNotEmpty()) {
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Device Contacts",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+
+                    items(uiState.nonAppUsers, key = { it.phoneNumbers.firstOrNull() ?: it.name }) { contact ->
+                        DeviceContactCard(
+                            contact = contact,
+                            onInviteClick = { phoneNumber ->
+                                searchViewModel.inviteSentEvent(
+                                    ContactCardConnectionEvent.InvitePhoneNumberConnectEvent(phoneNumber)
+                                )
+                            }
+                        )
                     }
                 }
             }
@@ -541,6 +560,57 @@ fun SearchUserCard(
                 ) {
                     Text("Connect")
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun DeviceContactCard(
+    contact: DeviceContact,
+    onInviteClick: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = contact.name,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                contact.phoneNumbers.firstOrNull()?.let { phone ->
+                    Text(
+                        text = phone,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Text(
+                    text = "From device contacts",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Button(
+                onClick = {
+                    contact.phoneNumbers.firstOrNull()?.let { phone ->
+                        onInviteClick(phone)
+                    }
+                }
+            ) {
+                Text("Invite")
             }
         }
     }
