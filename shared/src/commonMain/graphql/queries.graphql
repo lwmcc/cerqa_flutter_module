@@ -126,3 +126,14 @@ query ListInvites($filter: ModelInviteFilterInput, $limit: Int, $nextToken: Stri
     nextToken
   }
 }
+
+# Fetches a JWT for Ably real-time services
+query FetchAblyJwt($userId: String!) {
+  fetchAblyJwt(userId: $userId) {
+    keyName
+    clientId
+    timestamp
+    nonce
+    mac
+  }
+}

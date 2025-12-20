@@ -123,7 +123,7 @@ fun Contacts(
 
             else -> {} // TODO:  what else?
         }
-        if (uiState.idle && contactsUiState.contacts.isEmpty() && uiState.nonAppUsers.isEmpty() && !contactsUiState.pending) {
+        if (uiState.idle && contactsUiState.contacts.isEmpty() && uiState.nonAppUsers.isEmpty() && !contactsUiState.pending && !uiState.pending) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -138,7 +138,7 @@ fun Contacts(
             }
         }
 
-        if (uiState.idle && searchQuery.isEmpty() && (contactsUiState.contacts.isNotEmpty() || uiState.nonAppUsers.isNotEmpty())) {
+        if (uiState.idle && searchQuery.isEmpty() && !contactsUiState.pending && !uiState.pending && (contactsUiState.contacts.isNotEmpty() || uiState.nonAppUsers.isNotEmpty())) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
                     .weight(1f),
@@ -223,7 +223,7 @@ fun Contacts(
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Device Contacts",
+                            text = "Device Contacts",// TODO: use string resource
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
@@ -570,48 +570,40 @@ fun DeviceContactCard(
     contact: DeviceContact,
     onInviteClick: (String) -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = contact.name,
+                style = MaterialTheme.typography.titleMedium
+            )
+            contact.phoneNumbers.firstOrNull()?.let { phone ->
                 Text(
-                    text = contact.name,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                contact.phoneNumbers.firstOrNull()?.let { phone ->
-                    Text(
-                        text = phone,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Text(
-                    text = "From device contacts",
+                    text = phone,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            Text(
+                text = "From device contacts",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
-            Button(
-                onClick = {
-                    contact.phoneNumbers.firstOrNull()?.let { phone ->
-                        onInviteClick(phone)
-                    }
+        Button(
+            onClick = {
+                contact.phoneNumbers.firstOrNull()?.let { phone ->
+                    onInviteClick(phone)
                 }
-            ) {
-                Text("Invite")
             }
+        ) {
+            Text("Invite")
         }
     }
 }

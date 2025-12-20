@@ -42,10 +42,10 @@ val commonModule = module {
 
     single { TestDataSeeder(apolloClient = get(), authTokenProvider = get()) }
 
-    factory { ContactsViewModel(get()) }
+    factory { ContactsViewModel(get(), get()) }
     factory { ApolloContactsViewModel(get()) }
     factory { MockContactsViewModel(get()) }
-    factory { SearchViewModel(get()) }
+    factory { SearchViewModel(get(), get(), get()) }
     factory {
         ProfileViewModel(
             apolloClient = get(),

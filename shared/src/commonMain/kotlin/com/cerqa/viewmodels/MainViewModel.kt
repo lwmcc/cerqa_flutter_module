@@ -1,12 +1,16 @@
 package com.cerqa.viewmodels
 
+import androidx.lifecycle.viewModelScope
 import com.cerqa.data.Preferences
 import com.cerqa.data.UserRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainViewModel(
@@ -68,4 +72,29 @@ class MainViewModel(
             _isLoading.value = false
         }
     }
+
+    fun initAbly() {
+       /* viewModelScope.launch {
+            val id = localRepo.getUserId().first()
+            _userId.value = id
+            fetchAblyToken(id)
+        }*/
+    }
+
+/*    private fun fetchAblyToken(userId: String?) {
+        viewModelScope.launch {
+            // TODO: connections refused right now over limit from testing, will get back to this
+                        if (userId != null) {
+                            val ablyRequestToken: Deferred<Auth.TokenRequest?> = async {
+                                repo.fetchAblyToken(userId).firstOrNull()
+                            }
+
+                            realTime.initAbly(
+                                userId = userId,
+                                channelName = channelName(userId),
+                                tokenRequest = ablyRequestToken.await(),
+                            )
+                        }
+        }
+    }*/
 }

@@ -21,9 +21,12 @@ actual class DeviceContactsProvider(private val context: Context) {
      * Get all contacts from the device with phone numbers.
      */
     actual suspend fun getDeviceContacts(): List<DeviceContact> = withContext(Dispatchers.IO) {
+        println("DeviceContactsProvider.android: getDeviceContacts called")
         if (!hasContactsPermission()) {
+            println("DeviceContactsProvider.android: READ_CONTACTS permission NOT granted")
             return@withContext emptyList()
         }
+        println("DeviceContactsProvider.android: READ_CONTACTS permission granted, fetching contacts...")
 
         val contacts = mutableListOf<DeviceContact>()
         val contentResolver: ContentResolver = context.contentResolver
@@ -66,12 +69,15 @@ actual class DeviceContactsProvider(private val context: Context) {
                     }
                 }
             }
+            println("DeviceContactsProvider.android: successfully loaded ${contacts.size} contacts")
             contacts
         } catch (e: SecurityException) {
             // Permission denied
+            println("DeviceContactsProvider.android: SecurityException - ${e.message}")
             emptyList()
         } catch (e: RuntimeException) {
             // Other runtime errors
+            println("DeviceContactsProvider.android: RuntimeException - ${e.message}")
             emptyList()
         }
     }

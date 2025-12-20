@@ -7,6 +7,8 @@ import com.cerqa.data.Preferences
 import com.cerqa.data.StoreDefaults
 import com.cerqa.data.StoreUserDefaults
 import com.cerqa.data.UserPreferences
+import com.cerqa.platform.DeviceContactsProvider
+import com.cerqa.platform.SmsProvider
 import io.ktor.client.engine.*
 import io.ktor.client.engine.darwin.*
 import org.koin.core.module.Module
@@ -30,4 +32,8 @@ actual fun platformModule(): Module = module {
             ioDispatcher = get() // Gets Dispatchers.IO from appModule
         )
     }
+
+    // Device contacts and SMS providers
+    single { DeviceContactsProvider() }
+    single { SmsProvider() }
 }

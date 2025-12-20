@@ -66,13 +66,16 @@ class SearchViewModel(
      * Load device contacts on demand (call this when user navigates to search/contacts screen)
      */
     fun loadDeviceContacts() {
+        println("SearchViewModel: loadDeviceContacts called, deviceContactsLoaded=$deviceContactsLoaded")
         if (deviceContactsLoaded) return // Already loaded
 
         scope.launch {
             deviceContactsProvider?.let { provider ->
+                println("SearchViewModel: deviceContactsProvider is available, loading contacts...")
                 _uiState.value = _uiState.value.copy(pending = true)
 
                 val deviceContacts = provider.getDeviceContacts()
+                println("SearchViewModel: loaded ${deviceContacts.size} device contacts")
 
                 // TODO: Categorize into app users vs non-app users
                 // For now, just showing all as non-app users
@@ -82,6 +85,9 @@ class SearchViewModel(
                 )
 
                 deviceContactsLoaded = true
+                println("SearchViewModel: device contacts loaded successfully, nonAppUsers count: ${deviceContacts.size}")
+            } ?: run {
+                println("SearchViewModel: deviceContactsProvider is NULL!")
             }
         }
     }
