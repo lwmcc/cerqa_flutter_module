@@ -83,7 +83,7 @@ class MainActivity : ComponentActivity() {
         registerReceiver()
         handleIncomingIntentS(intent)
 
-        //mainViewModel.initAbly()
+        mainViewModel.initAbly()
         //pigeonFlutterApi.flutterApi?.sendChats(chatsToSend) { result ->
         //uer    println("_CerqaFlutterApi ***** PIGEON RESULT SUCCESS ${result.isSuccess}")
         //}

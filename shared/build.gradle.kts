@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.compose") version "1.8.2"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.2.0"
     id("com.apollographql.apollo") version "4.1.0"
+    kotlin("native.cocoapods")
 }
 
 kotlin {
@@ -48,6 +49,18 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = xcfName
             isStatic = true
+        }
+    }
+
+    // CocoaPods configuration for iOS dependencies
+    cocoapods {
+        summary = "Shared module for carclub"
+        homepage = "https://cerqa.com"
+        ios.deploymentTarget = "14.0"
+
+        // Ably iOS SDK
+        pod("Ably") {
+            version = "1.2.33"
         }
     }
 
@@ -126,6 +139,9 @@ kotlin {
                 // Amplify Android SDK for authentication
                 implementation("com.amplifyframework:core:2.14.+")
                 implementation("com.amplifyframework:aws-auth-cognito:2.14.+")
+
+                // Ably Android SDK
+                implementation("io.ably:ably-android:1.2.48")
             }
         }
 

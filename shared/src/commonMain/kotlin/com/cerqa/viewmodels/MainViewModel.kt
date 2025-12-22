@@ -3,6 +3,8 @@ package com.cerqa.viewmodels
 import androidx.lifecycle.viewModelScope
 import com.cerqa.data.Preferences
 import com.cerqa.data.UserRepository
+import com.cerqa.realtime.AblyService
+import com.cerqa.repository.AblyRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -17,6 +19,7 @@ class MainViewModel(
     private val preferences: Preferences,
     private val userRepository: UserRepository,
     private val mainDispatcher: CoroutineDispatcher,
+    private val ablyService: AblyService,
 ) {
     private val viewModelScope = CoroutineScope(mainDispatcher)
 
@@ -63,6 +66,9 @@ class MainViewModel(
                     println("MainViewModel ***** Email: ${user.email}")
                     println("MainViewModel ***** Phone: ${user.phone}")
                     println("MainViewModel ***** Avatar: ${user.avatarUri}")
+
+                    // Initialize Ably for realtime features
+                    initAbly(user.id)
                 }
                 .onFailure { exception ->
                     println("MainViewModel ***** ERROR: ${exception.message}")
@@ -73,28 +79,64 @@ class MainViewModel(
         }
     }
 
-    fun initAbly() {
-       /* viewModelScope.launch {
-            val id = localRepo.getUserId().first()
-            _userId.value = id
-            fetchAblyToken(id)
-        }*/
+    /**
+     * Initialize Ably for the current user.
+     * Called automatically after successful user fetch.
+     * Can also be called manually if needed.
+     */
+    fun initAbly(userId: String) {
+        viewModelScope.launch {
+            println("MainViewModel: Initializing Ably for user: $userId")
+
+            ablyService.initialize(userId)
+                .onSuccess {
+                    println("MainViewModel: Ably initialized successfully")
+
+                    // Subscribe to a user-specific channel
+                    val channelName = "user:$userId"
+                    launch {
+                        ablyService.subscribeToChannel(channelName).collect { message ->
+                            println("MainViewModel: Received message on $channelName: $message")
+                            // Handle received message
+                        }
+                    }
+
+                    // Subscribe to test channel
+                    val testChannelName = "cerqa-test-channel:$userId"
+                    launch {
+                        ablyService.subscribeToChannel(testChannelName).collect { message ->
+                            println("MainViewModel: [TEST CHANNEL] Received: $message")
+                            // Handle test channel message
+                        }
+                    }
+
+                    // Monitor connection state
+                    launch {
+                        ablyService.getConnectionState().collect { state ->
+                            println("MainViewModel: Connection state: $state")
+                        }
+                    }
+                }
+                .onFailure { error ->
+                    println("MainViewModel: Ably initialization failed: ${error.message}")
+                    _error.value = error.message
+                }
+        }
     }
 
-/*    private fun fetchAblyToken(userId: String?) {
+    /**
+     * Send a message via Ably to a specific channel.
+     */
+    fun sendAblyMessage(channelName: String, message: String) {
         viewModelScope.launch {
-            // TODO: connections refused right now over limit from testing, will get back to this
-                        if (userId != null) {
-                            val ablyRequestToken: Deferred<Auth.TokenRequest?> = async {
-                                repo.fetchAblyToken(userId).firstOrNull()
-                            }
-
-                            realTime.initAbly(
-                                userId = userId,
-                                channelName = channelName(userId),
-                                tokenRequest = ablyRequestToken.await(),
-                            )
-                        }
+            ablyService.publishMessage(channelName, message)
+                .onSuccess {
+                    println("MainViewModel: Message sent successfully")
+                }
+                .onFailure { error ->
+                    println("MainViewModel: Failed to send message: ${error.message}")
+                    _error.value = error.message
+                }
         }
-    }*/
+    }
 }
