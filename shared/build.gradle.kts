@@ -170,6 +170,17 @@ kotlin {
         enabled = false // Disable this task - we'll handle resources differently
     }
 
+    cocoapods {
+        summary = "Shared KMP module"
+        homepage = "https://example.com"
+        ios.deploymentTarget = "16.0"
+        version = "1.0.0"
+        framework {
+            baseName = "Shared"
+            isStatic = true
+        }
+    }
+
 }
 
 apollo {

@@ -11,7 +11,7 @@ import com.cerqa.network.createHttpClient
 import com.cerqa.notifications.Notifications
 import com.cerqa.notifications.NotificationsImpl
 import com.cerqa.realtime.AblyService
-import com.cerqa.realtime.createAblyClient
+// TEMPORARILY DISABLED: import com.cerqa.realtime.createAblyClient
 import com.cerqa.repository.AblyRepository
 import com.cerqa.repository.AblyRepositoryImpl
 import com.cerqa.repository.ApolloContactsRepository
