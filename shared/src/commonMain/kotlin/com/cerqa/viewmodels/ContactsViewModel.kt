@@ -2,6 +2,7 @@ package com.cerqa.viewmodels
 
 import androidx.lifecycle.viewModelScope
 import com.cerqa.models.*
+import com.cerqa.notifications.Notifications
 import com.cerqa.repository.ContactsRepository
 import com.cerqa.platform.DeviceContactsProvider
 import kotlinx.coroutines.CoroutineScope
@@ -44,6 +45,7 @@ sealed class ContactCardEvent {
  */
 class ContactsViewModel(
     private val contactsRepository: ContactsRepository,
+    private val notifications: Notifications,
     private val deviceContactsProvider: DeviceContactsProvider? = null,
 ) {
     private val viewModelJob = SupervisorJob()
@@ -306,7 +308,14 @@ class ContactsViewModel(
         }
     }
 
-    fun sendInviteToConnect(receiverUserId: String, receiverUserName: String? = null, receiverName: String? = null, senderUserId: String? = null) {
+    fun sendInviteToConnect(
+        receiverUserId: String,
+        receiverUserName: String? = null,
+        receiverName: String? = null,
+        senderUserId: String? = null,
+        senderName: String,
+        senderUserName: String
+    ) {
         _isSendingInvite.value = true
         scope.launch {
             contactsRepository.sendInviteToConnect(receiverUserId)
@@ -320,6 +329,18 @@ class ContactsViewModel(
                         receiverName = receiverName,
                         senderUserId = senderUserId ?: ""
                     )
+
+                    // Send push notification to recipient via Ably
+                    notifications.sendConnectionInviteNotification(
+                        recipientUserId = receiverUserId,
+                        senderName = senderName,
+                        senderUserName = senderUserName
+                    ).onSuccess {
+                        println("ContactsViewModel: Push notification sent to $receiverUserId")
+                    }.onFailure { error ->
+                        println("ContactsViewModel: Failed to send push notification: ${error.message}")
+                        // Don't fail the whole operation if notification fails
+                    }
 
                     _inviteSentSuccess.value = true
                     _isSendingInvite.value = false
@@ -356,7 +377,7 @@ class ContactsViewModel(
     /**
      * Add contact by phone number
      */
-    fun addContactByPhone(phone: String) {
+    fun addContactByPhone(phone: String, senderName: String, senderUserName: String) {
         scope.launch {
             _isLoading.value = true
             _error.value = null
@@ -369,7 +390,9 @@ class ContactsViewModel(
                         sendInviteToConnect(
                             receiverUserId = user.userId ?: "",
                             receiverUserName = user.userName,
-                            receiverName = user.name
+                            receiverName = user.name,
+                            senderName = senderName,
+                            senderUserName = senderUserName
                         )
                     } else {
                         _error.value = "User with phone number $phone not found"

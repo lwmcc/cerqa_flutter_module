@@ -13,6 +13,7 @@ import com.cerqa.models.*
 import com.cerqa.viewmodels.ContactCardConnectionEvent
 import com.cerqa.viewmodels.ContactCardEvent
 import com.cerqa.viewmodels.ContactsViewModel
+import com.cerqa.viewmodels.MainViewModel
 import com.cerqa.viewmodels.MessageType
 import com.cerqa.viewmodels.SearchViewModel
 
@@ -20,7 +21,8 @@ import com.cerqa.viewmodels.SearchViewModel
 fun Contacts(
     searchQuery: String,
     searchViewModel: SearchViewModel,
-    contactsViewModel: ContactsViewModel
+    contactsViewModel: ContactsViewModel,
+    mainViewModel: MainViewModel,
 ) {
     val uiState by searchViewModel.uiState.collectAsState()
     val contactsUiState by contactsViewModel.uiState.collectAsState()
@@ -123,7 +125,11 @@ fun Contacts(
 
             else -> {} // TODO:  what else?
         }
-        if (uiState.idle && contactsUiState.contacts.isEmpty() && uiState.nonAppUsers.isEmpty() && !contactsUiState.pending && !uiState.pending) {
+        if (
+            uiState.idle && contactsUiState.contacts.isEmpty() &&
+            uiState.nonAppUsers.isEmpty() &&
+            !contactsUiState.pending && !uiState.pending
+        ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -138,7 +144,13 @@ fun Contacts(
             }
         }
 
-        if (uiState.idle && searchQuery.isEmpty() && !contactsUiState.pending && !uiState.pending && (contactsUiState.contacts.isNotEmpty() || uiState.nonAppUsers.isNotEmpty())) {
+        if (
+            uiState.idle && searchQuery.isEmpty() &&
+            !contactsUiState.pending &&
+            !uiState.pending &&
+            (contactsUiState.contacts.isNotEmpty() ||
+                    uiState.nonAppUsers.isNotEmpty())
+        ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
                     .weight(1f),

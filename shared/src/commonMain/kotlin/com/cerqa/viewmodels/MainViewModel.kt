@@ -3,6 +3,7 @@ package com.cerqa.viewmodels
 import androidx.lifecycle.viewModelScope
 import com.cerqa.data.Preferences
 import com.cerqa.data.UserRepository
+import com.cerqa.notifications.Notifications
 import com.cerqa.realtime.AblyService
 import com.cerqa.repository.AblyRepository
 import kotlinx.coroutines.CoroutineDispatcher
@@ -20,6 +21,7 @@ class MainViewModel(
     private val userRepository: UserRepository,
     private val mainDispatcher: CoroutineDispatcher,
     private val ablyService: AblyService,
+    private val notifications: Notifications,
 ) {
     private val viewModelScope = CoroutineScope(mainDispatcher)
 
@@ -137,6 +139,38 @@ class MainViewModel(
                     println("MainViewModel: Failed to send message: ${error.message}")
                     _error.value = error.message
                 }
+        }
+    }
+
+    /**
+     * Send a connection invite notification to a user.
+     * This triggers an FCM push notification on the recipient's device.
+     *
+     * @param recipientUserId The user ID of the person receiving the invite
+     * @param senderName The full name of the person sending the invite
+     * @param senderUserName The username of the person sending the invite
+     */
+    fun sendConnectionInvite(
+        recipientUserId: String,
+        senderName: String,
+        senderUserName: String
+    ) {
+        viewModelScope.launch {
+            println("MainViewModel: Sending connection invite to user: $recipientUserId")
+            _isLoading.value = true
+
+            notifications.sendConnectionInviteNotification(
+                recipientUserId = recipientUserId,
+                senderName = senderName,
+                senderUserName = senderUserName
+            ).onSuccess {
+                println("MainViewModel: Connection invite sent successfully")
+            }.onFailure { error ->
+                println("MainViewModel: Failed to send connection invite: ${error.message}")
+                _error.value = error.message
+            }
+
+            _isLoading.value = false
         }
     }
 }

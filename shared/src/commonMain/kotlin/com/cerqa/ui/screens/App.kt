@@ -295,7 +295,8 @@ fun App(
                     Contacts(
                         searchQuery = searchQuery,
                         searchViewModel = searchViewModel,
-                        contactsViewModel = contactsViewModel
+                        contactsViewModel = contactsViewModel,
+                        mainViewModel = mainViewModel
                     )
                 }
                 composable(AppDestination.Groups.route) {

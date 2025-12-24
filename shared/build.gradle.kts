@@ -52,18 +52,6 @@ kotlin {
         }
     }
 
-    // CocoaPods configuration for iOS dependencies
-    cocoapods {
-        summary = "Shared module for carclub"
-        homepage = "https://cerqa.com"
-        ios.deploymentTarget = "14.0"
-
-        // Ably iOS SDK
-        pod("Ably") {
-            version = "1.2.33"
-        }
-    }
-
     // Source set declarations.
     // Declaring a target automatically creates a source set with the same name. By default, the
     // Kotlin Gradle Plugin creates additional source sets that depend on each other, since it is
