@@ -10,10 +10,12 @@ interface Notifications {
      * @param recipientUserId The user ID of the recipient
      * @param senderName The name of the user sending the invite
      * @param senderUserName The username of the sender
+     * @param inviteId The ID of the invite that was created
      */
     suspend fun sendConnectionInviteNotification(
         recipientUserId: String,
         senderName: String,
-        senderUserName: String
+        senderUserName: String,
+        inviteId: String
     ): Result<Unit>
 }

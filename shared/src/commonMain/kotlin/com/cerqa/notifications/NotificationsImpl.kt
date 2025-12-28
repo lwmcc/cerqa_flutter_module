@@ -1,47 +1,52 @@
 package com.cerqa.notifications
 
-import com.cerqa.realtime.AblyService
+import com.apollographql.apollo.ApolloClient
+import com.cerqa.graphql.SendInviteNotificationMutation
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
- * Implementation of Notifications using Ably for real-time delivery.
- * Sends push notifications via Ably channels to trigger FCM on the recipient's device.
+ * Implementation of Notifications using FCM (Firebase Cloud Messaging).
+ * Sends push notifications via AWS Lambda function that triggers FCM on the recipient's device.
  */
 class NotificationsImpl(
-    private val ablyService: AblyService
+    private val apolloClient: ApolloClient
 ) : Notifications {
 
     override suspend fun sendConnectionInviteNotification(
         recipientUserId: String,
         senderName: String,
-        senderUserName: String
+        senderUserName: String,
+        inviteId: String
     ): Result<Unit> {
         return try {
-            println("NotificationsImpl: Sending connection invite notification to user: $recipientUserId")
+            println("NotificationsImpl: Sending FCM notification to user: $recipientUserId")
+            println("NotificationsImpl: Sender: $senderName (@$senderUserName), InviteId: $inviteId")
 
-            // Create notification payload
-            val notification = ConnectionInviteNotification(
-                type = "connection_invite",
-                senderName = senderName,
-                senderUserName = senderUserName,
-                message = "$senderName (@$senderUserName) sent you a connection invite"
-            )
+            val response = apolloClient.mutation(
+                SendInviteNotificationMutation(
+                    recipientUserId = recipientUserId,
+                    senderName = senderName,
+                    inviteId = inviteId
+                )
+            ).execute()
 
-            // Serialize to JSON
-            val messageJson = Json.encodeToString(notification)
+            if (response.hasErrors()) {
+                val errorMessage = response.errors?.firstOrNull()?.message ?: "Unknown error"
+                println("NotificationsImpl: Error sending notification: $errorMessage")
+                return Result.failure(Exception(errorMessage))
+            }
 
-            // Send to the recipient's user channel
-            val recipientChannel = "user:$recipientUserId"
-
-            ablyService.publishMessage(recipientChannel, messageJson)
-                .onSuccess {
-                    println("NotificationsImpl: Successfully sent notification to $recipientChannel")
-                }
-                .onFailure { error ->
-                    println("NotificationsImpl: Failed to send notification: ${error.message}")
-                }
+            val result = response.data?.sendInviteNotification
+            if (result?.success == true) {
+                println("NotificationsImpl: Successfully sent notification - ${result.message}")
+                Result.success(Unit)
+            } else {
+                val message = result?.message ?: "Failed to send notification"
+                println("NotificationsImpl: Notification failed - $message")
+                Result.failure(Exception(message))
+            }
         } catch (e: Exception) {
             println("NotificationsImpl: Exception sending notification: ${e.message}")
             Result.failure(e)

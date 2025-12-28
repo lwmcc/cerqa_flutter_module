@@ -1,7 +1,5 @@
 package com.mccartycarclub.data.websocket
 
-import android.content.Intent
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.cerqa.notifications.PushRouter
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -18,10 +16,7 @@ class AblyPushMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        // Store token in Ably
-        //ActivationContext.getActivationContext(this)
-       //       .onNewRegistrationToken(RegistrationToken.Type.FCM, s)
-
+        // Store token
         ActivationContext
             .getActivationContext(this)
             .onNewRegistrationToken(RegistrationToken.Type.FCM, token)

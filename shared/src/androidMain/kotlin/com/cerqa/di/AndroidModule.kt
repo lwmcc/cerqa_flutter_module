@@ -3,6 +3,8 @@ package com.cerqa.di
 import com.cerqa.auth.AndroidAuthTokenProvider
 import com.cerqa.auth.AuthService
 import com.cerqa.auth.AuthTokenProvider
+import com.cerqa.notifications.AndroidFcmTokenProvider
+import com.cerqa.notifications.FcmTokenProvider
 import io.ktor.client.engine.*
 import io.ktor.client.engine.okhttp.*
 import org.koin.dsl.module
@@ -14,6 +16,7 @@ import org.koin.dsl.module
  */
 val androidModule = module {
     single<AuthTokenProvider> { AndroidAuthTokenProvider() }
+    single<FcmTokenProvider> { AndroidFcmTokenProvider() }
     // AuthService is now defined in platformModule()
     single<HttpClientEngine> { OkHttp.create() }
 }

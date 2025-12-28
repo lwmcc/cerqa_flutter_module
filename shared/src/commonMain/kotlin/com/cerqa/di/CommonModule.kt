@@ -19,6 +19,8 @@ import com.cerqa.repository.AuthRepository
 import com.cerqa.repository.AuthRepositoryImpl
 import com.cerqa.repository.ContactsRepository
 import com.cerqa.repository.MockContactsRepository
+import com.cerqa.repository.NotificationRepository
+import com.cerqa.repository.NotificationRepositoryImpl
 import com.cerqa.viewmodels.ApolloContactsViewModel
 import com.cerqa.viewmodels.ContactsViewModel
 import com.cerqa.viewmodels.MainViewModel
@@ -52,7 +54,10 @@ val commonModule = module {
         AblyService(ablyRepository = get(), ablyClient = createAblyClient())
     }
     single<Notifications> {
-        NotificationsImpl(ablyService = get())
+        NotificationsImpl(apolloClient = get())
+    }
+    single<NotificationRepository> {
+        NotificationRepositoryImpl(apolloClient = get())
     }
 
     single { TestDataSeeder(apolloClient = get(), authTokenProvider = get()) }
@@ -60,7 +65,7 @@ val commonModule = module {
     factory { ContactsViewModel(get(), get(), get()) }
     factory { ApolloContactsViewModel(get()) }
     factory { MockContactsViewModel(get()) }
-    factory { SearchViewModel(get(), get(), get()) }
+    factory { SearchViewModel(get(), get(), get(), get(), get()) }
     factory {
         ProfileViewModel(
             apolloClient = get(),
@@ -74,7 +79,9 @@ val commonModule = module {
             userRepository = get(),
             mainDispatcher = get(),
             ablyService = get(),
-            notifications = get()
+            notifications = get(),
+            notificationRepository = get(),
+            fcmTokenProvider = get()
         )
     }
 }

@@ -2,9 +2,10 @@ import { type ClientSchema, a, defineData, defineFunction } from "@aws-amplify/b
 import { fetchAblyJwt } from "../functions/fetchAblyJwt/resource";
 import { fetchUserWithContactInfo } from "../functions/fetchUserWithContactInfo/resource";
 import { fetchPendingSentInviteStatus } from "../functions/fetchPendingSentInviteStatus/resource";
-import { createInviteByPhoneNumber } from "../functions/createInviteByPhoneNumber/resource";
 import { hasUserCreatedProfile } from "../functions/hasUserCreatedProfile/resource";
 import { getUserByUserId } from "../functions/getUserByUserId/resource";
+import { storeFcmToken } from "../functions/storeFcmToken/resource";
+import { sendInviteNotification } from "../functions/sendInviteNotification/resource";
 
 const AblyJwt = a.customType({
       keyName: a.string().required(),
@@ -62,6 +63,12 @@ const UserData = a.customType({
       lastName: a.string(),
       name: a.string(),
       phone: a.string(),
+});
+
+const NotificationResult = a.customType({
+      success: a.boolean().required(),
+      message: a.string().required(),
+      deviceCount: a.integer(),
 });
 
 export const schema = a.schema({
@@ -179,12 +186,34 @@ export const schema = a.schema({
         .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
         .handler(a.handler.function(hasUserCreatedProfile)),
 
+    storeFcmToken: a
+        .mutation()
+        .arguments({
+            userId: a.string().required(),
+            token: a.string().required(),
+            platform: a.string().required()
+        })
+        .returns(a.boolean())
+        .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
+        .handler(a.handler.function(storeFcmToken)),
+
     getUserByUserId: a
         .query()
         .arguments({userId: a.string().required()})
         .returns(UserData)
         .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
         .handler(a.handler.function(getUserByUserId)),
+
+    sendInviteNotification: a
+        .mutation()
+        .arguments({
+            recipientUserId: a.string().required(),
+            senderName: a.string().required(),
+            inviteId: a.string().required()
+        })
+        .returns(NotificationResult)
+        .authorization(allow => [allow.authenticated()])
+        .handler(a.handler.function(sendInviteNotification)),
 });
 
 export type Schema = ClientSchema<typeof schema>;

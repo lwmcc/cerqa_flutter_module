@@ -7,22 +7,27 @@ const client = generateClient<Schema>({
   authMode: "identityPool",
 });
 
-export const handler: Schema["checkProfileComplete"]["functionHandler"] = async (event) => {
+export const handler: Schema["hasUserCreatedProfile"]["functionHandler"] = async (event) => {
   const { userId } = event.arguments;
 
   console.log("hasUserCreatedProfile - Checking profile for userId:", userId);
 
   try {
-    // Query the User table to get the user's profile data
-    const { data: user, errors } = await client.models.User.get({ id: userId });
+    // Query the User table by userId field (Cognito ID)
+    const { data: users, errors } = await client.models.User.list({
+      filter: { userId: { eq: userId } },
+      limit: 1
+    });
 
-    if (errors || !user) {
-      console.error("Error fetching user:", errors);
+    if (errors || !users || users.length === 0) {
+      console.log("User not found for userId:", userId);
       return {
         isProfileComplete: false,
-        missingFields: ["User not found"],
+        missingFields: ["User not found - please create profile"],
       };
     }
+
+    const user = users[0];
 
     console.log("User data:", JSON.stringify(user, null, 2));
 

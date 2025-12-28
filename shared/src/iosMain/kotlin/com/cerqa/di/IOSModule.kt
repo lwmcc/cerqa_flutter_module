@@ -3,6 +3,8 @@ package com.cerqa.di
 import com.cerqa.auth.AuthService
 import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.auth.IOSAuthTokenProvider
+import com.cerqa.notifications.FcmTokenProvider
+import com.cerqa.notifications.IosFcmTokenProvider
 import io.ktor.client.engine.*
 import io.ktor.client.engine.darwin.*
 import org.koin.core.component.KoinComponent
@@ -16,6 +18,7 @@ import org.koin.dsl.module
  */
 val iosModule = module {
     single<AuthTokenProvider> { IOSAuthTokenProvider() }
+    single<FcmTokenProvider> { IosFcmTokenProvider() }
     // AuthService is now defined in platformModule()
     single<HttpClientEngine> { Darwin.create() }
 }

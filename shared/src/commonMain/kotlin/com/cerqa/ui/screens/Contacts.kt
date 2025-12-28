@@ -30,6 +30,7 @@ fun Contacts(
     var selectedUser by remember { mutableStateOf<SearchUser?>(null) }
     var showConfirmDialog by remember { mutableStateOf(false) }
     var confirmDialogData by remember { mutableStateOf<ConfirmDialogData?>(null) }
+    var showInviteSentSuccess by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         contactsViewModel.fetchAllContacts()
@@ -89,6 +90,7 @@ fun Contacts(
                 }
             }
 
+            // TODO: hide
             MessageType.INVITE_SENT -> {
                 Card(
                     modifier = Modifier
@@ -327,7 +329,7 @@ fun Contacts(
                     onClick = {
                         selectedUser?.let { user ->
                             searchViewModel.inviteSentEvent(
-                                com.cerqa.viewmodels.ContactCardConnectionEvent.InviteConnectEvent(
+                                ContactCardConnectionEvent.InviteConnectEvent(
                                     receiverUserId = user.userId,
                                     rowId = user.id
                                 )
@@ -351,12 +353,12 @@ fun Contacts(
     if (showConfirmDialog && confirmDialogData != null) {
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
-            title = { Text(confirmDialogData!!.title) },
+            title = { Text(confirmDialogData!!.title) }, // TODO: no !!
             text = { Text(confirmDialogData!!.message) },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        confirmDialogData!!.onConfirm()
+                        confirmDialogData!!.onConfirm() // TODO: don't use !!
                         showConfirmDialog = false
                     }
                 ) {

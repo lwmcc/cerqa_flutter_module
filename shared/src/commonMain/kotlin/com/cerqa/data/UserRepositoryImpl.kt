@@ -2,7 +2,7 @@ package com.cerqa.data
 
 import com.apollographql.apollo.ApolloClient
 import com.cerqa.auth.AuthTokenProvider
-import com.cerqa.graphql.GetUserQuery
+import com.cerqa.graphql.GetUserByUserIdQuery
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
@@ -17,7 +17,7 @@ class UserRepositoryImpl(
     private val preferences: Preferences,
 ) : UserRepository {
 
-    override suspend fun getUser(): Result<GetUserQuery.GetUser> {
+    override suspend fun getUser(): Result<GetUserByUserIdQuery.GetUserByUserId> {
         return withContext(ioDispatcher) {
             try {
                 val userId = authTokenProvider.getCurrentUserId()
@@ -26,10 +26,10 @@ class UserRepositoryImpl(
                     return@withContext Result.failure(IllegalStateException("User is not authenticated"))
                 }
 
-                println("UserRepositoryImpl ===== Fetching user with ID: $userId")
+                println("UserRepositoryImpl ===== Fetching user with userId: $userId")
 
                 val response = apolloClient.query(
-                    GetUserQuery(id = userId)
+                    GetUserByUserIdQuery(userId = userId)
                 ).execute()
 
                 if (response.hasErrors()) {
@@ -38,7 +38,7 @@ class UserRepositoryImpl(
                     return@withContext Result.failure(Exception("GraphQL errors: $errors"))
                 }
 
-                val user = response.data?.getUser
+                val user = response.data?.getUserByUserId
 
                 if (user == null) {
                     println("UserRepositoryImpl ===== No user data returned")
@@ -48,10 +48,10 @@ class UserRepositoryImpl(
                 // Save user data to preferences
                 user.userName?.let { userName ->
                     preferences.setUserData(
-                        userId = userId,
+                        userId = user.userId ?: userId,
                         userName = userName,
                         userEmail = user.email ?: "",
-                        createdAt = user.createdAt,
+                        createdAt = "", // UserData doesn't have createdAt
                         avatarUri = user.avatarUri ?: ""
                     )
                 }

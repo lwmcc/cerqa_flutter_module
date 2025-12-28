@@ -29,8 +29,8 @@ fun createApolloClient(
         .addHttpHeader("Content-Type", "application/json")
         .addHttpHeader("Accept", "application/json")
         .addHttpHeader("x-api-key", "da2-zornpxxqrbfuzfccnh2wzabctm")
-        // Temporarily disabled - using API key auth instead of Cognito
-        // .addHttpInterceptor(AuthInterceptor(tokenProvider))
+        // Add Cognito auth tokens for mutations that require authentication
+        .addHttpInterceptor(AuthInterceptor(tokenProvider))
         .addHttpInterceptor(LoggingInterceptor())
         .build()
 }
