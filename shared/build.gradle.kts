@@ -5,7 +5,7 @@ plugins {
     id("org.jetbrains.compose") version "1.8.2"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.2.0"
     id("com.apollographql.apollo") version "4.1.0"
-    kotlin("native.cocoapods")
+    // kotlin("native.cocoapods")  // Enable this on Mac with CocoaPods installed
 }
 
 kotlin {
@@ -130,6 +130,10 @@ kotlin {
 
                 // Ably Android SDK
                 implementation("io.ably:ably-android:1.2.48")
+
+                // Firebase Messaging for FCM
+                implementation("com.google.firebase:firebase-messaging-ktx:24.1.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
             }
         }
 
@@ -169,6 +173,21 @@ kotlin {
     tasks.matching { it.name == "syncComposeResourcesForIos" }.configureEach {
         enabled = false // Disable this task - we'll handle resources differently
     }
+
+    // Uncomment this block on Mac with CocoaPods installed
+    // cocoapods {
+    //     version = "1.0.0"
+    //
+    //     framework {
+    //         baseName = "shared"
+    //         isStatic = true
+    //     }
+    //
+    //     // Firebase Messaging for iOS
+    //     pod("FirebaseMessaging") {
+    //         version = "11.8.0"
+    //     }
+    // }
 
 }
 

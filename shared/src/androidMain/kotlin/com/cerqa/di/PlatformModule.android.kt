@@ -9,6 +9,8 @@ import com.cerqa.data.Preferences
 import com.cerqa.data.StoreDefaults
 import com.cerqa.data.StoreUserDefaults
 import com.cerqa.data.UserPreferences
+import com.cerqa.notifications.AndroidFcmTokenProvider
+import com.cerqa.notifications.FcmTokenProvider
 import com.cerqa.platform.DeviceContactsProvider
 import com.cerqa.platform.SmsProvider
 import io.ktor.client.engine.*
@@ -26,6 +28,7 @@ actual fun platformModule(): Module = module {
 
     // Auth and HTTP engine for Apollo (from androidModule)
     single<AuthTokenProvider> { AndroidAuthTokenProvider() }
+    single<FcmTokenProvider> { AndroidFcmTokenProvider() }
     single { AuthService(get()) }
     single<HttpClientEngine> { OkHttp.create() }
 

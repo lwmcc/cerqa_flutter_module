@@ -3,9 +3,11 @@ package com.cerqa.viewmodels
 import androidx.lifecycle.viewModelScope
 import com.cerqa.data.Preferences
 import com.cerqa.data.UserRepository
+import com.cerqa.notifications.FcmTokenProvider
 import com.cerqa.notifications.Notifications
 import com.cerqa.realtime.AblyService
 import com.cerqa.repository.AblyRepository
+import com.cerqa.repository.NotificationRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -22,6 +24,8 @@ class MainViewModel(
     private val mainDispatcher: CoroutineDispatcher,
     private val ablyService: AblyService,
     private val notifications: Notifications,
+    private val notificationRepository: NotificationRepository,
+    private val fcmTokenProvider: FcmTokenProvider,
 ) {
     private val viewModelScope = CoroutineScope(mainDispatcher)
 
@@ -62,15 +66,19 @@ class MainViewModel(
             userRepository.getUser()
                 .onSuccess { user ->
                     println("MainViewModel ***** SUCCESS! Got user data:")
-                    println("MainViewModel ***** User ID: ${user.id}")
+                    println("MainViewModel ***** User ID: ${user.userId}")
                     println("MainViewModel ***** User Name: ${user.firstName} ${user.lastName}")
                     println("MainViewModel ***** Username: @${user.userName}")
                     println("MainViewModel ***** Email: ${user.email}")
                     println("MainViewModel ***** Phone: ${user.phone}")
                     println("MainViewModel ***** Avatar: ${user.avatarUri}")
 
-                    // Initialize Ably for realtime features
-                    initAbly(user.id)
+                    // Initialize Ably for realtime features using userId (Cognito ID)
+                    user.userId?.let { userId ->
+                        initAbly(userId)
+                        // Store FCM token after user is authenticated, passing the userId
+                        storeFcmToken(userId)
+                    }
                 }
                 .onFailure { exception ->
                     println("MainViewModel ***** ERROR: ${exception.message}")
@@ -92,13 +100,13 @@ class MainViewModel(
 
             ablyService.initialize(userId)
                 .onSuccess {
-                    println("MainViewModel: Ably initialized successfully")
+                    println("MainViewModel ***** Ably initialized successfully")
 
                     // Subscribe to a user-specific channel
                     val channelName = "user:$userId"
                     launch {
                         ablyService.subscribeToChannel(channelName).collect { message ->
-                            println("MainViewModel: Received message on $channelName: $message")
+                            println("MainViewModel ***** Received message on $channelName: $message")
                             // Handle received message
                         }
                     }
@@ -107,7 +115,7 @@ class MainViewModel(
                     val testChannelName = "cerqa-test-channel:$userId"
                     launch {
                         ablyService.subscribeToChannel(testChannelName).collect { message ->
-                            println("MainViewModel: [TEST CHANNEL] Received: $message")
+                            println("MainViewModel ***** [TEST CHANNEL] Received: $message")
                             // Handle test channel message
                         }
                     }
@@ -115,12 +123,12 @@ class MainViewModel(
                     // Monitor connection state
                     launch {
                         ablyService.getConnectionState().collect { state ->
-                            println("MainViewModel: Connection state: $state")
+                            println("MainViewModel ***** Connection state: $state")
                         }
                     }
                 }
                 .onFailure { error ->
-                    println("MainViewModel: Ably initialization failed: ${error.message}")
+                    println("MainViewModel ***** Ably initialization failed: ${error.message}")
                     _error.value = error.message
                 }
         }
@@ -133,10 +141,10 @@ class MainViewModel(
         viewModelScope.launch {
             ablyService.publishMessage(channelName, message)
                 .onSuccess {
-                    println("MainViewModel: Message sent successfully")
+                    println("MainViewModel ***** Message sent successfully")
                 }
                 .onFailure { error ->
-                    println("MainViewModel: Failed to send message: ${error.message}")
+                    println("MainViewModel ***** Failed to send message: ${error.message}")
                     _error.value = error.message
                 }
         }
@@ -149,28 +157,57 @@ class MainViewModel(
      * @param recipientUserId The user ID of the person receiving the invite
      * @param senderName The full name of the person sending the invite
      * @param senderUserName The username of the person sending the invite
+     * @param inviteId The ID of the invite that was created
      */
     fun sendConnectionInvite(
         recipientUserId: String,
         senderName: String,
-        senderUserName: String
+        senderUserName: String,
+        inviteId: String
     ) {
         viewModelScope.launch {
-            println("MainViewModel: Sending connection invite to user: $recipientUserId")
+            println("MainViewModel ***** Sending connection invite notification to user: $recipientUserId")
             _isLoading.value = true
 
             notifications.sendConnectionInviteNotification(
                 recipientUserId = recipientUserId,
                 senderName = senderName,
-                senderUserName = senderUserName
+                senderUserName = senderUserName,
+                inviteId = inviteId
             ).onSuccess {
-                println("MainViewModel: Connection invite sent successfully")
+                println("MainViewModel ***** Connection invite notification sent successfully")
             }.onFailure { error ->
-                println("MainViewModel: Failed to send connection invite: ${error.message}")
+                println("MainViewModel ***** Failed to send connection invite notification: ${error.message}")
                 _error.value = error.message
             }
 
             _isLoading.value = false
+        }
+    }
+
+    fun storeFcmToken(userId: String) {
+        viewModelScope.launch {
+            println("MainViewModel ***** Getting FCM token for userId: $userId")
+
+            val token = fcmTokenProvider.getToken()
+            if (token == null) {
+                println("MainViewModel ***** Failed to get FCM token")
+                _error.value = "Failed to get FCM token"
+                return@launch
+            }
+
+            println("MainViewModel ***** Got FCM token: $token")
+            val platform = fcmTokenProvider.getPlatform()
+            println("MainViewModel ***** Platform: $platform")
+
+            notificationRepository.storeFcmToken(userId, token, platform)
+                .onSuccess { success ->
+                    println("MainViewModel ***** FCM token stored successfully: $success")
+                }
+                .onFailure { error ->
+                    println("MainViewModel ***** Failed to store FCM token: ${error.message}")
+                    _error.value = error.message
+                }
         }
     }
 }

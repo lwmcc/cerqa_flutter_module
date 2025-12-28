@@ -104,6 +104,9 @@ class SearchViewModel @Inject constructor(
                     //realTime.createReceiverInviteSubscription(_userId.value.toString(), channel)
 
                     try {
+                        // TODO: Remove this Android-specific SearchViewModel - using shared SearchViewModel instead
+                        // Invite sending now happens in shared/src/commonMain/kotlin/com/cerqa/viewmodels/SearchViewModel.kt
+                        /*
                         println("SearchViewModel: Calling repo.sendInviteToConnect")
                         val data = repo.sendInviteToConnect(
                             receiverUserId = connectionEvent.receiverUserId,
@@ -128,6 +131,7 @@ class SearchViewModel @Inject constructor(
                                 uiState.copy(pending = false, message = UiUserMessage.INVITE_SENT)
                             }
                         }
+                        */
                     } catch (e: Exception) {
                         println("SearchViewModel: Exception caught: ${e.message}")
                         e.printStackTrace()

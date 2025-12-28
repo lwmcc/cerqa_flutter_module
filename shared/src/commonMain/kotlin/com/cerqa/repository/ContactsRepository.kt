@@ -396,19 +396,38 @@ class ContactsRepository(
             println("ContactsRepository: fetchSentInvites found ${invites.size} invites")
 
             // Map invites to SentInviteContactInvite
-            // Note: With userId pointing to sender, user relationship now contains sender details
-            // For sent invites we want to show receiver, so this won't work as expected
-            // TODO: Need to fetch receiver details separately or modify schema
+            // For sent invites, we need to fetch receiver details using their userId
             val sentInviteContacts = invites.mapNotNull { invite ->
                 // Handle nullable fields from Apollo generated code
-                val receiverId = invite?.receiverId ?: ""
-                val senderId = invite?.senderId ?: ""
-                val inviteId = invite?.id.orEmpty()
+                val receiverId = invite?.receiverId ?: return@mapNotNull null
+                val inviteId = invite?.id ?: return@mapNotNull null
 
-                // The 'user' relationship now points to sender (not receiver)
-                // For sent invites, we'd want receiver details, so skip for now
-                println("ContactsRepository: WARNING - sent invites disabled until receiver details can be fetched")
-                null
+                // Fetch receiver details using getUserByUserId
+                try {
+                    val receiverResponse = apolloClient.query(
+                        com.cerqa.graphql.GetUserByUserIdQuery(userId = receiverId)
+                    ).execute()
+
+                    val receiver = receiverResponse.data?.getUserByUserId
+                    if (receiver != null) {
+                        println("ContactsRepository: fetchSentInvites - found receiver: ${receiver.userName}")
+                        SentInviteContactInvite(
+                            senderUserId = userId, // Current user is the sender
+                            contactId = inviteId,
+                            userId = receiver.userId ?: receiverId,
+                            userName = receiver.userName,
+                            name = receiver.name,
+                            avatarUri = receiver.avatarUri,
+                            phoneNumber = receiver.phone
+                        )
+                    } else {
+                        println("ContactsRepository: fetchSentInvites - receiver not found for id: $receiverId")
+                        null
+                    }
+                } catch (e: Exception) {
+                    println("ContactsRepository: fetchSentInvites - error fetching receiver $receiverId: ${e.message}")
+                    null
+                }
             }
 
             println("ContactsRepository: fetchSentInvites returning ${sentInviteContacts.size} sent invite contacts")
@@ -586,6 +605,7 @@ class ContactsRepository(
 
             if (inviteId != null) {
                 println("ContactsRepository: sendInviteToConnect success, ID: $inviteId")
+                // Note: Notification is sent by the ViewModel to avoid duplicate notifications
                 Result.success(inviteId)
             } else {
                 Result.failure(Exception("Invite created but returned no ID"))

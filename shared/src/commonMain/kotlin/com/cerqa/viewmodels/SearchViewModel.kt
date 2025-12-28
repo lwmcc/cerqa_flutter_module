@@ -2,6 +2,8 @@ package com.cerqa.viewmodels
 
 import com.cerqa.models.*
 import com.cerqa.repository.ContactsRepository
+import com.cerqa.data.UserRepository
+import com.cerqa.notifications.Notifications
 import com.cerqa.platform.DeviceContactsProvider
 import com.cerqa.platform.SmsProvider
 import kotlinx.coroutines.CoroutineScope
@@ -41,6 +43,8 @@ sealed class ContactCardConnectionEvent {
 
 class SearchViewModel(
     private val repository: ContactsRepository,
+    private val userRepository: UserRepository,
+    private val notifications: Notifications,
     private val deviceContactsProvider: DeviceContactsProvider? = null,
     private val smsProvider: SmsProvider? = null
 ) {
@@ -159,10 +163,15 @@ class SearchViewModel(
     }
 
     fun inviteSentEvent(connectionEvent: ContactCardConnectionEvent) {
-        println("SharedSearchViewModel: inviteSentEvent called with event: $connectionEvent")
+
         when (connectionEvent) {
             is ContactCardConnectionEvent.InviteConnectEvent -> {
-                println("SharedSearchViewModel: Processing InviteConnectEvent for user: ${connectionEvent.receiverUserId}")
+                // Guard: prevent duplicate invites from being sent
+                if (_uiState.value.isSendingInvite) {
+                    println("SearchViewModel: Already sending an invite, ignoring duplicate call")
+                    return
+                }
+
                 // Disable the button for this user
                 val updatedResults = _uiState.value.results.map { user ->
                     if (user.userId == connectionEvent.receiverUserId) {
@@ -171,21 +180,38 @@ class SearchViewModel(
                         user
                     }
                 }
-                _uiState.value = _uiState.value.copy(results = updatedResults)
+                _uiState.value = _uiState.value.copy(results = updatedResults, isSendingInvite = true)
 
                 // Send the invite
                 scope.launch {
-                    println("SharedSearchViewModel ***** : Starting coroutine to send invite")
-                    _uiState.value = _uiState.value.copy(pending = true, isSendingInvite = true)
+                    _uiState.value = _uiState.value.copy(pending = true)
 
                     try {
-                        println("SharedSearchViewModel ***** : Calling repository.sendInviteToConnect")
                         repository.sendInviteToConnect(connectionEvent.receiverUserId)
                             .onSuccess { inviteId ->
-                                println("SharedSearchViewModel ***** : Invite sent successfully! InviteId: $inviteId")
-
-                                // Get the user details from search results
                                 val receiverUser = _uiState.value.results.find { it.userId == connectionEvent.receiverUserId }
+
+                                // Get current user details for notification
+                                userRepository.getUser()
+                                    .onSuccess { currentUser ->
+                                        val senderName = currentUser.name ?: "${currentUser.firstName} ${currentUser.lastName}"
+                                        val senderUserName = currentUser.userName.orEmpty()
+
+                                        // Send push notification to the receiver
+                                        notifications.sendConnectionInviteNotification(
+                                            recipientUserId = connectionEvent.receiverUserId,
+                                            senderName = senderName,
+                                            senderUserName = senderUserName,
+                                            inviteId = inviteId
+                                        ).onSuccess {
+                                            println("SharedSearchViewModel: Notification sent successfully")
+                                        }.onFailure { error ->
+                                            println("SharedSearchViewModel: Failed to send notification: ${error.message}")
+                                        }
+                                    }
+                                    .onFailure { error ->
+                                        println("SharedSearchViewModel: Failed to get current user: ${error.message}")
+                                    }
 
                                 // Immediately update the UI to show "Invite Sent" for this user
                                 val updatedResults = _uiState.value.results.map { user ->

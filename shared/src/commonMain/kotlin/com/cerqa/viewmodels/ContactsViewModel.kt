@@ -330,17 +330,18 @@ class ContactsViewModel(
                         senderUserId = senderUserId ?: ""
                     )
 
-                    // Send push notification to recipient via Ably
-                    notifications.sendConnectionInviteNotification(
+                    // Send push notification to recipient via FCM
+/*                    notifications.sendConnectionInviteNotification(
                         recipientUserId = receiverUserId,
                         senderName = senderName,
-                        senderUserName = senderUserName
+                        senderUserName = senderUserName,
+                        inviteId = inviteId
                     ).onSuccess {
-                        println("ContactsViewModel: Push notification sent to $receiverUserId")
+                        println("ContactsViewModel: FCM push notification sent to $receiverUserId")
                     }.onFailure { error ->
                         println("ContactsViewModel: Failed to send push notification: ${error.message}")
                         // Don't fail the whole operation if notification fails
-                    }
+                    }*/
 
                     _inviteSentSuccess.value = true
                     _isSendingInvite.value = false

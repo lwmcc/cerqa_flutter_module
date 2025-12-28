@@ -7,6 +7,8 @@ import com.cerqa.data.Preferences
 import com.cerqa.data.StoreDefaults
 import com.cerqa.data.StoreUserDefaults
 import com.cerqa.data.UserPreferences
+import com.cerqa.notifications.FcmTokenProvider
+import com.cerqa.notifications.IosFcmTokenProvider
 import com.cerqa.platform.DeviceContactsProvider
 import com.cerqa.platform.SmsProvider
 import io.ktor.client.engine.*
@@ -22,6 +24,7 @@ actual fun platformModule(): Module = module {
 
     // Auth and HTTP engine for Apollo (from iosModule)
     single<AuthTokenProvider> { IOSAuthTokenProvider() }
+    single<FcmTokenProvider> { IosFcmTokenProvider() }
     single { AuthService(get()) }
     single<HttpClientEngine> { Darwin.create() }
 

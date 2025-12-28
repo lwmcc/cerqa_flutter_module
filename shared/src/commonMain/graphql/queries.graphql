@@ -17,6 +17,21 @@ query GetUser($id: ID!) {
   }
 }
 
+# Get user by userId (Cognito ID)
+query GetUserByUserId($userId: String!) {
+  getUserByUserId(userId: $userId) {
+    id
+    userId
+    userName
+    email
+    avatarUri
+    firstName
+    lastName
+    name
+    phone
+  }
+}
+
 # List all users
 query ListUsers($filter: ModelUserFilterInput, $limit: Int, $nextToken: String) {
   listUsers(filter: $filter, limit: $limit, nextToken: $nextToken) {
@@ -94,7 +109,7 @@ query ListByPhone($phone: String!, $userName: ModelStringKeyConditionInput, $sor
 }
 
 # Check if user profile is complete (Lambda function: hasUserCreatedProfile)
-query HasUserCreatedProfile($userId: ID!) {
+query HasUserCreatedProfile($userId: String!) {
   hasUserCreatedProfile(userId: $userId) {
     isProfileComplete
     missingFields

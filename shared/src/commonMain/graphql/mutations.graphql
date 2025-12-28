@@ -34,6 +34,20 @@ mutation UpdateUser($input: UpdateUserInput!, $condition: ModelUserConditionInpu
     }
 }
 
+# Store FCM token for push notifications
+mutation StoreFcmToken($userId: String!, $token: String!, $platform: String!) {
+    storeFcmToken(userId: $userId, token: $token, platform: $platform)
+}
+
+# Send invite notification via FCM
+mutation SendInviteNotification($recipientUserId: String!, $senderName: String!, $inviteId: String!) {
+    sendInviteNotification(recipientUserId: $recipientUserId, senderName: $senderName, inviteId: $inviteId) {
+        success
+        message
+        deviceCount
+    }
+}
+
 # Delete a user
 mutation DeleteUser($input: DeleteUserInput!, $condition: ModelUserConditionInput) {
     deleteUser(input: $input, condition: $condition) {
