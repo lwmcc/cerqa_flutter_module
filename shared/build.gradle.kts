@@ -52,6 +52,18 @@ kotlin {
         }
     }
 
+    cocoapods {
+        summary = "Shared KMP module"
+        homepage = "https://example.com"
+        version = "1.0"
+        ios.deploymentTarget = "16.0"
+
+        framework {
+            baseName = xcfName
+            isStatic = true
+        }
+    }
+
     // Source set declarations.
     // Declaring a target automatically creates a source set with the same name. By default, the
     // Kotlin Gradle Plugin creates additional source sets that depend on each other, since it is
@@ -75,8 +87,8 @@ kotlin {
                 implementation(compose.materialIconsExtended)
                 implementation(compose.material3)
                 implementation(libs.koin.core)
-                implementation(libs.koin.core)
-                implementation(libs.koin.androidx.compose)
+                implementation("io.insert-koin:koin-compose:4.1.1")
+                implementation("io.insert-koin:koin-compose-viewmodel:4.1.1")
 
                 // Ktor client for API calls
                 implementation("io.ktor:ktor-client-core:3.3.2")

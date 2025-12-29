@@ -35,8 +35,11 @@ data class GroupItem(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Chat(onNavigateToContacts: () -> Unit = {}) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+fun Chat(
+    selectedTabIndex: Int = 0,
+    onTabChange: (Int) -> Unit = {},
+    onNavigateToContacts: () -> Unit = {}
+) {
     val tabs = listOf("Chats", "Groups")
     Column(
         modifier = Modifier
@@ -46,7 +49,7 @@ fun Chat(onNavigateToContacts: () -> Unit = {}) {
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
+                    onClick = { onTabChange(index) },
                     text = { Text(title) }
                 )
             }

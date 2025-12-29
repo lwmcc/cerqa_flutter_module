@@ -14,9 +14,10 @@ import com.cerqa.ui.components.topNavItemsMain
 
 data class BottomNavItem(
     val route: String,
-    val icon: ImageVector,
+    val icon: ImageVector? = null,
     val label: String,
-    val contentDescription: String
+    val contentDescription: String,
+    val iconComposable: (@Composable () -> Unit)? = null
 )
 
 data class TopNavItem(
@@ -48,10 +49,14 @@ fun BottomBar(
         items.forEach { item ->
             NavigationBarItem(
                 icon = {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.contentDescription
-                    )
+                    if (item.iconComposable != null) {
+                        item.iconComposable.invoke()
+                    } else if (item.icon != null) {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.contentDescription
+                        )
+                    }
                 },
                 selected = item.route == currentRoute,
                 onClick = { onBottomNavClick(item.route) },

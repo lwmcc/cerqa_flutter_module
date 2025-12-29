@@ -5,12 +5,15 @@ import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Contacts
 import androidx.compose.material.icons.outlined.Groups2
-import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Icon
+import carclub.shared.generated.resources.Res
+import carclub.shared.generated.resources.cars_nav
 import com.cerqa.navigation.AppDestination
 import com.cerqa.ui.Navigation.BottomNavItem
 import com.cerqa.ui.Navigation.TopNavItem
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * Main bottom navigation bar items
@@ -18,9 +21,14 @@ import com.cerqa.ui.Navigation.TopNavItem
 val navItems = listOf(
     BottomNavItem(
         route = AppDestination.Main.route,
-        icon = Icons.Outlined.Home,
-        label = "Home",
-        contentDescription = "Home" // TODO: move to resources
+        label = "Navigate",
+        contentDescription = "Navigate",
+        iconComposable = {
+            Icon(
+                painter = painterResource(Res.drawable.cars_nav),
+                contentDescription = "Navigate"
+            )
+        }
     ),
     BottomNavItem(
         route = AppDestination.Chat.route,

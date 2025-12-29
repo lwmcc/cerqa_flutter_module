@@ -48,6 +48,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import carclub.shared.generated.resources.Res
+import carclub.shared.generated.resources.plus_bubble
+import carclub.shared.generated.resources.person_badge_plus
+import org.jetbrains.compose.resources.painterResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -85,10 +89,10 @@ fun App(
 
     var searchQuery by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
+    var chatTabIndex by remember { mutableStateOf(0) } // 0 = Chats, 1 = Groups
 
     LaunchedEffect(Unit) {
         mainViewModel.fetchUser()
-        // subscribeToDmChannel() is called automatically after Ably initialization
     }
 
     MaterialTheme {
@@ -182,7 +186,13 @@ fun App(
                             },
                             actions = {
                                 IconButton(onClick = { navActions.navigateToContacts() }) {
-                                    Icon(Icons.Default.Add, contentDescription = "Add Contact")
+                                    Icon(
+                                        painter = painterResource(
+                                            if (chatTabIndex == 1) Res.drawable.person_badge_plus
+                                            else Res.drawable.plus_bubble
+                                        ),
+                                        contentDescription = if (chatTabIndex == 1) "Add Group Member" else "Add Contact"
+                                    )
                                 }
                             }
                         )
@@ -287,6 +297,8 @@ fun App(
             ) {
                 composable(AppDestination.Chat.route) {
                     Chat(
+                        selectedTabIndex = chatTabIndex,
+                        onTabChange = { chatTabIndex = it },
                         onNavigateToContacts = {
                             navActions.navigateToContacts()
                         }
