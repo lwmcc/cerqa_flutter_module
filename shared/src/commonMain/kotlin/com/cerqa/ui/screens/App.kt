@@ -88,6 +88,7 @@ fun App(
 
     LaunchedEffect(Unit) {
         mainViewModel.fetchUser()
+        // subscribeToDmChannel() is called automatically after Ably initialization
     }
 
     MaterialTheme {

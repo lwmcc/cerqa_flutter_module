@@ -6,8 +6,10 @@ import com.cerqa.data.UserRepository
 import com.cerqa.notifications.FcmTokenProvider
 import com.cerqa.notifications.Notifications
 import com.cerqa.realtime.AblyService
+import com.cerqa.realtime.RealtimeChannel
 import com.cerqa.repository.AblyRepository
 import com.cerqa.repository.NotificationRepository
+import com.cerqa.repository.RealtimeRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -18,14 +20,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+// TODO: too many params, do something about that
 class MainViewModel(
     private val preferences: Preferences,
     private val userRepository: UserRepository,
     private val mainDispatcher: CoroutineDispatcher,
-    private val ablyService: AblyService,
+    private val ablyService: AblyService, // TODO: move to repository
     private val notifications: Notifications,
     private val notificationRepository: NotificationRepository,
     private val fcmTokenProvider: FcmTokenProvider,
+    private val realtimeRepository: RealtimeRepository,
 ) {
     private val viewModelScope = CoroutineScope(mainDispatcher)
 
@@ -35,6 +39,9 @@ class MainViewModel(
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    private val _ablyMessages = MutableStateFlow<List<String>>(emptyList())
+    val ablyMessages: StateFlow<List<String>> = _ablyMessages.asStateFlow()
 
     fun setUserData(
         userId: String,
@@ -126,6 +133,9 @@ class MainViewModel(
                             println("MainViewModel ***** Connection state: $state")
                         }
                     }
+
+                    // Subscribe to DM channel after Ably is initialized
+                    subscribeToDmChannel()
                 }
                 .onFailure { error ->
                     println("MainViewModel ***** Ably initialization failed: ${error.message}")
@@ -209,5 +219,39 @@ class MainViewModel(
                     _error.value = error.message
                 }
         }
+    }
+
+    fun subscribeToDmChannel() {
+        viewModelScope.launch {
+            val channel = getInviteChannelPath()
+
+            if (channel != null) {
+                println("MainViewModel: Subscribing to channel: $channel")
+                realtimeRepository.subscribeToChannel(channel).collect { message ->
+                    println("MainViewModel ***** Received DM message on $channel: $message")
+
+                }
+            } else {
+                println("MainViewModel ***** ERROR CREATING CHANNEL $channel")
+            }
+        }
+    }
+
+    fun sendMessage(channelName: String, message: String) {
+        viewModelScope.launch {
+            realtimeRepository.publishMessage(channelName, message)
+                .onSuccess {
+                    println("MainViewModel: Message sent successfully to $channelName")
+                }
+                .onFailure { error ->
+                    println("MainViewModel: Failed to send message: ${error.message}")
+                    _error.value = error.message
+                }
+        }
+    }
+
+    private fun getInviteChannelPath(): String? {
+        val userId = preferences.getUserData().userId
+        return userId?.let { RealtimeChannel.NOTIFICATIONS_INVITES.build(it) }
     }
 }

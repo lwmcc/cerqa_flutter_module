@@ -6,6 +6,8 @@ import { hasUserCreatedProfile } from "../functions/hasUserCreatedProfile/resour
 import { getUserByUserId } from "../functions/getUserByUserId/resource";
 import { storeFcmToken } from "../functions/storeFcmToken/resource";
 import { sendInviteNotification } from "../functions/sendInviteNotification/resource";
+import { sendSmartInviteNotification } from "../functions/sendSmartInviteNotification/resource";
+import { updatePresence } from "../functions/updatePresence/resource";
 
 const AblyJwt = a.customType({
       keyName: a.string().required(),
@@ -69,6 +71,20 @@ const NotificationResult = a.customType({
       success: a.boolean().required(),
       message: a.string().required(),
       deviceCount: a.integer(),
+});
+
+const PresenceStatus = a.customType({
+      userId: a.string().required(),
+      isOnline: a.boolean().required(),
+      lastSeen: a.string(),
+      platform: a.string(),
+});
+
+const InviteNotificationResult = a.customType({
+      success: a.boolean().required(),
+      message: a.string().required(),
+      deliveryMethod: a.string().required(), // "FCM" or "ABLY"
+      channelName: a.string(),
 });
 
 export const schema = a.schema({
@@ -214,6 +230,17 @@ export const schema = a.schema({
         .returns(NotificationResult)
         .authorization(allow => [allow.authenticated()])
         .handler(a.handler.function(sendInviteNotification)),
+
+    updatePresence: a
+        .mutation()
+        .arguments({
+            userId: a.string().required(),
+            isOnline: a.boolean().required(),
+            platform: a.string()
+        })
+        .returns(a.boolean())
+        .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
+        .handler(a.handler.function(updatePresence)),
 });
 
 export type Schema = ClientSchema<typeof schema>;

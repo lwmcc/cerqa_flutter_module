@@ -6,6 +6,8 @@ import com.cerqa.data.UserRepository
 import com.cerqa.notifications.Notifications
 import com.cerqa.platform.DeviceContactsProvider
 import com.cerqa.platform.SmsProvider
+import com.cerqa.realtime.RealtimeChannel
+import com.cerqa.repository.RealtimeRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -41,12 +43,14 @@ sealed class ContactCardConnectionEvent {
     data class InvitePhoneNumberConnectEvent(val receiverPhoneNumber: String) : ContactCardConnectionEvent()
 }
 
+// TODO: reduce number of params
 class SearchViewModel(
     private val repository: ContactsRepository,
     private val userRepository: UserRepository,
     private val notifications: Notifications,
     private val deviceContactsProvider: DeviceContactsProvider? = null,
-    private val smsProvider: SmsProvider? = null
+    private val smsProvider: SmsProvider? = null,
+    private val realtimeRepository: RealtimeRepository,
 ) {
     private val viewModelJob = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.Main + viewModelJob)
@@ -196,6 +200,17 @@ class SearchViewModel(
                                     .onSuccess { currentUser ->
                                         val senderName = currentUser.name ?: "${currentUser.firstName} ${currentUser.lastName}"
                                         val senderUserName = currentUser.userName.orEmpty()
+
+                                        val channel = RealtimeChannel.NOTIFICATIONS_INVITES.build(
+                                            connectionEvent.receiverUserId
+                                        )
+
+                                        println("SearchViewModel ***** PUBLISH TO $channel")
+
+                                        realtimeRepository.publishMessage(
+                                            channel,
+                                            "My connection Test"
+                                        )
 
                                         // Send push notification to the receiver
                                         notifications.sendConnectionInviteNotification(

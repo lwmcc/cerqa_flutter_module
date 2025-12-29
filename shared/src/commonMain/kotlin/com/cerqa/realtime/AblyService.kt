@@ -20,18 +20,18 @@ class AblyService(
      * @return Result indicating success or failure
      */
     suspend fun initialize(userId: String): Result<Unit> {
-        println("AblyService: Initializing for user: $userId")
+        println("AblyService ***** Initializing for user: $userId")
 
         // Fetch token from backend
         val tokenResult = ablyRepository.fetchAblyToken(userId)
         if (tokenResult.isFailure) {
             val error = tokenResult.exceptionOrNull()
-            println("AblyService: Failed to fetch token: ${error?.message}")
+            println("AblyService ***** Failed to fetch token: ${error?.message}")
             return Result.failure(error ?: Exception("Unknown error fetching token"))
         }
 
         val tokenResponse = tokenResult.getOrNull()!!
-        println("AblyService: Token fetched successfully")
+        println("AblyService ***** Token fetched successfully")
 
         // Convert to platform-agnostic token data
         val tokenData = AblyTokenData(
@@ -53,7 +53,7 @@ class AblyService(
      * @return Flow of messages
      */
     fun subscribeToChannel(channelName: String): Flow<String> {
-        println("AblyService: Subscribing to channel: $channelName")
+        println("AblyService ***** Subscribing to channel: $channelName")
         return ablyClient.subscribeToChannel(channelName)
     }
 
@@ -64,7 +64,7 @@ class AblyService(
      * @param message The message to publish
      */
     suspend fun publishMessage(channelName: String, message: String): Result<Unit> {
-        println("AblyService: Publishing message to channel: $channelName")
+        println("AblyService ***** Publishing message to channel: $channelName")
         return ablyClient.publishMessage(channelName, message)
     }
 
