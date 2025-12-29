@@ -50,7 +50,7 @@ class UserRepositoryImpl(
                     preferences.setUserData(
                         userId = user.userId ?: userId,
                         userName = userName,
-                        userEmail = user.email ?: "",
+                        userEmail = user.email ?: "", // TODO: handle nulls
                         createdAt = "", // UserData doesn't have createdAt
                         avatarUri = user.avatarUri ?: ""
                     )
