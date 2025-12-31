@@ -811,6 +811,10 @@ class ContactsRepository(
             val currentUserId = tokenProvider.getCurrentUserId()
                 ?: return Result.failure(Exception("User not authenticated"))
 
+            println("ContactsRepository ===== searchUsersByUserName called")
+            println("ContactsRepository ===== Search term: '$userName'")
+            println("ContactsRepository ===== Current user ID: '$currentUserId'")
+
             // Build filter for username contains search, excluding current user
             val filter = com.cerqa.graphql.type.ModelUserFilterInput(
                 userName = com.apollographql.apollo.api.Optional.present(
@@ -824,6 +828,8 @@ class ContactsRepository(
                     )
                 )
             )
+
+            println("ContactsRepository ===== Filter created with userName.contains='$userName'")
 
             val response = apolloClient.query(
                 com.cerqa.graphql.ListUsersQuery(
@@ -840,6 +846,12 @@ class ContactsRepository(
             }
 
             val items = response.data?.listUsers?.items ?: emptyList()
+            println("ContactsRepository ===== Response received: ${items.size} items")
+
+            // Log all items for debugging
+            items.forEachIndexed { index, item ->
+                println("ContactsRepository ===== Item $index: id=${item?.id}, userId=${item?.userId}, userName='${item?.userName}', name='${item?.name}'")
+            }
 
             // Map Apollo generated types to our User model
             val users = items.mapNotNull { item ->
@@ -856,6 +868,11 @@ class ContactsRepository(
                         avatarUri = it.avatarUri
                     )
                 }
+            }
+
+            println("ContactsRepository ===== Mapped ${users.size} users from response")
+            users.forEach { user ->
+                println("ContactsRepository ===== User: userName='${user.userName}', name='${user.name}', userId='${user.userId}'")
             }
 
             Result.success(users)

@@ -162,7 +162,13 @@ fun TopBar(
                 IconButton(onClick = {
                     onTopNavClick(item.route)
                 }) {
-                    Icon(item.icon, contentDescription = item.contentDescription)
+                    val composableIcon = item.iconComposable
+                    val vectorIcon = item.icon
+                    if (composableIcon != null) {
+                        composableIcon.invoke()
+                    } else if (vectorIcon != null) {
+                        Icon(vectorIcon, contentDescription = item.contentDescription)
+                    }
                 }
             }
         }

@@ -23,6 +23,7 @@ fun Contacts(
     searchViewModel: SearchViewModel,
     contactsViewModel: ContactsViewModel,
     mainViewModel: MainViewModel,
+    onNavigateToConversation: (contactId: String, userName: String) -> Unit = { _, _ -> }
 ) {
     val uiState by searchViewModel.uiState.collectAsState()
     val contactsUiState by contactsViewModel.uiState.collectAsState()
@@ -226,6 +227,12 @@ fun Contacts(
                                         }
                                     )
                                     showConfirmDialog = true
+                                },
+                                onClick = {
+                                    onNavigateToConversation(
+                                        contact.contactId,
+                                        contact.userName ?: contact.name ?: "Unknown"
+                                    )
                                 }
                             )
                         }
@@ -478,11 +485,13 @@ fun SentInviteCard(
 @Composable
 fun CurrentContactCard(
     contact: CurrentContact,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically

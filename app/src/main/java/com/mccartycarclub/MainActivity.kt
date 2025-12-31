@@ -38,6 +38,7 @@ import com.mccartycarclub.ui.start.StartScreen
 import com.mccartycarclub.viewmodels.MainViewModel
 import kotlin.String
 import com.cerqa.ui.screens.App as SharedApp
+import com.mccartycarclub.navigation.navItems
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -73,7 +74,7 @@ class MainActivity : ComponentActivity() {
                     ) { state ->
                         mainViewModel.setLoggedInUserId(userId = state.user.userId)
 
-                        SharedApp()
+                        SharedApp(bottomNavItems = navItems)
 
                         checkPermissions()
                     }

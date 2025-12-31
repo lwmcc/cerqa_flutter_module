@@ -118,15 +118,6 @@ class MainViewModel(
                         }
                     }
 
-                    // Subscribe to test channel
-                    val testChannelName = "cerqa-test-channel:$userId"
-                    launch {
-                        ablyService.subscribeToChannel(testChannelName).collect { message ->
-                            println("MainViewModel ***** [TEST CHANNEL] Received: $message")
-                            // Handle test channel message
-                        }
-                    }
-
                     // Monitor connection state
                     launch {
                         ablyService.getConnectionState().collect { state ->
@@ -223,13 +214,13 @@ class MainViewModel(
 
     fun subscribeToDmChannel() {
         viewModelScope.launch {
+            val userId = preferences.getUserData().userId
             val channel = getInviteChannelPath()
-
+            
             if (channel != null) {
-                println("MainViewModel: Subscribing to channel: $channel")
                 realtimeRepository.subscribeToChannel(channel).collect { message ->
-                    println("MainViewModel ***** Received DM message on $channel: $message")
-
+                    println("MainViewModel ***** Channel: $channel")
+                    println("MainViewModel ***** Message: $message")
                 }
             } else {
                 println("MainViewModel ***** ERROR CREATING CHANNEL $channel")

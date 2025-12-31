@@ -22,8 +22,9 @@ data class BottomNavItem(
 
 data class TopNavItem(
     val route: String,
-    val icon: ImageVector,
+    val icon: ImageVector? = null,
     val contentDescription: String,
+    val iconComposable: (@Composable () -> Unit)? = null
 )
 
 fun getTopNavItems(route: String?): List<TopNavItem> {

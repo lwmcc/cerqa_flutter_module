@@ -8,6 +8,14 @@ plugins {
     kotlin("native.cocoapods")
 }
 
+compose {
+    resources {
+        publicResClass = true
+        packageOfResClass = "carclub.shared.generated.resources"
+        generateResClass = auto
+    }
+}
+
 kotlin {
     // Suppress expect/actual classes warning
     compilerOptions {
@@ -29,6 +37,14 @@ kotlin {
             sourceSetTreeName = "test"
         }.configure {
             instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        }
+
+        packaging {
+            resources {
+                excludes += setOf(
+                    "META-INF/androidx.test_*.version"
+                )
+            }
         }
     }
 
@@ -142,6 +158,10 @@ kotlin {
 
                 // Ably Android SDK
                 implementation("io.ably:ably-android:1.2.48")
+
+                // Firebase Cloud Messaging for push notifications
+                implementation("com.google.firebase:firebase-messaging:23.4.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
             }
         }
 

@@ -9,4 +9,7 @@ sealed class AppDestination(val route: String) {
     object Groups : AppDestination("groups")
     object GroupsAdd : AppDestination("groups-add")
     object Profile : AppDestination("profile")
+    object Conversation : AppDestination("conversation/{contactId}/{userName}") {
+        fun createRoute(contactId: String, userName: String) = "conversation/$contactId/$userName"
+    }
 }

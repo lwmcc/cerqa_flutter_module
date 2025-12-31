@@ -128,16 +128,27 @@ class SearchViewModel(
      * Perform user search
      */
     private suspend fun performSearch(userName: String) {
+        println("SearchViewModel ===== performSearch called with userName: '$userName'")
         _uiState.value = _uiState.value.copy(pending = true, idle = false)
 
         // Search for users by username
+        println("SearchViewModel ===== Calling repository.searchUsersByUserName")
         val searchUsersResult = repository.searchUsersByUserName(userName)
+
+        if (searchUsersResult.isFailure) {
+            println("SearchViewModel ===== searchUsersByUserName FAILED: ${searchUsersResult.exceptionOrNull()?.message}")
+        } else {
+            println("SearchViewModel ===== searchUsersByUserName SUCCESS: ${searchUsersResult.getOrNull()?.size} users found")
+        }
 
         // Get all contacts to determine connection status
         val contactsResult = repository.fetchAllContactsWithInvites()
 
         val contacts = contactsResult.getOrNull() ?: emptyList()
         val searchUsers = searchUsersResult.getOrNull() ?: emptyList()
+
+        println("SearchViewModel ===== Found ${searchUsers.size} users from search")
+        println("SearchViewModel ===== Found ${contacts.size} contacts")
 
         // Map search results with their connection state
         val userResults = searchUsers.map { user ->
@@ -158,6 +169,11 @@ class SearchViewModel(
                 connectButtonEnabled = true,
                 contactType = contactType
             )
+        }
+
+        println("SearchViewModel ===== Mapped ${userResults.size} search results")
+        userResults.forEach { result ->
+            println("SearchViewModel ===== Result: userName='${result.userName}', contactType=${result.contactType}")
         }
 
         _uiState.value = _uiState.value.copy(
@@ -205,12 +221,25 @@ class SearchViewModel(
                                             connectionEvent.receiverUserId
                                         )
 
-                                        println("SearchViewModel ***** PUBLISH TO $channel")
+                                        println("SearchViewModel ***** ATTEMPTING TO PUBLISH")
+                                        println("SearchViewModel ***** Receiver UserId: ${connectionEvent.receiverUserId}")
+                                        println("SearchViewModel ***** Channel name: $channel")
+                                        println("SearchViewModel ***** Message: My connection Test")
 
-                                        realtimeRepository.publishMessage(
+                                        // TODO: testing publish
+                                        val publishResult = realtimeRepository.publishMessage(
                                             channel,
                                             "My connection Test"
                                         )
+
+                                        publishResult
+                                            .onSuccess {
+                                                println("SearchViewModel ***** Message published SUCCESSFULLY to channel: $channel")
+                                            }
+                                            .onFailure { error ->
+                                                println("SearchViewModel ***** FAILED to publish message: ${error.message}")
+                                                error.printStackTrace()
+                                            }
 
                                         // Send push notification to the receiver
                                         notifications.sendConnectionInviteNotification(
