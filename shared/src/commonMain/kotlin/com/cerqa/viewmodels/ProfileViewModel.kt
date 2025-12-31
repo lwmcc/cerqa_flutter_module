@@ -3,10 +3,12 @@ package com.cerqa.viewmodels
 import com.apollographql.apollo.ApolloClient
 import com.cerqa.auth.AuthResult
 import com.cerqa.auth.AuthTokenProvider
+import com.cerqa.data.Preferences
 import com.cerqa.data.UserProfileRepository
 import com.cerqa.graphql.CreateUserMutation
 import com.cerqa.graphql.HasUserCreatedProfileQuery
 import com.cerqa.graphql.type.CreateUserInput
+import com.cerqa.models.UserData
 import com.cerqa.repository.AuthRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +29,7 @@ class ProfileViewModel(
     private val apolloClient: ApolloClient,
     private val authTokenProvider: AuthTokenProvider,
     private val authRepository: AuthRepository,
+    private val preferences: Preferences,
 ) {
     private val viewModelJob = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.Main + viewModelJob)
@@ -43,6 +46,9 @@ class ProfileViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _userData = MutableStateFlow<UserData?>(null)
+    val userData: StateFlow<UserData?> = _userData.asStateFlow()
+
 
     fun checkProfileComplete() {
         scope.launch {
@@ -50,6 +56,9 @@ class ProfileViewModel(
             _error.value = null
 
             try {
+                // Load user data from preferences
+                _userData.value = preferences.getUserData()
+
                 val userId = authTokenProvider.getCurrentUserId()
                 if (userId != null) {
                     val response = apolloClient.query(

@@ -54,12 +54,11 @@ import org.koin.compose.koinInject
 fun Profile(
     userImageUrl: String? = null,
     onDismiss: () -> Unit = {},
-    viewModel: ProfileViewModel = koinInject(),
-    preferences: Preferences = koinInject()
+    viewModel: ProfileViewModel = koinInject()
 ) {
 
     val isProfileComplete by viewModel.isProfileComplete.collectAsState()
-    var userData by remember { mutableStateOf<UserData?>(null) }
+    val userData by viewModel.userData.collectAsState()
 
     var showCreateProfileForm by remember { mutableStateOf(false) }
     var newUserName by remember { mutableStateOf("") }
@@ -70,7 +69,6 @@ fun Profile(
 
     LaunchedEffect(Unit) {
         viewModel.checkProfileComplete()
-        userData = preferences.getUserData()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -160,19 +158,19 @@ fun Profile(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        val currentUser = userData
-                        if (isProfileComplete == true && currentUser != null) {
+                        if (isProfileComplete == true && userData != null) {
+                            val currentUserData = userData // Create local variable for smart cast
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = currentUser.userName ?: "Unknown",
+                                    text = currentUserData?.userName ?: "Unknown",
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    text = currentUser.userEmail ?: "Unknown",
+                                    text = currentUserData?.userEmail ?: "Unknown",
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    text = currentUser.createdAt ?: "Unknown",
+                                    text = currentUserData?.createdAt ?: "Unknown",
                                     style = MaterialTheme.typography.titleMedium
                                 )
                             }

@@ -10,7 +10,7 @@ import com.cerqa.ui.components.topNavItemsContacts
 import com.cerqa.ui.components.topNavItemsGroups
 import com.cerqa.ui.components.topNavItemsMain
 import com.cerqa.navigation.AppDestination
-import com.cerqa.ui.BottomNavItem
+import com.cerqa.ui.Navigation.BottomNavItem
 import com.cerqa.ui.Navigation.TopNavItem
 
 fun getTopNavItems(route: String?): List<TopNavItem> {
@@ -35,10 +35,16 @@ fun BottomBar(
         items.forEach { item ->
             NavigationBarItem(
                 icon = {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.contentDescription
-                    )
+                    val composableIcon = item.iconComposable
+                    val vectorIcon = item.icon
+                    if (composableIcon != null) {
+                        composableIcon.invoke()
+                    } else if (vectorIcon != null) {
+                        Icon(
+                            imageVector = vectorIcon,
+                            contentDescription = item.contentDescription
+                        )
+                    }
                 },
                 selected = item.route == currentRoute,
                 onClick = { onBottomNavClick(item.route) },

@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -48,10 +50,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import carclub.shared.generated.resources.Res
-import carclub.shared.generated.resources.plus_bubble
-import carclub.shared.generated.resources.person_badge_plus
-import org.jetbrains.compose.resources.painterResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -70,6 +68,8 @@ import com.cerqa.viewmodels.ContactsViewModel
 import com.cerqa.viewmodels.MainViewModel
 import com.cerqa.viewmodels.SearchViewModel
 import org.koin.compose.koinInject
+import com.cerqa.ui.resources.getAddChatIcon
+import com.cerqa.ui.resources.getAddGroupIcon
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +81,7 @@ fun App(
     searchViewModel: SearchViewModel = koinInject(),
     contactsViewModel: ContactsViewModel = koinInject(),
     mainViewModel: MainViewModel = koinInject(),
+    bottomNavItems: List<com.cerqa.ui.Navigation.BottomNavItem> = navItems,
 ) {
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
@@ -187,11 +188,9 @@ fun App(
                             actions = {
                                 IconButton(onClick = { navActions.navigateToContacts() }) {
                                     Icon(
-                                        painter = painterResource(
-                                            if (chatTabIndex == 1) Res.drawable.person_badge_plus
-                                            else Res.drawable.plus_bubble
-                                        ),
-                                        contentDescription = if (chatTabIndex == 1) "Add Group Member" else "Add Contact"
+                                        painter = if (chatTabIndex == 1) getAddGroupIcon() else getAddChatIcon(),
+                                        contentDescription = if (chatTabIndex == 1) "Add Group Member" else "Add Contact",
+                                        tint = Color.Unspecified
                                     )
                                 }
                             }
@@ -274,7 +273,7 @@ fun App(
 
             bottomBar = {
                 BottomBar(
-                    items = navItems,
+                    items = bottomNavItems,
                     currentRoute = currentRoute,
                     onBottomNavClick = { route ->
                         navController.navigate(route) {
@@ -309,7 +308,12 @@ fun App(
                         searchQuery = searchQuery,
                         searchViewModel = searchViewModel,
                         contactsViewModel = contactsViewModel,
-                        mainViewModel = mainViewModel
+                        mainViewModel = mainViewModel,
+                        onNavigateToConversation = { contactId, userName ->
+                            navController.navigate(
+                                AppDestination.Conversation.createRoute(contactId, userName)
+                            )
+                        }
                     )
                 }
                 composable(AppDestination.Groups.route) {
@@ -332,6 +336,15 @@ fun App(
                 }
                 composable(AppDestination.ContactsSearch.route) {
                     Search()
+                }
+                composable(
+                    AppDestination.Conversation.route,
+                    enterTransition = { slideInFromRight() },
+                    exitTransition = { slideOutToRight() }
+                ) { backStackEntry ->
+                    val contactId = backStackEntry.arguments?.getString("contactId") ?: ""
+                    val userName = backStackEntry.arguments?.getString("userName") ?: "Unknown"
+                    Conversation()
                 }
             }
         }

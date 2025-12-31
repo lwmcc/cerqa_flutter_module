@@ -82,7 +82,8 @@ val commonModule = module {
         ProfileViewModel(
             apolloClient = get(),
             authTokenProvider = get(),
-            authRepository = get()
+            authRepository = get(),
+            preferences = get()
         )
     }
     factory {
