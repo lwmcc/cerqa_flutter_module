@@ -152,3 +152,32 @@ query FetchAblyJwt($userId: String!) {
     mac
   }
 }
+
+# List notifications for a user
+query ListNotifications($filter: ModelNotificationFilterInput, $limit: Int, $nextToken: String) {
+  listNotifications(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      id
+      userId
+      type
+      title
+      message
+      isRead
+      relatedId
+      senderUserId
+      senderName
+      createdAt
+      updatedAt
+    }
+    nextToken
+  }
+}
+
+# Get unread notification count for a user
+query GetUnreadNotificationCount($userId: ID!) {
+  listNotifications(filter: { userId: { eq: $userId }, isRead: { eq: false } }, limit: 1000) {
+    items {
+      id
+    }
+  }
+}

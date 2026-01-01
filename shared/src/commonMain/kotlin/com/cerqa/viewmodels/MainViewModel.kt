@@ -43,6 +43,9 @@ class MainViewModel(
     private val _ablyMessages = MutableStateFlow<List<String>>(emptyList())
     val ablyMessages: StateFlow<List<String>> = _ablyMessages.asStateFlow()
 
+    private val _unreadNotificationCount = MutableStateFlow(0)
+    val unreadNotificationCount: StateFlow<Int> = _unreadNotificationCount.asStateFlow()
+
     fun setUserData(
         userId: String,
         userName: String,

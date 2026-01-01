@@ -104,6 +104,7 @@ export const schema = a.schema({
            groups: a.hasMany('UserGroup', 'userId'),
            invites: a.hasMany('Invite','userId'),
            channels: a.hasMany('Channel', 'userId'),
+           notifications: a.hasMany('Notification', 'userId'),
          })
          .secondaryIndexes((index) => [
                    index("phone")
@@ -173,6 +174,23 @@ export const schema = a.schema({
          channel: a.belongsTo('Channel', 'channelId'),
      })
     .authorization((allow) => [allow.publicApiKey()]),
+
+    Notification: a
+     .model({
+         userId: a.id().required(), // User who receives the notification
+         type: a.string().required(), // "INVITE", "MESSAGE", "GROUP_INVITE", etc.
+         title: a.string().required(),
+         message: a.string().required(),
+         isRead: a.boolean().default(false),
+         relatedId: a.string(), // ID of related entity (inviteId, messageId, etc.)
+         senderUserId: a.string(), // User who triggered the notification
+         senderName: a.string(), // Name of sender for display
+         user: a.belongsTo('User', 'userId'),
+     })
+     .authorization((allow) => [
+       allow.authenticated(),
+       allow.publicApiKey(),
+     ]),
 
     fetchAblyJwt: a
         .query()

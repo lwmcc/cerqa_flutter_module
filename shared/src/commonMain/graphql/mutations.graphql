@@ -121,3 +121,44 @@ mutation DeleteInvite($input: DeleteInviteInput!) {
         id
     }
 }
+
+# Create a notification
+mutation CreateNotification($input: CreateNotificationInput!, $condition: ModelNotificationConditionInput) {
+    createNotification(input: $input, condition: $condition) {
+        id
+        userId
+        type
+        title
+        message
+        isRead
+        relatedId
+        senderUserId
+        senderName
+        createdAt
+        updatedAt
+    }
+}
+
+# Update a notification (mark as read)
+mutation UpdateNotification($input: UpdateNotificationInput!, $condition: ModelNotificationConditionInput) {
+    updateNotification(input: $input, condition: $condition) {
+        id
+        userId
+        type
+        title
+        message
+        isRead
+        relatedId
+        senderUserId
+        senderName
+        createdAt
+        updatedAt
+    }
+}
+
+# Delete a notification
+mutation DeleteNotification($input: DeleteNotificationInput!) {
+    deleteNotification(input: $input) {
+        id
+    }
+}
