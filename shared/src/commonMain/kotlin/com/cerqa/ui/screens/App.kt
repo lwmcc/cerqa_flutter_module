@@ -92,6 +92,20 @@ fun App(
     var active by remember { mutableStateOf(false) }
     var chatTabIndex by remember { mutableStateOf(0) } // 0 = Chats, 1 = Groups
 
+    // Collect unread notification count
+    val unreadNotificationCount by mainViewModel.unreadNotificationCount.collectAsState()
+
+    // Create bottom nav items with badge count
+    val bottomNavItemsWithBadge = remember(unreadNotificationCount) {
+        bottomNavItems.map { item ->
+            if (item.route == AppDestination.Notifications.route) {
+                item.copy(badgeCount = unreadNotificationCount)
+            } else {
+                item
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         mainViewModel.fetchUser()
     }
@@ -273,7 +287,7 @@ fun App(
 
             bottomBar = {
                 BottomBar(
-                    items = bottomNavItems,
+                    items = bottomNavItemsWithBadge,
                     currentRoute = currentRoute,
                     onBottomNavClick = { route ->
                         navController.navigate(route) {
@@ -341,9 +355,7 @@ fun App(
                     AppDestination.Conversation.route,
                     enterTransition = { slideInFromRight() },
                     exitTransition = { slideOutToRight() }
-                ) { backStackEntry ->
-                    val contactId = backStackEntry.arguments?.getString("contactId") ?: ""
-                    val userName = backStackEntry.arguments?.getString("userName") ?: "Unknown"
+                ) {
                     Conversation()
                 }
             }

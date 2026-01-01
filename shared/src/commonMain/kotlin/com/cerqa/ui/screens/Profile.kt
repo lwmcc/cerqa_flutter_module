@@ -158,8 +158,9 @@ fun Profile(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        if (isProfileComplete == true && userData != null) {
-                            val currentUserData = userData // Create local variable for smart cast
+                        if (userData != null) {
+                            // Show saved user data from preferences
+                            val currentUserData = userData
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     text = currentUserData?.userName ?: "Unknown",
@@ -173,6 +174,14 @@ fun Profile(
                                     text = currentUserData?.createdAt ?: "Unknown",
                                     style = MaterialTheme.typography.titleMedium
                                 )
+
+                                if (isProfileComplete == false) {
+                                    Text(
+                                        text = "Profile incomplete",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
                             }
                         } else if (isProfileComplete == false) {
                             OutlinedTextField(

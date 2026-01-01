@@ -4,9 +4,10 @@ import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
 import com.cerqa.graphql.CreateNotificationMutation
 import com.cerqa.graphql.GetUnreadNotificationCountQuery
-import com.cerqa.graphql.StoreFcmTokenMutation
+import com.cerqa.graphql.CreateFcmTokenMutation
 import com.cerqa.graphql.UpdateNotificationMutation
 import com.cerqa.graphql.type.CreateNotificationInput
+import com.cerqa.graphql.type.CreateFcmTokenInput
 import com.cerqa.graphql.type.UpdateNotificationInput
 
 class NotificationRepositoryImpl(private val apolloClient: ApolloClient): NotificationRepository {
@@ -16,12 +17,19 @@ class NotificationRepositoryImpl(private val apolloClient: ApolloClient): Notifi
             println("NotificationRepository: Storing FCM token for userId: $userId, platform: $platform")
             println("NotificationRepository: Token: $token")
 
+            // Generate a deviceId by combining userId and platform
+            // This ensures the same device gets the same ID
+            val deviceId = "${userId}_${platform}".hashCode().toString()
+
+            val input = CreateFcmTokenInput(
+                userId = userId,
+                deviceId = deviceId,
+                token = token,
+                platform = platform
+            )
+
             val response = apolloClient.mutation(
-                StoreFcmTokenMutation(
-                    userId = userId,
-                    token = token,
-                    platform = platform
-                )
+                CreateFcmTokenMutation(input = input)
             ).execute()
 
             if (response.hasErrors()) {
@@ -29,7 +37,7 @@ class NotificationRepositoryImpl(private val apolloClient: ApolloClient): Notifi
                 println("NotificationRepository: Error storing FCM token: $errorMessage")
                 Result.failure(Exception(errorMessage))
             } else {
-                val success = response.data?.storeFcmToken ?: false
+                val success = response.data?.createFcmToken != null
                 println("NotificationRepository: FCM token stored successfully: $success")
                 Result.success(success)
             }

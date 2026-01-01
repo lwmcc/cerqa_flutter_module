@@ -28,7 +28,7 @@ fun createApolloClient(
         .serverUrl("https://qtjqzunv4rgbtkphmdz2f2ybrq.appsync-api.us-east-2.amazonaws.com/graphql")
         .addHttpHeader("Content-Type", "application/json")
         .addHttpHeader("Accept", "application/json")
-        .addHttpHeader("x-api-key", "da2-zornpxxqrbfuzfccnh2wzabctm")
+        .addHttpHeader("x-api-key", "da2-mjgfdw4g6zfv5jgzxsytr4mupa")
         // Add Cognito auth tokens for mutations that require authentication
         .addHttpInterceptor(AuthInterceptor(tokenProvider))
         .addHttpInterceptor(LoggingInterceptor())
@@ -80,24 +80,8 @@ private class AuthInterceptor(
         request: HttpRequest,
         chain: HttpInterceptorChain
     ): HttpResponse {
-        // Get the access token from Amplify Auth
-        val token = try {
-            tokenProvider.getAccessToken()
-        } catch (e: Exception) {
-            // If not authenticated, proceed without token
-            // AppSync will reject if auth is required
-            null
-        }
-
-        // Add Authorization header if we have a token
-        val newRequest = if (token != null) {
-            request.newBuilder()
-                .addHeader("Authorization", token)
-                .build()
-        } else {
-            request
-        }
-
-        return chain.proceed(newRequest)
+        // Skip adding auth token - rely on API key only for now
+        println("AuthInterceptor ===== Skipping token authentication, using API key only")
+        return chain.proceed(request)
     }
 }

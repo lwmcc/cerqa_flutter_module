@@ -88,6 +88,8 @@ class MainViewModel(
                         initAbly(userId)
                         // Store FCM token after user is authenticated, passing the userId
                         storeFcmToken(userId)
+                        // Fetch unread notification count
+                        fetchUnreadNotificationCount(userId)
                     }
                 }
                 .onFailure { exception ->
@@ -210,6 +212,26 @@ class MainViewModel(
                 }
                 .onFailure { error ->
                     println("MainViewModel ***** Failed to store FCM token: ${error.message}")
+                    _error.value = error.message
+                }
+        }
+    }
+
+    /**
+     * Fetch the unread notification count for the current user.
+     * Called automatically after user authentication.
+     */
+    fun fetchUnreadNotificationCount(userId: String) {
+        viewModelScope.launch {
+            println("MainViewModel ***** Fetching unread notification count for userId: $userId")
+
+            notificationRepository.getUnreadCount(userId)
+                .onSuccess { count ->
+                    println("MainViewModel ***** Unread notification count: $count")
+                    _unreadNotificationCount.value = count
+                }
+                .onFailure { error ->
+                    println("MainViewModel ***** Failed to fetch unread count: ${error.message}")
                     _error.value = error.message
                 }
         }

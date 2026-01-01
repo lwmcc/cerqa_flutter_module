@@ -35,8 +35,15 @@ mutation UpdateUser($input: UpdateUserInput!, $condition: ModelUserConditionInpu
 }
 
 # Store FCM token for push notifications
-mutation StoreFcmToken($userId: String!, $token: String!, $platform: String!) {
-    storeFcmToken(userId: $userId, token: $token, platform: $platform)
+mutation CreateFcmToken($input: CreateFcmTokenInput!) {
+    createFcmToken(input: $input) {
+        userId
+        deviceId
+        token
+        platform
+        createdAt
+        updatedAt
+    }
 }
 
 # Send invite notification via FCM

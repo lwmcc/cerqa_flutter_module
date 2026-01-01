@@ -57,13 +57,24 @@ class ProfileViewModel(
 
             try {
                 // Load user data from preferences
-                _userData.value = preferences.getUserData()
+                println("ProfileViewModel ===== Loading user data from preferences")
+                val savedUserData = preferences.getUserData()
+                _userData.value = savedUserData
+                println("ProfileViewModel ===== Saved user data: userName=${savedUserData?.userName}, email=${savedUserData?.userEmail}")
 
+                println("ProfileViewModel ===== Getting current user ID from auth provider")
                 val userId = authTokenProvider.getCurrentUserId()
+                println("ProfileViewModel ===== Current user ID: $userId")
+
                 if (userId != null) {
+                    println("ProfileViewModel ===== Querying hasUserCreatedProfile for userId: $userId")
                     val response = apolloClient.query(
                         HasUserCreatedProfileQuery(userId = userId)
-                    ).execute()
+                    )
+                    .addHttpHeader("x-api-key", "da2-mjgfdw4g6zfv5jgzxsytr4mupa")
+                    .execute()
+
+                    println("ProfileViewModel ===== Response received, hasErrors: ${response.hasErrors()}")
 
                     if (response.hasErrors()) {
                         val errors = response.errors?.joinToString { it.message }
@@ -72,9 +83,10 @@ class ProfileViewModel(
                     } else {
                         val data = response.data?.hasUserCreatedProfile
                         _isProfileComplete.value = data?.isProfileComplete
-                        _missingFields.value = data?.missingFields ?: emptyList()
+                        _missingFields.value = data?.missingFields?.filterNotNull() ?: emptyList()
 
                         println("ProfileViewModel ===== isProfileComplete: ${data?.isProfileComplete}")
+                        println("ProfileViewModel ===== missingFields: ${data?.missingFields}")
                     }
                 } else {
                     println("ProfileViewModel ===== No user ID found - user not authenticated")
