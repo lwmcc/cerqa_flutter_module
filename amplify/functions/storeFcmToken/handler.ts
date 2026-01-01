@@ -1,9 +1,10 @@
 import type { Schema } from '../../data/resource';
-import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
-
-const ddbClient = new DynamoDBClient({});
 
 export const handler: Schema["storeFcmToken"]["functionHandler"] = async (event) => {
+  // Dynamic import to avoid bundling issues
+  const { DynamoDBClient, PutItemCommand } = await import('@aws-sdk/client-dynamodb');
+  const ddbClient = new DynamoDBClient({});
+
   const { userId, token, platform } = event.arguments;
 
   console.log(`Storing FCM token for user ${userId} on platform ${platform}`);
