@@ -68,8 +68,10 @@ import com.cerqa.viewmodels.ContactsViewModel
 import com.cerqa.viewmodels.MainViewModel
 import com.cerqa.viewmodels.SearchViewModel
 import org.koin.compose.koinInject
-import com.cerqa.ui.resources.getAddChatIcon
-import com.cerqa.ui.resources.getAddGroupIcon
+import carclub.shared.generated.resources.Res
+import carclub.shared.generated.resources.add_chat
+import carclub.shared.generated.resources.add_group
+import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -188,7 +190,7 @@ fun App(
                             actions = {
                                 IconButton(onClick = { navActions.navigateToContacts() }) {
                                     Icon(
-                                        painter = if (chatTabIndex == 1) getAddGroupIcon() else getAddChatIcon(),
+                                        painter = if (chatTabIndex == 1) painterResource(Res.drawable.add_group) else painterResource(Res.drawable.add_chat),
                                         contentDescription = if (chatTabIndex == 1) "Add Group Member" else "Add Contact",
                                         tint = Color.Unspecified
                                     )
@@ -341,9 +343,7 @@ fun App(
                     AppDestination.Conversation.route,
                     enterTransition = { slideInFromRight() },
                     exitTransition = { slideOutToRight() }
-                ) { backStackEntry ->
-                    val contactId = backStackEntry.arguments?.getString("contactId") ?: ""
-                    val userName = backStackEntry.arguments?.getString("userName") ?: "Unknown"
+                ) {
                     Conversation()
                 }
             }
