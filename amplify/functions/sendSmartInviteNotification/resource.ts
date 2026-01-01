@@ -8,4 +8,7 @@ export const sendSmartInviteNotification = defineFunction({
     ABLY_API_KEY: secret('ABLY_API_KEY'),
   },
   timeoutSeconds: 30,
+  bundling: {
+    externalModules: ['@aws-sdk/client-dynamodb', 'firebase-admin', 'ably']
+  }
 });
