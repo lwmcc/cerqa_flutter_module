@@ -4,7 +4,6 @@ import { fetchUserWithContactInfo } from "../functions/fetchUserWithContactInfo/
 import { fetchPendingSentInviteStatus } from "../functions/fetchPendingSentInviteStatus/resource";
 import { hasUserCreatedProfile } from "../functions/hasUserCreatedProfile/resource";
 import { getUserByUserId } from "../functions/getUserByUserId/resource";
-import { storeFcmToken } from "../functions/storeFcmToken/resource";
 import { sendInviteNotification } from "../functions/sendInviteNotification/resource";
 import { sendSmartInviteNotification } from "../functions/sendSmartInviteNotification/resource";
 import { updatePresence } from "../functions/updatePresence/resource";
@@ -192,6 +191,19 @@ export const schema = a.schema({
        allow.publicApiKey(),
      ]),
 
+    FcmToken: a
+     .model({
+         userId: a.id().required(),
+         deviceId: a.id().required(),
+         token: a.string().required(),
+         platform: a.string().required(),
+     })
+     .identifier(['userId', 'deviceId'])
+     .authorization((allow) => [
+       allow.authenticated(),
+       allow.publicApiKey(),
+     ]),
+
     fetchAblyJwt: a
         .query()
         .arguments({userId: a.string()})
@@ -219,17 +231,6 @@ export const schema = a.schema({
         .returns(ProfileCheckResult)
         .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
         .handler(a.handler.function(hasUserCreatedProfile)),
-
-    storeFcmToken: a
-        .mutation()
-        .arguments({
-            userId: a.string().required(),
-            token: a.string().required(),
-            platform: a.string().required()
-        })
-        .returns(a.boolean())
-        .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
-        .handler(a.handler.function(storeFcmToken)),
 
     getUserByUserId: a
         .query()
