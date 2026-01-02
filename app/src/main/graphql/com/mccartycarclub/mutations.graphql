@@ -1,0 +1,658 @@
+# this is an auto generated file. This will be overwritten
+
+mutation CreateChannel(
+  $condition: ModelChannelConditionInput
+  $input: CreateChannelInput!
+) {
+  createChannel(condition: $condition, input: $input) {
+    createdAt
+    id
+    messages {
+      nextToken
+      __typename
+    }
+    name
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+mutation CreateGroup(
+  $condition: ModelGroupConditionInput
+  $input: CreateGroupInput!
+) {
+  createGroup(condition: $condition, input: $input) {
+    createdAt
+    groupId
+    id
+    name
+    updatedAt
+    users {
+      nextToken
+      __typename
+    }
+    __typename
+  }
+}
+
+mutation CreateInvite(
+  $condition: ModelInviteConditionInput
+  $input: CreateInviteInput!
+) {
+  createInvite(condition: $condition, input: $input) {
+    createdAt
+    id
+    receiverId
+    senderId
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+mutation CreateMessage(
+  $condition: ModelMessageConditionInput
+  $input: CreateMessageInput!
+) {
+  createMessage(condition: $condition, input: $input) {
+    channel {
+      createdAt
+      id
+      name
+      updatedAt
+      userId
+      __typename
+    }
+    channelId
+    content
+    createdAt
+    id
+    updatedAt
+    __typename
+  }
+}
+
+mutation CreateUser(
+  $condition: ModelUserConditionInput
+  $input: CreateUserInput!
+) {
+  createUser(condition: $condition, input: $input) {
+    asContact {
+      nextToken
+      __typename
+    }
+    avatarUri
+    channels {
+      nextToken
+      __typename
+    }
+    contacts {
+      nextToken
+      __typename
+    }
+    createdAt
+    email
+    firstName
+    groups {
+      nextToken
+      __typename
+    }
+    id
+    invites {
+      nextToken
+      __typename
+    }
+    lastName
+    name
+    phone
+    updatedAt
+    userId
+    userName
+    __typename
+  }
+}
+
+mutation CreateUserContact(
+  $condition: ModelUserContactConditionInput
+  $input: CreateUserContactInput!
+) {
+  createUserContact(condition: $condition, input: $input) {
+    contact {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    contactId
+    createdAt
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+mutation CreateUserGroup(
+  $condition: ModelUserGroupConditionInput
+  $input: CreateUserGroupInput!
+) {
+  createUserGroup(condition: $condition, input: $input) {
+    createdAt
+    group {
+      createdAt
+      groupId
+      id
+      name
+      updatedAt
+      __typename
+    }
+    groupId
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+mutation DeleteChannel(
+  $condition: ModelChannelConditionInput
+  $input: DeleteChannelInput!
+) {
+  deleteChannel(condition: $condition, input: $input) {
+    createdAt
+    id
+    messages {
+      nextToken
+      __typename
+    }
+    name
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+mutation DeleteGroup(
+  $condition: ModelGroupConditionInput
+  $input: DeleteGroupInput!
+) {
+  deleteGroup(condition: $condition, input: $input) {
+    createdAt
+    groupId
+    id
+    name
+    updatedAt
+    users {
+      nextToken
+      __typename
+    }
+    __typename
+  }
+}
+
+mutation DeleteInvite(
+  $condition: ModelInviteConditionInput
+  $input: DeleteInviteInput!
+) {
+  deleteInvite(condition: $condition, input: $input) {
+    createdAt
+    id
+    receiverId
+    senderId
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+mutation DeleteMessage(
+  $condition: ModelMessageConditionInput
+  $input: DeleteMessageInput!
+) {
+  deleteMessage(condition: $condition, input: $input) {
+    channel {
+      createdAt
+      id
+      name
+      updatedAt
+      userId
+      __typename
+    }
+    channelId
+    content
+    createdAt
+    id
+    updatedAt
+    __typename
+  }
+}
+
+mutation DeleteUser(
+  $condition: ModelUserConditionInput
+  $input: DeleteUserInput!
+) {
+  deleteUser(condition: $condition, input: $input) {
+    asContact {
+      nextToken
+      __typename
+    }
+    avatarUri
+    channels {
+      nextToken
+      __typename
+    }
+    contacts {
+      nextToken
+      __typename
+    }
+    createdAt
+    email
+    firstName
+    groups {
+      nextToken
+      __typename
+    }
+    id
+    invites {
+      nextToken
+      __typename
+    }
+    lastName
+    name
+    phone
+    updatedAt
+    userId
+    userName
+    __typename
+  }
+}
+
+mutation DeleteUserContact(
+  $condition: ModelUserContactConditionInput
+  $input: DeleteUserContactInput!
+) {
+  deleteUserContact(condition: $condition, input: $input) {
+    contact {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    contactId
+    createdAt
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+mutation DeleteUserGroup(
+  $condition: ModelUserGroupConditionInput
+  $input: DeleteUserGroupInput!
+) {
+  deleteUserGroup(condition: $condition, input: $input) {
+    createdAt
+    group {
+      createdAt
+      groupId
+      id
+      name
+      updatedAt
+      __typename
+    }
+    groupId
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+mutation UpdateChannel(
+  $condition: ModelChannelConditionInput
+  $input: UpdateChannelInput!
+) {
+  updateChannel(condition: $condition, input: $input) {
+    createdAt
+    id
+    messages {
+      nextToken
+      __typename
+    }
+    name
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+mutation UpdateGroup(
+  $condition: ModelGroupConditionInput
+  $input: UpdateGroupInput!
+) {
+  updateGroup(condition: $condition, input: $input) {
+    createdAt
+    groupId
+    id
+    name
+    updatedAt
+    users {
+      nextToken
+      __typename
+    }
+    __typename
+  }
+}
+
+mutation UpdateInvite(
+  $condition: ModelInviteConditionInput
+  $input: UpdateInviteInput!
+) {
+  updateInvite(condition: $condition, input: $input) {
+    createdAt
+    id
+    receiverId
+    senderId
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+mutation UpdateMessage(
+  $condition: ModelMessageConditionInput
+  $input: UpdateMessageInput!
+) {
+  updateMessage(condition: $condition, input: $input) {
+    channel {
+      createdAt
+      id
+      name
+      updatedAt
+      userId
+      __typename
+    }
+    channelId
+    content
+    createdAt
+    id
+    updatedAt
+    __typename
+  }
+}
+
+mutation UpdateUser(
+  $condition: ModelUserConditionInput
+  $input: UpdateUserInput!
+) {
+  updateUser(condition: $condition, input: $input) {
+    asContact {
+      nextToken
+      __typename
+    }
+    avatarUri
+    channels {
+      nextToken
+      __typename
+    }
+    contacts {
+      nextToken
+      __typename
+    }
+    createdAt
+    email
+    firstName
+    groups {
+      nextToken
+      __typename
+    }
+    id
+    invites {
+      nextToken
+      __typename
+    }
+    lastName
+    name
+    phone
+    updatedAt
+    userId
+    userName
+    __typename
+  }
+}
+
+mutation UpdateUserContact(
+  $condition: ModelUserContactConditionInput
+  $input: UpdateUserContactInput!
+) {
+  updateUserContact(condition: $condition, input: $input) {
+    contact {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    contactId
+    createdAt
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+mutation UpdateUserGroup(
+  $condition: ModelUserGroupConditionInput
+  $input: UpdateUserGroupInput!
+) {
+  updateUserGroup(condition: $condition, input: $input) {
+    createdAt
+    group {
+      createdAt
+      groupId
+      id
+      name
+      updatedAt
+      __typename
+    }
+    groupId
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}

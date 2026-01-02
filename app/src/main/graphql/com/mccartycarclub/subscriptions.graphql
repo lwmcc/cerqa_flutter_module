@@ -1,0 +1,601 @@
+# this is an auto generated file. This will be overwritten
+
+subscription OnCreateChannel($filter: ModelSubscriptionChannelFilterInput) {
+  onCreateChannel(filter: $filter) {
+    createdAt
+    id
+    messages {
+      nextToken
+      __typename
+    }
+    name
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+subscription OnCreateGroup($filter: ModelSubscriptionGroupFilterInput) {
+  onCreateGroup(filter: $filter) {
+    createdAt
+    groupId
+    id
+    name
+    updatedAt
+    users {
+      nextToken
+      __typename
+    }
+    __typename
+  }
+}
+
+subscription OnCreateInvite($filter: ModelSubscriptionInviteFilterInput) {
+  onCreateInvite(filter: $filter) {
+    createdAt
+    id
+    receiverId
+    senderId
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+subscription OnCreateMessage($filter: ModelSubscriptionMessageFilterInput) {
+  onCreateMessage(filter: $filter) {
+    channel {
+      createdAt
+      id
+      name
+      updatedAt
+      userId
+      __typename
+    }
+    channelId
+    content
+    createdAt
+    id
+    updatedAt
+    __typename
+  }
+}
+
+subscription OnCreateUser($filter: ModelSubscriptionUserFilterInput) {
+  onCreateUser(filter: $filter) {
+    asContact {
+      nextToken
+      __typename
+    }
+    avatarUri
+    channels {
+      nextToken
+      __typename
+    }
+    contacts {
+      nextToken
+      __typename
+    }
+    createdAt
+    email
+    firstName
+    groups {
+      nextToken
+      __typename
+    }
+    id
+    invites {
+      nextToken
+      __typename
+    }
+    lastName
+    name
+    phone
+    updatedAt
+    userId
+    userName
+    __typename
+  }
+}
+
+subscription OnCreateUserContact(
+  $filter: ModelSubscriptionUserContactFilterInput
+) {
+  onCreateUserContact(filter: $filter) {
+    contact {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    contactId
+    createdAt
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+subscription OnCreateUserGroup($filter: ModelSubscriptionUserGroupFilterInput) {
+  onCreateUserGroup(filter: $filter) {
+    createdAt
+    group {
+      createdAt
+      groupId
+      id
+      name
+      updatedAt
+      __typename
+    }
+    groupId
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+subscription OnDeleteChannel($filter: ModelSubscriptionChannelFilterInput) {
+  onDeleteChannel(filter: $filter) {
+    createdAt
+    id
+    messages {
+      nextToken
+      __typename
+    }
+    name
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+subscription OnDeleteGroup($filter: ModelSubscriptionGroupFilterInput) {
+  onDeleteGroup(filter: $filter) {
+    createdAt
+    groupId
+    id
+    name
+    updatedAt
+    users {
+      nextToken
+      __typename
+    }
+    __typename
+  }
+}
+
+subscription OnDeleteInvite($filter: ModelSubscriptionInviteFilterInput) {
+  onDeleteInvite(filter: $filter) {
+    createdAt
+    id
+    receiverId
+    senderId
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+subscription OnDeleteMessage($filter: ModelSubscriptionMessageFilterInput) {
+  onDeleteMessage(filter: $filter) {
+    channel {
+      createdAt
+      id
+      name
+      updatedAt
+      userId
+      __typename
+    }
+    channelId
+    content
+    createdAt
+    id
+    updatedAt
+    __typename
+  }
+}
+
+subscription OnDeleteUser($filter: ModelSubscriptionUserFilterInput) {
+  onDeleteUser(filter: $filter) {
+    asContact {
+      nextToken
+      __typename
+    }
+    avatarUri
+    channels {
+      nextToken
+      __typename
+    }
+    contacts {
+      nextToken
+      __typename
+    }
+    createdAt
+    email
+    firstName
+    groups {
+      nextToken
+      __typename
+    }
+    id
+    invites {
+      nextToken
+      __typename
+    }
+    lastName
+    name
+    phone
+    updatedAt
+    userId
+    userName
+    __typename
+  }
+}
+
+subscription OnDeleteUserContact(
+  $filter: ModelSubscriptionUserContactFilterInput
+) {
+  onDeleteUserContact(filter: $filter) {
+    contact {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    contactId
+    createdAt
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+subscription OnDeleteUserGroup($filter: ModelSubscriptionUserGroupFilterInput) {
+  onDeleteUserGroup(filter: $filter) {
+    createdAt
+    group {
+      createdAt
+      groupId
+      id
+      name
+      updatedAt
+      __typename
+    }
+    groupId
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+subscription OnUpdateChannel($filter: ModelSubscriptionChannelFilterInput) {
+  onUpdateChannel(filter: $filter) {
+    createdAt
+    id
+    messages {
+      nextToken
+      __typename
+    }
+    name
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+subscription OnUpdateGroup($filter: ModelSubscriptionGroupFilterInput) {
+  onUpdateGroup(filter: $filter) {
+    createdAt
+    groupId
+    id
+    name
+    updatedAt
+    users {
+      nextToken
+      __typename
+    }
+    __typename
+  }
+}
+
+subscription OnUpdateInvite($filter: ModelSubscriptionInviteFilterInput) {
+  onUpdateInvite(filter: $filter) {
+    createdAt
+    id
+    receiverId
+    senderId
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+subscription OnUpdateMessage($filter: ModelSubscriptionMessageFilterInput) {
+  onUpdateMessage(filter: $filter) {
+    channel {
+      createdAt
+      id
+      name
+      updatedAt
+      userId
+      __typename
+    }
+    channelId
+    content
+    createdAt
+    id
+    updatedAt
+    __typename
+  }
+}
+
+subscription OnUpdateUser($filter: ModelSubscriptionUserFilterInput) {
+  onUpdateUser(filter: $filter) {
+    asContact {
+      nextToken
+      __typename
+    }
+    avatarUri
+    channels {
+      nextToken
+      __typename
+    }
+    contacts {
+      nextToken
+      __typename
+    }
+    createdAt
+    email
+    firstName
+    groups {
+      nextToken
+      __typename
+    }
+    id
+    invites {
+      nextToken
+      __typename
+    }
+    lastName
+    name
+    phone
+    updatedAt
+    userId
+    userName
+    __typename
+  }
+}
+
+subscription OnUpdateUserContact(
+  $filter: ModelSubscriptionUserContactFilterInput
+) {
+  onUpdateUserContact(filter: $filter) {
+    contact {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    contactId
+    createdAt
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+subscription OnUpdateUserGroup($filter: ModelSubscriptionUserGroupFilterInput) {
+  onUpdateUserGroup(filter: $filter) {
+    createdAt
+    group {
+      createdAt
+      groupId
+      id
+      name
+      updatedAt
+      __typename
+    }
+    groupId
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
