@@ -30,14 +30,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.cerqa.viewmodels.ConversationViewModel
+import com.cerqa.viewmodels.ProfileViewModel
+import org.koin.compose.koinInject
 
 @Composable
-fun Conversation() {
-    Chat("")
+fun Conversation(conversationViewModel: ConversationViewModel = koinInject()) {
+    Chat("") { chatMessage ->
+        conversationViewModel.sendChatMessage(chatMessage)
+    }
 }
 
 @Composable
-fun Chat(name: String) {
+fun Chat(
+    name: String,
+    onSendChatMessage: (String) -> Unit,
+) {
     var textState by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -75,6 +83,8 @@ fun Chat(name: String) {
 
                 IconButton(
                     onClick = {
+                        val messageToSend = textState.trim()
+                        onSendChatMessage(messageToSend)
                         textState = ""
                     },
                     enabled = textState.isNotBlank()

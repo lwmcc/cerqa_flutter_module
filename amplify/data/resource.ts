@@ -7,6 +7,7 @@ import { getUserByUserId } from "../functions/getUserByUserId/resource";
 import { sendInviteNotification } from "../functions/sendInviteNotification/resource";
 import { sendSmartInviteNotification } from "../functions/sendSmartInviteNotification/resource";
 import { updatePresence } from "../functions/updatePresence/resource";
+import { sendMessage } from "../functions/sendMessage/resource";
 
 const AblyJwt = a.customType({
       keyName: a.string().required(),
@@ -84,6 +85,13 @@ const InviteNotificationResult = a.customType({
       message: a.string().required(),
       deliveryMethod: a.string().required(), // "FCM" or "ABLY"
       channelName: a.string(),
+});
+
+const SendMessageResult = a.customType({
+  success: a.boolean().required(),
+  messageId: a.string(),
+  channelId: a.string().required(),
+  deliveredVia: a.string().required(), // "ABLY" | "DB"
 });
 
 export const schema = a.schema({
@@ -167,12 +175,16 @@ export const schema = a.schema({
    .authorization((allow) => [allow.publicApiKey()]),
 
     Message: a
-     .model({
-         content: a.string().required(),
-         channelId: a.id().required(),
-         channel: a.belongsTo('Channel', 'channelId'),
-     })
-    .authorization((allow) => [allow.publicApiKey()]),
+      .model({
+        content: a.string().required(),
+        channelId: a.id().required(),
+        senderUserId: a.id().required(),
+        createdAt: a.datetime(),
+        channel: a.belongsTo('Channel', 'channelId'),
+      })
+      .grant(sendMessage, [a.allow.create()])
+      .authorization((allow) => [allow.authenticated(),allow.publicApiKey(),
+     ]),
 
     Notification: a
      .model({
@@ -260,6 +272,20 @@ export const schema = a.schema({
         .returns(a.boolean())
         .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
         .handler(a.handler.function(updatePresence)),
+
+        sendMessage: a
+          .mutation()
+          .arguments({
+            channelId: a.id().required(),
+            senderUserId: a.id().required(),
+            content: a.string().required(),
+          })
+          .returns(SendMessageResult)
+          .authorization((allow) => [
+            allow.authenticated(),
+          ])
+          .handler(a.handler.function(sendMessage)),
+
 });
 
 export type Schema = ClientSchema<typeof schema>;
@@ -267,6 +293,7 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
     schema,
     //secrets: ["ably_key", "ably_secret"],
+    secrets: ['ABLY_API_KEY'],
     authorizationModes: {
         defaultAuthorizationMode: "userPool",
         apiKeyAuthorizationMode: {

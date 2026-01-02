@@ -1,0 +1,51 @@
+{
+  "TableName": "FcmTokens",
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "id",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "userId",
+      "AttributeType": "S"
+    }
+  ],
+  "KeySchema": [
+    {
+      "AttributeName": "id",
+      "KeyType": "HASH"
+    }
+  ],
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "userId-index",
+      "KeySchema": [
+        {
+          "AttributeName": "userId",
+          "KeyType": "HASH"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      },
+      "ProvisionedThroughput": {
+        "ReadCapacityUnits": 5,
+        "WriteCapacityUnits": 5
+      }
+    }
+  ],
+  "BillingMode": "PAY_PER_REQUEST",
+  "StreamSpecification": {
+    "StreamEnabled": false
+  },
+  "Tags": [
+    {
+      "Key": "Environment",
+      "Value": "production"
+    },
+    {
+      "Key": "Application",
+      "Value": "CarClub"
+    }
+  ]
+}
