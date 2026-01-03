@@ -35,25 +35,27 @@ mutation UpdateUser($input: UpdateUserInput!, $condition: ModelUserConditionInpu
 }
 
 # Store FCM token for push notifications
-mutation CreateFcmToken($input: CreateFcmTokenInput!) {
-    createFcmToken(input: $input) {
-        userId
-        deviceId
-        token
-        platform
-        createdAt
-        updatedAt
-    }
-}
+# NOTE: Commented out - not available in API wtl5wlqxxvb6lp2nenxcjpvpwq
+#mutation CreateFcmToken($input: CreateFcmTokenInput!) {
+#    createFcmToken(input: $input) {
+#        userId
+#        deviceId
+#        token
+#        platform
+#        createdAt
+#        updatedAt
+#    }
+#}
 
 # Send invite notification via FCM
-mutation SendInviteNotification($recipientUserId: String!, $senderName: String!, $inviteId: String!) {
-    sendInviteNotification(recipientUserId: $recipientUserId, senderName: $senderName, inviteId: $inviteId) {
-        success
-        message
-        deviceCount
-    }
-}
+# NOTE: Commented out - not available in API wtl5wlqxxvb6lp2nenxcjpvpwq
+#mutation SendInviteNotification($recipientUserId: String!, $senderName: String!, $inviteId: String!) {
+#    sendInviteNotification(recipientUserId: $recipientUserId, senderName: $senderName, inviteId: $inviteId) {
+#        success
+#        message
+#        deviceCount
+#    }
+#}
 
 # Delete a user
 mutation DeleteUser($input: DeleteUserInput!, $condition: ModelUserConditionInput) {
@@ -130,42 +132,71 @@ mutation DeleteInvite($input: DeleteInviteInput!) {
 }
 
 # Create a notification
-mutation CreateNotification($input: CreateNotificationInput!, $condition: ModelNotificationConditionInput) {
-    createNotification(input: $input, condition: $condition) {
-        id
-        userId
-        type
-        title
-        message
-        isRead
-        relatedId
-        senderUserId
-        senderName
-        createdAt
-        updatedAt
-    }
-}
+# NOTE: Commented out - not available in API wtl5wlqxxvb6lp2nenxcjpvpwq
+#mutation CreateNotification($input: CreateNotificationInput!, $condition: ModelNotificationConditionInput) {
+#    createNotification(input: $input, condition: $condition) {
+#        id
+#        userId
+#        type
+#        title
+#        message
+#        isRead
+#        relatedId
+#        senderUserId
+#        senderName
+#        createdAt
+#        updatedAt
+#    }
+#}
 
 # Update a notification (mark as read)
-mutation UpdateNotification($input: UpdateNotificationInput!, $condition: ModelNotificationConditionInput) {
-    updateNotification(input: $input, condition: $condition) {
+# NOTE: Commented out - not available in API wtl5wlqxxvb6lp2nenxcjpvpwq
+#mutation UpdateNotification($input: UpdateNotificationInput!, $condition: ModelNotificationConditionInput) {
+#    updateNotification(input: $input, condition: $condition) {
+#        id
+#        userId
+#        type
+#        title
+#        message
+#        isRead
+#        relatedId
+#        senderUserId
+#        senderName
+#        createdAt
+#        updatedAt
+#    }
+#}
+
+# Delete a notification
+# NOTE: Commented out - not available in API wtl5wlqxxvb6lp2nenxcjpvpwq
+#mutation DeleteNotification($input: DeleteNotificationInput!) {
+#    deleteNotification(input: $input) {
+#        id
+#    }
+#}
+
+# Create a channel for 1-on-1 chat
+mutation CreateChannel($input: CreateChannelInput!) {
+    createChannel(input: $input) {
         id
-        userId
-        type
-        title
-        message
-        isRead
-        relatedId
-        senderUserId
-        senderName
+        name
+        creatorId
+        receiverId
+        isGroup
+        isPublic
         createdAt
         updatedAt
     }
 }
 
-# Delete a notification
-mutation DeleteNotification($input: DeleteNotificationInput!) {
-    deleteNotification(input: $input) {
+# Send a chat message
+mutation SendMessage($input: CreateMessageInput!) {
+    createMessage(input: $input) {
         id
+        senderId
+        content
+        channelId
+        createdAt
+        updatedAt
     }
 }

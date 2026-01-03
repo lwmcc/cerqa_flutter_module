@@ -2,13 +2,12 @@ package com.cerqa.data
 
 import com.apollographql.apollo.ApolloClient
 import com.cerqa.auth.AuthTokenProvider
-import com.cerqa.graphql.GetUserByUserIdQuery
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
-import org.koin.compose.koinInject
 
 /**
  * Implementation of UserRepository using Apollo GraphQL client
+ * TODO: Re-implement once GetUserByUserIdQuery is available in API
  */
 class UserRepositoryImpl(
     private val apolloClient: ApolloClient,
@@ -17,7 +16,7 @@ class UserRepositoryImpl(
     private val preferences: Preferences,
 ) : UserRepository {
 
-    override suspend fun getUser(): Result<GetUserByUserIdQuery.GetUserByUserId> {
+    override suspend fun getUser(): Result<UserData> {
         return withContext(ioDispatcher) {
             try {
                 val userId = authTokenProvider.getCurrentUserId()
@@ -26,36 +25,13 @@ class UserRepositoryImpl(
                     return@withContext Result.failure(IllegalStateException("User is not authenticated"))
                 }
 
-                println("UserRepositoryImpl ===== Fetching user with userId: $userId")
+                // TODO: Implement actual API call once endpoint is available
+                // For now, return stub data
+                val userData = UserData(
+                    userId = userId
+                )
 
-                val response = apolloClient.query(
-                    GetUserByUserIdQuery(userId = userId)
-                ).execute()
-
-                if (response.hasErrors()) {
-                    val errors = response.errors?.joinToString { it.message }
-                    println("UserRepositoryImpl ===== GraphQL errors: $errors")
-                    return@withContext Result.failure(Exception("GraphQL errors: $errors"))
-                }
-
-                val user = response.data?.getUserByUserId
-
-                if (user == null) {
-                    println("UserRepositoryImpl ===== No user data returned")
-                    return@withContext Result.failure(Exception("User not found"))
-                }
-
-                // Save user data to preferences
-                user.userName?.let { userName ->
-                    preferences.setUserData(
-                        userId = user.userId ?: userId,
-                        userName = userName,
-                        userEmail = user.email ?: "", // TODO: handle nulls
-                        createdAt = "", // UserData doesn't have createdAt
-                        avatarUri = user.avatarUri ?: ""
-                    )
-                }
-                Result.success(user)
+                Result.success(userData)
             } catch (e: Exception) {
                 e.printStackTrace()
                 Result.failure(e)

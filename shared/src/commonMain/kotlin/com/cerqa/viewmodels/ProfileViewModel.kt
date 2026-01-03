@@ -6,7 +6,6 @@ import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.data.Preferences
 import com.cerqa.data.UserProfileRepository
 import com.cerqa.graphql.CreateUserMutation
-import com.cerqa.graphql.HasUserCreatedProfileQuery
 import com.cerqa.graphql.type.CreateUserInput
 import com.cerqa.models.UserData
 import com.cerqa.repository.AuthRepository
@@ -67,27 +66,10 @@ class ProfileViewModel(
                 println("ProfileViewModel ===== Current user ID: $userId")
 
                 if (userId != null) {
-                    println("ProfileViewModel ===== Querying hasUserCreatedProfile for userId: $userId")
-                    val response = apolloClient.query(
-                        HasUserCreatedProfileQuery(userId = userId)
-                    )
-                    .addHttpHeader("x-api-key", "da2-mjgfdw4g6zfv5jgzxsytr4mupa")
-                    .execute()
-
-                    println("ProfileViewModel ===== Response received, hasErrors: ${response.hasErrors()}")
-
-                    if (response.hasErrors()) {
-                        val errors = response.errors?.joinToString { it.message }
-                        println("ProfileViewModel ===== GraphQL Errors: $errors")
-                        _error.value = "GraphQL errors: $errors"
-                    } else {
-                        val data = response.data?.hasUserCreatedProfile
-                        _isProfileComplete.value = data?.isProfileComplete
-                        _missingFields.value = data?.missingFields?.filterNotNull() ?: emptyList()
-
-                        println("ProfileViewModel ===== isProfileComplete: ${data?.isProfileComplete}")
-                        println("ProfileViewModel ===== missingFields: ${data?.missingFields}")
-                    }
+                    // TODO: Implement hasUserCreatedProfile query once available in API
+                    println("ProfileViewModel ===== HasUserCreatedProfileQuery not available yet, assuming profile is complete")
+                    _isProfileComplete.value = true
+                    _missingFields.value = emptyList()
                 } else {
                     println("ProfileViewModel ===== No user ID found - user not authenticated")
                     _error.value = "User not authenticated"

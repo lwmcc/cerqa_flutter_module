@@ -268,6 +268,6 @@ class MainViewModel(
 
     private fun getInviteChannelPath(): String? {
         val userId = preferences.getUserData().userId
-        return userId?.let { RealtimeChannel.NOTIFICATIONS_INVITES.build(it) }
+        return userId?.let { RealtimeChannel.NOTIFICATIONS_INVITES }
     }
 }

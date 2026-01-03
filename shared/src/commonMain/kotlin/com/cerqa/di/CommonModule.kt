@@ -55,8 +55,9 @@ val commonModule = module {
     single<AblyRepository> {
         AblyRepositoryImpl(apolloClient = get())
     }
+    single { createAblyClient() }
     single {
-        AblyService(ablyRepository = get(), ablyClient = createAblyClient())
+        AblyService(ablyRepository = get(), ablyClient = get())
     }
     single<Notifications> {
         NotificationsImpl(apolloClient = get())
@@ -67,7 +68,7 @@ val commonModule = module {
 
     single { TestDataSeeder(apolloClient = get(), authTokenProvider = get()) }
     single<RealtimeRepository> { RealtimeRepositoryImpl(ablyService = get()) }
-    single<ConversationRepository> { ConversationRepositoryImpl(apolloClient = get()) }
+    single<ConversationRepository> { ConversationRepositoryImpl(apolloClient = get(), ablyClient = get()) }
 
     factory { ContactsViewModel(get(), get(), get()) }
     factory { ApolloContactsViewModel(get()) }
@@ -104,8 +105,16 @@ val commonModule = module {
     }
     factory {
         ConversationViewModel(
+            preferences = get(),
             mainDispatcher = get(),
             conversationRepository = get()
+        )
+    }
+    factory {
+        com.cerqa.viewmodels.ChatViewModel(
+            authTokenProvider = get(),
+            conversationRepository = get(),
+            mainDispatcher = get()
         )
     }
 }

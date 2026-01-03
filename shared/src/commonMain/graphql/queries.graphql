@@ -18,19 +18,21 @@ query GetUser($id: ID!) {
 }
 
 # Get user by userId (Cognito ID)
-query GetUserByUserId($userId: String!) {
-  getUserByUserId(userId: $userId) {
-    id
-    userId
-    userName
-    email
-    avatarUri
-    firstName
-    lastName
-    name
-    phone
-  }
-}
+# NOTE: Commented out - not available in API wtl5wlqxxvb6lp2nenxcjpvpwq
+# Use ListByPhone or GetUser instead
+#query GetUserByUserId($userId: String!) {
+#  getUserByUserId(userId: $userId) {
+#    id
+#    userId
+#    userName
+#    email
+#    avatarUri
+#    firstName
+#    lastName
+#    name
+#    phone
+#  }
+#}
 
 # List all users
 query ListUsers($filter: ModelUserFilterInput, $limit: Int, $nextToken: String) {
@@ -109,12 +111,13 @@ query ListByPhone($phone: String!, $userName: ModelStringKeyConditionInput, $sor
 }
 
 # Check if user profile is complete (Lambda function: hasUserCreatedProfile)
-query HasUserCreatedProfile($userId: String!) {
-  hasUserCreatedProfile(userId: $userId) {
-    isProfileComplete
-    missingFields
-  }
-}
+# NOTE: Commented out - not available in API wtl5wlqxxvb6lp2nenxcjpvpwq
+#query HasUserCreatedProfile($userId: String!) {
+#  hasUserCreatedProfile(userId: $userId) {
+#    isProfileComplete
+#    missingFields
+#  }
+#}
 
 # List Invites (for connection requests)
 query ListInvites($filter: ModelInviteFilterInput, $limit: Int, $nextToken: String) {
@@ -154,30 +157,77 @@ query FetchAblyJwt($userId: String!) {
 }
 
 # List notifications for a user
-query ListNotifications($filter: ModelNotificationFilterInput, $limit: Int, $nextToken: String) {
-  listNotifications(filter: $filter, limit: $limit, nextToken: $nextToken) {
-    items {
-      id
-      userId
-      type
-      title
-      message
-      isRead
-      relatedId
-      senderUserId
-      senderName
-      createdAt
-      updatedAt
-    }
-    nextToken
-  }
-}
+# NOTE: Commented out - not available in API wtl5wlqxxvb6lp2nenxcjpvpwq
+#query ListNotifications($filter: ModelNotificationFilterInput, $limit: Int, $nextToken: String) {
+#  listNotifications(filter: $filter, limit: $limit, nextToken: $nextToken) {
+#    items {
+#      id
+#      userId
+#      type
+#      title
+#      message
+#      isRead
+#      relatedId
+#      senderUserId
+#      senderName
+#      createdAt
+#      updatedAt
+#    }
+#    nextToken
+#  }
+#}
 
 # Get unread notification count for a user
-query GetUnreadNotificationCount($userId: ID!) {
-  listNotifications(filter: { userId: { eq: $userId }, isRead: { eq: false } }, limit: 1000) {
+# NOTE: Commented out - not available in API wtl5wlqxxvb6lp2nenxcjpvpwq
+#query GetUnreadNotificationCount($userId: ID!) {
+#  listNotifications(filter: { userId: { eq: $userId }, isRead: { eq: false } }, limit: 1000) {
+#    items {
+#      id
+#    }
+#  }
+#}
+
+# List channels for the current user (channels where user is creator or receiver)
+query ListUserChannels($userId: String!) {
+  listChannels(
+    filter: {
+      or: [
+        { creatorId: { eq: $userId } }
+        { receiverId: { eq: $userId } }
+      ]
+    }
+    limit: 100
+  ) {
     items {
       id
+      name
+      creatorId
+      receiverId
+      isGroup
+      isPublic
+      createdAt
+      updatedAt
+      creator {
+        id
+        userId
+        userName
+        name
+      }
+      receiver {
+        id
+        userId
+        userName
+        name
+      }
+      messages(limit: 1, sortDirection: DESC) {
+        items {
+          id
+          content
+          senderId
+          createdAt
+        }
+      }
     }
+    nextToken
   }
 }

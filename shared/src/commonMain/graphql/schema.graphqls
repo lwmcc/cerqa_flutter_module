@@ -1,10 +1,3 @@
-# AWS AppSync directive definitions
-directive @aws_api_key on OBJECT | FIELD_DEFINITION
-directive @aws_iam on OBJECT | FIELD_DEFINITION
-directive @aws_cognito_user_pools on OBJECT | FIELD_DEFINITION
-directive @aws_subscribe(mutations: [String!]!) on FIELD_DEFINITION
-
-# AWS AppSync custom scalars
 scalar AWSDate
 scalar AWSTime
 scalar AWSDateTime
@@ -15,6 +8,13 @@ scalar AWSURL
 scalar AWSPhone
 scalar AWSIPAddress
 
+directive @aws_api_key on OBJECT | FIELD_DEFINITION
+directive @aws_iam on OBJECT | FIELD_DEFINITION
+directive @aws_cognito_user_pools(cognito_groups: [String]) on OBJECT | FIELD_DEFINITION
+directive @aws_auth(cognito_groups: [String]) on OBJECT | FIELD_DEFINITION
+directive @aws_subscribe(mutations: [String]) on FIELD_DEFINITION
+directive @aws_lambda on OBJECT | FIELD_DEFINITION
+
 schema {
   query: Query
   mutation: Mutation
@@ -22,25 +22,28 @@ schema {
 }
 
 type Channel @aws_api_key @aws_iam {
+  channels(filter: ModelUserChannelFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelUserChannelConnection
   createdAt: AWSDateTime!
+  creator: User
+  creatorId: String!
   id: ID!
+  isGroup: Boolean
+  isPublic: Boolean
   messages(filter: ModelMessageFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelMessageConnection
-  name: String
+  name: String!
+  receiver: User
+  receiverId: String!
   updatedAt: AWSDateTime!
-  user: User
-  userId: ID!
 }
 
-type FcmToken @aws_api_key @aws_cognito_user_pools @aws_iam {
-  createdAt: AWSDateTime!
-  deviceId: ID!
-  platform: String!
-  token: String!
-  updatedAt: AWSDateTime!
-  userId: ID!
+type DirectChat {
+  avatarUri: String
+  chatId: String!
+  lastMessage: String
+  userName: String!
 }
 
-type FetchAblyJwtReturnType @aws_api_key @aws_iam {
+type FetchAblyJwtReturnType @aws_api_key {
   clientId: String!
   keyName: String!
   mac: String!
@@ -48,20 +51,8 @@ type FetchAblyJwtReturnType @aws_api_key @aws_iam {
   timestamp: Float!
 }
 
-type FetchUserWithContactInfoReturnType @aws_api_key @aws_iam {
+type FetchUserWithContactInfoReturnType @aws_api_key {
   id: String
-  userName: String
-}
-
-type GetUserByUserIdReturnType @aws_api_key @aws_cognito_user_pools @aws_iam {
-  avatarUri: String
-  email: String
-  firstName: String
-  id: String
-  lastName: String
-  name: String
-  phone: String
-  userId: String
   userName: String
 }
 
@@ -74,12 +65,7 @@ type Group @aws_api_key @aws_iam {
   users(filter: ModelUserGroupFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelUserGroupConnection
 }
 
-type HasUserCreatedProfileReturnType @aws_api_key @aws_cognito_user_pools @aws_iam {
-  isProfileComplete: Boolean!
-  missingFields: [String]!
-}
-
-type Invite @aws_api_key @aws_cognito_user_pools @aws_iam {
+type Invite @aws_api_key @aws_iam {
   createdAt: AWSDateTime!
   id: ID!
   receiverId: String
@@ -95,16 +81,12 @@ type Message @aws_api_key @aws_iam {
   content: String!
   createdAt: AWSDateTime!
   id: ID!
+  senderId: ID!
   updatedAt: AWSDateTime!
 }
 
-type ModelChannelConnection @aws_api_key @aws_cognito_user_pools @aws_iam {
+type ModelChannelConnection @aws_api_key @aws_iam {
   items: [Channel]!
-  nextToken: String
-}
-
-type ModelFcmTokenConnection @aws_api_key @aws_cognito_user_pools @aws_iam {
-  items: [FcmToken]!
   nextToken: String
 }
 
@@ -113,7 +95,7 @@ type ModelGroupConnection @aws_api_key @aws_iam {
   nextToken: String
 }
 
-type ModelInviteConnection @aws_api_key @aws_cognito_user_pools @aws_iam {
+type ModelInviteConnection @aws_api_key @aws_iam {
   items: [Invite]!
   nextToken: String
 }
@@ -123,142 +105,111 @@ type ModelMessageConnection @aws_api_key @aws_iam {
   nextToken: String
 }
 
-type ModelNotificationConnection @aws_api_key @aws_cognito_user_pools @aws_iam {
-  items: [Notification]!
+type ModelUserChannelConnection @aws_api_key @aws_iam {
+  items: [UserChannel]!
   nextToken: String
 }
 
-type ModelUserConnection @aws_api_key @aws_cognito_user_pools @aws_iam {
+type ModelUserConnection @aws_api_key @aws_iam {
   items: [User]!
   nextToken: String
 }
 
-type ModelUserContactConnection @aws_api_key @aws_cognito_user_pools @aws_iam {
+type ModelUserContactConnection @aws_api_key @aws_iam {
   items: [UserContact]!
   nextToken: String
 }
 
-type ModelUserGroupConnection @aws_api_key @aws_cognito_user_pools @aws_iam {
+type ModelUserGroupConnection @aws_api_key @aws_iam {
   items: [UserGroup]!
   nextToken: String
 }
 
-type Mutation @aws_iam {
+type Mutation {
   createChannel(condition: ModelChannelConditionInput, input: CreateChannelInput!): Channel @aws_api_key @aws_iam
-  createFcmToken(condition: ModelFcmTokenConditionInput, input: CreateFcmTokenInput!): FcmToken @aws_api_key @aws_cognito_user_pools @aws_iam
   createGroup(condition: ModelGroupConditionInput, input: CreateGroupInput!): Group @aws_api_key @aws_iam
-  createInvite(condition: ModelInviteConditionInput, input: CreateInviteInput!): Invite @aws_api_key @aws_cognito_user_pools @aws_iam
+  createInvite(condition: ModelInviteConditionInput, input: CreateInviteInput!): Invite @aws_api_key @aws_iam
   createMessage(condition: ModelMessageConditionInput, input: CreateMessageInput!): Message @aws_api_key @aws_iam
-  createNotification(condition: ModelNotificationConditionInput, input: CreateNotificationInput!): Notification @aws_api_key @aws_cognito_user_pools @aws_iam
-  createUser(condition: ModelUserConditionInput, input: CreateUserInput!): User @aws_api_key @aws_cognito_user_pools @aws_iam
-  createUserContact(condition: ModelUserContactConditionInput, input: CreateUserContactInput!): UserContact @aws_api_key @aws_cognito_user_pools @aws_iam
+  createUser(condition: ModelUserConditionInput, input: CreateUserInput!): User @aws_api_key @aws_iam
+  createUserChannel(condition: ModelUserChannelConditionInput, input: CreateUserChannelInput!): UserChannel @aws_api_key @aws_iam
+  createUserContact(condition: ModelUserContactConditionInput, input: CreateUserContactInput!): UserContact @aws_api_key @aws_iam
   createUserGroup(condition: ModelUserGroupConditionInput, input: CreateUserGroupInput!): UserGroup @aws_api_key @aws_iam
   deleteChannel(condition: ModelChannelConditionInput, input: DeleteChannelInput!): Channel @aws_api_key @aws_iam
-  deleteFcmToken(condition: ModelFcmTokenConditionInput, input: DeleteFcmTokenInput!): FcmToken @aws_api_key @aws_cognito_user_pools @aws_iam
   deleteGroup(condition: ModelGroupConditionInput, input: DeleteGroupInput!): Group @aws_api_key @aws_iam
-  deleteInvite(condition: ModelInviteConditionInput, input: DeleteInviteInput!): Invite @aws_api_key @aws_cognito_user_pools @aws_iam
+  deleteInvite(condition: ModelInviteConditionInput, input: DeleteInviteInput!): Invite @aws_api_key @aws_iam
   deleteMessage(condition: ModelMessageConditionInput, input: DeleteMessageInput!): Message @aws_api_key @aws_iam
-  deleteNotification(condition: ModelNotificationConditionInput, input: DeleteNotificationInput!): Notification @aws_api_key @aws_cognito_user_pools @aws_iam
-  deleteUser(condition: ModelUserConditionInput, input: DeleteUserInput!): User @aws_api_key @aws_cognito_user_pools @aws_iam
-  deleteUserContact(condition: ModelUserContactConditionInput, input: DeleteUserContactInput!): UserContact @aws_api_key @aws_cognito_user_pools @aws_iam
+  deleteUser(condition: ModelUserConditionInput, input: DeleteUserInput!): User @aws_api_key @aws_iam
+  deleteUserChannel(condition: ModelUserChannelConditionInput, input: DeleteUserChannelInput!): UserChannel @aws_api_key @aws_iam
+  deleteUserContact(condition: ModelUserContactConditionInput, input: DeleteUserContactInput!): UserContact @aws_api_key @aws_iam
   deleteUserGroup(condition: ModelUserGroupConditionInput, input: DeleteUserGroupInput!): UserGroup @aws_api_key @aws_iam
-  sendInviteNotification(inviteId: String!, recipientUserId: String!, senderName: String!): SendInviteNotificationReturnType @aws_cognito_user_pools @aws_iam
   updateChannel(condition: ModelChannelConditionInput, input: UpdateChannelInput!): Channel @aws_api_key @aws_iam
-  updateFcmToken(condition: ModelFcmTokenConditionInput, input: UpdateFcmTokenInput!): FcmToken @aws_api_key @aws_cognito_user_pools @aws_iam
   updateGroup(condition: ModelGroupConditionInput, input: UpdateGroupInput!): Group @aws_api_key @aws_iam
-  updateInvite(condition: ModelInviteConditionInput, input: UpdateInviteInput!): Invite @aws_api_key @aws_cognito_user_pools @aws_iam
+  updateInvite(condition: ModelInviteConditionInput, input: UpdateInviteInput!): Invite @aws_api_key @aws_iam
   updateMessage(condition: ModelMessageConditionInput, input: UpdateMessageInput!): Message @aws_api_key @aws_iam
-  updateNotification(condition: ModelNotificationConditionInput, input: UpdateNotificationInput!): Notification @aws_api_key @aws_cognito_user_pools @aws_iam
-  updatePresence(isOnline: Boolean!, platform: String, userId: String!): Boolean @aws_api_key @aws_cognito_user_pools @aws_iam
-  updateUser(condition: ModelUserConditionInput, input: UpdateUserInput!): User @aws_api_key @aws_cognito_user_pools @aws_iam
-  updateUserContact(condition: ModelUserContactConditionInput, input: UpdateUserContactInput!): UserContact @aws_api_key @aws_cognito_user_pools @aws_iam
+  updateUser(condition: ModelUserConditionInput, input: UpdateUserInput!): User @aws_api_key @aws_iam
+  updateUserChannel(condition: ModelUserChannelConditionInput, input: UpdateUserChannelInput!): UserChannel @aws_api_key @aws_iam
+  updateUserContact(condition: ModelUserContactConditionInput, input: UpdateUserContactInput!): UserContact @aws_api_key @aws_iam
   updateUserGroup(condition: ModelUserGroupConditionInput, input: UpdateUserGroupInput!): UserGroup @aws_api_key @aws_iam
 }
 
-type Notification @aws_api_key @aws_cognito_user_pools @aws_iam {
-  createdAt: AWSDateTime!
-  id: ID!
-  isRead: Boolean
-  message: String!
-  relatedId: String
-  senderName: String
-  senderUserId: String
-  title: String!
-  type: String!
-  updatedAt: AWSDateTime!
-  user: User
-  userId: ID!
-}
-
-type Query @aws_iam {
+type Query {
   fetchAblyJwt(userId: String): FetchAblyJwtReturnType @aws_api_key @aws_iam
   fetchPendingSentInviteStatus(userName: String): String @aws_api_key @aws_iam
   fetchUserWithContactInfo(userName: String): FetchUserWithContactInfoReturnType @aws_api_key @aws_iam
   getChannel(id: ID!): Channel @aws_api_key @aws_iam
-  getFcmToken(deviceId: ID!, userId: ID!): FcmToken @aws_api_key @aws_cognito_user_pools @aws_iam
   getGroup(id: ID!): Group @aws_api_key @aws_iam
-  getInvite(id: ID!): Invite @aws_api_key @aws_cognito_user_pools @aws_iam
+  getInvite(id: ID!): Invite @aws_api_key @aws_iam
   getMessage(id: ID!): Message @aws_api_key @aws_iam
-  getNotification(id: ID!): Notification @aws_api_key @aws_cognito_user_pools @aws_iam
-  getUser(id: ID!): User @aws_api_key @aws_cognito_user_pools @aws_iam
-  getUserByUserId(userId: String!): GetUserByUserIdReturnType @aws_api_key @aws_cognito_user_pools @aws_iam
-  getUserContact(id: ID!): UserContact @aws_api_key @aws_cognito_user_pools @aws_iam
+  getUser(id: ID!): User @aws_api_key @aws_iam
+  getUserChannel(id: ID!): UserChannel @aws_api_key @aws_iam
+  getUserContact(id: ID!): UserContact @aws_api_key @aws_iam
   getUserGroup(id: ID!): UserGroup @aws_api_key @aws_iam
-  hasUserCreatedProfile(userId: String!): HasUserCreatedProfileReturnType @aws_api_key @aws_cognito_user_pools @aws_iam
-  listByPhone(filter: ModelUserFilterInput, limit: Int, nextToken: String, phone: String!, sortDirection: ModelSortDirection, userName: ModelStringKeyConditionInput): ModelUserConnection @aws_api_key @aws_cognito_user_pools @aws_iam
+  listByPhone(filter: ModelUserFilterInput, limit: Int, nextToken: String, phone: String!, sortDirection: ModelSortDirection, userName: ModelStringKeyConditionInput): ModelUserConnection @aws_api_key @aws_iam
   listChannels(filter: ModelChannelFilterInput, limit: Int, nextToken: String): ModelChannelConnection @aws_api_key @aws_iam
-  listFcmTokens(deviceId: ModelIDKeyConditionInput, filter: ModelFcmTokenFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection, userId: ID): ModelFcmTokenConnection @aws_api_key @aws_cognito_user_pools @aws_iam
   listGroups(filter: ModelGroupFilterInput, limit: Int, nextToken: String): ModelGroupConnection @aws_api_key @aws_iam
-  listInvites(filter: ModelInviteFilterInput, limit: Int, nextToken: String): ModelInviteConnection @aws_api_key @aws_cognito_user_pools @aws_iam
+  listInvites(filter: ModelInviteFilterInput, limit: Int, nextToken: String): ModelInviteConnection @aws_api_key @aws_iam
   listMessages(filter: ModelMessageFilterInput, limit: Int, nextToken: String): ModelMessageConnection @aws_api_key @aws_iam
-  listNotifications(filter: ModelNotificationFilterInput, limit: Int, nextToken: String): ModelNotificationConnection @aws_api_key @aws_cognito_user_pools @aws_iam
-  listUserContacts(filter: ModelUserContactFilterInput, limit: Int, nextToken: String): ModelUserContactConnection @aws_api_key @aws_cognito_user_pools @aws_iam
+  listUserChannelByUserIdAndChannelId(channelId: ModelIDKeyConditionInput, filter: ModelUserChannelFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection, userId: ID!): ModelUserChannelConnection @aws_api_key @aws_iam
+  listUserChannels(filter: ModelUserChannelFilterInput, limit: Int, nextToken: String): ModelUserChannelConnection @aws_api_key @aws_iam
+  listUserContacts(filter: ModelUserContactFilterInput, limit: Int, nextToken: String): ModelUserContactConnection @aws_api_key @aws_iam
   listUserGroups(filter: ModelUserGroupFilterInput, limit: Int, nextToken: String): ModelUserGroupConnection @aws_api_key @aws_iam
-  listUsers(filter: ModelUserFilterInput, limit: Int, nextToken: String): ModelUserConnection @aws_api_key @aws_cognito_user_pools @aws_iam
-}
-
-type SendInviteNotificationReturnType @aws_cognito_user_pools @aws_iam {
-  deviceCount: Int
-  message: String!
-  success: Boolean!
+  listUsers(filter: ModelUserFilterInput, limit: Int, nextToken: String): ModelUserConnection @aws_api_key @aws_iam
 }
 
 type Subscription {
   onCreateChannel(filter: ModelSubscriptionChannelFilterInput): Channel @aws_api_key @aws_iam @aws_subscribe(mutations : ["createChannel"])
-  onCreateFcmToken(filter: ModelSubscriptionFcmTokenFilterInput): FcmToken @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["createFcmToken"])
   onCreateGroup(filter: ModelSubscriptionGroupFilterInput): Group @aws_api_key @aws_iam @aws_subscribe(mutations : ["createGroup"])
-  onCreateInvite(filter: ModelSubscriptionInviteFilterInput): Invite @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["createInvite"])
+  onCreateInvite(filter: ModelSubscriptionInviteFilterInput): Invite @aws_api_key @aws_iam @aws_subscribe(mutations : ["createInvite"])
   onCreateMessage(filter: ModelSubscriptionMessageFilterInput): Message @aws_api_key @aws_iam @aws_subscribe(mutations : ["createMessage"])
-  onCreateNotification(filter: ModelSubscriptionNotificationFilterInput): Notification @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["createNotification"])
-  onCreateUser(filter: ModelSubscriptionUserFilterInput): User @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["createUser"])
-  onCreateUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["createUserContact"])
+  onCreateUser(filter: ModelSubscriptionUserFilterInput): User @aws_api_key @aws_iam @aws_subscribe(mutations : ["createUser"])
+  onCreateUserChannel(filter: ModelSubscriptionUserChannelFilterInput): UserChannel @aws_api_key @aws_iam @aws_subscribe(mutations : ["createUserChannel"])
+  onCreateUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_api_key @aws_iam @aws_subscribe(mutations : ["createUserContact"])
   onCreateUserGroup(filter: ModelSubscriptionUserGroupFilterInput): UserGroup @aws_api_key @aws_iam @aws_subscribe(mutations : ["createUserGroup"])
   onDeleteChannel(filter: ModelSubscriptionChannelFilterInput): Channel @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteChannel"])
-  onDeleteFcmToken(filter: ModelSubscriptionFcmTokenFilterInput): FcmToken @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["deleteFcmToken"])
   onDeleteGroup(filter: ModelSubscriptionGroupFilterInput): Group @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteGroup"])
-  onDeleteInvite(filter: ModelSubscriptionInviteFilterInput): Invite @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["deleteInvite"])
+  onDeleteInvite(filter: ModelSubscriptionInviteFilterInput): Invite @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteInvite"])
   onDeleteMessage(filter: ModelSubscriptionMessageFilterInput): Message @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteMessage"])
-  onDeleteNotification(filter: ModelSubscriptionNotificationFilterInput): Notification @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["deleteNotification"])
-  onDeleteUser(filter: ModelSubscriptionUserFilterInput): User @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["deleteUser"])
-  onDeleteUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["deleteUserContact"])
+  onDeleteUser(filter: ModelSubscriptionUserFilterInput): User @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteUser"])
+  onDeleteUserChannel(filter: ModelSubscriptionUserChannelFilterInput): UserChannel @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteUserChannel"])
+  onDeleteUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteUserContact"])
   onDeleteUserGroup(filter: ModelSubscriptionUserGroupFilterInput): UserGroup @aws_api_key @aws_iam @aws_subscribe(mutations : ["deleteUserGroup"])
   onUpdateChannel(filter: ModelSubscriptionChannelFilterInput): Channel @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateChannel"])
-  onUpdateFcmToken(filter: ModelSubscriptionFcmTokenFilterInput): FcmToken @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["updateFcmToken"])
   onUpdateGroup(filter: ModelSubscriptionGroupFilterInput): Group @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateGroup"])
-  onUpdateInvite(filter: ModelSubscriptionInviteFilterInput): Invite @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["updateInvite"])
+  onUpdateInvite(filter: ModelSubscriptionInviteFilterInput): Invite @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateInvite"])
   onUpdateMessage(filter: ModelSubscriptionMessageFilterInput): Message @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateMessage"])
-  onUpdateNotification(filter: ModelSubscriptionNotificationFilterInput): Notification @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["updateNotification"])
-  onUpdateUser(filter: ModelSubscriptionUserFilterInput): User @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["updateUser"])
-  onUpdateUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_api_key @aws_cognito_user_pools @aws_iam @aws_subscribe(mutations : ["updateUserContact"])
+  onUpdateUser(filter: ModelSubscriptionUserFilterInput): User @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateUser"])
+  onUpdateUserChannel(filter: ModelSubscriptionUserChannelFilterInput): UserChannel @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateUserChannel"])
+  onUpdateUserContact(filter: ModelSubscriptionUserContactFilterInput): UserContact @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateUserContact"])
   onUpdateUserGroup(filter: ModelSubscriptionUserGroupFilterInput): UserGroup @aws_api_key @aws_iam @aws_subscribe(mutations : ["updateUserGroup"])
 }
 
-type User @aws_api_key @aws_cognito_user_pools @aws_iam {
+type User @aws_api_key @aws_iam {
   asContact(filter: ModelUserContactFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelUserContactConnection
   avatarUri: AWSURL
-  channels(filter: ModelChannelFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelChannelConnection
+  channels(filter: ModelUserChannelFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelUserChannelConnection
   contacts(filter: ModelUserContactFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelUserContactConnection
   createdAt: AWSDateTime!
+  createdChannels(filter: ModelChannelFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelChannelConnection
   email: AWSEmail
   firstName: String!
   groups(filter: ModelUserGroupFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelUserGroupConnection
@@ -266,14 +217,26 @@ type User @aws_api_key @aws_cognito_user_pools @aws_iam {
   invites(filter: ModelInviteFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelInviteConnection
   lastName: String!
   name: String
-  notifications(filter: ModelNotificationFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelNotificationConnection
   phone: String
+  receivedChannels(filter: ModelChannelFilterInput, limit: Int, nextToken: String, sortDirection: ModelSortDirection): ModelChannelConnection
   updatedAt: AWSDateTime!
   userId: ID
   userName: String
 }
 
-type UserContact @aws_api_key @aws_cognito_user_pools @aws_iam {
+type UserChannel @aws_api_key @aws_iam {
+  channel: Channel
+  channelId: ID!
+  createdAt: AWSDateTime!
+  id: ID!
+  isMuted: Boolean
+  role: String
+  updatedAt: AWSDateTime!
+  user: User
+  userId: ID!
+}
+
+type UserContact @aws_api_key @aws_iam {
   contact: User
   contactId: ID!
   createdAt: AWSDateTime!
@@ -311,22 +274,13 @@ enum ModelSortDirection {
   DESC
 }
 
-input AmplifyAIConversationTurnErrorInput {
-  errorType: String!
-  message: String!
-}
-
 input CreateChannelInput {
+  creatorId: String!
   id: ID
-  name: String
-  userId: ID!
-}
-
-input CreateFcmTokenInput {
-  deviceId: ID!
-  platform: String!
-  token: String!
-  userId: ID!
+  isGroup: Boolean
+  isPublic: Boolean
+  name: String!
+  receiverId: String!
 }
 
 input CreateGroupInput {
@@ -346,17 +300,14 @@ input CreateMessageInput {
   channelId: ID!
   content: String!
   id: ID
+  senderId: ID!
 }
 
-input CreateNotificationInput {
+input CreateUserChannelInput {
+  channelId: ID!
   id: ID
-  isRead: Boolean
-  message: String!
-  relatedId: String
-  senderName: String
-  senderUserId: String
-  title: String!
-  type: String!
+  isMuted: Boolean
+  role: String
   userId: ID!
 }
 
@@ -388,11 +339,6 @@ input DeleteChannelInput {
   id: ID!
 }
 
-input DeleteFcmTokenInput {
-  deviceId: ID!
-  userId: ID!
-}
-
 input DeleteGroupInput {
   id: ID!
 }
@@ -405,7 +351,7 @@ input DeleteMessageInput {
   id: ID!
 }
 
-input DeleteNotificationInput {
+input DeleteUserChannelInput {
   id: ID!
 }
 
@@ -431,45 +377,28 @@ input ModelBooleanInput {
 input ModelChannelConditionInput {
   and: [ModelChannelConditionInput]
   createdAt: ModelStringInput
+  creatorId: ModelStringInput
+  isGroup: ModelBooleanInput
+  isPublic: ModelBooleanInput
   name: ModelStringInput
   not: ModelChannelConditionInput
   or: [ModelChannelConditionInput]
+  receiverId: ModelStringInput
   updatedAt: ModelStringInput
-  userId: ModelIDInput
 }
 
 input ModelChannelFilterInput {
   and: [ModelChannelFilterInput]
   createdAt: ModelStringInput
+  creatorId: ModelStringInput
   id: ModelIDInput
+  isGroup: ModelBooleanInput
+  isPublic: ModelBooleanInput
   name: ModelStringInput
   not: ModelChannelFilterInput
   or: [ModelChannelFilterInput]
+  receiverId: ModelStringInput
   updatedAt: ModelStringInput
-  userId: ModelIDInput
-}
-
-input ModelFcmTokenConditionInput {
-  and: [ModelFcmTokenConditionInput]
-  createdAt: ModelStringInput
-  not: ModelFcmTokenConditionInput
-  or: [ModelFcmTokenConditionInput]
-  platform: ModelStringInput
-  token: ModelStringInput
-  updatedAt: ModelStringInput
-}
-
-input ModelFcmTokenFilterInput {
-  and: [ModelFcmTokenFilterInput]
-  createdAt: ModelStringInput
-  deviceId: ModelIDInput
-  id: ModelIDInput
-  not: ModelFcmTokenFilterInput
-  or: [ModelFcmTokenFilterInput]
-  platform: ModelStringInput
-  token: ModelStringInput
-  updatedAt: ModelStringInput
-  userId: ModelIDInput
 }
 
 input ModelFloatInput {
@@ -573,6 +502,7 @@ input ModelMessageConditionInput {
   createdAt: ModelStringInput
   not: ModelMessageConditionInput
   or: [ModelMessageConditionInput]
+  senderId: ModelIDInput
   updatedAt: ModelStringInput
 }
 
@@ -584,40 +514,8 @@ input ModelMessageFilterInput {
   id: ModelIDInput
   not: ModelMessageFilterInput
   or: [ModelMessageFilterInput]
+  senderId: ModelIDInput
   updatedAt: ModelStringInput
-}
-
-input ModelNotificationConditionInput {
-  and: [ModelNotificationConditionInput]
-  createdAt: ModelStringInput
-  isRead: ModelBooleanInput
-  message: ModelStringInput
-  not: ModelNotificationConditionInput
-  or: [ModelNotificationConditionInput]
-  relatedId: ModelStringInput
-  senderName: ModelStringInput
-  senderUserId: ModelStringInput
-  title: ModelStringInput
-  type: ModelStringInput
-  updatedAt: ModelStringInput
-  userId: ModelIDInput
-}
-
-input ModelNotificationFilterInput {
-  and: [ModelNotificationFilterInput]
-  createdAt: ModelStringInput
-  id: ModelIDInput
-  isRead: ModelBooleanInput
-  message: ModelStringInput
-  not: ModelNotificationFilterInput
-  or: [ModelNotificationFilterInput]
-  relatedId: ModelStringInput
-  senderName: ModelStringInput
-  senderUserId: ModelStringInput
-  title: ModelStringInput
-  type: ModelStringInput
-  updatedAt: ModelStringInput
-  userId: ModelIDInput
 }
 
 input ModelSizeInput {
@@ -664,23 +562,14 @@ input ModelSubscriptionBooleanInput {
 input ModelSubscriptionChannelFilterInput {
   and: [ModelSubscriptionChannelFilterInput]
   createdAt: ModelSubscriptionStringInput
+  creatorId: ModelSubscriptionStringInput
   id: ModelSubscriptionIDInput
+  isGroup: ModelSubscriptionBooleanInput
+  isPublic: ModelSubscriptionBooleanInput
   name: ModelSubscriptionStringInput
   or: [ModelSubscriptionChannelFilterInput]
+  receiverId: ModelSubscriptionStringInput
   updatedAt: ModelSubscriptionStringInput
-  userId: ModelSubscriptionIDInput
-}
-
-input ModelSubscriptionFcmTokenFilterInput {
-  and: [ModelSubscriptionFcmTokenFilterInput]
-  createdAt: ModelSubscriptionStringInput
-  deviceId: ModelSubscriptionIDInput
-  id: ModelSubscriptionIDInput
-  or: [ModelSubscriptionFcmTokenFilterInput]
-  platform: ModelSubscriptionStringInput
-  token: ModelSubscriptionStringInput
-  updatedAt: ModelSubscriptionStringInput
-  userId: ModelSubscriptionIDInput
 }
 
 input ModelSubscriptionFloatInput {
@@ -750,23 +639,8 @@ input ModelSubscriptionMessageFilterInput {
   createdAt: ModelSubscriptionStringInput
   id: ModelSubscriptionIDInput
   or: [ModelSubscriptionMessageFilterInput]
+  senderId: ModelSubscriptionIDInput
   updatedAt: ModelSubscriptionStringInput
-}
-
-input ModelSubscriptionNotificationFilterInput {
-  and: [ModelSubscriptionNotificationFilterInput]
-  createdAt: ModelSubscriptionStringInput
-  id: ModelSubscriptionIDInput
-  isRead: ModelSubscriptionBooleanInput
-  message: ModelSubscriptionStringInput
-  or: [ModelSubscriptionNotificationFilterInput]
-  relatedId: ModelSubscriptionStringInput
-  senderName: ModelSubscriptionStringInput
-  senderUserId: ModelSubscriptionStringInput
-  title: ModelSubscriptionStringInput
-  type: ModelSubscriptionStringInput
-  updatedAt: ModelSubscriptionStringInput
-  userId: ModelSubscriptionIDInput
 }
 
 input ModelSubscriptionStringInput {
@@ -782,6 +656,18 @@ input ModelSubscriptionStringInput {
   ne: String
   notContains: String
   notIn: [String]
+}
+
+input ModelSubscriptionUserChannelFilterInput {
+  and: [ModelSubscriptionUserChannelFilterInput]
+  channelId: ModelSubscriptionIDInput
+  createdAt: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  isMuted: ModelSubscriptionBooleanInput
+  or: [ModelSubscriptionUserChannelFilterInput]
+  role: ModelSubscriptionStringInput
+  updatedAt: ModelSubscriptionStringInput
+  userId: ModelSubscriptionIDInput
 }
 
 input ModelSubscriptionUserContactFilterInput {
@@ -818,6 +704,31 @@ input ModelSubscriptionUserGroupFilterInput {
   or: [ModelSubscriptionUserGroupFilterInput]
   updatedAt: ModelSubscriptionStringInput
   userId: ModelSubscriptionIDInput
+}
+
+input ModelUserChannelConditionInput {
+  and: [ModelUserChannelConditionInput]
+  channelId: ModelIDInput
+  createdAt: ModelStringInput
+  isMuted: ModelBooleanInput
+  not: ModelUserChannelConditionInput
+  or: [ModelUserChannelConditionInput]
+  role: ModelStringInput
+  updatedAt: ModelStringInput
+  userId: ModelIDInput
+}
+
+input ModelUserChannelFilterInput {
+  and: [ModelUserChannelFilterInput]
+  channelId: ModelIDInput
+  createdAt: ModelStringInput
+  id: ModelIDInput
+  isMuted: ModelBooleanInput
+  not: ModelUserChannelFilterInput
+  or: [ModelUserChannelFilterInput]
+  role: ModelStringInput
+  updatedAt: ModelStringInput
+  userId: ModelIDInput
 }
 
 input ModelUserConditionInput {
@@ -896,16 +807,12 @@ input ModelUserGroupFilterInput {
 }
 
 input UpdateChannelInput {
+  creatorId: String
   id: ID!
+  isGroup: Boolean
+  isPublic: Boolean
   name: String
-  userId: ID
-}
-
-input UpdateFcmTokenInput {
-  deviceId: ID!
-  platform: String
-  token: String
-  userId: ID!
+  receiverId: String
 }
 
 input UpdateGroupInput {
@@ -925,17 +832,14 @@ input UpdateMessageInput {
   channelId: ID
   content: String
   id: ID!
+  senderId: ID
 }
 
-input UpdateNotificationInput {
+input UpdateUserChannelInput {
+  channelId: ID
   id: ID!
-  isRead: Boolean
-  message: String
-  relatedId: String
-  senderName: String
-  senderUserId: String
-  title: String
-  type: String
+  isMuted: Boolean
+  role: String
   userId: ID
 }
 

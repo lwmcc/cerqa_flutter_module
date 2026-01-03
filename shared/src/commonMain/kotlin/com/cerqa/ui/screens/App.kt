@@ -50,10 +50,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.cerqa.navigation.AppDestination
 import com.cerqa.models.Contact
 import com.cerqa.ui.Navigation.AppNavigationActions
@@ -67,6 +69,8 @@ import com.cerqa.viewmodels.ApolloContactsViewModel
 import com.cerqa.viewmodels.ContactsViewModel
 import com.cerqa.viewmodels.MainViewModel
 import com.cerqa.viewmodels.SearchViewModel
+import com.cerqa.data.Preferences
+import com.cerqa.auth.AuthTokenProvider
 import org.koin.compose.koinInject
 import com.cerqa.ui.resources.getAddChatIcon
 import com.cerqa.ui.resources.getAddGroupIcon
@@ -92,10 +96,8 @@ fun App(
     var active by remember { mutableStateOf(false) }
     var chatTabIndex by remember { mutableStateOf(0) } // 0 = Chats, 1 = Groups
 
-    // Collect unread notification count
     val unreadNotificationCount by mainViewModel.unreadNotificationCount.collectAsState()
 
-    // Create bottom nav items with badge count
     val bottomNavItemsWithBadge = remember(unreadNotificationCount) {
         bottomNavItems.map { item ->
             if (item.route == AppDestination.Notifications.route) {
@@ -314,6 +316,11 @@ fun App(
                         onTabChange = { chatTabIndex = it },
                         onNavigateToContacts = {
                             navActions.navigateToContacts()
+                        },
+                        onNavigateToConversation = { contactId, userName ->
+                            navController.navigate(
+                                AppDestination.Conversation.createRoute(contactId, userName)
+                            )
                         }
                     )
                 }
@@ -352,11 +359,22 @@ fun App(
                     Search()
                 }
                 composable(
-                    AppDestination.Conversation.route,
+                    route = AppDestination.Conversation.route,
+                    arguments = listOf(
+                        navArgument("contactId") { type = NavType.StringType },
+                        navArgument("userName") { type = NavType.StringType }
+                    ),
                     enterTransition = { slideInFromRight() },
                     exitTransition = { slideOutToRight() }
-                ) {
-                    Conversation()
+                ) { backStackEntry ->
+                    // Get receiver ID from navigation arguments
+                    val receiverId = backStackEntry.arguments?.get("contactId") as? String ?: ""
+
+                    println("App.kt ***** RECEIVER ID (from navigation): $receiverId")
+
+                    Conversation(
+                        receiverId = receiverId
+                    )
                 }
             }
         }

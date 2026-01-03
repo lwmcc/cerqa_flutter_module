@@ -30,14 +30,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.cerqa.data.Preferences
 import com.cerqa.viewmodels.ConversationViewModel
 import com.cerqa.viewmodels.ProfileViewModel
 import org.koin.compose.koinInject
 
 @Composable
-fun Conversation(conversationViewModel: ConversationViewModel = koinInject()) {
+fun Conversation(
+    receiverId: String,
+    conversationViewModel: ConversationViewModel = koinInject(),
+    preferences: Preferences = koinInject()
+) {
+    val senderId = preferences.getUserData()?.userId ?: ""
+    val channelId = conversationViewModel.createConversationChannelName(receiverId, senderId)
+
     Chat("") { chatMessage ->
-        conversationViewModel.sendChatMessage(chatMessage)
+        conversationViewModel.sendChatMessage(
+            channelId = channelId,
+            senderUserId = senderId,
+            receiverId = receiverId,
+            message = chatMessage
+        )
     }
 }
 

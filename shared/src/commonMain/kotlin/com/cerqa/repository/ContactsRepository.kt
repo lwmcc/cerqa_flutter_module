@@ -402,28 +402,11 @@ class ContactsRepository(
                 val receiverId = invite?.receiverId ?: return@mapNotNull null
                 val inviteId = invite?.id ?: return@mapNotNull null
 
-                // Fetch receiver details using getUserByUserId
+                // TODO: Fetch receiver details using getUserByUserId once available in API
                 try {
-                    val receiverResponse = apolloClient.query(
-                        com.cerqa.graphql.GetUserByUserIdQuery(userId = receiverId)
-                    ).execute()
-
-                    val receiver = receiverResponse.data?.getUserByUserId
-                    if (receiver != null) {
-                        println("ContactsRepository: fetchSentInvites - found receiver: ${receiver.userName}")
-                        SentInviteContactInvite(
-                            senderUserId = userId, // Current user is the sender
-                            contactId = inviteId,
-                            userId = receiver.userId ?: receiverId,
-                            userName = receiver.userName,
-                            name = receiver.name,
-                            avatarUri = receiver.avatarUri,
-                            phoneNumber = receiver.phone
-                        )
-                    } else {
-                        println("ContactsRepository: fetchSentInvites - receiver not found for id: $receiverId")
-                        null
-                    }
+                    // Stub: GetUserByUserIdQuery not available in wtl5wlqxxvb6lp2nenxcjpvpwq API
+                    println("ContactsRepository: fetchSentInvites - GetUserByUserIdQuery not implemented yet")
+                    null
                 } catch (e: Exception) {
                     println("ContactsRepository: fetchSentInvites - error fetching receiver $receiverId: ${e.message}")
                     null
