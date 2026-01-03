@@ -231,3 +231,22 @@ query ListUserChannels($userId: String!) {
     nextToken
   }
 }
+
+# Get all messages for a specific channel
+query ListChannelMessages($channelId: ID!, $limit: Int, $nextToken: String) {
+  listMessages(
+    filter: { channelId: { eq: $channelId } }
+    limit: $limit
+    nextToken: $nextToken
+  ) {
+    items {
+      id
+      channelId
+      content
+      senderId
+      createdAt
+      updatedAt
+    }
+    nextToken
+  }
+}

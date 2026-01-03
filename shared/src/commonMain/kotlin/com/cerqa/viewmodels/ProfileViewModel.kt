@@ -28,6 +28,7 @@ class ProfileViewModel(
     private val apolloClient: ApolloClient,
     private val authTokenProvider: AuthTokenProvider,
     private val authRepository: AuthRepository,
+    private val userRepository: com.cerqa.data.UserRepository,
     private val preferences: Preferences,
 ) {
     private val viewModelJob = SupervisorJob()
@@ -45,8 +46,8 @@ class ProfileViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    private val _userData = MutableStateFlow<UserData?>(null)
-    val userData: StateFlow<UserData?> = _userData.asStateFlow()
+    private val _userData = MutableStateFlow<com.cerqa.data.UserData?>(null)
+    val userData: StateFlow<com.cerqa.data.UserData?> = _userData.asStateFlow()
 
 
     fun checkProfileComplete() {
@@ -55,21 +56,25 @@ class ProfileViewModel(
             _error.value = null
 
             try {
-                // Load user data from preferences
-                println("ProfileViewModel ===== Loading user data from preferences")
-                val savedUserData = preferences.getUserData()
-                _userData.value = savedUserData
-                println("ProfileViewModel ===== Saved user data: userName=${savedUserData?.userName}, email=${savedUserData?.userEmail}")
-
                 println("ProfileViewModel ===== Getting current user ID from auth provider")
                 val userId = authTokenProvider.getCurrentUserId()
                 println("ProfileViewModel ===== Current user ID: $userId")
 
                 if (userId != null) {
-                    // TODO: Implement hasUserCreatedProfile query once available in API
-                    println("ProfileViewModel ===== HasUserCreatedProfileQuery not available yet, assuming profile is complete")
-                    _isProfileComplete.value = true
-                    _missingFields.value = emptyList()
+                    // Fetch fresh user data from repository
+                    println("ProfileViewModel ===== Fetching user data from repository")
+                    userRepository.getUser()
+                        .onSuccess { userData ->
+                            println("ProfileViewModel ===== User data fetched: userName=${userData.userName}, email=${userData.email}")
+                            _userData.value = userData
+                            _isProfileComplete.value = true
+                            _missingFields.value = emptyList()
+                        }
+                        .onFailure { error ->
+                            println("ProfileViewModel ===== Failed to fetch user data: ${error.message}")
+                            _error.value = "Failed to load user data: ${error.message}"
+                            _isProfileComplete.value = false
+                        }
                 } else {
                     println("ProfileViewModel ===== No user ID found - user not authenticated")
                     _error.value = "User not authenticated"

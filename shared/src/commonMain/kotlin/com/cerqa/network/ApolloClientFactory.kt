@@ -25,6 +25,7 @@ fun createApolloClient(
     httpClientEngine: HttpClientEngine
 ): ApolloClient {
     return ApolloClient.Builder()
+        // Using production API: wtl5wlqxxvb6lp2nenxcjpvpwq
         .serverUrl("https://qtjqzunv4rgbtkphmdz2f2ybrq.appsync-api.us-east-2.amazonaws.com/graphql")
         .addHttpHeader("Content-Type", "application/json")
         .addHttpHeader("Accept", "application/json")

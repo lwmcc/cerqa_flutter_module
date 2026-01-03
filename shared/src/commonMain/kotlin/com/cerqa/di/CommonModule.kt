@@ -88,11 +88,13 @@ val commonModule = module {
             apolloClient = get(),
             authTokenProvider = get(),
             authRepository = get(),
+            userRepository = get(),
             preferences = get()
         )
     }
     factory {
         MainViewModel(
+            authTokenProvider = get(),
             preferences = get(),
             userRepository = get(),
             mainDispatcher = get(),
@@ -105,7 +107,7 @@ val commonModule = module {
     }
     factory {
         ConversationViewModel(
-            preferences = get(),
+            authTokenProvider = get(),
             mainDispatcher = get(),
             conversationRepository = get()
         )

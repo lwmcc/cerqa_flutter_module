@@ -1,6 +1,7 @@
 package com.cerqa.viewmodels
 
 import androidx.lifecycle.viewModelScope
+import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.data.Preferences
 import com.cerqa.data.UserRepository
 import com.cerqa.notifications.FcmTokenProvider
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 
 // TODO: too many params, do something about that
 class MainViewModel(
+    private val authTokenProvider: AuthTokenProvider,
     private val preferences: Preferences,
     private val userRepository: UserRepository,
     private val mainDispatcher: CoroutineDispatcher,
@@ -239,9 +241,8 @@ class MainViewModel(
 
     fun subscribeToDmChannel() {
         viewModelScope.launch {
-            val userId = preferences.getUserData().userId
             val channel = getInviteChannelPath()
-            
+
             if (channel != null) {
                 realtimeRepository.subscribeToChannel(channel).collect { message ->
                     println("MainViewModel ***** Channel: $channel")
@@ -266,8 +267,8 @@ class MainViewModel(
         }
     }
 
-    private fun getInviteChannelPath(): String? {
-        val userId = preferences.getUserData().userId
+    private suspend fun getInviteChannelPath(): String? {
+        val userId = authTokenProvider.getCurrentUserId()
         return userId?.let { RealtimeChannel.NOTIFICATIONS_INVITES }
     }
 }

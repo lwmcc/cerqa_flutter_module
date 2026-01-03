@@ -1,5 +1,6 @@
 package com.cerqa.ui.screens
 
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.background
@@ -71,6 +72,8 @@ import com.cerqa.viewmodels.MainViewModel
 import com.cerqa.viewmodels.SearchViewModel
 import com.cerqa.data.Preferences
 import com.cerqa.auth.AuthTokenProvider
+import com.cerqa.ui.animations.slideInFromLeft
+import com.cerqa.ui.animations.slideOutToLeft
 import org.koin.compose.koinInject
 import com.cerqa.ui.resources.getAddChatIcon
 import com.cerqa.ui.resources.getAddGroupIcon
@@ -293,7 +296,7 @@ fun App(
                     currentRoute = currentRoute,
                     onBottomNavClick = { route ->
                         navController.navigate(route) {
-                            popUpTo(AppDestination.Main.route) {
+                            popUpTo(/*AppDestination.Main.route*/navController.graph.startDestinationId) {
                                 saveState = true
                             }
                             launchSingleTop = true
@@ -348,8 +351,12 @@ fun App(
                 }
                 composable(
                     AppDestination.Profile.route,
-                    enterTransition = { slideInFromRight() },
-                    exitTransition = { slideOutToRight() }
+                    enterTransition = {
+                        slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right)
+                    },
+                    exitTransition = {
+                        slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left)
+                    },
                 ) {
                     Profile(
                         onDismiss = { navActions.popBackStack() }
@@ -367,7 +374,6 @@ fun App(
                     enterTransition = { slideInFromRight() },
                     exitTransition = { slideOutToRight() }
                 ) { backStackEntry ->
-                    // Get receiver ID from navigation arguments
                     val receiverId = backStackEntry.arguments?.get("contactId") as? String ?: ""
 
                     println("App.kt ***** RECEIVER ID (from navigation): $receiverId")

@@ -79,10 +79,14 @@ fun Chat(
 private fun ChatsTab(
     chatViewModel: ChatViewModel,
     onNavigateToConversation: (contactId: String, userName: String) -> Unit,
-    preferences: com.cerqa.data.Preferences = koinInject()
+    authTokenProvider: com.cerqa.auth.AuthTokenProvider = koinInject()
 ) {
     val uiState by chatViewModel.uiState.collectAsState()
-    val currentUserId = preferences.getUserData()?.userId ?: ""
+    var currentUserId by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        currentUserId = authTokenProvider.getCurrentUserId() ?: ""
+    }
 
     when {
         uiState.isLoading -> {

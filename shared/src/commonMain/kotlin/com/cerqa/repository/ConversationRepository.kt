@@ -1,5 +1,6 @@
 package com.cerqa.repository
 
+import com.cerqa.graphql.ListChannelMessagesQuery
 import com.cerqa.graphql.ListUserChannelsQuery
 
 interface ConversationRepository {
@@ -10,4 +11,6 @@ interface ConversationRepository {
     )
 
     suspend fun getUserChannels(userId: String): Result<List<ListUserChannelsQuery.Item>>
+
+    suspend fun getChannelMessages(channelId: String): Result<List<ListChannelMessagesQuery.Item>>
 }

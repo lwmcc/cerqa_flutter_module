@@ -3,6 +3,7 @@ package com.cerqa.repository
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
 import com.cerqa.graphql.CreateChannelMutation
+import com.cerqa.graphql.ListChannelMessagesQuery
 import com.cerqa.graphql.ListUserChannelsQuery
 import com.cerqa.graphql.SendMessageMutation
 import com.cerqa.graphql.type.CreateChannelInput
@@ -77,14 +78,16 @@ class ConversationRepositoryImpl(
 
     private suspend fun ensureChannelExists(channelId: String, creatorId: String) {
         try {
-            // Extract sender and receiver from channelId (format: "userId1_userId2")
-            val userIds = channelId.split("_")
-            if (userIds.size != 2) {
-                println("ConversationRepository: Invalid channelId format: $channelId")
+            // Extract sender and receiver from channelId (format: "chat:userId1:userId2")
+            val parts = channelId.split(":")
+            if (parts.size != 3 || parts[0] != "chat") {
+                println("ConversationRepository: Invalid channelId format: $channelId (expected chat:userId1:userId2)")
                 return
             }
 
-            val receiverId = if (userIds[0] == creatorId) userIds[1] else userIds[0]
+            val userId1 = parts[1]
+            val userId2 = parts[2]
+            val receiverId = if (userId1 == creatorId) userId2 else userId1
 
             // Try to create the channel (will fail silently if it already exists)
             val input = CreateChannelInput(
@@ -129,6 +132,28 @@ class ConversationRepositoryImpl(
             }
         } catch (e: Exception) {
             println("ConversationRepository: Exception fetching channels: ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getChannelMessages(channelId: String): Result<List<ListChannelMessagesQuery.Item>> {
+        return try {
+            val response = apolloClient
+                .query(ListChannelMessagesQuery(channelId = channelId, limit = Optional.presentIfNotNull(100)))
+                .execute()
+
+            if (response.hasErrors()) {
+                val errors = response.errors?.joinToString { it.message }
+                println("ConversationRepository: Error fetching messages: $errors")
+                Result.failure(Exception(errors ?: "Unknown error"))
+            } else {
+                val messages = response.data?.listMessages?.items?.filterNotNull() ?: emptyList()
+                println("ConversationRepository: Fetched ${messages.size} messages for channel $channelId")
+                Result.success(messages)
+            }
+        } catch (e: Exception) {
+            println("ConversationRepository: Exception fetching messages: ${e.message}")
             e.printStackTrace()
             Result.failure(e)
         }

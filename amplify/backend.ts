@@ -34,4 +34,4 @@ backend.sendInviteNotification.resources.lambda.addToRolePolicy(
   })
 );
 
-
+// Firebase credentials are now loaded from FIREBASE_SERVICE_ACCOUNT secret

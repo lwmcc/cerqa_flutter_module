@@ -7,7 +7,7 @@ import { getUserByUserId } from "../functions/getUserByUserId/resource";
 import { sendInviteNotification } from "../functions/sendInviteNotification/resource";
 import { sendSmartInviteNotification } from "../functions/sendSmartInviteNotification/resource";
 import { updatePresence } from "../functions/updatePresence/resource";
-import { sendMessage } from "../functions/sendMessage/resource";
+// import { sendMessage } from "../functions/sendMessage/resource"; // TODO: Fix bundling issues
 
 const AblyJwt = a.customType({
       keyName: a.string().required(),
@@ -110,7 +110,9 @@ export const schema = a.schema({
            asContact: a.hasMany('UserContact', 'contactId'), // contact user
            groups: a.hasMany('UserGroup', 'userId'),
            invites: a.hasMany('Invite','userId'),
-           channels: a.hasMany('Channel', 'userId'),
+           createdChannels: a.hasMany('Channel', 'creatorId'),
+           receivedChannels: a.hasMany('Channel', 'receiverId'),
+           messages: a.hasMany('Message', 'senderId'),
            notifications: a.hasMany('Notification', 'userId'),
          })
          .secondaryIndexes((index) => [
@@ -168,21 +170,26 @@ export const schema = a.schema({
    Channel: a
    .model({
        name: a.string(),
-       userId: a.id().required(),
-       user: a.belongsTo('User', 'userId'),
+       creatorId: a.id().required(),
+       receiverId: a.id(),
+       creator: a.belongsTo('User', 'creatorId'),
+       receiver: a.belongsTo('User', 'receiverId'),
+       isGroup: a.boolean().default(false),
+       isPublic: a.boolean().default(false),
        messages: a.hasMany('Message', 'channelId'),
    })
-   .authorization((allow) => [allow.publicApiKey()]),
+   .authorization((allow) => [allow.publicApiKey(), allow.authenticated()]),
 
     Message: a
       .model({
         content: a.string().required(),
         channelId: a.id().required(),
-        senderUserId: a.id().required(),
-        createdAt: a.datetime(),
+        senderId: a.id().required(),
+        sender: a.belongsTo('User', 'senderId'),
         channel: a.belongsTo('Channel', 'channelId'),
       })
-      .grant(sendMessage, [a.allow.create()])
+      // TODO: Re-enable grant once we verify the correct syntax
+      // .grant(sendMessage, [a.allow.create()])
       .authorization((allow) => [allow.authenticated(),allow.publicApiKey(),
      ]),
 
@@ -273,18 +280,19 @@ export const schema = a.schema({
         .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
         .handler(a.handler.function(updatePresence)),
 
-        sendMessage: a
-          .mutation()
-          .arguments({
-            channelId: a.id().required(),
-            senderUserId: a.id().required(),
-            content: a.string().required(),
-          })
-          .returns(SendMessageResult)
-          .authorization((allow) => [
-            allow.authenticated(),
-          ])
-          .handler(a.handler.function(sendMessage)),
+        // TODO: Re-enable once sendMessage bundling is fixed
+        // sendMessage: a
+        //   .mutation()
+        //   .arguments({
+        //     channelId: a.id().required(),
+        //     senderUserId: a.id().required(),
+        //     content: a.string().required(),
+        //   })
+        //   .returns(SendMessageResult)
+        //   .authorization((allow) => [
+        //     allow.authenticated(),
+        //   ])
+        //   .handler(a.handler.function(sendMessage)),
 
 });
 

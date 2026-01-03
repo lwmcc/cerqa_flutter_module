@@ -4,7 +4,6 @@ export const fetchAblyJwt = defineFunction({
   name: 'fetch-ably-jwt',
   entry: './handler.ts',
   environment: {
-    ABLY_KEY: secret('ably_key'),
-    ABLY_SECRET: secret('ably_secret'),
+    ABLY_API_KEY: secret('ABLY_API_KEY'),
   },
 });

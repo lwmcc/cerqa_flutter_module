@@ -6,7 +6,11 @@ import { type Schema } from '../../data/resource';
 export const handler: Schema["fetchAblyJwt"]["functionHandler"] = async (event) => {
     const { userId } = event.arguments
 
-    const key = `${process.env.ABLY_KEY}:${process.env.ABLY_SECRET}`;
+    const key = process.env.ABLY_API_KEY;
+
+    if (!key) {
+        throw new Error('ABLY_API_KEY environment variable is not set');
+    }
 
     const ably = new Ably.Rest({ key: key });
 
