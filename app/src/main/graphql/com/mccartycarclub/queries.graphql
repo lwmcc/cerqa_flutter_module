@@ -1,0 +1,397 @@
+# this is an auto generated file. This will be overwritten
+
+query FetchAblyJwt($userId: String) {
+  fetchAblyJwt(userId: $userId) {
+    clientId
+    keyName
+    mac
+    nonce
+    timestamp
+    __typename
+  }
+}
+
+query FetchPendingSentInviteStatus($userName: String) {
+  fetchPendingSentInviteStatus(userName: $userName)
+}
+
+query FetchUserWithContactInfo($userName: String) {
+  fetchUserWithContactInfo(userName: $userName) {
+    id
+    userName
+    __typename
+  }
+}
+
+query GetChannel($id: ID!) {
+  getChannel(id: $id) {
+    createdAt
+    id
+    messages {
+      nextToken
+      __typename
+    }
+    name
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+query GetGroup($id: ID!) {
+  getGroup(id: $id) {
+    createdAt
+    groupId
+    id
+    name
+    updatedAt
+    users {
+      nextToken
+      __typename
+    }
+    __typename
+  }
+}
+
+query GetInvite($id: ID!) {
+  getInvite(id: $id) {
+    createdAt
+    id
+    receiverId
+    senderId
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+query GetMessage($id: ID!) {
+  getMessage(id: $id) {
+    channel {
+      createdAt
+      id
+      name
+      updatedAt
+      userId
+      __typename
+    }
+    channelId
+    content
+    createdAt
+    id
+    updatedAt
+    __typename
+  }
+}
+
+query GetUser($id: ID!) {
+  getUser(id: $id) {
+    asContact {
+      nextToken
+      __typename
+    }
+    avatarUri
+    channels {
+      nextToken
+      __typename
+    }
+    contacts {
+      nextToken
+      __typename
+    }
+    createdAt
+    email
+    firstName
+    groups {
+      nextToken
+      __typename
+    }
+    id
+    invites {
+      nextToken
+      __typename
+    }
+    lastName
+    name
+    phone
+    updatedAt
+    userId
+    userName
+    __typename
+  }
+}
+
+query GetUserContact($id: ID!) {
+  getUserContact(id: $id) {
+    contact {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    contactId
+    createdAt
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+query GetUserGroup($id: ID!) {
+  getUserGroup(id: $id) {
+    createdAt
+    group {
+      createdAt
+      groupId
+      id
+      name
+      updatedAt
+      __typename
+    }
+    groupId
+    id
+    updatedAt
+    user {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    userId
+    __typename
+  }
+}
+
+query ListByPhone(
+  $filter: ModelUserFilterInput
+  $limit: Int
+  $nextToken: String
+  $phone: String!
+  $sortDirection: ModelSortDirection
+  $userName: ModelStringKeyConditionInput
+) {
+  listByPhone(
+    filter: $filter
+    limit: $limit
+    nextToken: $nextToken
+    phone: $phone
+    sortDirection: $sortDirection
+    userName: $userName
+  ) {
+    items {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}
+
+query ListChannels(
+  $filter: ModelChannelFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listChannels(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      createdAt
+      id
+      name
+      updatedAt
+      userId
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}
+
+query ListGroups(
+  $filter: ModelGroupFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listGroups(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      createdAt
+      groupId
+      id
+      name
+      updatedAt
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}
+
+query ListInvites(
+  $filter: ModelInviteFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listInvites(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      createdAt
+      id
+      receiverId
+      senderId
+      updatedAt
+      userId
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}
+
+query ListMessages(
+  $filter: ModelMessageFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listMessages(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      channelId
+      content
+      createdAt
+      id
+      updatedAt
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}
+
+query ListUserContacts(
+  $filter: ModelUserContactFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listUserContacts(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      contactId
+      createdAt
+      id
+      updatedAt
+      userId
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}
+
+query ListUserGroups(
+  $filter: ModelUserGroupFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listUserGroups(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      createdAt
+      groupId
+      id
+      updatedAt
+      userId
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}
+
+query ListUsers(
+  $filter: ModelUserFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listUsers(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      avatarUri
+      createdAt
+      email
+      firstName
+      id
+      lastName
+      name
+      phone
+      updatedAt
+      userId
+      userName
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}

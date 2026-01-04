@@ -27,3 +27,21 @@ fun AnimatedContentTransitionScope<*>.slideOutToRight(): ExitTransition {
         towards = AnimatedContentTransitionScope.SlideDirection.End
     )
 }
+
+fun AnimatedContentTransitionScope<*>.slideInFromLeft(): EnterTransition {
+    return fadeIn(
+        animationSpec = tween(300, easing = LinearEasing)
+    ) + slideIntoContainer(
+        animationSpec = tween(300, easing = EaseIn),
+        towards = AnimatedContentTransitionScope.SlideDirection.End
+    )
+}
+
+fun AnimatedContentTransitionScope<*>.slideOutToLeft(): ExitTransition {
+    return fadeOut(
+        animationSpec = tween(300, easing = LinearEasing)
+    ) + slideOutOfContainer(
+        animationSpec = tween(300, easing = EaseOut),
+        towards = AnimatedContentTransitionScope.SlideDirection.Start
+    )
+}

@@ -59,9 +59,20 @@ class AndroidAuthTokenProvider : AuthTokenProvider {
     }
 
     override suspend fun getCurrentUserId(): String? = suspendCoroutine { continuation ->
-        Amplify.Auth.getCurrentUser(
-            { user ->
-                continuation.resume(user.userId)
+        Amplify.Auth.fetchAuthSession(
+            { session ->
+                try {
+                    val cognitoSession = session as? AWSCognitoAuthSession
+                    if (cognitoSession == null) {
+                        continuation.resume(null)
+                        return@fetchAuthSession
+                    }
+
+                    val userSub = cognitoSession.userSubResult.value
+                    continuation.resume(userSub)
+                } catch (e: Exception) {
+                    continuation.resume(null)
+                }
             },
             {
                 continuation.resume(null)

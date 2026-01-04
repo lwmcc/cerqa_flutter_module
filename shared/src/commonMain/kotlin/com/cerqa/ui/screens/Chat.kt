@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.cerqa.viewmodels.ChatViewModel
+import org.koin.compose.koinInject
 
 // Dummy data models
 data class ChatItem(
@@ -38,9 +40,17 @@ data class GroupItem(
 fun Chat(
     selectedTabIndex: Int = 0,
     onTabChange: (Int) -> Unit = {},
-    onNavigateToContacts: () -> Unit = {}
+    onNavigateToContacts: () -> Unit = {},
+    onNavigateToConversation: (contactId: String, userName: String) -> Unit = { _, _ -> },
+    chatViewModel: ChatViewModel = koinInject()
 ) {
     val tabs = listOf("Chats", "Groups")
+
+    // Load channels when composable is first displayed
+    LaunchedEffect(Unit) {
+        chatViewModel.loadUserChannels()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -56,73 +66,79 @@ fun Chat(
         }
 
         when (selectedTabIndex) {
-            0 -> ChatsTab()
+            0 -> ChatsTab(
+                chatViewModel = chatViewModel,
+                onNavigateToConversation = onNavigateToConversation
+            )
             1 -> GroupsTab()
         }
     }
 }
 
 @Composable
-private fun ChatsTab() {
-    // Dummy chat data
-    val chats = remember {
-        listOf(
-            ChatItem(
-                id = "1",
-                name = "Larry McCarty",
-                lastMessage = "Hey, how are you?",
-                timestamp = "2:30 PM",
-                unreadCount = 2
-            ),
-            ChatItem(
-                id = "2",
-                name = "LeBron James",
-                lastMessage = "See you at the game!",
-                timestamp = "1:15 PM",
-                unreadCount = 0
-            ),
-            ChatItem(
-                id = "3",
-                name = "Sarah Johnson",
-                lastMessage = "Thanks for your help!",
-                timestamp = "Yesterday",
-                unreadCount = 1
-            ),
-            ChatItem(
-                id = "4",
-                name = "Mike Chen",
-                lastMessage = "The meeting is at 3 PM",
-                timestamp = "Yesterday",
-                unreadCount = 0
-            ),
-            ChatItem(
-                id = "5",
-                name = "Emma Wilson",
-                lastMessage = "Can you send me the files?",
-                timestamp = "Monday",
-                unreadCount = 3
-            )
-        )
+private fun ChatsTab(
+    chatViewModel: ChatViewModel,
+    onNavigateToConversation: (contactId: String, userName: String) -> Unit,
+    authTokenProvider: com.cerqa.auth.AuthTokenProvider = koinInject()
+) {
+    val uiState by chatViewModel.uiState.collectAsState()
+    var currentUserId by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        currentUserId = authTokenProvider.getCurrentUserId() ?: ""
     }
 
-    if (chats.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "No chats yet",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+    when {
+        uiState.isLoading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(chats, key = { it.id }) { chat ->
-                ChatListItem(chat = chat, onClick = { /* TODO: Open chat */ })
-                HorizontalDivider()
+        uiState.error != null -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Error: ${uiState.error}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(onClick = { chatViewModel.loadUserChannels() }) {
+                        Text("Retry")
+                    }
+                }
+            }
+        }
+        uiState.channels.isEmpty() -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No chats yet",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        else -> {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(uiState.channels, key = { it.id }) { channel ->
+                    ChatListItemFromChannel(
+                        channel = channel,
+                        currentUserId = currentUserId,
+                        onNavigateToConversation = onNavigateToConversation
+                    )
+                    HorizontalDivider()
+                }
             }
         }
     }
@@ -192,6 +208,81 @@ private fun GroupsTab() {
 }
 
 @Composable
+private fun ChatListItemFromChannel(
+    channel: com.cerqa.graphql.ListUserChannelsQuery.Item,
+    currentUserId: String,
+    onNavigateToConversation: (contactId: String, userName: String) -> Unit
+) {
+    // Determine which user is the OTHER person (not the current user)
+    val (otherUserId, displayName) = when {
+        channel.creator?.userId == currentUserId -> {
+            // Current user is the creator, so show receiver
+            val userId = channel.receiver?.userId ?: ""
+            val name = channel.receiver?.name ?: channel.receiver?.userName ?: "Unknown"
+            userId to name
+        }
+        channel.receiver?.userId == currentUserId -> {
+            // Current user is the receiver, so show creator
+            val userId = channel.creator?.userId ?: ""
+            val name = channel.creator?.name ?: channel.creator?.userName ?: "Unknown"
+            userId to name
+        }
+        // Fallback: show creator if available, otherwise receiver
+        channel.creator != null -> {
+            val userId = channel.creator.userId ?: ""
+            val name = channel.creator.name ?: channel.creator.userName ?: "Unknown"
+            userId to name
+        }
+        else -> {
+            val userId = channel.receiver?.userId ?: ""
+            val name = channel.receiver?.name ?: channel.receiver?.userName ?: "Unknown"
+            userId to name
+        }
+    }
+    val lastMessage = channel.messages?.items?.filterNotNull()?.firstOrNull()
+    val lastMessageText = lastMessage?.content ?: "No messages yet"
+
+    // Format timestamp
+    val timestamp = lastMessage?.createdAt ?: channel.createdAt
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                onNavigateToConversation(otherUserId, displayName)
+            }
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = displayName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = lastMessageText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+        }
+
+        Column(
+            horizontalAlignment = Alignment.End
+        ) {
+            Text(
+                text = formatTimestamp(timestamp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
 private fun ChatListItem(chat: ChatItem, onClick: () -> Unit) {
     Row(
         modifier = Modifier
@@ -231,6 +322,17 @@ private fun ChatListItem(chat: ChatItem, onClick: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+// Helper function to format timestamp
+private fun formatTimestamp(timestamp: String): String {
+    // Simple formatting - you can enhance this later
+    return try {
+        // Extract just the date part for now
+        timestamp.substringBefore("T")
+    } catch (e: Exception) {
+        "Recently"
     }
 }
 

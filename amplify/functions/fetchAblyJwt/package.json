@@ -1,0 +1,8 @@
+{
+  "name": "fetch-ably-jwt",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "ably": "^2.16.0"
+  }
+}

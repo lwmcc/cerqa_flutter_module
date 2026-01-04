@@ -4,10 +4,10 @@ import { fetchUserWithContactInfo } from "../functions/fetchUserWithContactInfo/
 import { fetchPendingSentInviteStatus } from "../functions/fetchPendingSentInviteStatus/resource";
 import { hasUserCreatedProfile } from "../functions/hasUserCreatedProfile/resource";
 import { getUserByUserId } from "../functions/getUserByUserId/resource";
-import { storeFcmToken } from "../functions/storeFcmToken/resource";
 import { sendInviteNotification } from "../functions/sendInviteNotification/resource";
 import { sendSmartInviteNotification } from "../functions/sendSmartInviteNotification/resource";
 import { updatePresence } from "../functions/updatePresence/resource";
+// import { sendMessage } from "../functions/sendMessage/resource"; // TODO: Fix bundling issues
 
 const AblyJwt = a.customType({
       keyName: a.string().required(),
@@ -87,6 +87,13 @@ const InviteNotificationResult = a.customType({
       channelName: a.string(),
 });
 
+const SendMessageResult = a.customType({
+  success: a.boolean().required(),
+  messageId: a.string(),
+  channelId: a.string().required(),
+  deliveredVia: a.string().required(), // "ABLY" | "DB"
+});
+
 export const schema = a.schema({
 
      User: a
@@ -103,7 +110,10 @@ export const schema = a.schema({
            asContact: a.hasMany('UserContact', 'contactId'), // contact user
            groups: a.hasMany('UserGroup', 'userId'),
            invites: a.hasMany('Invite','userId'),
-           channels: a.hasMany('Channel', 'userId'),
+           createdChannels: a.hasMany('Channel', 'creatorId'),
+           receivedChannels: a.hasMany('Channel', 'receiverId'),
+           messages: a.hasMany('Message', 'senderId'),
+           notifications: a.hasMany('Notification', 'userId'),
          })
          .secondaryIndexes((index) => [
                    index("phone")
@@ -160,19 +170,58 @@ export const schema = a.schema({
    Channel: a
    .model({
        name: a.string(),
-       userId: a.id().required(),
-       user: a.belongsTo('User', 'userId'),
+       creatorId: a.id().required(),
+       receiverId: a.id(),
+       creator: a.belongsTo('User', 'creatorId'),
+       receiver: a.belongsTo('User', 'receiverId'),
+       isGroup: a.boolean().default(false),
+       isPublic: a.boolean().default(false),
        messages: a.hasMany('Message', 'channelId'),
    })
-   .authorization((allow) => [allow.publicApiKey()]),
+   .authorization((allow) => [allow.publicApiKey(), allow.authenticated()]),
 
     Message: a
+      .model({
+        content: a.string().required(),
+        channelId: a.id().required(),
+        senderId: a.id().required(),
+        sender: a.belongsTo('User', 'senderId'),
+        channel: a.belongsTo('Channel', 'channelId'),
+      })
+      // TODO: Re-enable grant once we verify the correct syntax
+      // .grant(sendMessage, [a.allow.create()])
+      .authorization((allow) => [allow.authenticated(),allow.publicApiKey(),
+     ]),
+
+    Notification: a
      .model({
-         content: a.string().required(),
-         channelId: a.id().required(),
-         channel: a.belongsTo('Channel', 'channelId'),
+         userId: a.id().required(), // User who receives the notification
+         type: a.string().required(), // "INVITE", "MESSAGE", "GROUP_INVITE", etc.
+         title: a.string().required(),
+         message: a.string().required(),
+         isRead: a.boolean().default(false),
+         relatedId: a.string(), // ID of related entity (inviteId, messageId, etc.)
+         senderUserId: a.string(), // User who triggered the notification
+         senderName: a.string(), // Name of sender for display
+         user: a.belongsTo('User', 'userId'),
      })
-    .authorization((allow) => [allow.publicApiKey()]),
+     .authorization((allow) => [
+       allow.authenticated(),
+       allow.publicApiKey(),
+     ]),
+
+    FcmToken: a
+     .model({
+         userId: a.id().required(),
+         deviceId: a.id().required(),
+         token: a.string().required(),
+         platform: a.string().required(),
+     })
+     .identifier(['userId', 'deviceId'])
+     .authorization((allow) => [
+       allow.authenticated(),
+       allow.publicApiKey(),
+     ]),
 
     fetchAblyJwt: a
         .query()
@@ -202,17 +251,6 @@ export const schema = a.schema({
         .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
         .handler(a.handler.function(hasUserCreatedProfile)),
 
-    storeFcmToken: a
-        .mutation()
-        .arguments({
-            userId: a.string().required(),
-            token: a.string().required(),
-            platform: a.string().required()
-        })
-        .returns(a.boolean())
-        .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
-        .handler(a.handler.function(storeFcmToken)),
-
     getUserByUserId: a
         .query()
         .arguments({userId: a.string().required()})
@@ -241,6 +279,21 @@ export const schema = a.schema({
         .returns(a.boolean())
         .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
         .handler(a.handler.function(updatePresence)),
+
+        // TODO: Re-enable once sendMessage bundling is fixed
+        // sendMessage: a
+        //   .mutation()
+        //   .arguments({
+        //     channelId: a.id().required(),
+        //     senderUserId: a.id().required(),
+        //     content: a.string().required(),
+        //   })
+        //   .returns(SendMessageResult)
+        //   .authorization((allow) => [
+        //     allow.authenticated(),
+        //   ])
+        //   .handler(a.handler.function(sendMessage)),
+
 });
 
 export type Schema = ClientSchema<typeof schema>;
@@ -248,6 +301,7 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
     schema,
     //secrets: ["ably_key", "ably_secret"],
+    secrets: ['ABLY_API_KEY'],
     authorizationModes: {
         defaultAuthorizationMode: "userPool",
         apiKeyAuthorizationMode: {

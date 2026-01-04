@@ -1,6 +1,8 @@
 package com.cerqa.ui.Navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -17,7 +19,8 @@ data class BottomNavItem(
     val icon: ImageVector? = null,
     val label: String,
     val contentDescription: String,
-    val iconComposable: (@Composable () -> Unit)? = null
+    val iconComposable: (@Composable () -> Unit)? = null,
+    val badgeCount: Int? = null
 )
 
 data class TopNavItem(
@@ -50,13 +53,23 @@ fun BottomBar(
         items.forEach { item ->
             NavigationBarItem(
                 icon = {
-                    if (item.iconComposable != null) {
-                        item.iconComposable.invoke()
-                    } else if (item.icon != null) {
-                        Icon(
-                            imageVector = item.icon,
-                            contentDescription = item.contentDescription
-                        )
+                    BadgedBox(
+                        badge = {
+                            if (item.badgeCount != null && item.badgeCount > 0) {
+                                Badge {
+                                    Text(text = item.badgeCount.toString())
+                                }
+                            }
+                        }
+                    ) {
+                        if (item.iconComposable != null) {
+                            item.iconComposable.invoke()
+                        } else if (item.icon != null) {
+                            Icon(
+                                imageVector = item.icon,
+                                contentDescription = item.contentDescription
+                            )
+                        }
                     }
                 },
                 selected = item.route == currentRoute,

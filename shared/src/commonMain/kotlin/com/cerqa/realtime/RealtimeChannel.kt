@@ -1,8 +1,19 @@
 package com.cerqa.realtime
 
-enum class RealtimeChannel(val prefix: String) {
-    NOTIFICATIONS("notifications:"),
-    NOTIFICATIONS_INVITES("notifications:invites:");
+sealed class RealtimeChannel(val prefix: String) {
+    abstract val name: String
 
-    fun build(id: String): String = "$prefix$id"
+    data class UserInbox(val userId: String) : RealtimeChannel("inbox:user:") {
+        override val name: String
+            get() = "user:$userId:inbox"
+    }
+
+    data class Chat(val conversationId: String) : RealtimeChannel("chat:") {
+        override val name: String
+            get() = "chat:$conversationId"
+    }
+
+    companion object {
+        const val NOTIFICATIONS_INVITES = "notifications:invites"
+    }
 }

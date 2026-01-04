@@ -230,7 +230,7 @@ fun Contacts(
                                 },
                                 onClick = {
                                     onNavigateToConversation(
-                                        contact.contactId,
+                                        contact.userId,
                                         contact.userName ?: contact.name ?: "Unknown"
                                     )
                                 }

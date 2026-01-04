@@ -6,7 +6,6 @@ import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.data.Preferences
 import com.cerqa.data.UserProfileRepository
 import com.cerqa.graphql.CreateUserMutation
-import com.cerqa.graphql.HasUserCreatedProfileQuery
 import com.cerqa.graphql.type.CreateUserInput
 import com.cerqa.models.UserData
 import com.cerqa.repository.AuthRepository
@@ -29,6 +28,7 @@ class ProfileViewModel(
     private val apolloClient: ApolloClient,
     private val authTokenProvider: AuthTokenProvider,
     private val authRepository: AuthRepository,
+    private val userRepository: com.cerqa.data.UserRepository,
     private val preferences: Preferences,
 ) {
     private val viewModelJob = SupervisorJob()
@@ -46,8 +46,8 @@ class ProfileViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    private val _userData = MutableStateFlow<UserData?>(null)
-    val userData: StateFlow<UserData?> = _userData.asStateFlow()
+    private val _userData = MutableStateFlow<com.cerqa.data.UserData?>(null)
+    val userData: StateFlow<com.cerqa.data.UserData?> = _userData.asStateFlow()
 
 
     fun checkProfileComplete() {
@@ -56,26 +56,25 @@ class ProfileViewModel(
             _error.value = null
 
             try {
-                // Load user data from preferences
-                _userData.value = preferences.getUserData()
-
+                println("ProfileViewModel ===== Getting current user ID from auth provider")
                 val userId = authTokenProvider.getCurrentUserId()
+                println("ProfileViewModel ===== Current user ID: $userId")
+
                 if (userId != null) {
-                    val response = apolloClient.query(
-                        HasUserCreatedProfileQuery(userId = userId)
-                    ).execute()
-
-                    if (response.hasErrors()) {
-                        val errors = response.errors?.joinToString { it.message }
-                        println("ProfileViewModel ===== GraphQL Errors: $errors")
-                        _error.value = "GraphQL errors: $errors"
-                    } else {
-                        val data = response.data?.hasUserCreatedProfile
-                        _isProfileComplete.value = data?.isProfileComplete
-                        _missingFields.value = data?.missingFields ?: emptyList()
-
-                        println("ProfileViewModel ===== isProfileComplete: ${data?.isProfileComplete}")
-                    }
+                    // Fetch fresh user data from repository
+                    println("ProfileViewModel ===== Fetching user data from repository")
+                    userRepository.getUser()
+                        .onSuccess { userData ->
+                            println("ProfileViewModel ===== User data fetched: userName=${userData.userName}, email=${userData.email}")
+                            _userData.value = userData
+                            _isProfileComplete.value = true
+                            _missingFields.value = emptyList()
+                        }
+                        .onFailure { error ->
+                            println("ProfileViewModel ===== Failed to fetch user data: ${error.message}")
+                            _error.value = "Failed to load user data: ${error.message}"
+                            _isProfileComplete.value = false
+                        }
                 } else {
                     println("ProfileViewModel ===== No user ID found - user not authenticated")
                     _error.value = "User not authenticated"

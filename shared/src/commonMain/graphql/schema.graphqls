@@ -1,3 +1,20 @@
+scalar AWSDate
+scalar AWSTime
+scalar AWSDateTime
+scalar AWSTimestamp
+scalar AWSEmail
+scalar AWSJSON
+scalar AWSURL
+scalar AWSPhone
+scalar AWSIPAddress
+
+directive @aws_api_key on OBJECT | FIELD_DEFINITION
+directive @aws_iam on OBJECT | FIELD_DEFINITION
+directive @aws_cognito_user_pools(cognito_groups: [String]) on OBJECT | FIELD_DEFINITION
+directive @aws_auth(cognito_groups: [String]) on OBJECT | FIELD_DEFINITION
+directive @aws_subscribe(mutations: [String]) on FIELD_DEFINITION
+directive @aws_lambda on OBJECT | FIELD_DEFINITION
+
 schema {
   query: Query
   mutation: Mutation
@@ -133,36 +150,20 @@ type Mutation {
   updateUserChannel(condition: ModelUserChannelConditionInput, input: UpdateUserChannelInput!): UserChannel @aws_api_key @aws_iam
   updateUserContact(condition: ModelUserContactConditionInput, input: UpdateUserContactInput!): UserContact @aws_api_key @aws_iam
   updateUserGroup(condition: ModelUserGroupConditionInput, input: UpdateUserGroupInput!): UserGroup @aws_api_key @aws_iam
-  storeFcmToken(userId: String!, platform: String!, token: String!): Boolean @aws_api_key @aws_iam
-  sendInviteNotification(recipientUserId: String!, senderName: String!, inviteId: String!): NotificationResult @aws_api_key @aws_iam
-}
-
-type NotificationResult {
-  success: Boolean!
-  message: String!
-  deviceCount: Int
-}
-
-type ProfileStatus {
-  isProfileComplete: Boolean!
-  missingFields: [String!]!
 }
 
 type Query {
   fetchAblyJwt(userId: String): FetchAblyJwtReturnType @aws_api_key @aws_iam
   fetchPendingSentInviteStatus(userName: String): String @aws_api_key @aws_iam
-  fetchUserByUserId(userId: ID!): User @aws_api_key @aws_iam
   fetchUserWithContactInfo(userName: String): FetchUserWithContactInfoReturnType @aws_api_key @aws_iam
   getChannel(id: ID!): Channel @aws_api_key @aws_iam
   getGroup(id: ID!): Group @aws_api_key @aws_iam
   getInvite(id: ID!): Invite @aws_api_key @aws_iam
   getMessage(id: ID!): Message @aws_api_key @aws_iam
   getUser(id: ID!): User @aws_api_key @aws_iam
-  getUserByUserId(userId: String!): User @aws_api_key @aws_iam
   getUserChannel(id: ID!): UserChannel @aws_api_key @aws_iam
   getUserContact(id: ID!): UserContact @aws_api_key @aws_iam
   getUserGroup(id: ID!): UserGroup @aws_api_key @aws_iam
-  hasUserCreatedProfile(userId: String!): ProfileStatus @aws_api_key @aws_iam
   listByPhone(filter: ModelUserFilterInput, limit: Int, nextToken: String, phone: String!, sortDirection: ModelSortDirection, userName: ModelStringKeyConditionInput): ModelUserConnection @aws_api_key @aws_iam
   listChannels(filter: ModelChannelFilterInput, limit: Int, nextToken: String): ModelChannelConnection @aws_api_key @aws_iam
   listGroups(filter: ModelGroupFilterInput, limit: Int, nextToken: String): ModelGroupConnection @aws_api_key @aws_iam
@@ -865,22 +866,3 @@ input UpdateUserInput {
   userId: ID
   userName: String
 }
-
-# AWS AppSync scalar types
-scalar AWSDate
-scalar AWSTime
-scalar AWSDateTime
-scalar AWSTimestamp
-scalar AWSEmail
-scalar AWSJSON
-scalar AWSURL
-scalar AWSPhone
-scalar AWSIPAddress
-
-# AWS AppSync directive definitions
-directive @aws_subscribe(mutations: [String!]!) on FIELD_DEFINITION
-directive @aws_auth(cognito_groups: [String!]!) on FIELD_DEFINITION
-directive @aws_api_key on FIELD_DEFINITION | OBJECT
-directive @aws_iam on FIELD_DEFINITION | OBJECT
-directive @aws_oidc on FIELD_DEFINITION | OBJECT
-directive @aws_cognito_user_pools(cognito_groups: [String!]) on FIELD_DEFINITION | OBJECT

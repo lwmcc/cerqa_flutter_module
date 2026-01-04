@@ -1,5 +1,6 @@
 package com.cerqa.ui.screens
 
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.background
@@ -50,10 +51,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.cerqa.navigation.AppDestination
 import com.cerqa.models.Contact
 import com.cerqa.ui.Navigation.AppNavigationActions
@@ -67,6 +70,10 @@ import com.cerqa.viewmodels.ApolloContactsViewModel
 import com.cerqa.viewmodels.ContactsViewModel
 import com.cerqa.viewmodels.MainViewModel
 import com.cerqa.viewmodels.SearchViewModel
+import com.cerqa.data.Preferences
+import com.cerqa.auth.AuthTokenProvider
+import com.cerqa.ui.animations.slideInFromLeft
+import com.cerqa.ui.animations.slideOutToLeft
 import org.koin.compose.koinInject
 import carclub.shared.generated.resources.Res
 import carclub.shared.generated.resources.add_chat
@@ -93,6 +100,18 @@ fun App(
     var searchQuery by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
     var chatTabIndex by remember { mutableStateOf(0) } // 0 = Chats, 1 = Groups
+
+    val unreadNotificationCount by mainViewModel.unreadNotificationCount.collectAsState()
+
+    val bottomNavItemsWithBadge = remember(unreadNotificationCount) {
+        bottomNavItems.map { item ->
+            if (item.route == AppDestination.Notifications.route) {
+                item.copy(badgeCount = unreadNotificationCount)
+            } else {
+                item
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         mainViewModel.fetchUser()
@@ -275,11 +294,11 @@ fun App(
 
             bottomBar = {
                 BottomBar(
-                    items = bottomNavItems,
+                    items = bottomNavItemsWithBadge,
                     currentRoute = currentRoute,
                     onBottomNavClick = { route ->
                         navController.navigate(route) {
-                            popUpTo(AppDestination.Main.route) {
+                            popUpTo(/*AppDestination.Main.route*/navController.graph.startDestinationId) {
                                 saveState = true
                             }
                             launchSingleTop = true
@@ -302,6 +321,11 @@ fun App(
                         onTabChange = { chatTabIndex = it },
                         onNavigateToContacts = {
                             navActions.navigateToContacts()
+                        },
+                        onNavigateToConversation = { contactId, userName ->
+                            navController.navigate(
+                                AppDestination.Conversation.createRoute(contactId, userName)
+                            )
                         }
                     )
                 }
@@ -329,8 +353,12 @@ fun App(
                 }
                 composable(
                     AppDestination.Profile.route,
-                    enterTransition = { slideInFromRight() },
-                    exitTransition = { slideOutToRight() }
+                    enterTransition = {
+                        slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right)
+                    },
+                    exitTransition = {
+                        slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left)
+                    },
                 ) {
                     Profile(
                         onDismiss = { navActions.popBackStack() }
@@ -340,11 +368,21 @@ fun App(
                     Search()
                 }
                 composable(
-                    AppDestination.Conversation.route,
+                    route = AppDestination.Conversation.route,
+                    arguments = listOf(
+                        navArgument("contactId") { type = NavType.StringType },
+                        navArgument("userName") { type = NavType.StringType }
+                    ),
                     enterTransition = { slideInFromRight() },
                     exitTransition = { slideOutToRight() }
-                ) {
-                    Conversation()
+                ) { backStackEntry ->
+                    val receiverId = backStackEntry.arguments?.get("contactId") as? String ?: ""
+
+                    println("App.kt ***** RECEIVER ID (from navigation): $receiverId")
+
+                    Conversation(
+                        receiverId = receiverId
+                    )
                 }
             }
         }

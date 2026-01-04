@@ -1,6 +1,7 @@
 package com.cerqa.viewmodels
 
 import androidx.lifecycle.viewModelScope
+import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.data.Preferences
 import com.cerqa.data.UserRepository
 import com.cerqa.notifications.FcmTokenProvider
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 
 // TODO: too many params, do something about that
 class MainViewModel(
+    private val authTokenProvider: AuthTokenProvider,
     private val preferences: Preferences,
     private val userRepository: UserRepository,
     private val mainDispatcher: CoroutineDispatcher,
@@ -42,6 +44,9 @@ class MainViewModel(
 
     private val _ablyMessages = MutableStateFlow<List<String>>(emptyList())
     val ablyMessages: StateFlow<List<String>> = _ablyMessages.asStateFlow()
+
+    private val _unreadNotificationCount = MutableStateFlow(0)
+    val unreadNotificationCount: StateFlow<Int> = _unreadNotificationCount.asStateFlow()
 
     fun setUserData(
         userId: String,
@@ -85,6 +90,8 @@ class MainViewModel(
                         initAbly(userId)
                         // Store FCM token after user is authenticated, passing the userId
                         storeFcmToken(userId)
+                        // Fetch unread notification count
+                        fetchUnreadNotificationCount(userId)
                     }
                 }
                 .onFailure { exception ->
@@ -212,11 +219,30 @@ class MainViewModel(
         }
     }
 
+    /**
+     * Fetch the unread notification count for the current user.
+     * Called automatically after user authentication.
+     */
+    fun fetchUnreadNotificationCount(userId: String) {
+        viewModelScope.launch {
+            println("MainViewModel ***** Fetching unread notification count for userId: $userId")
+
+            notificationRepository.getUnreadCount(userId)
+                .onSuccess { count ->
+                    println("MainViewModel ***** Unread notification count: $count")
+                    _unreadNotificationCount.value = count
+                }
+                .onFailure { error ->
+                    println("MainViewModel ***** Failed to fetch unread count: ${error.message}")
+                    _error.value = error.message
+                }
+        }
+    }
+
     fun subscribeToDmChannel() {
         viewModelScope.launch {
-            val userId = preferences.getUserData().userId
             val channel = getInviteChannelPath()
-            
+
             if (channel != null) {
                 realtimeRepository.subscribeToChannel(channel).collect { message ->
                     println("MainViewModel ***** Channel: $channel")
@@ -241,8 +267,8 @@ class MainViewModel(
         }
     }
 
-    private fun getInviteChannelPath(): String? {
-        val userId = preferences.getUserData().userId
-        return userId?.let { RealtimeChannel.NOTIFICATIONS_INVITES.build(it) }
+    private suspend fun getInviteChannelPath(): String? {
+        val userId = authTokenProvider.getCurrentUserId()
+        return userId?.let { RealtimeChannel.NOTIFICATIONS_INVITES }
     }
 }

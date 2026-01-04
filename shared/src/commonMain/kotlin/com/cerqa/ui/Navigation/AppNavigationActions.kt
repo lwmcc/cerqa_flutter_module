@@ -49,7 +49,11 @@ class AppNavigationActions(private val navController: NavHostController) {
 
     fun navigateToProfile() {
         navController.navigate(AppDestination.Profile.route) {
+            popUpTo(navController.graph.startDestinationId) {
+                saveState = true
+            }
             launchSingleTop = true
+            restoreState = true
         }
     }
 
