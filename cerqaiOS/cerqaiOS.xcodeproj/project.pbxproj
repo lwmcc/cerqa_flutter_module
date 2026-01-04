@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		46419FCE2F012EAB0081D74A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 46419FCD2F012EAB0081D74A /* GoogleService-Info.plist */; };
 		46CCD62F2ED6D09A0052FA85 /* AWSCognitoAuthPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 46CCD62E2ED6D09A0052FA85 /* AWSCognitoAuthPlugin */; };
 		46CCD6312ED6D09A0052FA85 /* Amplify in Frameworks */ = {isa = PBXBuildFile; productRef = 46CCD6302ED6D09A0052FA85 /* Amplify */; };
 		46CCD6352ED792470052FA85 /* Authenticator in Frameworks */ = {isa = PBXBuildFile; productRef = 46CCD6342ED792470052FA85 /* Authenticator */; };
@@ -29,7 +28,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		46419FCD2F012EAB0081D74A /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		46419FCF2F012EAC0081D74A /* cerqaiOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = cerqaiOS.entitlements; sourceTree = "<group>"; };
 		46CCD6362ED79A840052FA85 /* amplifyconfiguration.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = amplifyconfiguration.json; sourceTree = "<group>"; };
 		46CCD6382ED82B610052FA85 /* amplifyconfiguration 2.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "amplifyconfiguration 2.json"; sourceTree = "<group>"; };
@@ -96,7 +94,6 @@
 				A1000023000000000000001 /* Preview Content */,
 				46CCD6382ED82B610052FA85 /* amplifyconfiguration 2.json */,
 				46CCD63A2ED82BAA0052FA85 /* amplify_outputs.json */,
-				46419FCD2F012EAB0081D74A /* GoogleService-Info.plist */,
 				46419FCF2F012EAC0081D74A /* cerqaiOS.entitlements */,
 			);
 			path = cerqaiOS;
@@ -145,12 +142,11 @@
 			buildConfigurationList = A1000025000000000000001 /* Build configuration list for PBXNativeTarget "cerqaiOS" */;
 			buildPhases = (
 				176BDB1DC016F82A637C9051 /* [CP] Check Pods Manifest.lock */,
-				46CCD6322ED6D2020052FA85 /* ShellScript */,
 				A1000026000000000000001 /* Sources */,
 				A1000018000000000000001 /* Frameworks */,
 				A1000027000000000000001 /* Resources */,
-				2A7DCBB198A20A80AC0284B1 /* [CP] Embed Pods Frameworks */,
 				1CAF476FB9ECD4C813AD8ECE /* [CP] Copy Pods Resources */,
+				F9B60EDDF6EB227DDED30FD0 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -212,7 +208,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1000015000000000000001 /* Preview Assets.xcassets in Resources */,
-				46419FCE2F012EAB0081D74A /* GoogleService-Info.plist in Resources */,
 				46CCD6372ED79A850052FA85 /* amplifyconfiguration.json in Resources */,
 				46CCD63B2ED82BAA0052FA85 /* amplify_outputs.json in Resources */,
 				A1000013000000000000001 /* Assets.xcassets in Resources */,
@@ -253,20 +248,16 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-cerqaiOS/Pods-cerqaiOS-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-cerqaiOS/Pods-cerqaiOS-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-cerqaiOS/Pods-cerqaiOS-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		2A7DCBB198A20A80AC0284B1 /* [CP] Embed Pods Frameworks */ = {
+		46CCD6322ED6D2020052FA85 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -274,36 +265,14 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-cerqaiOS/Pods-cerqaiOS-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-cerqaiOS/Pods-cerqaiOS-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-cerqaiOS/Pods-cerqaiOS-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
-		};
-		46CCD6322ED6D2020052FA85 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\ncd \"$SRCROOT/..\"\n./gradlew :shared:embedAndSignAppleFrameworkForXcode\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.cerqa.data.Preferences
 import com.cerqa.models.UserData
+import com.cerqa.ui.components.ModalBottomSheet
 import com.cerqa.viewmodels.ProfileViewModel
 import org.koin.compose.koinInject
 
@@ -69,9 +70,14 @@ fun Profile(
     var newLastName by remember { mutableStateOf("") }
     var newPhone by remember { mutableStateOf("") }
     var newEmail by remember { mutableStateOf("") }
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.checkProfileComplete()
+    }
+
+    if (showBottomSheet) {
+        ModalBottomSheet()
     }
 
     Column {
@@ -117,7 +123,7 @@ fun Profile(
             Box(
                 modifier = Modifier.clickable(
                     onClick = {
-
+                        showBottomSheet = true
                     },
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() }

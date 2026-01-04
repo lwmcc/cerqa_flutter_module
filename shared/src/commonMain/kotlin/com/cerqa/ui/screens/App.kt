@@ -376,7 +376,9 @@ fun App(
                     enterTransition = { slideInFromRight() },
                     exitTransition = { slideOutToRight() }
                 ) { backStackEntry ->
-                    val receiverId = backStackEntry.arguments?.get("contactId") as? String ?: ""
+                    // TODO: Fix argument extraction for multiplatform navigation 2.9.1
+                    // The API for accessing navigation arguments has changed in 2.9.x
+                    val receiverId = "" // Temporarily hardcoded until proper API is determined
 
                     println("App.kt ***** RECEIVER ID (from navigation): $receiverId")
 

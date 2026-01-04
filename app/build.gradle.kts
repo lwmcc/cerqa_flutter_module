@@ -1,11 +1,11 @@
 plugins {
-    kotlin("multiplatform") version "2.2.0" apply false
+    kotlin("multiplatform") version "2.2.21" apply false
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
 
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
-    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.21"
     id("com.google.gms.google-services")
     id("io.gitlab.arturbosch.detekt")
     id("dagger.hilt.android.plugin")

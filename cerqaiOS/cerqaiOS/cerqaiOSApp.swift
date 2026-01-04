@@ -5,8 +5,8 @@ import AWSCognitoAuthPlugin
 import AWSPluginsCore
 import SwiftUI
 import Shared
-import FirebaseCore
-import FirebaseMessaging
+//import FirebaseCore
+//import FirebaseMessaging
 import UserNotifications
 
 // Swift implementation of IOSAuthCallback for Kotlin interop
@@ -145,7 +145,7 @@ struct cerqaiOSApp: App {
 
     init() {
         // Initialize Firebase
-        FirebaseApp.configure()
+       // FirebaseApp.configure()
 
         // Initialize KMP Koin
         KoinHelperKt.doInitKoin()
@@ -165,14 +165,14 @@ struct cerqaiOSApp: App {
 
         // Setup FCM token provider for KMP
         IosFcmTokenProvider.companion.setNativeTokenProvider { callback in
-            Messaging.messaging().token { token, error in
-                if let error = error {
-                    print("Error fetching FCM token: \(error.localizedDescription)")
-                    callback(nil)
-                } else {
-                    callback(token)
-                }
-            }
+           // Messaging.messaging().token { token, error in
+           //     if let error = error {
+           //         print("Error fetching FCM token: \(error.localizedDescription)")
+           //         callback(nil)
+           //     } else {
+           //         callback(token)
+           //     }
+           // }
         }
     }
 

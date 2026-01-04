@@ -1,7 +1,7 @@
 package com.cerqa.auth
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,8 +11,10 @@ import kotlinx.coroutines.launch
  * ViewModel for authentication UI
  */
 class AuthViewModel(
-    private val authService: AuthService
-) : ViewModel() {
+    private val authService: AuthService,
+    private val mainDispatcher: CoroutineDispatcher
+) {
+    private val viewModelScope = CoroutineScope(mainDispatcher)
 
     val authState: StateFlow<AuthState> = authService.authState
 

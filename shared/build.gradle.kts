@@ -1,9 +1,9 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
-    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.21"
     id("org.jetbrains.compose") version "1.8.2"
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.0"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.21"
     id("com.apollographql.apollo") version "4.1.0"
     kotlin("native.cocoapods")
 }
@@ -78,6 +78,11 @@ kotlin {
             baseName = xcfName
             isStatic = true
         }
+
+        // TODO: Add Ably pod when iOS real-time messaging is implemented
+        // pod("Ably") {
+        //     version = "1.2.33"
+        // }
     }
 
     // Source set declarations.
@@ -98,8 +103,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlin.stdlib)
-                implementation(libs.lifecycle.viewmodel.compose)
-                implementation(libs.navigation.compose)
+                implementation("org.jetbrains.androidx.navigation:navigation-compose:2.9.1")
                 implementation(compose.materialIconsExtended)
                 implementation(compose.material3)
                 implementation(libs.koin.core)
@@ -148,6 +152,9 @@ kotlin {
                 implementation(libs.koin.android)
                 implementation(libs.androidx.core.ktx)
                 implementation(libs.koin.androidx.compose)
+
+                // Lifecycle ViewModel (Android-only, not compatible with iOS Native)
+                implementation(libs.lifecycle.viewmodel.compose)
 
                 // Ktor Android engine
                 implementation("io.ktor:ktor-client-okhttp:3.3.2")
