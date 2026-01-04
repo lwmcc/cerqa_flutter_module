@@ -63,6 +63,7 @@ import com.cerqa.ui.Navigation.AppNavigationActions
 import com.cerqa.ui.Navigation.BottomBar
 import com.cerqa.ui.Navigation.TopBar
 import com.cerqa.ui.Navigation.getTopNavItems
+import com.cerqa.ui.components.topNavItemsMain
 import com.cerqa.ui.animations.slideInFromRight
 import com.cerqa.ui.animations.slideOutToRight
 import com.cerqa.ui.components.navItems
@@ -207,12 +208,16 @@ fun App(
                                 )
                             },
                             actions = {
+                                val iconItem = if (chatTabIndex == 1) {
+                                    topNavItemsMain.getOrNull(1) // Groups - add_group icon
+                                } else {
+                                    topNavItemsMain.getOrNull(0) // Chats - add_chat icon
+                                }
+
                                 IconButton(onClick = { navActions.navigateToContacts() }) {
-                                    Icon(
-                                        painter = if (chatTabIndex == 1) painterResource(Res.drawable.add_group) else painterResource(Res.drawable.add_chat),
-                                        contentDescription = if (chatTabIndex == 1) "Add Group Member" else "Add Contact",
-                                        tint = Color.Unspecified
-                                    )
+                                    iconItem?.iconComposable?.invoke() ?: iconItem?.icon?.let {
+                                        Icon(it, contentDescription = iconItem.contentDescription)
+                                    }
                                 }
                             }
                         )

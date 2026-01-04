@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.cerqa.data.Preferences
 import com.cerqa.models.UserData
-import com.cerqa.ui.components.ModalBottomSheet
+import com.cerqa.ui.components.PhotoBottomSheet
 import com.cerqa.viewmodels.ProfileViewModel
 import org.koin.compose.koinInject
 
@@ -77,7 +77,21 @@ fun Profile(
     }
 
     if (showBottomSheet) {
-        ModalBottomSheet()
+        PhotoBottomSheet(
+            onDismiss = { showBottomSheet = false },
+            onTakePhoto = {
+                // TODO: Implement camera functionality
+                println("Take photo clicked")
+            },
+            onSelectPhoto = {
+                // TODO: Implement photo picker functionality
+                println("Select photo clicked")
+            },
+            onDeletePhoto = {
+                // TODO: Implement delete photo functionality
+                println("Delete photo clicked")
+            }
+        )
     }
 
     Column {

@@ -10,13 +10,11 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Sms
 import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.Color
-import carclub.shared.generated.resources.Res
-import carclub.shared.generated.resources.add_chat
-import carclub.shared.generated.resources.add_group
 import com.cerqa.navigation.AppDestination
 import com.cerqa.ui.Navigation.BottomNavItem
 import com.cerqa.ui.Navigation.TopNavItem
-import org.jetbrains.compose.resources.painterResource
+import com.cerqa.ui.resources.getAddChatIcon
+import com.cerqa.ui.resources.getAddGroupIcon
 
 /**
  * Main bottom navigation bar items (Android)
@@ -51,7 +49,7 @@ actual val topNavItemsMain = listOf(
         route = AppDestination.Contacts.route,
         iconComposable = {
             Icon(
-                painter = painterResource(Res.drawable.add_chat),
+                painter = getAddChatIcon(),
                 contentDescription = "Add chat",
                 tint = Color.Unspecified
             )
@@ -62,7 +60,7 @@ actual val topNavItemsMain = listOf(
         route = AppDestination.Groups.route,
         iconComposable = {
             Icon(
-                painter = painterResource(Res.drawable.add_group),
+                painter = getAddGroupIcon(),
                 contentDescription = "Add group",
                 tint = Color.Unspecified
             )
