@@ -250,3 +250,51 @@ query ListChannelMessages($channelId: ID!, $limit: Int, $nextToken: String) {
     nextToken
   }
 }
+
+# Check if a group name already exists
+query CheckGroupNameExists($name: String!) {
+  listGroups(
+    filter: { name: { eq: $name } }
+    limit: 1
+  ) {
+    items {
+      id
+      name
+    }
+  }
+}
+
+# List all groups
+query ListGroups($filter: ModelGroupFilterInput, $limit: Int, $nextToken: String) {
+  listGroups(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      id
+      groupId
+      name
+      createdAt
+      updatedAt
+    }
+    nextToken
+  }
+}
+
+# List user's groups with details
+query ListUserGroups($userId: ID!, $filter: ModelUserGroupFilterInput, $limit: Int, $nextToken: String) {
+  listUserGroups(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      id
+      userId
+      groupId
+      group {
+        id
+        groupId
+        name
+        createdAt
+        updatedAt
+      }
+      createdAt
+      updatedAt
+    }
+    nextToken
+  }
+}

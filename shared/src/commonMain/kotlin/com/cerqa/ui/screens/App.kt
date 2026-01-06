@@ -208,13 +208,24 @@ fun App(
                                 )
                             },
                             actions = {
+                                // TODO: use when
                                 val iconItem = if (chatTabIndex == 1) {
                                     topNavItemsMain.getOrNull(1) // Groups - add_group icon
                                 } else {
                                     topNavItemsMain.getOrNull(0) // Chats - add_chat icon
                                 }
 
-                                IconButton(onClick = { navActions.navigateToContacts() }) {
+                                IconButton(onClick = {
+                                    when (chatTabIndex) {
+                                        0 -> {
+                                            navActions.navigateToContacts()
+                                        }
+
+                                        1 -> {
+                                            navActions.navigateToGroupsAdd()
+                                        }
+                                    }
+                                }) {
                                     iconItem?.iconComposable?.invoke() ?: iconItem?.icon?.let {
                                         Icon(it, contentDescription = iconItem.contentDescription)
                                     }
@@ -348,7 +359,7 @@ fun App(
                     )
                 }
                 composable(AppDestination.Groups.route) {
-                    Groups()
+                    Groups() // TODO: to remove
                 }
                 composable(AppDestination.Notifications.route) {
                     Inbox()
@@ -371,6 +382,9 @@ fun App(
                 }
                 composable(AppDestination.ContactsSearch.route) {
                     Search()
+                }
+                composable(AppDestination.GroupsAdd.route) {
+                    CreateGroup()
                 }
                 composable(
                     route = AppDestination.Conversation.route,

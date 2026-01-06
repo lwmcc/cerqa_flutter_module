@@ -42,7 +42,7 @@ fun Chat(
     onTabChange: (Int) -> Unit = {},
     onNavigateToContacts: () -> Unit = {},
     onNavigateToConversation: (contactId: String, userName: String) -> Unit = { _, _ -> },
-    chatViewModel: ChatViewModel = koinInject()
+    chatViewModel: ChatViewModel = koinInject(),
 ) {
     val tabs = listOf("Chats", "Groups")
 

@@ -20,14 +20,18 @@ import com.cerqa.repository.AuthRepositoryImpl
 import com.cerqa.repository.ContactsRepository
 import com.cerqa.repository.ConversationRepository
 import com.cerqa.repository.ConversationRepositoryImpl
+import com.cerqa.repository.GroupRepository
+import com.cerqa.repository.GroupRepositoryImpl
 import com.cerqa.repository.MockContactsRepository
 import com.cerqa.repository.NotificationRepository
 import com.cerqa.repository.NotificationRepositoryImpl
 import com.cerqa.repository.RealtimeRepository
 import com.cerqa.repository.RealtimeRepositoryImpl
 import com.cerqa.viewmodels.ApolloContactsViewModel
+import com.cerqa.viewmodels.ChatViewModel
 import com.cerqa.viewmodels.ContactsViewModel
 import com.cerqa.viewmodels.ConversationViewModel
+import com.cerqa.viewmodels.CreateGroupViewModel
 import com.cerqa.viewmodels.MainViewModel
 import com.cerqa.viewmodels.MockContactsViewModel
 import com.cerqa.viewmodels.ProfileViewModel
@@ -69,6 +73,7 @@ val commonModule = module {
     single { TestDataSeeder(apolloClient = get(), authTokenProvider = get()) }
     single<RealtimeRepository> { RealtimeRepositoryImpl(ablyService = get()) }
     single<ConversationRepository> { ConversationRepositoryImpl(apolloClient = get(), ablyClient = get()) }
+    single<GroupRepository> { GroupRepositoryImpl(apolloClient = get()) }
 
     factory { ContactsViewModel(get(), get(), get()) }
     factory { ApolloContactsViewModel(get()) }
@@ -80,7 +85,7 @@ val commonModule = module {
             notifications = get(),
             deviceContactsProvider = get(),
             smsProvider = get(),
-            realtimeRepository = get()
+            realtimeRepository = get(),
         )
     }
     factory {
@@ -89,7 +94,7 @@ val commonModule = module {
             authTokenProvider = get(),
             authRepository = get(),
             userRepository = get(),
-            preferences = get()
+            preferences = get(),
         )
     }
     factory {
@@ -102,7 +107,7 @@ val commonModule = module {
             notifications = get(),
             notificationRepository = get(),
             fcmTokenProvider = get(),
-            realtimeRepository = get()
+            realtimeRepository = get(),
         )
     }
     factory {
@@ -113,10 +118,19 @@ val commonModule = module {
         )
     }
     factory {
-        com.cerqa.viewmodels.ChatViewModel(
+        ChatViewModel(
             authTokenProvider = get(),
             conversationRepository = get(),
-            mainDispatcher = get()
+            mainDispatcher = get(),
+            groupRepository = get(),
+        )
+    }
+    factory {
+        CreateGroupViewModel(
+            groupRepository = get(),
+            contactsRepository = get(),
+            authTokenProvider = get(),
+            mainDispatcher = get(),
         )
     }
 }

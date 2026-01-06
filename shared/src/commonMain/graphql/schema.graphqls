@@ -1,3 +1,10 @@
+directive @aws_api_key on OBJECT | FIELD_DEFINITION | INTERFACE
+directive @aws_iam on OBJECT | FIELD_DEFINITION | INTERFACE
+directive @aws_lambda on FIELD_DEFINITION
+directive @aws_subscribe(mutations: [String!]!) on FIELD_DEFINITION
+directive @aws_auth(cognito_groups: [String!]!) on FIELD_DEFINITION
+directive @aws_cognito_user_pools(cognito_groups: [String!]) on OBJECT | FIELD_DEFINITION | INTERFACE
+
 scalar AWSDate
 scalar AWSTime
 scalar AWSDateTime
@@ -7,13 +14,6 @@ scalar AWSJSON
 scalar AWSURL
 scalar AWSPhone
 scalar AWSIPAddress
-
-directive @aws_api_key on OBJECT | FIELD_DEFINITION
-directive @aws_iam on OBJECT | FIELD_DEFINITION
-directive @aws_cognito_user_pools(cognito_groups: [String]) on OBJECT | FIELD_DEFINITION
-directive @aws_auth(cognito_groups: [String]) on OBJECT | FIELD_DEFINITION
-directive @aws_subscribe(mutations: [String]) on FIELD_DEFINITION
-directive @aws_lambda on OBJECT | FIELD_DEFINITION
 
 schema {
   query: Query
@@ -34,6 +34,15 @@ type Channel @aws_api_key @aws_iam {
   receiver: User
   receiverId: String!
   updatedAt: AWSDateTime!
+}
+
+type CreateGroupResponse @aws_api_key @aws_iam {
+  channelId: String
+  error: String
+  groupId: String
+  memberCount: Int
+  message: String
+  success: Boolean!
 }
 
 type DirectChat {
@@ -128,6 +137,7 @@ type ModelUserGroupConnection @aws_api_key @aws_iam {
 type Mutation {
   createChannel(condition: ModelChannelConditionInput, input: CreateChannelInput!): Channel @aws_api_key @aws_iam
   createGroup(condition: ModelGroupConditionInput, input: CreateGroupInput!): Group @aws_api_key @aws_iam
+  createGroupWithMembers(creatorUserId: String!, groupName: String!, memberUserIds: [String!]!): CreateGroupResponse @aws_api_key @aws_iam
   createInvite(condition: ModelInviteConditionInput, input: CreateInviteInput!): Invite @aws_api_key @aws_iam
   createMessage(condition: ModelMessageConditionInput, input: CreateMessageInput!): Message @aws_api_key @aws_iam
   createUser(condition: ModelUserConditionInput, input: CreateUserInput!): User @aws_api_key @aws_iam

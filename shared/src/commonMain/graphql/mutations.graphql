@@ -200,3 +200,15 @@ mutation SendMessage($input: CreateMessageInput!) {
         updatedAt
     }
 }
+
+# Create a group with members (Lambda function)
+mutation CreateGroupWithMembers($groupName: String!, $memberUserIds: [String!]!, $creatorUserId: String!) {
+    createGroupWithMembers(groupName: $groupName, memberUserIds: $memberUserIds, creatorUserId: $creatorUserId) {
+        success
+        groupId
+        channelId
+        memberCount
+        message
+        error
+    }
+}
