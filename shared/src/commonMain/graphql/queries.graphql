@@ -212,12 +212,16 @@ query ListUserChannels($userId: String!) {
         userId
         userName
         name
+        firstName
+        lastName
       }
       receiver {
         id
         userId
         userName
         name
+        firstName
+        lastName
       }
       messages(limit: 1, sortDirection: DESC) {
         items {
@@ -279,7 +283,7 @@ query ListGroups($filter: ModelGroupFilterInput, $limit: Int, $nextToken: String
 }
 
 # List user's groups with details
-query ListUserGroups($userId: ID!, $filter: ModelUserGroupFilterInput, $limit: Int, $nextToken: String) {
+query ListUserGroups($filter: ModelUserGroupFilterInput, $limit: Int, $nextToken: String) {
   listUserGroups(filter: $filter, limit: $limit, nextToken: $nextToken) {
     items {
       id

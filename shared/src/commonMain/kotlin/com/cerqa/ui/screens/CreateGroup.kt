@@ -1,5 +1,6 @@
 package com.cerqa.ui.screens
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,9 +11,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
@@ -30,10 +34,16 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cerqa.ui.components.MembersBottomSheet
@@ -42,8 +52,27 @@ import org.koin.compose.koinInject
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun CreateGroup(createGroupViewModel: CreateGroupViewModel = koinInject()) {
+fun CreateGroup(
+    createGroupViewModel: CreateGroupViewModel = koinInject(),
+    onGroupCreated: () -> Unit = {}
+) {
     val uiState by createGroupViewModel.uiState.collectAsState()
+
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    // Request focus and show keyboard when screen is first displayed
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+        keyboardController?.show()
+    }
+
+    // Navigate when group is created successfully
+    LaunchedEffect(uiState.groupCreatedSuccessfully) {
+        if (uiState.groupCreatedSuccessfully) {
+            onGroupCreated()
+        }
+    }
 
     // Show members bottom sheet when requested
     if (uiState.showMembersBottomSheet) {
@@ -56,9 +85,19 @@ fun CreateGroup(createGroupViewModel: CreateGroupViewModel = koinInject()) {
         )
     }
 
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .imePadding() // Prevents UI from being squished by keyboard on iOS
+            .verticalScroll(scrollState) // Allow scrolling when keyboard is visible
+            .pointerInput(Unit) {
+                // Dismiss keyboard when tapping outside text fields
+                detectTapGestures(onTap = {
+                    keyboardController?.hide()
+                })
+            }
             .padding(24.dp)
     ) {
         Text(
@@ -69,61 +108,30 @@ fun CreateGroup(createGroupViewModel: CreateGroupViewModel = koinInject()) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Group Name Input with Validation
         OutlinedTextField(
             value = uiState.groupName,
             onValueChange = { createGroupViewModel.onGroupNameChanged(it) },
             label = { Text("Group Name") },
             placeholder = { Text("Enter group name (min 3 characters)") },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
             isError = uiState.groupNameError != null,
             supportingText = {
-                when {
-                    uiState.groupNameError != null -> {
-                        Text(
-                            text = uiState.groupNameError ?: "",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    uiState.groupName.length >= 3 && !uiState.groupNameExists && !uiState.isCheckingName -> {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Available",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Name available",
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
+                if (uiState.groupNameError != null) {
+                    Text(
+                        text = uiState.groupNameError ?: "",
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
             },
             trailingIcon = {
-                when {
-                    uiState.isCheckingName -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
-                        )
-                    }
-                    uiState.groupNameError != null -> {
-                        Icon(
-                            imageVector = Icons.Default.Error,
-                            contentDescription = "Error",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    uiState.groupName.length >= 3 && !uiState.groupNameExists -> {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Valid",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                if (uiState.groupNameError != null) {
+                    Icon(
+                        imageVector = Icons.Default.Error,
+                        contentDescription = "Error",
+                        tint = MaterialTheme.colorScheme.error
+                    )
                 }
             },
             singleLine = true
@@ -158,7 +166,6 @@ fun CreateGroup(createGroupViewModel: CreateGroupViewModel = koinInject()) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Selected Members as Chips
         if (uiState.selectedMembers.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -166,11 +173,6 @@ fun CreateGroup(createGroupViewModel: CreateGroupViewModel = koinInject()) {
                     .padding(vertical = 32.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "No members added yet",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         } else {
             FlowRow(
@@ -211,9 +213,8 @@ fun CreateGroup(createGroupViewModel: CreateGroupViewModel = koinInject()) {
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        // Error Message
         if (uiState.error != null) {
             Text(
                 text = uiState.error ?: "",
@@ -223,16 +224,15 @@ fun CreateGroup(createGroupViewModel: CreateGroupViewModel = koinInject()) {
             )
         }
 
-        // Create Button
         Button(
             onClick = { createGroupViewModel.createGroup() },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             enabled = !uiState.isCreatingGroup &&
-                      uiState.groupName.length >= 3 &&
-                      !uiState.groupNameExists &&
-                      uiState.selectedMembers.isNotEmpty()
+                    uiState.groupName.length >= 3 &&
+                    uiState.groupNameError == null &&
+                    uiState.selectedMembers.isNotEmpty()
         ) {
             if (uiState.isCreatingGroup) {
                 CircularProgressIndicator(

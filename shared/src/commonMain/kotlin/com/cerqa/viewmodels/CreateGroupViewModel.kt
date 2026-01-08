@@ -20,19 +20,19 @@ import kotlinx.coroutines.launch
  */
 data class CreateGroupUiState(
     val groupName: String = "",
-    val isCheckingName: Boolean = false,
-    val groupNameExists: Boolean = false,
     val groupNameError: String? = null,
     val contacts: List<CurrentContact> = emptyList(),
     val isLoadingContacts: Boolean = false,
     val selectedMembers: Set<String> = emptySet(), // Set of user IDs
     val showMembersBottomSheet: Boolean = false,
     val isCreatingGroup: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val groupCreatedSuccessfully: Boolean = false
 )
 
 /**
- * ViewModel for creating a new group with name validation and member selection
+ * ViewModel for creating a new group with member selection
+ * Duplicate validation is handled by backend Lambda function
  */
 @OptIn(FlowPreview::class)
 class CreateGroupViewModel(
@@ -46,67 +46,23 @@ class CreateGroupViewModel(
     private val _uiState = MutableStateFlow(CreateGroupUiState())
     val uiState: StateFlow<CreateGroupUiState> = _uiState.asStateFlow()
 
-    // Flow for debouncing group name input
-    private val groupNameFlow = MutableStateFlow("")
-
     init {
-        // Set up debounced group name validation
-        viewModelScope.launch {
-            groupNameFlow
-                .debounce(500) // Wait 500ms after user stops typing
-                .filter { it.length >= 3 } // Only search if 3+ characters
-                .collect { groupName ->
-                    checkGroupNameAvailability(groupName)
-                }
-        }
-
         // Load user's contacts when ViewModel is created
         loadContacts()
     }
 
     /**
-     * Update the group name and trigger debounced search
+     * Update the group name
      */
     fun onGroupNameChanged(name: String) {
         _uiState.value = _uiState.value.copy(
             groupName = name,
-            groupNameError = null
+            groupNameError = if (name.isNotEmpty() && name.length < 3) {
+                "Group name must be at least 3 characters"
+            } else {
+                null
+            }
         )
-
-        // If name is less than 3 characters, clear validation state
-        if (name.length < 3) {
-            _uiState.value = _uiState.value.copy(
-                isCheckingName = false,
-                groupNameExists = false,
-                groupNameError = if (name.isNotEmpty()) "Group name must be at least 3 characters" else null
-            )
-        } else {
-            // Start checking indicator
-            _uiState.value = _uiState.value.copy(isCheckingName = true)
-        }
-
-        // Emit to debounced flow
-        groupNameFlow.value = name
-    }
-
-    /**
-     * Check if group name is available (debounced)
-     */
-    private suspend fun checkGroupNameAvailability(groupName: String) {
-        groupRepository.checkGroupNameExists(groupName)
-            .onSuccess { exists ->
-                _uiState.value = _uiState.value.copy(
-                    isCheckingName = false,
-                    groupNameExists = exists,
-                    groupNameError = if (exists) "Group name already exists" else null
-                )
-            }
-            .onFailure { error ->
-                _uiState.value = _uiState.value.copy(
-                    isCheckingName = false,
-                    groupNameError = "Error checking name: ${error.message}"
-                )
-            }
     }
 
     /**
@@ -171,6 +127,7 @@ class CreateGroupViewModel(
 
     /**
      * Create the group with selected members
+     * Backend will validate for duplicate names
      */
     fun createGroup() {
         val state = _uiState.value
@@ -178,11 +135,6 @@ class CreateGroupViewModel(
         // Validation
         if (state.groupName.length < 3) {
             _uiState.value = state.copy(error = "Group name must be at least 3 characters")
-            return
-        }
-
-        if (state.groupNameExists) {
-            _uiState.value = state.copy(error = "Group name already exists")
             return
         }
 
@@ -211,9 +163,9 @@ class CreateGroupViewModel(
             )
                 .onSuccess { groupId ->
                     _uiState.value = _uiState.value.copy(
-                        isCreatingGroup = false
+                        isCreatingGroup = false,
+                        groupCreatedSuccessfully = true
                     )
-                    // TODO: Navigate to the created group or show success message
                     println("CreateGroupViewModel: Group created successfully with ID: $groupId")
                 }
                 .onFailure { error ->

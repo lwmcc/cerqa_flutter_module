@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -46,7 +47,6 @@ fun Chat(
 ) {
     val tabs = listOf("Chats", "Groups")
 
-    // Load channels when composable is first displayed
     LaunchedEffect(Unit) {
         chatViewModel.loadUserChannels()
     }
@@ -70,7 +70,9 @@ fun Chat(
                 chatViewModel = chatViewModel,
                 onNavigateToConversation = onNavigateToConversation
             )
-            1 -> GroupsTab()
+            1 -> GroupsTab(
+                chatViewModel = chatViewModel
+            )
         }
     }
 }
@@ -126,8 +128,7 @@ private fun ChatsTab(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        }
-        else -> {
+        } else -> {
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -145,63 +146,66 @@ private fun ChatsTab(
 }
 
 @Composable
-private fun GroupsTab() {
-    // Dummy group data
-    val groups = remember {
-        listOf(
-            GroupItem(
-                id = "1",
-                name = "Car Club Members",
-                lastMessage = "John: When is the next meetup?",
-                timestamp = "3:45 PM",
-                memberCount = 12,
-                unreadCount = 5
-            ),
-            GroupItem(
-                id = "2",
-                name = "Weekend Warriors",
-                lastMessage = "Mike: I'm in for Saturday!",
-                timestamp = "11:20 AM",
-                memberCount = 8,
-                unreadCount = 0
-            ),
-            GroupItem(
-                id = "3",
-                name = "Classic Cars Enthusiasts",
-                lastMessage = "Sarah: Check out my new ride!",
-                timestamp = "Yesterday",
-                memberCount = 24,
-                unreadCount = 2
-            ),
-            GroupItem(
-                id = "4",
-                name = "Track Day Crew",
-                lastMessage = "Alex: Next event is Aug 15th",
-                timestamp = "Tuesday",
-                memberCount = 6,
-                unreadCount = 0
-            )
-        )
+private fun GroupsTab(
+    chatViewModel: ChatViewModel
+) {
+    val uiState by chatViewModel.uiState.collectAsState()
+
+    // Load groups when tab is first displayed
+    LaunchedEffect(Unit) {
+        chatViewModel.loadUserGroups()
     }
 
-    if (groups.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "No groups yet",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+    when {
+        uiState.isLoadingGroups -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(groups, key = { it.id }) { group ->
-                GroupListItem(group = group, onClick = { /* TODO: Open group */ })
-                HorizontalDivider()
+        uiState.groupsError != null -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Error: ${uiState.groupsError}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(onClick = { chatViewModel.loadUserGroups() }) {
+                        Text("Retry")
+                    }
+                }
+            }
+        }
+        uiState.groups.isEmpty() -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No groups yet",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        else -> {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(uiState.groups, key = { it.id }) { userGroup ->
+                    GroupListItemFromUserGroup(
+                        userGroup = userGroup,
+                        onClick = { /* TODO: Open group chat */ }
+                    )
+                    HorizontalDivider()
+                }
             }
         }
     }
@@ -213,30 +217,37 @@ private fun ChatListItemFromChannel(
     currentUserId: String,
     onNavigateToConversation: (contactId: String, userName: String) -> Unit
 ) {
+    // Helper function to get display name with fallback logic
+    fun getDisplayName(user: com.cerqa.graphql.ListUserChannelsQuery.Creator?): String {
+        return user?.userName?.takeIf { it.isNotEmpty() }
+            ?: user?.name?.takeIf { it.isNotEmpty() }
+            ?: "${user?.firstName ?: ""} ${user?.lastName ?: ""}".trim().takeIf { it.isNotEmpty() }
+            ?: "Unknown"
+    }
+
+    fun getDisplayNameFromReceiver(user: com.cerqa.graphql.ListUserChannelsQuery.Receiver?): String {
+        return user?.userName?.takeIf { it.isNotEmpty() }
+            ?: user?.name?.takeIf { it.isNotEmpty() }
+            ?: "${user?.firstName ?: ""} ${user?.lastName ?: ""}".trim().takeIf { it.isNotEmpty() }
+            ?: "Unknown"
+    }
+
     // Determine which user is the OTHER person (not the current user)
     val (otherUserId, displayName) = when {
         channel.creator?.userId == currentUserId -> {
             // Current user is the creator, so show receiver
-            val userId = channel.receiver?.userId ?: ""
-            val name = channel.receiver?.name ?: channel.receiver?.userName ?: "Unknown"
-            userId to name
+            (channel.receiver?.userId ?: "") to getDisplayNameFromReceiver(channel.receiver)
         }
         channel.receiver?.userId == currentUserId -> {
             // Current user is the receiver, so show creator
-            val userId = channel.creator?.userId ?: ""
-            val name = channel.creator?.name ?: channel.creator?.userName ?: "Unknown"
-            userId to name
+            (channel.creator?.userId ?: "") to getDisplayName(channel.creator)
         }
         // Fallback: show creator if available, otherwise receiver
         channel.creator != null -> {
-            val userId = channel.creator.userId ?: ""
-            val name = channel.creator.name ?: channel.creator.userName ?: "Unknown"
-            userId to name
+            (channel.creator.userId ?: "") to getDisplayName(channel.creator)
         }
         else -> {
-            val userId = channel.receiver?.userId ?: ""
-            val name = channel.receiver?.name ?: channel.receiver?.userName ?: "Unknown"
-            userId to name
+            (channel.receiver?.userId ?: "") to getDisplayNameFromReceiver(channel.receiver)
         }
     }
     val lastMessage = channel.messages?.items?.filterNotNull()?.firstOrNull()
@@ -270,7 +281,20 @@ private fun ChatListItemFromChannel(
             )
         }
 
-        Column(
+        IconButton(
+            onClick = {
+                // TODO: show chat options
+            },
+            modifier = Modifier.align(Alignment.CenterVertically)
+        ) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "Chat Options for $displayName",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+/*        Column(
             horizontalAlignment = Alignment.End
         ) {
             Text(
@@ -278,7 +302,7 @@ private fun ChatListItemFromChannel(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        }
+        }*/
     }
 }
 
@@ -333,6 +357,63 @@ private fun formatTimestamp(timestamp: String): String {
         timestamp.substringBefore("T")
     } catch (e: Exception) {
         "Recently"
+    }
+}
+
+@Composable
+private fun GroupListItemFromUserGroup(
+    userGroup: com.cerqa.graphql.ListUserGroupsQuery.Item,
+    onClick: () -> Unit
+) {
+    val groupName = userGroup.group?.name ?: "Unknown Group"
+    val createdAt = userGroup.group?.createdAt ?: ""
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = groupName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Created ${formatTimestamp(createdAt)}",// TODO: dont format like this
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+        }
+
+        IconButton(
+            onClick = {
+                // TODO: show chat options
+            },
+            modifier = Modifier.align(Alignment.CenterVertically)
+        ) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "Chat Options",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+
+/*        Column(
+            horizontalAlignment = Alignment.End
+        ) {
+            Text(
+                text = formatTimestamp(createdAt),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }*/
     }
 }
 

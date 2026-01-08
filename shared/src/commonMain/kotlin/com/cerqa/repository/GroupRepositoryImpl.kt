@@ -15,6 +15,9 @@ class GroupRepositoryImpl(
 
     override suspend fun checkGroupNameExists(groupName: String): Result<Boolean> {
         return try {
+            // Note: This query may return cached results. However, the backend Lambda function
+            // also validates for duplicate names, so the backend will reject duplicates even if
+            // the frontend cache is stale.
             val response = apolloClient
                 .query(CheckGroupNameExistsQuery(name = groupName))
                 .execute()
@@ -68,8 +71,38 @@ class GroupRepositoryImpl(
     }
 
     override suspend fun getUserGroups(userId: String): Result<List<ListUserGroupsQuery.Item>> {
-        println("GroupRepositoryImpl ***** getUserGroups()")
-        // TODO: just to compile
-        return Result.success(emptyList())
+        return try {
+            val filter = Optional.present(
+                com.cerqa.graphql.type.ModelUserGroupFilterInput(
+                    userId = Optional.present(
+                        com.cerqa.graphql.type.ModelIDInput(
+                            eq =Optional.present(userId)
+                        )
+                    )
+                )
+            )
+
+            val response = apolloClient
+                .query(ListUserGroupsQuery(
+                        filter = filter,
+                        limit = Optional.Absent,
+                        nextToken = Optional.Absent
+                    ))
+                .execute()
+
+            if (response.hasErrors()) {
+                val errors = response.errors?.joinToString { it.message }
+                println("GroupRepository: getUserGroups error - $errors")
+                Result.failure(Exception(errors ?: "Unknown error fetching user groups"))
+            } else {
+                val items = response.data?.listUserGroups?.items?.filterNotNull() ?: emptyList()
+                println("GroupRepository: Fetched ${items.size} groups for user $userId")
+                Result.success(items)
+            }
+        } catch (e: Exception) {
+            println("GroupRepository: getUserGroups error - ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
     }
 }

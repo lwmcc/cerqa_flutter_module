@@ -384,7 +384,12 @@ fun App(
                     Search()
                 }
                 composable(AppDestination.GroupsAdd.route) {
-                    CreateGroup()
+                    CreateGroup(
+                        onGroupCreated = {
+                            // Navigate back to Chat screen on Groups tab
+                            navActions.popBackStack()
+                        }
+                    )
                 }
                 composable(
                     route = AppDestination.Conversation.route,
