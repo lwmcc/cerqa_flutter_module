@@ -1,6 +1,8 @@
 package com.cerqa.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.cerqa.ui.components.ChatBottomSheet
 import com.cerqa.viewmodels.ChatViewModel
 import org.koin.compose.koinInject
 
@@ -39,23 +42,45 @@ data class GroupItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Chat(
+    // TODO: use actions to reduce params
     selectedTabIndex: Int = 0,
     onTabChange: (Int) -> Unit = {},
     onNavigateToContacts: () -> Unit = {},
+    onNavigateToEditGroup: () -> Unit,
     onNavigateToConversation: (contactId: String, userName: String) -> Unit = { _, _ -> },
     chatViewModel: ChatViewModel = koinInject(),
 ) {
     val tabs = listOf("Chats", "Groups")
+    // TODO: do something to reduce number of params, reduce sheets to one class
+    var showBottomSheet by remember { mutableStateOf(false) }
+    var showGroupChatBottomSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         chatViewModel.loadUserChannels()
     }
 
+    if (showBottomSheet) {
+        ChatBottomSheet(
+            showBottomSheet = { show ->
+                showBottomSheet = show
+            }
+        ) {
+            GroupChatBottomSheet() {
+                onNavigateToEditGroup()
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        TabRow(selectedTabIndex = selectedTabIndex) {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            containerColor = MaterialTheme.colorScheme.background,
+            divider = { } // Remove the divider line
+        ) {
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTabIndex == index,
@@ -68,10 +93,17 @@ fun Chat(
         when (selectedTabIndex) {
             0 -> ChatsTab(
                 chatViewModel = chatViewModel,
-                onNavigateToConversation = onNavigateToConversation
+                onNavigateToConversation = onNavigateToConversation,
+                onLongClick = {
+                    showBottomSheet = true
+                },
             )
+
             1 -> GroupsTab(
-                chatViewModel = chatViewModel
+                chatViewModel = chatViewModel,
+                onLongClick = {
+                    showBottomSheet = true
+                },
             )
         }
     }
@@ -81,7 +113,8 @@ fun Chat(
 private fun ChatsTab(
     chatViewModel: ChatViewModel,
     onNavigateToConversation: (contactId: String, userName: String) -> Unit,
-    authTokenProvider: com.cerqa.auth.AuthTokenProvider = koinInject()
+    onLongClick: () -> Unit,
+    authTokenProvider: com.cerqa.auth.AuthTokenProvider = koinInject(),
 ) {
     val uiState by chatViewModel.uiState.collectAsState()
     var currentUserId by remember { mutableStateOf("") }
@@ -99,6 +132,7 @@ private fun ChatsTab(
                 CircularProgressIndicator()
             }
         }
+
         uiState.error != null -> {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -117,6 +151,7 @@ private fun ChatsTab(
                 }
             }
         }
+
         uiState.channels.isEmpty() -> {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -128,15 +163,20 @@ private fun ChatsTab(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        } else -> {
+        }
+
+        else -> {
             LazyColumn(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
             ) {
                 items(uiState.channels, key = { it.id }) { channel ->
                     ChatListItemFromChannel(
                         channel = channel,
                         currentUserId = currentUserId,
-                        onNavigateToConversation = onNavigateToConversation
+                        onNavigateToConversation = onNavigateToConversation,
+                        onLongClick = onLongClick,
                     )
                     HorizontalDivider()
                 }
@@ -147,7 +187,8 @@ private fun ChatsTab(
 
 @Composable
 private fun GroupsTab(
-    chatViewModel: ChatViewModel
+    chatViewModel: ChatViewModel,
+    onLongClick: () -> Unit,
 ) {
     val uiState by chatViewModel.uiState.collectAsState()
 
@@ -165,6 +206,7 @@ private fun GroupsTab(
                 CircularProgressIndicator()
             }
         }
+
         uiState.groupsError != null -> {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -183,6 +225,7 @@ private fun GroupsTab(
                 }
             }
         }
+
         uiState.groups.isEmpty() -> {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -195,14 +238,20 @@ private fun GroupsTab(
                 )
             }
         }
+
         else -> {
             LazyColumn(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
             ) {
                 items(uiState.groups, key = { it.id }) { userGroup ->
                     GroupListItemFromUserGroup(
                         userGroup = userGroup,
-                        onClick = { /* TODO: Open group chat */ }
+                        onClick = {
+                            /* TODO: Open group chat */
+                        },
+                        onLongClick = onLongClick,
                     )
                     HorizontalDivider()
                 }
@@ -215,7 +264,8 @@ private fun GroupsTab(
 private fun ChatListItemFromChannel(
     channel: com.cerqa.graphql.ListUserChannelsQuery.Item,
     currentUserId: String,
-    onNavigateToConversation: (contactId: String, userName: String) -> Unit
+    onNavigateToConversation: (contactId: String, userName: String) -> Unit,
+    onLongClick: () -> Unit,
 ) {
     // Helper function to get display name with fallback logic
     fun getDisplayName(user: com.cerqa.graphql.ListUserChannelsQuery.Creator?): String {
@@ -238,6 +288,7 @@ private fun ChatListItemFromChannel(
             // Current user is the creator, so show receiver
             (channel.receiver?.userId ?: "") to getDisplayNameFromReceiver(channel.receiver)
         }
+
         channel.receiver?.userId == currentUserId -> {
             // Current user is the receiver, so show creator
             (channel.creator?.userId ?: "") to getDisplayName(channel.creator)
@@ -246,6 +297,7 @@ private fun ChatListItemFromChannel(
         channel.creator != null -> {
             (channel.creator.userId ?: "") to getDisplayName(channel.creator)
         }
+
         else -> {
             (channel.receiver?.userId ?: "") to getDisplayNameFromReceiver(channel.receiver)
         }
@@ -259,9 +311,14 @@ private fun ChatListItemFromChannel(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                onNavigateToConversation(otherUserId, displayName)
-            }
+            .combinedClickable(
+                onClick = {
+                    onNavigateToConversation(otherUserId, displayName)
+                },
+                onLongClick = {
+                    onLongClick()
+                }
+            )
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -281,20 +338,7 @@ private fun ChatListItemFromChannel(
             )
         }
 
-        IconButton(
-            onClick = {
-                // TODO: show chat options
-            },
-            modifier = Modifier.align(Alignment.CenterVertically)
-        ) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "Chat Options for $displayName",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-/*        Column(
+        Column(
             horizontalAlignment = Alignment.End
         ) {
             Text(
@@ -302,7 +346,7 @@ private fun ChatListItemFromChannel(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        }*/
+        }
     }
 }
 
@@ -363,7 +407,8 @@ private fun formatTimestamp(timestamp: String): String {
 @Composable
 private fun GroupListItemFromUserGroup(
     userGroup: com.cerqa.graphql.ListUserGroupsQuery.Item,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
     val groupName = userGroup.group?.name ?: "Unknown Group"
     val createdAt = userGroup.group?.createdAt ?: ""
@@ -371,7 +416,14 @@ private fun GroupListItemFromUserGroup(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = {
+                    onClick()
+                },
+                onLongClick = {
+                    onLongClick()
+                }
+            )
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -391,21 +443,7 @@ private fun GroupListItemFromUserGroup(
             )
         }
 
-        IconButton(
-            onClick = {
-                // TODO: show chat options
-            },
-            modifier = Modifier.align(Alignment.CenterVertically)
-        ) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "Chat Options",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-
-/*        Column(
+        Column(
             horizontalAlignment = Alignment.End
         ) {
             Text(
@@ -413,7 +451,7 @@ private fun GroupListItemFromUserGroup(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        }*/
+        }
     }
 }
 
@@ -465,5 +503,79 @@ private fun GroupListItem(group: GroupItem, onClick: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+
+
+@Composable
+fun GroupChatBottomSheet(editGroup: () -> Unit) {
+    OutlinedButton(
+        onClick = {
+            editGroup()
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.error
+        )
+    ) {
+        Text("Edit Group")
+    }
+    OutlinedButton(
+        onClick = {
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.error
+        )
+    ) {
+        Text("Delete Chat")
+    }
+    OutlinedButton(
+        onClick = {
+
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.error
+        )
+    ) {
+        Text("Leave Chat")
+    }
+}
+
+// TODO: move these
+@Composable
+fun ChatBottomSheet() {
+    OutlinedButton(
+        onClick = {
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.error
+        )
+    ) {
+        Text("Delete Chat")
+    }
+    OutlinedButton(
+        onClick = {
+
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.error
+        )
+    ) {
+        Text("Leave Chat")
     }
 }

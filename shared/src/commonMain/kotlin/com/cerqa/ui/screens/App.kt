@@ -75,11 +75,14 @@ import com.cerqa.data.Preferences
 import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.ui.animations.slideInFromLeft
 import com.cerqa.ui.animations.slideOutToLeft
+import com.cerqa.ui.theme.SystemBarsEffect
 import org.koin.compose.koinInject
 import carclub.shared.generated.resources.Res
 import carclub.shared.generated.resources.add_chat
 import carclub.shared.generated.resources.add_group
+import carclub.shared.generated.resources.create_group
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -119,13 +122,20 @@ fun App(
     }
 
     MaterialTheme {
+        // Set system status bar and navigation bar colors to match the app background
+        SystemBarsEffect(
+            statusBarColor = MaterialTheme.colorScheme.background,
+            navigationBarColor = MaterialTheme.colorScheme.background,
+            isDarkIcons = true  // Use dark icons for light backgrounds
+        )
+
         Scaffold(
             topBar = {
                 when (currentRoute) {
                     null, AppDestination.Main.route -> {
                         TopAppBar(
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                                containerColor = MaterialTheme.colorScheme.background
                             ),
                             navigationIcon = {
                                 IconButton(
@@ -158,7 +168,7 @@ fun App(
                     AppDestination.Chat.route -> {
                         TopAppBar(
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                                containerColor = MaterialTheme.colorScheme.background
                             ),
                             navigationIcon = {
                                 IconButton(onClick = { navActions.popBackStack() }) {
@@ -210,9 +220,11 @@ fun App(
                             actions = {
                                 // TODO: use when
                                 val iconItem = if (chatTabIndex == 1) {
-                                    topNavItemsMain.getOrNull(1) // Groups - add_group icon
+                                    // Groups
+                                    topNavItemsMain.getOrNull(1)
                                 } else {
-                                    topNavItemsMain.getOrNull(0) // Chats - add_chat icon
+                                    // Chats
+                                    topNavItemsMain.getOrNull(0)
                                 }
 
                                 IconButton(onClick = {
@@ -237,7 +249,7 @@ fun App(
                     AppDestination.Contacts.route -> {
                         TopAppBar(
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                                containerColor = MaterialTheme.colorScheme.background
                             ),
                             navigationIcon = {
                                 IconButton(onClick = { navActions.popBackStack() }) {
@@ -293,6 +305,44 @@ fun App(
                         )
                     }
 
+                    AppDestination.GroupsAdd.route -> {
+                        TopAppBar(
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.background
+                            ),
+                            navigationIcon = {
+                                IconButton(onClick = { navActions.popBackStack() }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
+                                }
+                            },
+                            title = {
+                                Text("Create Group")
+                            },
+                        )
+                    }
+
+                    AppDestination.EditGroup.route -> {
+                        TopAppBar(
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.background
+                            ),
+                            navigationIcon = {
+                                IconButton(onClick = { navActions.popBackStack() }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
+                                }
+                            },
+                            title = {
+                                Text("Edit Group")
+                            },
+                        )
+                    }
+
                     else -> {
                         TopBar(
                             searchViewModel = searchViewModel,
@@ -342,6 +392,9 @@ fun App(
                             navController.navigate(
                                 AppDestination.Conversation.createRoute(contactId, userName)
                             )
+                        },
+                        onNavigateToEditGroup = {
+                            navActions.navigateToEditGroup()
                         }
                     )
                 }
@@ -387,6 +440,13 @@ fun App(
                     CreateGroup(
                         onGroupCreated = {
                             // Navigate back to Chat screen on Groups tab
+                            navActions.popBackStack()
+                        }
+                    )
+                }
+                composable(AppDestination.EditGroup.route) {
+                    EditGroup(
+                        onDismiss = {
                             navActions.popBackStack()
                         }
                     )

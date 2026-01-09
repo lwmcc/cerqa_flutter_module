@@ -47,7 +47,7 @@ fun BottomBar(
     onBottomNavClick: (String) -> Unit,
 ) {
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer
+        containerColor = MaterialTheme.colorScheme.background
     ) {
 
         items.forEach { item ->

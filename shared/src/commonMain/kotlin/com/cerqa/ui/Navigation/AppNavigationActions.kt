@@ -17,6 +17,7 @@ class AppNavigationActions(private val navController: NavHostController) {
         }
     }
 
+    // TODO: remove using tabs
     fun navigateToGroups() {
         navController.navigate(AppDestination.Groups.route) {
             launchSingleTop = true
@@ -54,6 +55,12 @@ class AppNavigationActions(private val navController: NavHostController) {
             }
             launchSingleTop = true
             restoreState = true
+        }
+    }
+
+    fun navigateToEditGroup() {
+        navController.navigate(AppDestination.EditGroup.route) {
+            launchSingleTop = true
         }
     }
 

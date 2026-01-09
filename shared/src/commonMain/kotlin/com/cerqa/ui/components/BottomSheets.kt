@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.outlined.Circle
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -183,6 +185,7 @@ fun MembersBottomSheet(
                         CircularProgressIndicator()
                     }
                 }
+
                 contacts.isEmpty() -> {
                     Box(
                         modifier = Modifier
@@ -197,6 +200,7 @@ fun MembersBottomSheet(
                         )
                     }
                 }
+
                 else -> {
                     LazyColumn(
                         modifier = Modifier
@@ -267,6 +271,24 @@ private fun ContactSelectionItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ChatBottomSheet(
+    showBottomSheet: (Boolean) -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = { showBottomSheet(false) },
+    ) {
+        Column {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                content = content,
+            )
         }
     }
 }

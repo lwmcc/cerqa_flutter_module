@@ -1,5 +1,6 @@
 package com.cerqa.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,7 +21,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.AssistChip
@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cerqa.ui.components.MembersBottomSheet
+import com.cerqa.utils.NameValidator
 import com.cerqa.viewmodels.CreateGroupViewModel
 import org.koin.compose.koinInject
 
@@ -60,6 +61,9 @@ fun CreateGroup(
 
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    // TODO: move this
+    val groupNameRegex = Regex("^[\\p{L}\\p{N} _.-]*$")
 
     // Request focus and show keyboard when screen is first displayed
     LaunchedEffect(Unit) {
@@ -90,6 +94,7 @@ fun CreateGroup(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .imePadding() // Prevents UI from being squished by keyboard on iOS
             .verticalScroll(scrollState) // Allow scrolling when keyboard is visible
             .pointerInput(Unit) {
@@ -100,17 +105,14 @@ fun CreateGroup(
             }
             .padding(24.dp)
     ) {
-        Text(
-            text = "Create Group",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
             value = uiState.groupName,
-            onValueChange = { createGroupViewModel.onGroupNameChanged(it) },
+            onValueChange = { groupName ->
+                if (NameValidator.isValidFinal(groupName)) {
+                    createGroupViewModel.onGroupNameChanged(groupName)
+                }
+            },
             label = { Text("Group Name") },
             placeholder = { Text("Enter group name (min 3 characters)") },
             modifier = Modifier
@@ -223,6 +225,9 @@ fun CreateGroup(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
         }
+
+        // To push button to bottom
+        Spacer(modifier = Modifier.weight(1f))
 
         Button(
             onClick = { createGroupViewModel.createGroup() },
