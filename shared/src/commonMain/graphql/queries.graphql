@@ -289,7 +289,6 @@ query ListUserGroups($filter: ModelUserGroupFilterInput, $limit: Int, $nextToken
       id
       userId
       groupId
-      role
       group {
         id
         groupId

@@ -104,9 +104,7 @@ fun CreateGroup(
         OutlinedTextField(
             value = uiState.groupName,
             onValueChange = { groupName ->
-                if (NameValidator.isValidFinal(groupName)) {
-                    createGroupViewModel.onGroupNameChanged(groupName.trim())
-                }
+                createGroupViewModel.onGroupNameChanged(groupName.trim())
             },
             label = { Text("Group Name") },
             placeholder = { Text("Enter group name (min 3 characters)") },

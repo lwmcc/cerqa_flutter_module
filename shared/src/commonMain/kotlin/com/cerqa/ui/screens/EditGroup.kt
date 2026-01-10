@@ -13,6 +13,8 @@ import androidx.compose.ui.unit.dp
 fun EditGroup(
     onDismiss: () -> Unit = {}
 ) {
+    var newGroupName by remember { mutableStateOf("") }
+
     // TODO: Implement edit group functionality
     Column(
         modifier = Modifier
@@ -22,10 +24,18 @@ fun EditGroup(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+
+        OutlinedTextField(
+            value = "",
+            onValueChange = { newGroupName = it },
+            label = { Text("Username") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Text(
-            text = "Edit Group",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            text = "Add member",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(16.dp))

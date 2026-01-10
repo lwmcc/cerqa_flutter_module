@@ -3,17 +3,24 @@ package com.cerqa.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,11 +28,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.cerqa.graphql.ListUserChannelsQuery
+import com.cerqa.graphql.ListUserGroupsQuery
 import com.cerqa.ui.components.ChatBottomSheet
+import com.cerqa.ui.components.ChatFilterRow
 import com.cerqa.viewmodels.ChatViewModel
 import com.cerqa.viewmodels.ChatListItem
 import org.koin.compose.koinInject
 
+// TODO: move out
 // Dummy data models
 data class ChatItem(
     val id: String,
@@ -143,7 +154,7 @@ fun Chat(
                     onClick = {
                         groupToDelete?.let { (groupId, channelId) ->
                             actionInProgress = true
-/*                            chatViewModel.deleteGroup(groupId, channelId) { result ->
+                            chatViewModel.deleteGroup(groupId, channelId) { result ->
                                 actionInProgress = false
                                 showDeleteConfirmation = false
                                 groupToDelete = null
@@ -151,7 +162,7 @@ fun Chat(
                                     // TODO: Show error message to user
                                     println("Error deleting group: ${error.message}")
                                 }
-                            }*/
+                            }
                         }
                     },
                     enabled = !actionInProgress,
@@ -283,7 +294,18 @@ fun Chat(
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background)
                 ) {
-                    items(uiState.combinedChats, key = { it.id }) { chatItem ->
+
+                    val chats = uiState.combinedChats
+
+                    if (chats.isNotEmpty()) {
+                        item {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                ChatFilterRow()
+                            }
+                        }
+                    }
+
+                    items(chats, key = { it.id }) { chatItem ->
                         when (chatItem) {
                             is ChatListItem.DirectChat -> {
                                 DirectChatListItem(
@@ -291,7 +313,8 @@ fun Chat(
                                     currentUserId = currentUserId,
                                     onNavigateToConversation = onNavigateToConversation,
                                     onLongClick = { channelId, userName ->
-                                        longClickedChat = LongClickedChat.DirectChat(channelId, userName)
+                                        longClickedChat =
+                                            LongClickedChat.DirectChat(channelId, userName)
                                     }
                                 )
                             }
@@ -302,7 +325,8 @@ fun Chat(
                                         // TODO: Navigate to group conversation
                                     },
                                     onLongClick = { groupId, groupName, role ->
-                                        longClickedChat = LongClickedChat.GroupChat(groupId, groupName, role)
+                                        longClickedChat =
+                                            LongClickedChat.GroupChat(groupId, groupName, role)
                                     }
                                 )
                             }
@@ -713,7 +737,7 @@ private fun GroupListItem(group: GroupItem, onClick: () -> Unit) {
 }
 
 
-
+// TODO: move
 // Bottom sheet for Group Chats
 @Composable
 fun GroupChatBottomSheet(
@@ -724,7 +748,8 @@ fun GroupChatBottomSheet(
     onLeaveGroup: () -> Unit
 ) {
     // If role is null, we don't show creator-specific actions for safety
-    val isCreator = role == com.cerqa.graphql.type.GroupMemberRole.CREATOR
+    // TODO: testing
+    val isCreator = true // role == com.cerqa.graphql.type.GroupMemberRole.CREATOR
 
     Column(
         modifier = Modifier
@@ -732,70 +757,100 @@ fun GroupChatBottomSheet(
             .padding(vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Show "Edit Group" only for creators
-        if (isCreator) {
+
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Archive,
+                contentDescription = "Archive",
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurface
+            )
             Text(
-                text = "Edit Group",
+                text = "Archive",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Normal,
+            )
+        }
+
+        // Show "Delete Group" only for creators
+        if (isCreator) {
+            Row(
                 modifier = Modifier
                     .clickable { editGroup() }
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .fillMaxWidth(),
-            )
-        }
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = "Edit Group",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Edit Group",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Normal,
+                )
+            }
 
-        Text(
-            text = "Archive",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Normal,
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .fillMaxWidth(),
-        )
-
-        // Show "Delete Group" only for creators
-        if (isCreator) {
-            Text(
-                text = "Delete Group",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Normal,
-                color = MaterialTheme.colorScheme.error,
+            Row(
                 modifier = Modifier
                     .clickable { onDeleteGroup() }
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .fillMaxWidth(),
-            )
-        }
-
-        // Show "Leave Group" only for non-creators (members/moderators)
-        if (!isCreator) {
-            Text(
-                text = "Leave Group",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Normal,
-                color = MaterialTheme.colorScheme.error,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Delete Group",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.error
+                )
+                Text(
+                    text = "Delete Group",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        } else {
+            Row(
                 modifier = Modifier
                     .clickable { onLeaveGroup() }
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .fillMaxWidth(),
-            )
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ExitToApp,
+                    contentDescription = "Leave Group",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.error
+                )
+                Text(
+                    text = "Leave Group",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
         }
-
-        Text(
-            text = "Cancel",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Normal,
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .fillMaxWidth(),
-        )
     }
 }
 
+// TODO: move
 // Bottom sheet for Direct Chats
 @Composable
 fun DirectChatBottomSheet(
@@ -808,32 +863,47 @@ fun DirectChatBottomSheet(
             .padding(vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = "Archive",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Normal,
+        Row(
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .fillMaxWidth(),
-        )
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Archive,
+                contentDescription = "Archive",
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "Archive",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Normal,
+            )
+        }
 
-        Text(
-            text = "Delete",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Normal,
+        Row(
             modifier = Modifier
+                .clickable { onDeleteChat() }
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .fillMaxWidth(),
-        )
-
-        Text(
-            text = "Cancel",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Normal,
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .fillMaxWidth(),
-        )
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Delete,
+                contentDescription = "Delete",
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.error
+            )
+            Text(
+                text = "Delete",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.error,
+                fontWeight = FontWeight.Normal,
+            )
+        }
     }
 }
 
@@ -849,14 +919,16 @@ private fun DirectChatListItem(
     fun getDisplayName(user: com.cerqa.graphql.ListUserChannelsQuery.Creator?): String {
         return user?.userName?.takeIf { it.isNotEmpty() }
             ?: user?.name?.takeIf { it.isNotEmpty() }
-            ?: "${user?.firstName ?: ""} ${user?.lastName ?: ""}".trim().takeIf { it.isNotEmpty() }
+            ?: "${user?.firstName ?: ""} ${user?.lastName ?: ""}".trim()
+                .takeIf { it.isNotEmpty() }
             ?: "Unknown"
     }
 
     fun getDisplayNameFromReceiver(user: com.cerqa.graphql.ListUserChannelsQuery.Receiver?): String {
         return user?.userName?.takeIf { it.isNotEmpty() }
             ?: user?.name?.takeIf { it.isNotEmpty() }
-            ?: "${user?.firstName ?: ""} ${user?.lastName ?: ""}".trim().takeIf { it.isNotEmpty() }
+            ?: "${user?.firstName ?: ""} ${user?.lastName ?: ""}".trim()
+                .takeIf { it.isNotEmpty() }
             ?: "Unknown"
     }
 
@@ -864,6 +936,7 @@ private fun DirectChatListItem(
         channel.creator?.userId == currentUserId -> {
             Pair(channel.receiver?.userId ?: "", getDisplayNameFromReceiver(channel.receiver))
         }
+
         else -> {
             Pair(channel.creator?.userId ?: "", getDisplayName(channel.creator))
         }
@@ -933,7 +1006,8 @@ private fun GroupChatListItem(
     val groupName = userGroup.group?.name ?: "Unknown Group"
     val groupId = userGroup.group?.id ?: ""
     val createdAt = userGroup.group?.createdAt ?: ""
-    val role = userGroup.role  // Get role from UserGroup
+    val role: com.cerqa.graphql.type.GroupMemberRole? =
+        null  // Role not yet in production backend
 
     Row(
         modifier = Modifier
@@ -983,4 +1057,18 @@ private fun GroupChatListItem(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
+}
+
+sealed class ChatItemModel {
+    abstract val id: String
+
+    data class DirectChat(
+        override val id: String,
+        val channel: ListUserChannelsQuery.Item
+    ) : ChatItemModel()
+
+    data class GroupChat(
+        override val id: String,
+        val group: ListUserGroupsQuery.Item
+    ) : ChatItemModel()
 }
