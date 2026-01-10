@@ -103,7 +103,6 @@ fun App(
 
     var searchQuery by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
-    var chatTabIndex by remember { mutableStateOf(0) } // 0 = Chats, 1 = Groups
 
     val unreadNotificationCount by mainViewModel.unreadNotificationCount.collectAsState()
 
@@ -218,29 +217,19 @@ fun App(
                                 )
                             },
                             actions = {
-                                // TODO: use when
-                                val iconItem = if (chatTabIndex == 1) {
-                                    // Groups
-                                    topNavItemsMain.getOrNull(1)
-                                } else {
-                                    // Chats
-                                    topNavItemsMain.getOrNull(0)
+                                // Add contacts button
+                                IconButton(onClick = { navActions.navigateToContacts() }) {
+                                    topNavItemsMain.getOrNull(0)?.iconComposable?.invoke()
+                                        ?: topNavItemsMain.getOrNull(0)?.icon?.let {
+                                            Icon(it, contentDescription = "Add Contact")
+                                        }
                                 }
-
-                                IconButton(onClick = {
-                                    when (chatTabIndex) {
-                                        0 -> {
-                                            navActions.navigateToContacts()
+                                // Add group button
+                                IconButton(onClick = { navActions.navigateToGroupsAdd() }) {
+                                    topNavItemsMain.getOrNull(1)?.iconComposable?.invoke()
+                                        ?: topNavItemsMain.getOrNull(1)?.icon?.let {
+                                            Icon(it, contentDescription = "Add Group")
                                         }
-
-                                        1 -> {
-                                            navActions.navigateToGroupsAdd()
-                                        }
-                                    }
-                                }) {
-                                    iconItem?.iconComposable?.invoke() ?: iconItem?.icon?.let {
-                                        Icon(it, contentDescription = iconItem.contentDescription)
-                                    }
                                 }
                             }
                         )
@@ -383,8 +372,6 @@ fun App(
             ) {
                 composable(AppDestination.Chat.route) {
                     Chat(
-                        selectedTabIndex = chatTabIndex,
-                        onTabChange = { chatTabIndex = it },
                         onNavigateToContacts = {
                             navActions.navigateToContacts()
                         },

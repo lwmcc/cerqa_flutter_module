@@ -4,7 +4,15 @@ import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
 import com.cerqa.graphql.CheckGroupNameExistsQuery
 import com.cerqa.graphql.CreateGroupWithMembersMutation
+import com.cerqa.graphql.DeleteChannelMutation
+import com.cerqa.graphql.DeleteGroupMutation
+import com.cerqa.graphql.DeleteUserChannelMutation
+import com.cerqa.graphql.DeleteUserGroupMutation
 import com.cerqa.graphql.ListUserGroupsQuery
+import com.cerqa.graphql.type.DeleteChannelInput
+import com.cerqa.graphql.type.DeleteGroupInput
+import com.cerqa.graphql.type.DeleteUserChannelInput
+import com.cerqa.graphql.type.DeleteUserGroupInput
 
 /**
  * Apollo implementation of GroupRepository
@@ -101,6 +109,91 @@ class GroupRepositoryImpl(
             }
         } catch (e: Exception) {
             println("GroupRepository: getUserGroups error - ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteGroup(groupId: String, channelId: String): Result<Unit> {
+        return try {
+            // Step 1: Delete all UserGroup entries for this group
+            // Note: In a real implementation, you'd want to query for all UserGroup entries first
+            // For now, we rely on cascade delete or manual cleanup
+
+            // Step 2: Delete all UserChannel entries for this channel
+            // Note: Same as above - ideally query first then delete
+
+            // Step 3: Delete the Channel
+            val channelResponse = apolloClient
+                .mutation(DeleteChannelMutation(
+                    input = DeleteChannelInput(id = channelId)
+                ))
+                .execute()
+
+            if (channelResponse.hasErrors()) {
+                val errors = channelResponse.errors?.joinToString { it.message }
+                println("GroupRepository: deleteGroup - channel deletion error - $errors")
+                // Continue even if channel delete fails
+            }
+
+            // Step 4: Delete the Group
+            val groupResponse = apolloClient
+                .mutation(DeleteGroupMutation(
+                    input = DeleteGroupInput(id = groupId)
+                ))
+                .execute()
+
+            if (groupResponse.hasErrors()) {
+                val errors = groupResponse.errors?.joinToString { it.message }
+                println("GroupRepository: deleteGroup error - $errors")
+                Result.failure(Exception(errors ?: "Unknown error deleting group"))
+            } else {
+                println("GroupRepository: Group deleted successfully")
+                Result.success(Unit)
+            }
+        } catch (e: Exception) {
+            println("GroupRepository: deleteGroup error - ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun leaveGroup(
+        userGroupId: String,
+        userChannelId: String,
+        channelId: String
+    ): Result<Unit> {
+        return try {
+            // Step 1: Delete the UserChannel entry
+            val channelResponse = apolloClient
+                .mutation(DeleteUserChannelMutation(
+                    input = DeleteUserChannelInput(id = userChannelId)
+                ))
+                .execute()
+
+            if (channelResponse.hasErrors()) {
+                val errors = channelResponse.errors?.joinToString { it.message }
+                println("GroupRepository: leaveGroup - channel deletion error - $errors")
+                // Continue even if channel delete fails
+            }
+
+            // Step 2: Delete the UserGroup entry
+            val groupResponse = apolloClient
+                .mutation(DeleteUserGroupMutation(
+                    input = DeleteUserGroupInput(id = userGroupId)
+                ))
+                .execute()
+
+            if (groupResponse.hasErrors()) {
+                val errors = groupResponse.errors?.joinToString { it.message }
+                println("GroupRepository: leaveGroup error - $errors")
+                Result.failure(Exception(errors ?: "Unknown error leaving group"))
+            } else {
+                println("GroupRepository: Left group successfully")
+                Result.success(Unit)
+            }
+        } catch (e: Exception) {
+            println("GroupRepository: leaveGroup error - ${e.message}")
             e.printStackTrace()
             Result.failure(e)
         }

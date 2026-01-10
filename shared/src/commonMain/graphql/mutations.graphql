@@ -212,3 +212,31 @@ mutation CreateGroupWithMembers($groupName: String!, $memberUserIds: [String!]!,
         error
     }
 }
+
+# Delete a UserGroup entry (leave a group)
+mutation DeleteUserGroup($input: DeleteUserGroupInput!) {
+    deleteUserGroup(input: $input) {
+        id
+    }
+}
+
+# Delete a UserChannel entry
+mutation DeleteUserChannel($input: DeleteUserChannelInput!) {
+    deleteUserChannel(input: $input) {
+        id
+    }
+}
+
+# Delete a Group
+mutation DeleteGroup($input: DeleteGroupInput!) {
+    deleteGroup(input: $input) {
+        id
+    }
+}
+
+# Delete a Channel
+mutation DeleteChannel($input: DeleteChannelInput!) {
+    deleteChannel(input: $input) {
+        id
+    }
+}

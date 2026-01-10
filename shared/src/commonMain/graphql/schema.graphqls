@@ -261,6 +261,7 @@ type UserGroup @aws_api_key @aws_iam {
   group: Group
   groupId: ID!
   id: ID!
+  role: GroupMemberRole!
   updatedAt: AWSDateTime!
   user: User
   userId: ID!
@@ -282,6 +283,12 @@ enum ModelAttributeTypes {
 enum ModelSortDirection {
   ASC
   DESC
+}
+
+enum GroupMemberRole {
+  CREATOR
+  MODERATOR
+  MEMBER
 }
 
 input CreateChannelInput {
@@ -330,6 +337,7 @@ input CreateUserContactInput {
 input CreateUserGroupInput {
   groupId: ID!
   id: ID
+  role: GroupMemberRole!
   userId: ID!
 }
 
@@ -712,6 +720,7 @@ input ModelSubscriptionUserGroupFilterInput {
   groupId: ModelSubscriptionIDInput
   id: ModelSubscriptionIDInput
   or: [ModelSubscriptionUserGroupFilterInput]
+  role: ModelSubscriptionStringInput
   updatedAt: ModelSubscriptionStringInput
   userId: ModelSubscriptionIDInput
 }
@@ -801,6 +810,7 @@ input ModelUserGroupConditionInput {
   groupId: ModelIDInput
   not: ModelUserGroupConditionInput
   or: [ModelUserGroupConditionInput]
+  role: ModelStringInput
   updatedAt: ModelStringInput
   userId: ModelIDInput
 }
@@ -812,6 +822,7 @@ input ModelUserGroupFilterInput {
   id: ModelIDInput
   not: ModelUserGroupFilterInput
   or: [ModelUserGroupFilterInput]
+  role: ModelStringInput
   updatedAt: ModelStringInput
   userId: ModelIDInput
 }
@@ -862,6 +873,7 @@ input UpdateUserContactInput {
 input UpdateUserGroupInput {
   groupId: ID
   id: ID!
+  role: GroupMemberRole
   userId: ID
 }
 

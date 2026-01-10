@@ -40,13 +40,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cerqa.ui.components.MembersBottomSheet
+import com.cerqa.ui.utils.KeyboardManager
 import com.cerqa.utils.NameValidator
 import com.cerqa.viewmodels.CreateGroupViewModel
 import org.koin.compose.koinInject
@@ -58,18 +57,14 @@ fun CreateGroup(
     onGroupCreated: () -> Unit = {}
 ) {
     val uiState by createGroupViewModel.uiState.collectAsState()
-
-    val focusRequester = remember { FocusRequester() }
+    val keyboardManager = remember { KeyboardManager() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    // TODO: move this
-    val groupNameRegex = Regex("^[\\p{L}\\p{N} _.-]*$")
-
-    // Request focus and show keyboard when screen is first displayed
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-        keyboardController?.show()
-    }
+    // Platform-specific keyboard handling
+    keyboardManager.setupKeyboardHandling(
+        onShow = { /* Keyboard shown */ },
+        onHide = { /* Keyboard hidden */ }
+    )
 
     // Navigate when group is created successfully
     LaunchedEffect(uiState.groupCreatedSuccessfully) {
@@ -110,19 +105,19 @@ fun CreateGroup(
             value = uiState.groupName,
             onValueChange = { groupName ->
                 if (NameValidator.isValidFinal(groupName)) {
-                    createGroupViewModel.onGroupNameChanged(groupName)
+                    createGroupViewModel.onGroupNameChanged(groupName.trim())
                 }
             },
             label = { Text("Group Name") },
             placeholder = { Text("Enter group name (min 3 characters)") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester),
+            modifier = keyboardManager.addFocusModifier(
+                Modifier.fillMaxWidth()
+            ),
             isError = uiState.groupNameError != null,
             supportingText = {
                 if (uiState.groupNameError != null) {
                     Text(
-                        text = uiState.groupNameError ?: "",
+                        text = uiState.groupNameError.orEmpty(),
                         color = MaterialTheme.colorScheme.error
                     )
                 }
