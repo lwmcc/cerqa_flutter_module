@@ -6,8 +6,11 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -15,10 +18,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cerqa.ui.components.ChatBottomSheet
 import com.cerqa.viewmodels.ChatViewModel
+import com.cerqa.viewmodels.ChatListItem
 import org.koin.compose.koinInject
 
 // Dummy data models
@@ -39,36 +44,190 @@ data class GroupItem(
     val unreadCount: Int = 0
 )
 
+// Sealed class to track which chat was long-clicked
+sealed class LongClickedChat {
+    data class DirectChat(val channelId: String, val userName: String) : LongClickedChat()
+    data class GroupChat(val groupId: String, val groupName: String, val role: com.cerqa.graphql.type.GroupMemberRole?) : LongClickedChat()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Chat(
-    // TODO: use actions to reduce params
-    selectedTabIndex: Int = 0,
-    onTabChange: (Int) -> Unit = {},
     onNavigateToContacts: () -> Unit = {},
     onNavigateToEditGroup: () -> Unit,
     onNavigateToConversation: (contactId: String, userName: String) -> Unit = { _, _ -> },
     chatViewModel: ChatViewModel = koinInject(),
 ) {
-    val tabs = listOf("Chats", "Groups")
-    // TODO: do something to reduce number of params, reduce sheets to one class
-    var showBottomSheet by remember { mutableStateOf(false) }
-    var showGroupChatBottomSheet by remember { mutableStateOf(false) }
+    var longClickedChat by remember { mutableStateOf<LongClickedChat?>(null) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var showLeaveConfirmation by remember { mutableStateOf(false) }
+    var groupToDelete by remember { mutableStateOf<Pair<String, String>?>(null) } // groupId, channelId
+    var groupToLeave by remember { mutableStateOf<Pair<String, String>?>(null) } // userGroupId, userChannelId
+    var actionInProgress by remember { mutableStateOf(false) }
+
+    val uiState by chatViewModel.uiState.collectAsState()
+    var currentUserId by remember { mutableStateOf("") }
+    val authTokenProvider: com.cerqa.auth.AuthTokenProvider = koinInject()
 
     LaunchedEffect(Unit) {
-        chatViewModel.loadUserChannels()
+        currentUserId = authTokenProvider.getCurrentUserId() ?: ""
+        chatViewModel.loadAllChats()
     }
 
-    if (showBottomSheet) {
+    // Show appropriate bottom sheet based on chat type
+    longClickedChat?.let { chat ->
         ChatBottomSheet(
             showBottomSheet = { show ->
-                showBottomSheet = show
+                if (!show) longClickedChat = null
             }
         ) {
-            GroupChatBottomSheet() {
-                onNavigateToEditGroup()
+            when (chat) {
+                is LongClickedChat.DirectChat -> {
+                    DirectChatBottomSheet(
+                        userName = chat.userName,
+                        onDeleteChat = {
+                            // TODO: Delete direct chat
+                            longClickedChat = null
+                        }
+                    )
+                }
+                is LongClickedChat.GroupChat -> {
+                    // Find the full group data to get IDs we need
+                    val groupData = uiState.groups.find { it.group?.id == chat.groupId }
+
+                    GroupChatBottomSheet(
+                        groupName = chat.groupName,
+                        role = chat.role,
+                        editGroup = {
+                            onNavigateToEditGroup()
+                            longClickedChat = null
+                        },
+                        onDeleteGroup = {
+                            // Show confirmation dialog
+                            groupData?.let { group ->
+                                // Find the channel for this group
+                                val channel = uiState.channels.find {
+                                    it.receiverId == group.group?.groupId
+                                }
+                                groupToDelete = Pair(group.group?.id ?: "", channel?.id ?: "")
+                                showDeleteConfirmation = true
+                            }
+                            longClickedChat = null
+                        },
+                        onLeaveGroup = {
+                            // Show confirmation dialog
+                            groupData?.let { group ->
+                                // Find the user channel for this group's channel
+                                val channel = uiState.channels.find {
+                                    it.receiverId == group.group?.groupId
+                                }
+                                groupToLeave = Pair(group.id, "" /* TODO: find userChannelId */)
+                                showLeaveConfirmation = true
+                            }
+                            longClickedChat = null
+                        }
+                    )
+                }
             }
         }
+    }
+
+    // Delete Group Confirmation Dialog
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Delete Group?") },
+            text = { Text("Are you sure you want to delete this group? This action cannot be undone and will remove the group for all members.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        groupToDelete?.let { (groupId, channelId) ->
+                            actionInProgress = true
+/*                            chatViewModel.deleteGroup(groupId, channelId) { result ->
+                                actionInProgress = false
+                                showDeleteConfirmation = false
+                                groupToDelete = null
+                                result.onFailure { error ->
+                                    // TODO: Show error message to user
+                                    println("Error deleting group: ${error.message}")
+                                }
+                            }*/
+                        }
+                    },
+                    enabled = !actionInProgress,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    if (actionInProgress) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onError,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Delete")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteConfirmation = false },
+                    enabled = !actionInProgress
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Leave Group Confirmation Dialog
+    if (showLeaveConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showLeaveConfirmation = false },
+            title = { Text("Leave Group?") },
+            text = { Text("Are you sure you want to leave this group? You will no longer have access to group messages.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        groupToLeave?.let { (userGroupId, userChannelId) ->
+                            actionInProgress = true
+                            chatViewModel.leaveGroup(userGroupId, userChannelId) { result ->
+                                actionInProgress = false
+                                showLeaveConfirmation = false
+                                groupToLeave = null
+                                result.onFailure { error ->
+                                    // TODO: Show error message to user
+                                    println("Error leaving group: ${error.message}")
+                                }
+                            }
+                        }
+                    },
+                    enabled = !actionInProgress,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    if (actionInProgress) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onError,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Leave")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showLeaveConfirmation = false },
+                    enabled = !actionInProgress
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     Column(
@@ -76,35 +235,82 @@ fun Chat(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        TabRow(
-            selectedTabIndex = selectedTabIndex,
-            containerColor = MaterialTheme.colorScheme.background,
-            divider = { } // Remove the divider line
-        ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTabIndex == index,
-                    onClick = { onTabChange(index) },
-                    text = { Text(title) }
-                )
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-        }
 
-        when (selectedTabIndex) {
-            0 -> ChatsTab(
-                chatViewModel = chatViewModel,
-                onNavigateToConversation = onNavigateToConversation,
-                onLongClick = {
-                    showBottomSheet = true
-                },
-            )
+            uiState.error != null -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Error: ${uiState.error}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = { chatViewModel.loadAllChats() }) {
+                            Text("Retry")
+                        }
+                    }
+                }
+            }
 
-            1 -> GroupsTab(
-                chatViewModel = chatViewModel,
-                onLongClick = {
-                    showBottomSheet = true
-                },
-            )
+            uiState.combinedChats.isEmpty() -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No chats yet",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
+                ) {
+                    items(uiState.combinedChats, key = { it.id }) { chatItem ->
+                        when (chatItem) {
+                            is ChatListItem.DirectChat -> {
+                                DirectChatListItem(
+                                    chatItem = chatItem,
+                                    currentUserId = currentUserId,
+                                    onNavigateToConversation = onNavigateToConversation,
+                                    onLongClick = { channelId, userName ->
+                                        longClickedChat = LongClickedChat.DirectChat(channelId, userName)
+                                    }
+                                )
+                            }
+                            is ChatListItem.GroupChat -> {
+                                GroupChatListItem(
+                                    chatItem = chatItem,
+                                    onClick = {
+                                        // TODO: Navigate to group conversation
+                                    },
+                                    onLongClick = { groupId, groupName, role ->
+                                        longClickedChat = LongClickedChat.GroupChat(groupId, groupName, role)
+                                    }
+                                )
+                            }
+                        }
+                        HorizontalDivider()
+                    }
+                }
+            }
         }
     }
 }
@@ -508,74 +714,273 @@ private fun GroupListItem(group: GroupItem, onClick: () -> Unit) {
 
 
 
+// Bottom sheet for Group Chats
 @Composable
-fun GroupChatBottomSheet(editGroup: () -> Unit) {
-    OutlinedButton(
-        onClick = {
-            editGroup()
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.error
-        )
-    ) {
-        Text("Edit Group")
-    }
-    OutlinedButton(
-        onClick = {
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.error
-        )
-    ) {
-        Text("Delete Chat")
-    }
-    OutlinedButton(
-        onClick = {
+fun GroupChatBottomSheet(
+    groupName: String,
+    role: com.cerqa.graphql.type.GroupMemberRole?,
+    editGroup: () -> Unit,
+    onDeleteGroup: () -> Unit,
+    onLeaveGroup: () -> Unit
+) {
+    // If role is null, we don't show creator-specific actions for safety
+    val isCreator = role == com.cerqa.graphql.type.GroupMemberRole.CREATOR
 
-        },
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.error
-        )
+            .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("Leave Chat")
+        // Show "Edit Group" only for creators
+        if (isCreator) {
+            Text(
+                text = "Edit Group",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Normal,
+                modifier = Modifier
+                    .clickable { editGroup() }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .fillMaxWidth(),
+            )
+        }
+
+        Text(
+            text = "Archive",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .fillMaxWidth(),
+        )
+
+        // Show "Delete Group" only for creators
+        if (isCreator) {
+            Text(
+                text = "Delete Group",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Normal,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .clickable { onDeleteGroup() }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .fillMaxWidth(),
+            )
+        }
+
+        // Show "Leave Group" only for non-creators (members/moderators)
+        if (!isCreator) {
+            Text(
+                text = "Leave Group",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Normal,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .clickable { onLeaveGroup() }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .fillMaxWidth(),
+            )
+        }
+
+        Text(
+            text = "Cancel",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .fillMaxWidth(),
+        )
     }
 }
 
-// TODO: move these
+// Bottom sheet for Direct Chats
 @Composable
-fun ChatBottomSheet() {
-    OutlinedButton(
-        onClick = {
-        },
+fun DirectChatBottomSheet(
+    userName: String,
+    onDeleteChat: () -> Unit
+) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.error
-        )
+            .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("Delete Chat")
-    }
-    OutlinedButton(
-        onClick = {
+        Text(
+            text = "Archive",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .fillMaxWidth(),
+        )
 
-        },
+        Text(
+            text = "Delete",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .fillMaxWidth(),
+        )
+
+        Text(
+            text = "Cancel",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun DirectChatListItem(
+    chatItem: ChatListItem.DirectChat,
+    currentUserId: String,
+    onNavigateToConversation: (contactId: String, userName: String) -> Unit,
+    onLongClick: (channelId: String, userName: String) -> Unit
+) {
+    val channel = chatItem.channel
+
+    fun getDisplayName(user: com.cerqa.graphql.ListUserChannelsQuery.Creator?): String {
+        return user?.userName?.takeIf { it.isNotEmpty() }
+            ?: user?.name?.takeIf { it.isNotEmpty() }
+            ?: "${user?.firstName ?: ""} ${user?.lastName ?: ""}".trim().takeIf { it.isNotEmpty() }
+            ?: "Unknown"
+    }
+
+    fun getDisplayNameFromReceiver(user: com.cerqa.graphql.ListUserChannelsQuery.Receiver?): String {
+        return user?.userName?.takeIf { it.isNotEmpty() }
+            ?: user?.name?.takeIf { it.isNotEmpty() }
+            ?: "${user?.firstName ?: ""} ${user?.lastName ?: ""}".trim().takeIf { it.isNotEmpty() }
+            ?: "Unknown"
+    }
+
+    val (otherUserId, displayName) = when {
+        channel.creator?.userId == currentUserId -> {
+            Pair(channel.receiver?.userId ?: "", getDisplayNameFromReceiver(channel.receiver))
+        }
+        else -> {
+            Pair(channel.creator?.userId ?: "", getDisplayName(channel.creator))
+        }
+    }
+
+    val lastMessage = channel.messages?.items?.filterNotNull()?.firstOrNull()
+    val lastMessageText = lastMessage?.content ?: "No messages yet"
+    val timestamp = lastMessage?.createdAt ?: channel.createdAt
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.error
-        )
+            .combinedClickable(
+                onClick = { onNavigateToConversation(otherUserId, displayName) },
+                onLongClick = { onLongClick(channel.id, displayName) }
+            )
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("Leave Chat")
+        // Round avatar for direct chat
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "User avatar",
+                modifier = Modifier.size(28.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = displayName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = lastMessageText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+        }
+
+        Text(
+            text = formatTimestamp(timestamp),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun GroupChatListItem(
+    chatItem: ChatListItem.GroupChat,
+    onClick: () -> Unit,
+    onLongClick: (groupId: String, groupName: String, role: com.cerqa.graphql.type.GroupMemberRole?) -> Unit
+) {
+    val userGroup = chatItem.group
+    val groupName = userGroup.group?.name ?: "Unknown Group"
+    val groupId = userGroup.group?.id ?: ""
+    val createdAt = userGroup.group?.createdAt ?: ""
+    val role = userGroup.role  // Get role from UserGroup
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = { onClick() },
+                onLongClick = { onLongClick(groupId, groupName, role) }
+            )
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Rounded square avatar for group chat
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.secondaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Group,
+                contentDescription = "Group avatar",
+                modifier = Modifier.size(28.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = groupName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Group chat",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+        }
+
+        Text(
+            text = formatTimestamp(createdAt),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

@@ -162,6 +162,7 @@ export const schema = a.schema({
      .model({
        userId: a.id().required(),
        groupId: a.id().required(),
+       role: a.enum(['CREATOR', 'MODERATOR', 'MEMBER']),
        user: a.belongsTo('User', 'userId'),
        group: a.belongsTo('Group', 'groupId'),
      })
