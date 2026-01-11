@@ -1,19 +1,20 @@
 package com.cerqa.realtime
 
-sealed class RealtimeChannel(val prefix: String) {
+sealed class RealtimeChannel(protected val prefix: String) {
     abstract val name: String
 
-    data class UserInbox(val userId: String) : RealtimeChannel("inbox:user:") {
+    data class Chat(val conversationId: String) : RealtimeChannel(prefix = "chat:") {
         override val name: String
-            get() = "user:$userId:inbox"
+            get() = "$prefix$conversationId"
     }
 
-    data class Chat(val conversationId: String) : RealtimeChannel("chat:") {
+    data class InboxMessages(val userId: String) : RealtimeChannel(prefix = "inbox:messages:") {
         override val name: String
-            get() = "chat:$conversationId"
+            get() = "$prefix$userId"
     }
 
-    companion object {
-        const val NOTIFICATIONS_INVITES = "notifications:invites"
+    data class InboxNotifications(val userId: String) : RealtimeChannel(prefix = "inbox:notifications:") {
+        override val name: String
+            get() = "$prefix$userId"
     }
 }
