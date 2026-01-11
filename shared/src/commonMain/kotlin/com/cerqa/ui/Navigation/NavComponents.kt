@@ -9,6 +9,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import com.cerqa.navigation.AppDestination
 import com.cerqa.ui.components.topNavItemsContacts
 import com.cerqa.ui.components.topNavItemsGroups
@@ -47,7 +48,8 @@ fun BottomBar(
     onBottomNavClick: (String) -> Unit,
 ) {
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        tonalElevation = 0.dp
     ) {
 
         items.forEach { item ->

@@ -129,12 +129,14 @@ fun App(
        // )
 
         Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 when (currentRoute) {
                     null, AppDestination.Main.route -> {
                         TopAppBar(
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.background
+                                containerColor = MaterialTheme.colorScheme.background,
+                                scrolledContainerColor = MaterialTheme.colorScheme.background
                             ),
                             navigationIcon = {
                                 IconButton(
@@ -167,7 +169,8 @@ fun App(
                     AppDestination.Chat.route -> {
                         TopAppBar(
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.background
+                                containerColor = MaterialTheme.colorScheme.background,
+                                scrolledContainerColor = MaterialTheme.colorScheme.background
                             ),
                             navigationIcon = {
                                 IconButton(onClick = { navActions.popBackStack() }) {
@@ -245,7 +248,8 @@ fun App(
                     AppDestination.Contacts.route -> {
                         TopAppBar(
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.background
+                                containerColor = MaterialTheme.colorScheme.background,
+                                scrolledContainerColor = MaterialTheme.colorScheme.background
                             ),
                             navigationIcon = {
                                 IconButton(onClick = { navActions.popBackStack() }) {
@@ -293,18 +297,14 @@ fun App(
                                     )
                                 )
                             },
-                            actions = {
-                                IconButton(onClick = { /* TODO: Add Contact Action */ }) {
-                                    Icon(Icons.Default.Add, contentDescription = "Add Contact")
-                                }
-                            }
                         )
                     }
 
                     AppDestination.GroupsAdd.route -> {
                         TopAppBar(
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.background
+                                containerColor = MaterialTheme.colorScheme.background,
+                                scrolledContainerColor = MaterialTheme.colorScheme.background
                             ),
                             navigationIcon = {
                                 IconButton(onClick = { navActions.popBackStack() }) {
@@ -323,7 +323,8 @@ fun App(
                     AppDestination.EditGroup.route -> {
                         TopAppBar(
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.background
+                                containerColor = MaterialTheme.colorScheme.background,
+                                scrolledContainerColor = MaterialTheme.colorScheme.background
                             ),
                             navigationIcon = {
                                 IconButton(onClick = { navActions.popBackStack() }) {

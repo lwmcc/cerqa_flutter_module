@@ -60,13 +60,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            AppTheme {
+            AppTheme(dynamicColor = false) {
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface),
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 5.dp,
+                        .background(MaterialTheme.colorScheme.background),
+                    color = MaterialTheme.colorScheme.background,
+                    tonalElevation = 0.dp,
                 ) {
                     Authenticator(
                         state = stateProvider.provide(),

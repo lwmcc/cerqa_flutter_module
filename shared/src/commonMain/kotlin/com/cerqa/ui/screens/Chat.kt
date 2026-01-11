@@ -331,7 +331,6 @@ fun Chat(
                                 )
                             }
                         }
-                        HorizontalDivider()
                     }
                 }
             }
@@ -408,7 +407,6 @@ private fun ChatsTab(
                         onNavigateToConversation = onNavigateToConversation,
                         onLongClick = onLongClick,
                     )
-                    HorizontalDivider()
                 }
             }
         }
@@ -483,7 +481,6 @@ private fun GroupsTab(
                         },
                         onLongClick = onLongClick,
                     )
-                    HorizontalDivider()
                 }
             }
         }
@@ -946,54 +943,50 @@ private fun DirectChatListItem(
     val lastMessageText = lastMessage?.content ?: "No messages yet"
     val timestamp = lastMessage?.createdAt ?: channel.createdAt
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = { onNavigateToConversation(otherUserId, displayName) },
-                onLongClick = { onLongClick(channel.id, displayName) }
-            )
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Round avatar for direct chat
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "User avatar",
-                modifier = Modifier.size(28.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
-
-        Column(modifier = Modifier.weight(1f)) {
+    ListItem(
+        headlineContent = {
             Text(
                 text = displayName,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
-            Spacer(modifier = Modifier.height(4.dp))
+        },
+        supportingContent = {
             Text(
                 text = lastMessageText,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
-        }
-
-        Text(
-            text = formatTimestamp(timestamp),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        leadingContent = {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "User avatar",
+                    modifier = Modifier.size(28.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        },
+        trailingContent = {
+            Text(
+                text = formatTimestamp(timestamp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        modifier = Modifier.combinedClickable(
+            onClick = { onNavigateToConversation(otherUserId, displayName) },
+            onLongClick = { onLongClick(channel.id, displayName) }
         )
-    }
+    )
 }
 
 @Composable
@@ -1009,54 +1002,50 @@ private fun GroupChatListItem(
     val role: com.cerqa.graphql.type.GroupMemberRole? =
         null  // Role not yet in production backend
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = { onClick() },
-                onLongClick = { onLongClick(groupId, groupName, role) }
-            )
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Rounded square avatar for group chat
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.secondaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Group,
-                contentDescription = "Group avatar",
-                modifier = Modifier.size(28.dp),
-                tint = MaterialTheme.colorScheme.onSecondaryContainer
-            )
-        }
-
-        Column(modifier = Modifier.weight(1f)) {
+    ListItem(
+        headlineContent = {
             Text(
                 text = groupName,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
-            Spacer(modifier = Modifier.height(4.dp))
+        },
+        supportingContent = {
             Text(
                 text = "Group chat",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
-        }
-
-        Text(
-            text = formatTimestamp(createdAt),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        leadingContent = {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Group,
+                    contentDescription = "Group avatar",
+                    modifier = Modifier.size(28.dp),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        },
+        trailingContent = {
+            Text(
+                text = formatTimestamp(createdAt),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        modifier = Modifier.combinedClickable(
+            onClick = { onClick() },
+            onLongClick = { onLongClick(groupId, groupName, role) }
         )
-    }
+    )
 }
 
 sealed class ChatItemModel {

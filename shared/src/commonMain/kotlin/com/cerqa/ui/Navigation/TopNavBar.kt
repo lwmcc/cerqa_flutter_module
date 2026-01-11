@@ -50,7 +50,8 @@ fun TopBar(
 
     TopAppBar(
         colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
+            containerColor = MaterialTheme.colorScheme.background,
+            scrolledContainerColor = MaterialTheme.colorScheme.background
         ),
         navigationIcon = {
             if (currentRoute.equals( AppDestination.Main.route)) {

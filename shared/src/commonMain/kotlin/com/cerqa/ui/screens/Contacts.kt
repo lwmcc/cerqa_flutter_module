@@ -1,15 +1,21 @@
 package com.cerqa.ui.screens
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.cerqa.models.*
+import com.cerqa.ui.components.ChatBottomSheet
 import com.cerqa.viewmodels.ContactCardConnectionEvent
 import com.cerqa.viewmodels.ContactCardEvent
 import com.cerqa.viewmodels.ContactsViewModel
@@ -23,15 +29,16 @@ fun Contacts(
     searchViewModel: SearchViewModel,
     contactsViewModel: ContactsViewModel,
     mainViewModel: MainViewModel,
-    onNavigateToConversation: (contactId: String, userName: String) -> Unit = { _, _ -> }
+    onNavigateToConversation: (contactId: String, userName: String) -> Unit = { _, _ -> },
 ) {
     val uiState by searchViewModel.uiState.collectAsState()
     val contactsUiState by contactsViewModel.uiState.collectAsState()
     var showInviteDialog by remember { mutableStateOf(false) }
     var selectedUser by remember { mutableStateOf<SearchUser?>(null) }
+
     var showConfirmDialog by remember { mutableStateOf(false) }
     var confirmDialogData by remember { mutableStateOf<ConfirmDialogData?>(null) }
-    var showInviteSentSuccess by remember { mutableStateOf(false) }
+    var selectedContactForBottomSheet by remember { mutableStateOf<CurrentContact?>(null) }
 
     LaunchedEffect(Unit) {
         contactsViewModel.fetchAllContacts()
@@ -40,7 +47,6 @@ fun Contacts(
 
     LaunchedEffect(uiState.lastSentInvite) {
         uiState.lastSentInvite?.let { inviteData ->
-            println("Contacts: Detected new sent invite, adding to contacts list")
             contactsViewModel.addSentInvite(
                 inviteId = inviteData.inviteId,
                 receiverUserId = inviteData.receiverUserId,
@@ -57,10 +63,54 @@ fun Contacts(
         }
     }
 
+    if (selectedContactForBottomSheet != null) {
+        ChatBottomSheet(
+            showBottomSheet = { show ->
+                if (!show) selectedContactForBottomSheet = null
+            },
+            content = {
+                Text(
+                    text = selectedContactForBottomSheet?.userName ?: "Contact Options",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                OutlinedButton(
+                    onClick = {
+                        selectedContactForBottomSheet?.let { contact ->
+                            confirmDialogData = ConfirmDialogData(
+                                title = "Delete Contact",
+                                message = "Delete ${contact.userName ?: "this user"} from your contacts?",
+                                onConfirm = {
+                                    contactsViewModel.userConnectionEvent(
+                                        0,
+                                        ContactCardEvent.DeleteContact(contact.contactId)
+                                    )
+                                }
+                            )
+                            showConfirmDialog = true
+                        }
+                        selectedContactForBottomSheet = null
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Delete Contact")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.background),
     ) {
         if (uiState.pending || contactsUiState.pending) {
             Box(
@@ -91,7 +141,7 @@ fun Contacts(
                 }
             }
 
-            // TODO: hide
+            // TODO: hide after 5 seconds
             MessageType.INVITE_SENT -> {
                 Card(
                     modifier = Modifier
@@ -215,24 +265,14 @@ fun Contacts(
                         is CurrentContact -> {
                             CurrentContactCard(
                                 contact = contact,
-                                onDelete = {
-                                    confirmDialogData = ConfirmDialogData(
-                                        title = "Delete Contact",
-                                        message = "Delete ${contact.userName ?: "this user"} from your contacts?",
-                                        onConfirm = {
-                                            contactsViewModel.userConnectionEvent(
-                                                0,
-                                                ContactCardEvent.DeleteContact(contact.contactId)
-                                            )
-                                        }
-                                    )
-                                    showConfirmDialog = true
-                                },
                                 onClick = {
                                     onNavigateToConversation(
                                         contact.userId,
                                         contact.userName ?: contact.name ?: "Unknown"
                                     )
+                                },
+                                onLongClick = {
+                                    selectedContactForBottomSheet = contact
                                 }
                             )
                         }
@@ -250,12 +290,16 @@ fun Contacts(
                         )
                     }
 
-                    items(uiState.nonAppUsers, key = { it.phoneNumbers.firstOrNull() ?: it.name }) { contact ->
+                    items(
+                        uiState.nonAppUsers,
+                        key = { it.phoneNumbers.firstOrNull() ?: it.name }) { contact ->
                         DeviceContactCard(
                             contact = contact,
                             onInviteClick = { phoneNumber ->
                                 searchViewModel.inviteSentEvent(
-                                    ContactCardConnectionEvent.InvitePhoneNumberConnectEvent(phoneNumber)
+                                    ContactCardConnectionEvent.InvitePhoneNumberConnectEvent(
+                                        phoneNumber
+                                    )
                                 )
                             }
                         )
@@ -393,40 +437,52 @@ fun ReceivedInviteCard(
     onAccept: () -> Unit,
     onDeny: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        ListItem(
+            headlineContent = {
                 Text(
                     text = contact.userName ?: "Unknown User",
                     style = MaterialTheme.typography.titleMedium
                 )
-                Text(
-                    text = "Wants to connect",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                contact.phoneNumber?.let { phone ->
+            },
+            supportingContent = {
+                Column {
                     Text(
-                        text = phone,
+                        text = "Wants to connect",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    contact.phoneNumber?.let { phone ->
+                        Text(
+                            text = phone,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            },
+            leadingContent = {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "User avatar",
+                        modifier = Modifier.size(28.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
+        )
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedButton(
@@ -450,75 +506,103 @@ fun SentInviteCard(
     contact: SentInviteContactInvite,
     onCancel: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
+    ListItem(
+        headlineContent = {
             Text(
                 text = contact.userName ?: "Unknown User",
                 style = MaterialTheme.typography.titleMedium
             )
-            Text(
-                text = "Invite sent - waiting for response",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
-            contact.phoneNumber?.let { phone ->
+        },
+        supportingContent = {
+            Column {
                 Text(
-                    text = phone,
+                    text = "Invite sent - waiting for response",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                contact.phoneNumber?.let { phone ->
+                    Text(
+                        text = phone,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        leadingContent = {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "User avatar",
+                    modifier = Modifier.size(28.dp),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
+        },
+        trailingContent = {
+            OutlinedButton(onClick = onCancel) {
+                Text("Cancel")
+            }
         }
-
-        OutlinedButton(onClick = onCancel) {
-            Text("Cancel")
-        }
-    }
+    )
 }
 
 @Composable
 fun CurrentContactCard(
     contact: CurrentContact,
-    onDelete: () -> Unit,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
+    ListItem(
+        headlineContent = {
             Text(
                 text = contact.userName ?: contact.name ?: "Unknown User",
                 style = MaterialTheme.typography.titleMedium
             )
-            Text(
-                text = "Connected",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.tertiary
-            )
-            contact.phoneNumber?.let { phone ->
+        },
+        supportingContent = {
+            Column {
                 Text(
-                    text = phone,
+                    text = "Connected",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                contact.phoneNumber?.let { phone ->
+                    Text(
+                        text = phone,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-        }
-
-        OutlinedButton(onClick = onDelete) {
-            Text("Delete")
-        }
-    }
+        },
+        leadingContent = {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "User avatar",
+                    modifier = Modifier.size(28.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        },
+        modifier = Modifier.combinedClickable(
+            onClick = onClick,
+            onLongClick = onLongClick
+        )
+    )
 }
 
 @Composable
@@ -593,40 +677,39 @@ fun DeviceContactCard(
     contact: DeviceContact,
     onInviteClick: (String) -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
+    ListItem(
+        headlineContent = {
             Text(
                 text = contact.name,
                 style = MaterialTheme.typography.titleMedium
             )
-            contact.phoneNumbers.firstOrNull()?.let { phone ->
+        },
+        supportingContent = {
+            Column {
+                contact.phoneNumbers.firstOrNull()?.let { phone ->
+                    Text(
+                        text = phone,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Text(
-                    text = phone,
+                    text = "From device contacts",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Text(
-                text = "From device contacts",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        Button(
-            onClick = {
-                contact.phoneNumbers.firstOrNull()?.let { phone ->
-                    onInviteClick(phone)
+        },
+        trailingContent = {
+            Button(
+                onClick = {
+                    contact.phoneNumbers.firstOrNull()?.let { phone ->
+                        onInviteClick(phone)
+                    }
                 }
+            ) {
+                Text("Invite")
             }
-        ) {
-            Text("Invite")
         }
-    }
+    )
 }

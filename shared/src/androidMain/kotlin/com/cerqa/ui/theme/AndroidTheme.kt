@@ -18,12 +18,8 @@ actual fun PlatformThemeWrapper(content: @Composable () -> Unit) {
     val view = LocalView.current
     val darkTheme = isSystemInDarkTheme()
 
-    val colorScheme = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-    } else {
-        // Use the color schemes defined in Theme.kt via AppTheme
-        null
-    }
+    // Disable dynamic colors to use our custom theme colors
+    val colorScheme = null
 
     AppTheme(
         darkTheme = darkTheme,

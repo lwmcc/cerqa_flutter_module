@@ -57,6 +57,7 @@ fun CreateGroup(
 ) {
     val uiState by createGroupViewModel.uiState.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
+    val scrollState = rememberScrollState()
 
     // Navigate when group is created successfully
     LaunchedEffect(uiState.groupCreatedSuccessfully) {
@@ -76,14 +77,12 @@ fun CreateGroup(
         )
     }
 
-    val scrollState = rememberScrollState()
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .imePadding()
     ) {
+        // Scrollable content
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -95,52 +94,74 @@ fun CreateGroup(
                     })
                 }
                 .padding(24.dp)
+                .padding(bottom = 96.dp) // Extra padding to account for sticky button
         ) {
-
-        OutlinedTextField(
-            value = uiState.groupName,
-            onValueChange = { groupName ->
-                createGroupViewModel.onGroupNameChanged(groupName.trim())
-            },
-            label = { Text("Group Name") },
-            placeholder = { Text("Enter group name (min 3 characters)") },
-            modifier = Modifier.fillMaxWidth(),
-            isError = uiState.groupNameError != null,
-            supportingText = {
-                if (uiState.groupNameError != null) {
-                    Text(
-                        text = uiState.groupNameError.orEmpty(),
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-            trailingIcon = {
-                if (uiState.groupNameError != null) {
-                    Icon(
-                        imageVector = Icons.Default.Error,
-                        contentDescription = "Error",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Members Section
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Members (${uiState.selectedMembers.size})",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+            // Group Name Field
+            OutlinedTextField(
+                value = uiState.groupName,
+                onValueChange = { groupName ->
+                    createGroupViewModel.onGroupNameChanged(groupName.trim())
+                },
+                label = { Text("Group Name") },
+                placeholder = { Text("e.g., Weekend Crew") },
+                modifier = Modifier.fillMaxWidth(),
+                isError = uiState.groupNameError != null,
+                supportingText = {
+                    if (uiState.groupNameError != null) {
+                        Text(
+                            text = uiState.groupNameError.orEmpty(),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    } else {
+                        Text(
+                            text = "Minimum 3 characters",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                trailingIcon = {
+                    if (uiState.groupNameError != null) {
+                        Icon(
+                            imageVector = Icons.Default.Error,
+                            contentDescription = "Error",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                singleLine = true
             )
 
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Members Section Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Members",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = if (uiState.selectedMembers.isEmpty()) {
+                            "Add at least 1 member"
+                        } else {
+                            "${uiState.selectedMembers.size} ${if (uiState.selectedMembers.size == 1) "member" else "members"} selected"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Add Members Button
             OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
                 onClick = { createGroupViewModel.showMembersSheet() }
             ) {
                 Icon(
@@ -151,70 +172,98 @@ fun CreateGroup(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Add Members")
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        if (uiState.selectedMembers.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-            }
-        } else {
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                createGroupViewModel.getSelectedContacts().forEach { contact ->
-                    AssistChip(
-                        onClick = { },
-                        label = {
-                            Text(contact.name ?: contact.userName ?: "Unknown")
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.AccountCircle,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        },
-                        trailingIcon = {
-                            IconButton(
-                                onClick = { createGroupViewModel.removeMember(contact.userId ?: "") },
-                                modifier = Modifier.size(18.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Remove ${contact.name}",
-                                    modifier = Modifier.size(14.dp)
-                                )
-                            }
-                        },
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+            // Selected Members
+            if (uiState.selectedMembers.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
-                    )
+                        Text(
+                            text = "No members added yet",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Tap 'Add Members' to get started",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
+                }
+            } else {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    createGroupViewModel.getSelectedContacts().forEach { contact ->
+                        AssistChip(
+                            onClick = { },
+                            label = {
+                                Text(contact.name ?: contact.userName ?: "Unknown")
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.AccountCircle,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = { createGroupViewModel.removeMember(contact.userId.orEmpty()) },
+                                    modifier = Modifier.size(18.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Remove ${contact.name}",
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        )
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
+            // Error message
             if (uiState.error != null) {
+                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = uiState.error ?: "",
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
+        }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
+        // Sticky bottom button
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.background)
+                .imePadding()
+                .padding(horizontal = 24.dp, vertical = 16.dp)
+        ) {
             Button(
                 onClick = { createGroupViewModel.createGroup() },
                 modifier = Modifier
@@ -238,9 +287,6 @@ fun CreateGroup(
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-
-            // Extra padding at bottom to ensure button is always accessible above keyboard
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

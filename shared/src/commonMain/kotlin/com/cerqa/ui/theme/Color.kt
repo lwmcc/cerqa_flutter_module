@@ -14,10 +14,10 @@ val onSecondaryLight = Color(0xFFFFFFFF)
 val secondaryContainerLight = Color(0xFFDBE2F9)
 val onSecondaryContainerLight = Color(0xFF3F4759)
 
-val backgroundLight = Color(0xFFFAF8FF)
+val backgroundLight = Color(0xFFFFFFFF)
 val onBackgroundLight = Color(0xFF1A1B20)
 
-val surfaceLight = Color(0xFFFAF8FF)
+val surfaceLight = Color(0xFFFFFFFF)
 val onSurfaceLight = Color(0xFF1A1B20)
 
 val surfaceVariantLight = Color(0xFFE1E2EC)

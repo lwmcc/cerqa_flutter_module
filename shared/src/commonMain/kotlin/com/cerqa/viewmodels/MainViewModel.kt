@@ -269,6 +269,6 @@ class MainViewModel(
 
     private suspend fun getInviteChannelPath(): String? {
         val userId = authTokenProvider.getCurrentUserId()
-        return userId?.let { RealtimeChannel.NOTIFICATIONS_INVITES }
+        return userId?.let { RealtimeChannel.InboxNotifications(it).name }
     }
 }

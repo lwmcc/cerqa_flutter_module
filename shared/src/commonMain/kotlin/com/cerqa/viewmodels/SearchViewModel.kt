@@ -217,7 +217,7 @@ class SearchViewModel(
                                         val senderName = currentUser.name ?: "${currentUser.firstName} ${currentUser.lastName}"
                                         val senderUserName = currentUser.userName.orEmpty()
 
-                                        val channel = RealtimeChannel.NOTIFICATIONS_INVITES
+                                        val channel = RealtimeChannel.InboxNotifications(connectionEvent.receiverUserId).name
 
                                         println("SearchViewModel ***** ATTEMPTING TO PUBLISH")
                                         println("SearchViewModel ***** Receiver UserId: ${connectionEvent.receiverUserId}")
