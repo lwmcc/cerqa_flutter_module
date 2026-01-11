@@ -94,42 +94,50 @@ fun Profile(
         )
     }
 
-    Column {
-        Column {
+    Scaffold(
+        topBar = {
             if (isProfileComplete == false) {
-                IconButton(onClick = {
-                    // Reset fields on delete
-                    newUserName = ""
-                    newFirstName = ""
-                    newLastName = ""
-                    newPhone = ""
-                    newEmail = ""
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete"
-                    )
-                }
-                IconButton(onClick = {
-                    viewModel.createUser(
-                        userName = newUserName,
-                        firstName = newFirstName,
-                        lastName = newLastName,
-                        phone = newPhone,
-                        email = newEmail
-                    )
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Save,
-                        contentDescription = "Save"
-                    )
-                }
+                TopAppBar(
+                    title = { Text("Complete Profile") },
+                    actions = {
+                        Row {
+                            IconButton(onClick = {
+                                // Reset fields on delete
+                                newUserName = ""
+                                newFirstName = ""
+                                newLastName = ""
+                                newPhone = ""
+                                newEmail = ""
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete"
+                                )
+                            }
+                            IconButton(onClick = {
+                                viewModel.createUser(
+                                    userName = newUserName,
+                                    firstName = newFirstName,
+                                    lastName = newLastName,
+                                    phone = newPhone,
+                                    email = newEmail
+                                )
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Save,
+                                    contentDescription = "Save"
+                                )
+                            }
+                        }
+                    }
+                )
             }
         }
-
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(paddingValues)
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

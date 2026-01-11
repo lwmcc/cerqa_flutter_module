@@ -146,7 +146,6 @@
 				A1000018000000000000001 /* Frameworks */,
 				A1000027000000000000001 /* Resources */,
 				1CAF476FB9ECD4C813AD8ECE /* [CP] Copy Pods Resources */,
-				F9B60EDDF6EB227DDED30FD0 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -255,23 +254,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-cerqaiOS/Pods-cerqaiOS-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		46CCD6322ED6D2020052FA85 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-cerqaiOS/Pods-cerqaiOS-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-cerqaiOS/Pods-cerqaiOS-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-cerqaiOS/Pods-cerqaiOS-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

@@ -79,10 +79,36 @@ kotlin {
             isStatic = true
         }
 
-        // TODO: Add Ably pod when iOS real-time messaging is implemented
+        // TODO: Add Ably pod when iOS real-time messaging is fully implemented
+        // Currently using stub implementation, so Ably framework not needed yet
         // pod("Ably") {
         //     version = "1.2.33"
         // }
+
+        // Add PATH for CocoaPods and other tools used during build
+        extraSpecAttributes["script_phases"] = """
+            [
+                {
+                    :name => 'Build shared',
+                    :execution_position => :before_compile,
+                    :shell_path => '/bin/sh',
+                    :script => <<-SCRIPT
+                        if [ "YES" = "${'$'}OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED" ]; then
+                          echo "Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\"YES\\""
+                          exit 0
+                        fi
+                        set -ev
+                        # Add Homebrew and common tool paths
+                        export PATH="/opt/homebrew/bin:/usr/local/bin:${'$'}PATH"
+                        REPO_ROOT="${'$'}PODS_TARGET_SRCROOT"
+                        "${'$'}REPO_ROOT/../gradlew" -p "${'$'}REPO_ROOT" ${'$'}KOTLIN_PROJECT_PATH:syncFramework \\
+                            -Pkotlin.native.cocoapods.platform=${'$'}PLATFORM_NAME \\
+                            -Pkotlin.native.cocoapods.archs="${'$'}ARCHS" \\
+                            -Pkotlin.native.cocoapods.configuration="${'$'}CONFIGURATION"
+                    SCRIPT
+                }
+            ]
+        """.trimIndent()
     }
 
     // Source set declarations.

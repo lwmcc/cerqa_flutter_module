@@ -1,12 +1,16 @@
 package com.cerqa.ui.components
 
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Contacts
 import androidx.compose.material.icons.outlined.Groups2
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import carclub.shared.generated.resources.Res
 import carclub.shared.generated.resources.add_chat
 import carclub.shared.generated.resources.add_group
@@ -28,7 +32,8 @@ actual val navItems = listOf(
             Icon(
                 painter = painterResource(Res.drawable.cars_nav),
                 contentDescription = "Navigate",
-                tint = Color.Unspecified
+                tint = Color.Unspecified,
+                modifier = Modifier.height(24.dp)
             )
         },
         label = "Navigate",
@@ -40,7 +45,8 @@ actual val navItems = listOf(
             Icon(
                 painter = painterResource(Res.drawable.chat_nav),
                 contentDescription = "Chat",
-                tint = Color.Unspecified
+                tint = Color.Unspecified,
+                modifier = Modifier.height(24.dp)
             )
         },
         label = "Chat",
@@ -52,7 +58,8 @@ actual val navItems = listOf(
             Icon(
                 painter = painterResource(Res.drawable.bell_nav),
                 contentDescription = "Inbox",
-                tint = Color.Unspecified
+                tint = Color.Unspecified,
+                modifier = Modifier.height(24.dp)
             )
         },
         label = "Notifications",
@@ -70,7 +77,8 @@ actual val topNavItemsMain = listOf(
             Icon(
                 painter = painterResource(Res.drawable.add_chat),
                 contentDescription = "Add chat",
-                tint = Color.Unspecified
+                tint = Color.Unspecified,
+                modifier = Modifier.height(24.dp)
             )
         },
         contentDescription = "Contacts screen",
@@ -81,7 +89,8 @@ actual val topNavItemsMain = listOf(
             Icon(
                 painter = painterResource(Res.drawable.add_group),
                 contentDescription = "Add group",
-                tint = Color.Unspecified
+                tint = Color.Unspecified,
+                modifier = Modifier.height(24.dp)
             )
         },
         contentDescription = "Groups screen",

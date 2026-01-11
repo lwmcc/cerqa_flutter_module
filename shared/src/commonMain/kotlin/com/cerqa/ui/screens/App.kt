@@ -75,12 +75,12 @@ import com.cerqa.data.Preferences
 import com.cerqa.auth.AuthTokenProvider
 import com.cerqa.ui.animations.slideInFromLeft
 import com.cerqa.ui.animations.slideOutToLeft
-import com.cerqa.ui.theme.SystemBarsEffect
+//import com.cerqa.ui.theme.SystemBarsEffect
 import org.koin.compose.koinInject
 import carclub.shared.generated.resources.Res
 import carclub.shared.generated.resources.add_chat
 import carclub.shared.generated.resources.add_group
-import carclub.shared.generated.resources.create_group
+//import carclub.shared.generated.resources.create_group
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -122,11 +122,11 @@ fun App(
 
     MaterialTheme {
         // Set system status bar and navigation bar colors to match the app background
-        SystemBarsEffect(
-            statusBarColor = MaterialTheme.colorScheme.background,
-            navigationBarColor = MaterialTheme.colorScheme.background,
-            isDarkIcons = true  // Use dark icons for light backgrounds
-        )
+        //SystemBarsEffect(
+        //    statusBarColor = MaterialTheme.colorScheme.background,
+        //    navigationBarColor = MaterialTheme.colorScheme.background,
+        //    isDarkIcons = true  // Use dark icons for light backgrounds
+       // )
 
         Scaffold(
             topBar = {
@@ -217,19 +217,26 @@ fun App(
                                 )
                             },
                             actions = {
-                                // Add contacts button
-                                IconButton(onClick = { navActions.navigateToContacts() }) {
-                                    topNavItemsMain.getOrNull(0)?.iconComposable?.invoke()
-                                        ?: topNavItemsMain.getOrNull(0)?.icon?.let {
-                                            Icon(it, contentDescription = "Add Contact")
+                                // Add Chat icon
+                                topNavItemsMain.getOrNull(0)?.let { addChatItem ->
+                                    IconButton(onClick = {
+                                        navActions.navigateToContacts()
+                                    }) {
+                                        addChatItem.iconComposable?.invoke() ?: addChatItem.icon?.let {
+                                            Icon(it, contentDescription = addChatItem.contentDescription)
                                         }
+                                    }
                                 }
-                                // Add group button
-                                IconButton(onClick = { navActions.navigateToGroupsAdd() }) {
-                                    topNavItemsMain.getOrNull(1)?.iconComposable?.invoke()
-                                        ?: topNavItemsMain.getOrNull(1)?.icon?.let {
-                                            Icon(it, contentDescription = "Add Group")
+
+                                // Add Group icon
+                                topNavItemsMain.getOrNull(1)?.let { addGroupItem ->
+                                    IconButton(onClick = {
+                                        navActions.navigateToGroupsAdd()
+                                    }) {
+                                        addGroupItem.iconComposable?.invoke() ?: addGroupItem.icon?.let {
+                                            Icon(it, contentDescription = addGroupItem.contentDescription)
                                         }
+                                    }
                                 }
                             }
                         )

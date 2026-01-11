@@ -45,7 +45,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cerqa.ui.components.MembersBottomSheet
-import com.cerqa.ui.utils.KeyboardManager
 import com.cerqa.utils.NameValidator
 import com.cerqa.viewmodels.CreateGroupViewModel
 import org.koin.compose.koinInject
@@ -57,14 +56,7 @@ fun CreateGroup(
     onGroupCreated: () -> Unit = {}
 ) {
     val uiState by createGroupViewModel.uiState.collectAsState()
-    val keyboardManager = remember { KeyboardManager() }
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    // Platform-specific keyboard handling
-    keyboardManager.setupKeyboardHandling(
-        onShow = { /* Keyboard shown */ },
-        onHide = { /* Keyboard hidden */ }
-    )
 
     // Navigate when group is created successfully
     LaunchedEffect(uiState.groupCreatedSuccessfully) {
@@ -86,20 +78,24 @@ fun CreateGroup(
 
     val scrollState = rememberScrollState()
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .imePadding() // Prevents UI from being squished by keyboard on iOS
-            .verticalScroll(scrollState) // Allow scrolling when keyboard is visible
-            .pointerInput(Unit) {
-                // Dismiss keyboard when tapping outside text fields
-                detectTapGestures(onTap = {
-                    keyboardController?.hide()
-                })
-            }
-            .padding(24.dp)
+            .imePadding()
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .pointerInput(Unit) {
+                    // Dismiss keyboard when tapping outside text fields
+                    detectTapGestures(onTap = {
+                        keyboardController?.hide()
+                    })
+                }
+                .padding(24.dp)
+        ) {
 
         OutlinedTextField(
             value = uiState.groupName,
@@ -108,9 +104,7 @@ fun CreateGroup(
             },
             label = { Text("Group Name") },
             placeholder = { Text("Enter group name (min 3 characters)") },
-            modifier = keyboardManager.addFocusModifier(
-                Modifier.fillMaxWidth()
-            ),
+            modifier = Modifier.fillMaxWidth(),
             isError = uiState.groupNameError != null,
             supportingText = {
                 if (uiState.groupNameError != null) {
@@ -210,40 +204,43 @@ fun CreateGroup(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        if (uiState.error != null) {
-            Text(
-                text = uiState.error ?: "",
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        }
-
-        // To push button to bottom
-        Spacer(modifier = Modifier.weight(1f))
-
-        Button(
-            onClick = { createGroupViewModel.createGroup() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            enabled = !uiState.isCreatingGroup &&
-                    uiState.groupName.length >= 3 &&
-                    uiState.groupNameError == null &&
-                    uiState.selectedMembers.isNotEmpty()
-        ) {
-            if (uiState.isCreatingGroup) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
+            if (uiState.error != null) {
+                Text(
+                    text = uiState.error ?: "",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
             }
-            Text(
-                text = if (uiState.isCreatingGroup) "Creating..." else "Create Group",
-                style = MaterialTheme.typography.titleMedium
-            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = { createGroupViewModel.createGroup() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                enabled = !uiState.isCreatingGroup &&
+                        uiState.groupName.length >= 3 &&
+                        uiState.groupNameError == null &&
+                        uiState.selectedMembers.isNotEmpty()
+            ) {
+                if (uiState.isCreatingGroup) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(
+                    text = if (uiState.isCreatingGroup) "Creating..." else "Create Group",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            // Extra padding at bottom to ensure button is always accessible above keyboard
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
