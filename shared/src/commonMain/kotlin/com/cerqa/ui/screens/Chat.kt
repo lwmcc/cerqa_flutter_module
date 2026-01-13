@@ -111,9 +111,8 @@ fun Chat(
                         role = chat.role,
 
                         editGroup = {
-                            groupData?.group?.id?.let { groupId ->
-                                onNavigateToEditGroup(groupId)
-                            }
+                            // Use the groupId from the long-clicked chat directly
+                            onNavigateToEditGroup(chat.groupId)
                             longClickedChat = null
                         },
                         onDeleteGroup = {
