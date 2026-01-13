@@ -109,6 +109,7 @@ fun Chat(
                     GroupChatBottomSheet(
                         groupName = chat.groupName,
                         role = chat.role,
+
                         editGroup = {
                             groupData?.group?.id?.let { groupId ->
                                 onNavigateToEditGroup(groupId)
