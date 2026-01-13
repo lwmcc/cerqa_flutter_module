@@ -160,6 +160,7 @@ type Mutation {
   updateUserChannel(condition: ModelUserChannelConditionInput, input: UpdateUserChannelInput!): UserChannel @aws_api_key @aws_iam
   updateUserContact(condition: ModelUserContactConditionInput, input: UpdateUserContactInput!): UserContact @aws_api_key @aws_iam
   updateUserGroup(condition: ModelUserGroupConditionInput, input: UpdateUserGroupInput!): UserGroup @aws_api_key @aws_iam
+  cleanupUnknownData: String @aws_api_key @aws_iam
 }
 
 type Query {

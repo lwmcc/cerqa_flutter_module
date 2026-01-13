@@ -11,8 +11,7 @@ import com.cerqa.graphql.DeleteUserGroupMutation
 import com.cerqa.graphql.ListUserGroupsQuery
 import com.cerqa.graphql.UpdateGroupMutation
 import com.cerqa.graphql.CreateUserGroupMutation
-// TODO: Uncomment after backend deployment
-// import com.cerqa.graphql.CleanupUnknownDataMutation
+import com.cerqa.graphql.CleanupUnknownDataMutation
 import com.cerqa.graphql.type.DeleteChannelInput
 import com.cerqa.graphql.type.DeleteGroupInput
 import com.cerqa.graphql.type.DeleteUserChannelInput
@@ -326,10 +325,6 @@ class GroupRepositoryImpl(
     }
 
     override suspend fun cleanupUnknownData(): Result<String> {
-        // TODO: Uncomment after backend deployment and GraphQL regeneration
-        return Result.failure(Exception("Cleanup function not yet deployed. Deploy backend with 'npx ampx sandbox' first."))
-
-        /*
         return try {
             println("GroupRepository: Starting cleanup of unknown data...")
 
@@ -351,6 +346,5 @@ class GroupRepositoryImpl(
             e.printStackTrace()
             Result.failure(e)
         }
-        */
     }
 }

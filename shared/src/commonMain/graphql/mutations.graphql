@@ -242,10 +242,9 @@ mutation DeleteChannel($input: DeleteChannelInput!) {
 }
 
 # Cleanup Unknown Data - Deletes all groups/channels with null or "unknown" names
-# TODO: Uncomment after backend deployment
-# mutation CleanupUnknownData {
-#     cleanupUnknownData
-# }
+mutation CleanupUnknownData {
+    cleanupUnknownData
+}
 
 # Update a Group (name)
 mutation UpdateGroup($input: UpdateGroupInput!, $condition: ModelGroupConditionInput) {
