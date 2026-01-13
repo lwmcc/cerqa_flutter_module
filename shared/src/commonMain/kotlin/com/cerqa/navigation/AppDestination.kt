@@ -6,7 +6,9 @@ sealed class AppDestination(val route: String) {
     object Notifications : AppDestination("notifications")
     object Contacts : AppDestination("contacts")
     object ContactsSearch : AppDestination("contacts-search")
-    object EditGroup : AppDestination("edit-group")
+    object EditGroup : AppDestination("edit-group/{groupId}") {
+        fun createRoute(groupId: String) = "edit-group/$groupId"
+    }
     object Groups : AppDestination("groups")
     object GroupsAdd : AppDestination("groups-add")
     object Profile : AppDestination("profile")

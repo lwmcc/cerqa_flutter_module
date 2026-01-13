@@ -101,7 +101,7 @@ data class CurrentContact(
  */
 @Serializable
 enum class ContactType {
-    RECEIVED, SENT, CURRENT
+    RECEIVED, SENT, CURRENT, NONE
 }
 
 /**

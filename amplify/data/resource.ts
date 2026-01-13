@@ -7,6 +7,7 @@ import { getUserByUserId } from "../functions/getUserByUserId/resource";
 import { sendInviteNotification } from "../functions/sendInviteNotification/resource";
 import { sendSmartInviteNotification } from "../functions/sendSmartInviteNotification/resource";
 import { updatePresence } from "../functions/updatePresence/resource";
+import { cleanupUnknownData } from "../functions/cleanupUnknownData/resource";
 // import { sendMessage } from "../functions/sendMessage/resource"; // TODO: Fix bundling issues
 
 const AblyJwt = a.customType({
@@ -280,6 +281,13 @@ export const schema = a.schema({
         .returns(a.boolean())
         .authorization(allow => [allow.authenticated(), allow.publicApiKey()])
         .handler(a.handler.function(updatePresence)),
+
+    cleanupUnknownData: a
+        .mutation()
+        .arguments({})
+        .returns(a.string())
+        .authorization(allow => [allow.authenticated()])
+        .handler(a.handler.function(cleanupUnknownData)),
 
         // TODO: Re-enable once sendMessage bundling is fixed
         // sendMessage: a

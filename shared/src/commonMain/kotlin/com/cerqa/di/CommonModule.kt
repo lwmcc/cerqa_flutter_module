@@ -32,6 +32,7 @@ import com.cerqa.viewmodels.ChatViewModel
 import com.cerqa.viewmodels.ContactsViewModel
 import com.cerqa.viewmodels.ConversationViewModel
 import com.cerqa.viewmodels.CreateGroupViewModel
+import com.cerqa.viewmodels.EditGroupViewModel
 import com.cerqa.viewmodels.MainViewModel
 import com.cerqa.viewmodels.MockContactsViewModel
 import com.cerqa.viewmodels.ProfileViewModel
@@ -131,6 +132,14 @@ val commonModule = module {
             contactsRepository = get(),
             authTokenProvider = get(),
             mainDispatcher = get(),
+        )
+    }
+    factory {
+        EditGroupViewModel(
+            groupRepository = get(),
+            contactsRepository = get(),
+            authTokenProvider = get(),
+            mainDispatcher = get()
         )
     }
 }

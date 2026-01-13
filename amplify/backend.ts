@@ -7,6 +7,7 @@ import { fetchPendingSentInviteStatus } from './functions/fetchPendingSentInvite
 import { hasUserCreatedProfile } from './functions/hasUserCreatedProfile/resource';
 import { getUserByUserId } from './functions/getUserByUserId/resource';
 import { sendInviteNotification } from './functions/sendInviteNotification/resource';
+import { cleanupUnknownData } from './functions/cleanupUnknownData/resource';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 export const backend = defineBackend({
@@ -18,6 +19,7 @@ export const backend = defineBackend({
   hasUserCreatedProfile,
   getUserByUserId,
   sendInviteNotification,
+  cleanupUnknownData,
 });
 
 // Grant the Lambda function access to query the User table

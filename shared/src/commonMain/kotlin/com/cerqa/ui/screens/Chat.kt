@@ -65,7 +65,7 @@ sealed class LongClickedChat {
 @Composable
 fun Chat(
     onNavigateToContacts: () -> Unit = {},
-    onNavigateToEditGroup: () -> Unit,
+    onNavigateToEditGroup: (String) -> Unit,
     onNavigateToConversation: (contactId: String, userName: String) -> Unit = { _, _ -> },
     chatViewModel: ChatViewModel = koinInject(),
 ) {
@@ -110,7 +110,9 @@ fun Chat(
                         groupName = chat.groupName,
                         role = chat.role,
                         editGroup = {
-                            onNavigateToEditGroup()
+                            groupData?.group?.id?.let { groupId ->
+                                onNavigateToEditGroup(groupId)
+                            }
                             longClickedChat = null
                         },
                         onDeleteGroup = {

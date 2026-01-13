@@ -58,8 +58,8 @@ class AppNavigationActions(private val navController: NavHostController) {
         }
     }
 
-    fun navigateToEditGroup() {
-        navController.navigate(AppDestination.EditGroup.route) {
+    fun navigateToEditGroup(groupId: String) {
+        navController.navigate(AppDestination.EditGroup.createRoute(groupId)) {
             launchSingleTop = true
         }
     }

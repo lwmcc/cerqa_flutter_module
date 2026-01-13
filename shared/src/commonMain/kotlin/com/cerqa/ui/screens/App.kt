@@ -388,8 +388,8 @@ fun App(
                                 AppDestination.Conversation.createRoute(contactId, userName)
                             )
                         },
-                        onNavigateToEditGroup = {
-                            navActions.navigateToEditGroup()
+                        onNavigateToEditGroup = { groupId ->
+                            navActions.navigateToEditGroup(groupId)
                         }
                     )
                 }
@@ -439,8 +439,18 @@ fun App(
                         }
                     )
                 }
-                composable(AppDestination.EditGroup.route) {
+                composable(
+                    route = AppDestination.EditGroup.route,
+                    arguments = listOf(
+                        navArgument("groupId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    // Extract groupId from route path (e.g., "edit-group/abc123" -> "abc123")
+                    val groupId = backStackEntry.destination.route
+                        ?.removePrefix("edit-group/")
+                        ?.substringBefore("/") ?: ""
                     EditGroup(
+                        groupId = groupId,
                         onDismiss = {
                             navActions.popBackStack()
                         }

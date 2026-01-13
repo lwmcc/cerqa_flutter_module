@@ -48,4 +48,42 @@ interface GroupRepository {
      * @return Result indicating success or failure
      */
     suspend fun leaveGroup(userGroupId: String, userId: String, channelId: String): Result<Unit>
+
+    /**
+     * Update group name
+     * @param groupId The DynamoDB ID of the group
+     * @param newName The new name for the group
+     * @return Result indicating success or failure
+     */
+    suspend fun updateGroupName(groupId: String, newName: String): Result<Unit>
+
+    /**
+     * Add a member to a group
+     * @param groupId The group's groupId (not DynamoDB id)
+     * @param userId The user ID to add
+     * @return Result with the UserGroup ID
+     */
+    suspend fun addGroupMember(groupId: String, userId: String): Result<String>
+
+    /**
+     * Remove a member from a group
+     * @param userGroupId The UserGroup entry ID to delete
+     * @return Result indicating success or failure
+     */
+    suspend fun removeGroupMember(userGroupId: String): Result<Unit>
+
+    /**
+     * Get members of a group
+     * @param groupId The group's groupId
+     * @return Result with list of group members
+     */
+    suspend fun getGroupMembers(groupId: String): Result<List<ListUserGroupsQuery.Item>>
+
+    /**
+     * Cleanup all groups and channels with unknown/null names
+     * This will delete all groups and channels that have null or "unknown" names,
+     * along with all associated UserGroup entries and messages
+     * @return Result with a message describing what was deleted
+     */
+    suspend fun cleanupUnknownData(): Result<String>
 }

@@ -240,3 +240,36 @@ mutation DeleteChannel($input: DeleteChannelInput!) {
         id
     }
 }
+
+# Cleanup Unknown Data - Deletes all groups/channels with null or "unknown" names
+# TODO: Uncomment after backend deployment
+# mutation CleanupUnknownData {
+#     cleanupUnknownData
+# }
+
+# Update a Group (name)
+mutation UpdateGroup($input: UpdateGroupInput!, $condition: ModelGroupConditionInput) {
+    updateGroup(input: $input, condition: $condition) {
+        id
+        groupId
+        name
+        createdAt
+        updatedAt
+    }
+}
+
+# Create a UserGroup entry (add member to group)
+mutation CreateUserGroup($input: CreateUserGroupInput!, $condition: ModelUserGroupConditionInput) {
+    createUserGroup(input: $input, condition: $condition) {
+        id
+        userId
+        groupId
+        group {
+            id
+            groupId
+            name
+        }
+        createdAt
+        updatedAt
+    }
+}
