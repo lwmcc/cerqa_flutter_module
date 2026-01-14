@@ -32,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,46 +56,71 @@ fun CreateGroup(
     createGroupViewModel: CreateGroupViewModel = koinInject(),
     onGroupCreated: () -> Unit = {}
 ) {
+
     val uiState by createGroupViewModel.uiState.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val scrollState = rememberScrollState()
 
-    // Navigate when group is created successfully
-    LaunchedEffect(uiState.groupCreatedSuccessfully) {
-        if (uiState.groupCreatedSuccessfully) {
-            onGroupCreated()
-        }
-    }
-
-    // Show members bottom sheet when requested
-    if (uiState.showMembersBottomSheet) {
-        MembersBottomSheet(
-            onDismiss = { createGroupViewModel.hideMembersSheet() },
-            contacts = uiState.contacts,
-            selectedMemberIds = uiState.selectedMembers,
-            isLoading = uiState.isLoadingContacts,
-            onToggleMember = { userId -> createGroupViewModel.toggleMemberSelection(userId) }
-        )
-    }
-
-    Box(
+    Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        // Scrollable content
+            .imePadding(),
+        bottomBar = {
+            Button(
+                onClick = { createGroupViewModel.createGroup() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .height(56.dp),
+                enabled = !uiState.isCreatingGroup &&
+                        uiState.groupName.length >= 3 &&
+                        uiState.groupNameError == null &&
+                        uiState.selectedMembers.isNotEmpty()
+            ) {
+                if (uiState.isCreatingGroup) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                }
+                Text(
+                    text = if (uiState.isCreatingGroup) "Creating..." else "Create Group",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+    ) { innerPadding ->
+        // Navigate when group is created successfully
+        LaunchedEffect(uiState.groupCreatedSuccessfully) {
+            if (uiState.groupCreatedSuccessfully) {
+                onGroupCreated()
+            }
+        }
+
+        // Show members bottom sheet when requested
+        if (uiState.showMembersBottomSheet) {
+            MembersBottomSheet(
+                onDismiss = { createGroupViewModel.hideMembersSheet() },
+                contacts = uiState.contacts,
+                selectedMemberIds = uiState.selectedMembers,
+                isLoading = uiState.isLoadingContacts,
+                onToggleMember = { userId -> createGroupViewModel.toggleMemberSelection(userId) }
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .pointerInput(Unit) {
-                    // Dismiss keyboard when tapping outside text fields
                     detectTapGestures(onTap = {
                         keyboardController?.hide()
                     })
                 }
-                .padding(24.dp)
-                .padding(bottom = 96.dp) // Extra padding to account for sticky button
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             // Group Name Field
             OutlinedTextField(
@@ -102,7 +128,7 @@ fun CreateGroup(
                 onValueChange = { groupName ->
                     createGroupViewModel.onGroupNameChanged(groupName.trim())
                 },
-                label = { Text("Group Name") },
+                label = { Text("Enter name") },
                 placeholder = { Text("e.g., Weekend Crew") },
                 modifier = Modifier.fillMaxWidth(),
                 isError = uiState.groupNameError != null,
@@ -131,8 +157,6 @@ fun CreateGroup(
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
-
             // Members Section Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -157,8 +181,6 @@ fun CreateGroup(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
             // Add Members Button
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
@@ -169,11 +191,8 @@ fun CreateGroup(
                     contentDescription = "Add members",
                     modifier = Modifier.size(18.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
                 Text("Add Members")
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             // Selected Members
             if (uiState.selectedMembers.isEmpty()) {
@@ -197,11 +216,6 @@ fun CreateGroup(
                             text = "No members added yet",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "Tap 'Add Members' to get started",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
                     }
                 }
@@ -246,45 +260,10 @@ fun CreateGroup(
 
             // Error message
             if (uiState.error != null) {
-                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = uiState.error ?: "",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-
-        // Sticky bottom button
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.background)
-                .imePadding()
-                .padding(horizontal = 24.dp, vertical = 16.dp)
-        ) {
-            Button(
-                onClick = { createGroupViewModel.createGroup() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                enabled = !uiState.isCreatingGroup &&
-                        uiState.groupName.length >= 3 &&
-                        uiState.groupNameError == null &&
-                        uiState.selectedMembers.isNotEmpty()
-            ) {
-                if (uiState.isCreatingGroup) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
-                Text(
-                    text = if (uiState.isCreatingGroup) "Creating..." else "Create Group",
-                    style = MaterialTheme.typography.titleMedium
                 )
             }
         }

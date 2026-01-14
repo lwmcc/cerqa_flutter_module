@@ -5,7 +5,11 @@ import com.apollographql.apollo.api.Optional
 import com.cerqa.graphql.CreateChannelMutation
 import com.cerqa.graphql.ListChannelMessagesQuery
 import com.cerqa.graphql.ListUserChannelsQuery
+import com.cerqa.graphql.ListUserSentMessagesQuery
+import com.cerqa.graphql.ListUsersQuery
 import com.cerqa.graphql.SendMessageMutation
+import com.cerqa.graphql.type.ModelIDInput
+import com.cerqa.graphql.type.ModelUserFilterInput
 import com.cerqa.graphql.type.CreateChannelInput
 import com.cerqa.graphql.type.CreateMessageInput
 import com.cerqa.realtime.AblyClient
@@ -154,6 +158,83 @@ class ConversationRepositoryImpl(
             }
         } catch (e: Exception) {
             println("ConversationRepository: Exception fetching messages: ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getUserSentMessages(userId: String): Result<List<ListUserSentMessagesQuery.Item>> {
+        return try {
+            val response = apolloClient
+                .query(ListUserSentMessagesQuery(senderId = userId, limit = Optional.presentIfNotNull(500)))
+                .execute()
+
+            if (response.hasErrors()) {
+                val errors = response.errors?.joinToString { it.message }
+                println("ConversationRepository: Error fetching user sent messages: $errors")
+                Result.failure(Exception(errors ?: "Unknown error"))
+            } else {
+                val messages = response.data?.listMessages?.items?.filterNotNull() ?: emptyList()
+                println("ConversationRepository: Fetched ${messages.size} sent messages for user $userId")
+                Result.success(messages)
+            }
+        } catch (e: Exception) {
+            println("ConversationRepository: Exception fetching user sent messages: ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getUserByUserId(userId: String): Result<ListUsersQuery.Item?> {
+        return try {
+            val filter = ModelUserFilterInput(
+                userId = Optional.presentIfNotNull(
+                    ModelIDInput(eq = Optional.presentIfNotNull(userId))
+                )
+            )
+
+            val response = apolloClient
+                .query(ListUsersQuery(filter = Optional.presentIfNotNull(filter), limit = Optional.presentIfNotNull(1)))
+                .execute()
+
+            if (response.hasErrors()) {
+                val errors = response.errors?.joinToString { it.message }
+                println("ConversationRepository: Error fetching user by userId: $errors")
+                Result.failure(Exception(errors ?: "Unknown error"))
+            } else {
+                val user = response.data?.listUsers?.items?.filterNotNull()?.firstOrNull()
+                println("ConversationRepository: Found user for userId $userId: ${user?.userName}")
+                Result.success(user)
+            }
+        } catch (e: Exception) {
+            println("ConversationRepository: Exception fetching user by userId: ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getUsersByUserIds(userIds: List<String>): Result<Map<String, ListUsersQuery.Item>> {
+        return try {
+            if (userIds.isEmpty()) {
+                return Result.success(emptyMap())
+            }
+
+            // For now, query each user individually
+            // TODO: Optimize with batch query if the API supports it
+            val userMap = mutableMapOf<String, ListUsersQuery.Item>()
+
+            for (userId in userIds.distinct()) {
+                getUserByUserId(userId).onSuccess { user ->
+                    if (user != null) {
+                        userMap[userId] = user
+                    }
+                }
+            }
+
+            println("ConversationRepository: Fetched ${userMap.size} users for ${userIds.size} userIds")
+            Result.success(userMap)
+        } catch (e: Exception) {
+            println("ConversationRepository: Exception fetching users by userIds: ${e.message}")
             e.printStackTrace()
             Result.failure(e)
         }

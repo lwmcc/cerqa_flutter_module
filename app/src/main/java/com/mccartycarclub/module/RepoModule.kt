@@ -8,8 +8,6 @@ import com.mccartycarclub.repository.AmplifyDbRepo
 import com.mccartycarclub.repository.AmplifyRepo
 import com.mccartycarclub.repository.ChatContacts
 import com.mccartycarclub.repository.ChatContactsAmplify
-import com.mccartycarclub.repository.ChatRepository
-import com.mccartycarclub.repository.ChatRepositoryImpl
 import com.mccartycarclub.repository.CombinedContactsHelper
 import com.mccartycarclub.repository.CombinedContactsRepository
 import com.mccartycarclub.repository.ContactsQueryBuilder
@@ -65,8 +63,5 @@ abstract class RepoModule {
 
     @Binds
     abstract fun bindChatContactsr(chatContactsAmplify: ChatContactsAmplify): ChatContacts
-
-    @Binds
-    abstract fun bindChatRepository(chatRepository: ChatRepositoryImpl): ChatRepository
 
 }

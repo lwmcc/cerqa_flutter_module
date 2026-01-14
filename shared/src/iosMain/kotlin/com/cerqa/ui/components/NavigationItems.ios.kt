@@ -33,7 +33,7 @@ actual val navItems = listOf(
                 painter = painterResource(Res.drawable.cars_nav),
                 contentDescription = "Navigate",
                 tint = Color.Unspecified,
-                modifier = Modifier.height(24.dp)
+                modifier = Modifier.size(24.dp)
             )
         },
         label = "Navigate",
@@ -46,7 +46,7 @@ actual val navItems = listOf(
                 painter = painterResource(Res.drawable.chat_nav),
                 contentDescription = "Chat",
                 tint = Color.Unspecified,
-                modifier = Modifier.height(24.dp)
+                modifier = Modifier.size(24.dp)
             )
         },
         label = "Chat",
@@ -59,7 +59,7 @@ actual val navItems = listOf(
                 painter = painterResource(Res.drawable.bell_nav),
                 contentDescription = "Inbox",
                 tint = Color.Unspecified,
-                modifier = Modifier.height(24.dp)
+                modifier = Modifier.size(24.dp)
             )
         },
         label = "Notifications",
@@ -78,7 +78,7 @@ actual val topNavItemsMain = listOf(
                 painter = painterResource(Res.drawable.add_chat),
                 contentDescription = "Add chat",
                 tint = Color.Unspecified,
-                modifier = Modifier.height(24.dp)
+                modifier = Modifier.size(24.dp)
             )
         },
         contentDescription = "Contacts screen",
@@ -90,7 +90,7 @@ actual val topNavItemsMain = listOf(
                 painter = painterResource(Res.drawable.add_group),
                 contentDescription = "Add group",
                 tint = Color.Unspecified,
-                modifier = Modifier.height(24.dp)
+                modifier = Modifier.size(24.dp)
             )
         },
         contentDescription = "Groups screen",

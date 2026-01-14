@@ -32,8 +32,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.core.net.toUri
 import com.amplifyframework.datastore.generated.model.User
-import com.mccartycarclub.pigeon.CerqaFlutterApi
-import com.mccartycarclub.pigeon.PigeonFlutterApi
 import com.mccartycarclub.ui.start.StartScreen
 import com.mccartycarclub.viewmodels.MainViewModel
 import kotlin.String
@@ -50,12 +48,6 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var stateProvider: AuthenticatorStateProvider
-
-     @Inject
-     lateinit var cerqaFlutterApi: CerqaFlutterApi
-
-     @Inject
-     lateinit var pigeonFlutterApi: PigeonFlutterApi
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,9 +77,6 @@ class MainActivity : ComponentActivity() {
         handleIncomingIntentS(intent)
 
         mainViewModel.initAbly() // TODO: init from shared kmp?
-        //pigeonFlutterApi.flutterApi?.sendChats(chatsToSend) { result ->
-        //uer    println("_CerqaFlutterApi ***** PIGEON RESULT SUCCESS ${result.isSuccess}")
-        //}
     }
 
     private fun registerReceiver() {

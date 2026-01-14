@@ -321,26 +321,13 @@ fun App(
                     }
 
                     AppDestination.EditGroup.route -> {
-                        TopAppBar(
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.background,
-                                scrolledContainerColor = MaterialTheme.colorScheme.background
-                            ),
-                            navigationIcon = {
-                                IconButton(onClick = { navActions.popBackStack() }) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Back"
-                                    )
-                                }
-                            },
-                            title = {
-                                Text("Edit Group")
-                            },
-                        )
+                        // EditGroup has its own Scaffold with TopAppBar
                     }
 
-                    else -> {
+                    // Conversation screen has its own Scaffold - hide parent top bar
+                    else -> if (currentRoute?.startsWith("conversation/") == true) {
+                        // Conversation has its own Scaffold with TopAppBar
+                    } else {
                         TopBar(
                             searchViewModel = searchViewModel,
                             currentRoute = currentRoute,
@@ -356,19 +343,23 @@ fun App(
             },
 
             bottomBar = {
-                BottomBar(
-                    items = bottomNavItemsWithBadge,
-                    currentRoute = currentRoute,
-                    onBottomNavClick = { route ->
-                        navController.navigate(route) {
-                            popUpTo(/*AppDestination.Main.route*/navController.graph.startDestinationId) {
-                                saveState = true
+                // Hide bottom bar for screens with their own Scaffold
+                if (currentRoute?.startsWith("conversation/") != true &&
+                    currentRoute != AppDestination.EditGroup.route) {
+                    BottomBar(
+                        items = bottomNavItemsWithBadge,
+                        currentRoute = currentRoute,
+                        onBottomNavClick = { route ->
+                            navController.navigate(route) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                )
+                        },
+                    )
+                }
             }
         ) { paddingValues ->
             NavHost(
@@ -383,9 +374,9 @@ fun App(
                         onNavigateToContacts = {
                             navActions.navigateToContacts()
                         },
-                        onNavigateToConversation = { contactId, userName ->
+                        onNavigateToConversation = { contactId, userName, isGroup ->
                             navController.navigate(
-                                AppDestination.Conversation.createRoute(contactId, userName)
+                                AppDestination.Conversation.createRoute(contactId, userName, isGroup)
                             )
                         },
                         onNavigateToEditGroup = { groupId ->
@@ -401,7 +392,7 @@ fun App(
                         mainViewModel = mainViewModel,
                         onNavigateToConversation = { contactId, userName ->
                             navController.navigate(
-                                AppDestination.Conversation.createRoute(contactId, userName)
+                                AppDestination.Conversation.createRoute(contactId, userName, false)
                             )
                         }
                     )
@@ -445,10 +436,7 @@ fun App(
                         navArgument("groupId") { type = NavType.StringType }
                     )
                 ) { backStackEntry ->
-                    // Extract groupId from route path (e.g., "edit-group/abc123" -> "abc123")
-                    val groupId = backStackEntry.destination.route
-                        ?.removePrefix("edit-group/")
-                        ?.substringBefore("/") ?: ""
+                    val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
                     EditGroup(
                         groupId = groupId,
                         onDismiss = {
@@ -460,19 +448,21 @@ fun App(
                     route = AppDestination.Conversation.route,
                     arguments = listOf(
                         navArgument("contactId") { type = NavType.StringType },
-                        navArgument("userName") { type = NavType.StringType }
+                        navArgument("userName") { type = NavType.StringType },
+                        navArgument("isGroup") { type = NavType.BoolType }
                     ),
                     enterTransition = { slideInFromRight() },
                     exitTransition = { slideOutToRight() }
                 ) { backStackEntry ->
-                    // TODO: Fix argument extraction for multiplatform navigation 2.9.1
-                    // The API for accessing navigation arguments has changed in 2.9.x
-                    val receiverId = "" // Temporarily hardcoded until proper API is determined
-
-                    println("App.kt ***** RECEIVER ID (from navigation): $receiverId")
+                    val receiverId = backStackEntry.arguments?.getString("contactId") ?: ""
+                    val userName = backStackEntry.arguments?.getString("userName") ?: ""
+                    val isGroup = backStackEntry.arguments?.getBoolean("isGroup") ?: false
 
                     Conversation(
-                        receiverId = receiverId
+                        receiverId = receiverId,
+                        userName = userName,
+                        isGroup = isGroup,
+                        onNavigateBack = { navActions.popBackStack() }
                     )
                 }
             }

@@ -20,9 +20,10 @@ data class EditGroupUiState(
     val originalGroupName: String = "",
     val groupName: String = "",
     val groupNameError: String? = null,
+    val originalMemberIds: Set<String> = emptySet(),
     val members: List<GroupMember> = emptyList(),
     val availableContacts: List<CurrentContact> = emptyList(),
-    val isLoadingGroup: Boolean = false,
+    val isLoadingGroup: Boolean = true,  // Start with loading true
     val isLoadingContacts: Boolean = false,
     val isSaving: Boolean = false,
     val showMembersBottomSheet: Boolean = false,
@@ -30,7 +31,18 @@ data class EditGroupUiState(
     val memberToRemove: GroupMember? = null,
     val error: String? = null,
     val saveSuccessful: Boolean = false
-)
+) {
+    val hasUnsavedChanges: Boolean
+        get() {
+            val nameChanged = groupName != originalGroupName
+            val currentMemberIds = members.map { it.userId }.toSet()
+            val membersChanged = currentMemberIds != originalMemberIds
+            return nameChanged || membersChanged
+        }
+
+    val isValid: Boolean
+        get() = groupName.length >= 3 && groupNameError == null && members.isNotEmpty()
+}
 
 /**
  * Represents a group member with their UserGroup ID for removal
@@ -93,6 +105,7 @@ class EditGroupViewModel(
                     _uiState.value = _uiState.value.copy(
                         originalGroupName = groupName,
                         groupName = groupName,
+                        originalMemberIds = members.map { it.userId }.toSet(),
                         members = members,
                         isLoadingGroup = false
                     )

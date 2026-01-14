@@ -66,7 +66,7 @@ sealed class LongClickedChat {
 fun Chat(
     onNavigateToContacts: () -> Unit = {},
     onNavigateToEditGroup: (String) -> Unit,
-    onNavigateToConversation: (contactId: String, userName: String) -> Unit = { _, _ -> },
+    onNavigateToConversation: (contactId: String, userName: String, isGroup: Boolean) -> Unit = { _, _, _ -> },
     chatViewModel: ChatViewModel = koinInject(),
 ) {
     var longClickedChat by remember { mutableStateOf<LongClickedChat?>(null) }
@@ -82,7 +82,20 @@ fun Chat(
 
     LaunchedEffect(Unit) {
         currentUserId = authTokenProvider.getCurrentUserId() ?: ""
+        println("Chat: Loading chats for user: $currentUserId")
         chatViewModel.loadAllChats()
+    }
+
+    // Debug: Log the chat items being displayed
+    LaunchedEffect(uiState.combinedChats) {
+        println("Chat: combinedChats size = ${uiState.combinedChats.size}")
+        uiState.combinedChats.forEach { item ->
+            when (item) {
+                is ChatListItem.DirectChat -> println("Chat: DirectChat - id=${item.id}, channelName=${item.channel.name}")
+                is ChatListItem.MessageBasedChat -> println("Chat: MessageBasedChat - id=${item.id}, otherUser=${item.otherUserName}")
+                is ChatListItem.GroupChat -> println("Chat: GroupChat - id=${item.id}, name=${item.group.group?.name}")
+            }
+        }
     }
 
     // Show appropriate bottom sheet based on chat type
@@ -313,7 +326,21 @@ fun Chat(
                                 DirectChatListItem(
                                     chatItem = chatItem,
                                     currentUserId = currentUserId,
-                                    onNavigateToConversation = onNavigateToConversation,
+                                    onNavigateToConversation = { contactId, userName ->
+                                        onNavigateToConversation(contactId, userName, false)
+                                    },
+                                    onLongClick = { channelId, userName ->
+                                        longClickedChat =
+                                            LongClickedChat.DirectChat(channelId, userName)
+                                    }
+                                )
+                            }
+                            is ChatListItem.MessageBasedChat -> {
+                                MessageBasedChatListItem(
+                                    chatItem = chatItem,
+                                    onNavigateToConversation = { contactId, userName ->
+                                        onNavigateToConversation(contactId, userName, false)
+                                    },
                                     onLongClick = { channelId, userName ->
                                         longClickedChat =
                                             LongClickedChat.DirectChat(channelId, userName)
@@ -323,8 +350,8 @@ fun Chat(
                             is ChatListItem.GroupChat -> {
                                 GroupChatListItem(
                                     chatItem = chatItem,
-                                    onClick = {
-                                        // TODO: Navigate to group conversation
+                                    onNavigateToConversation = { groupId, groupName, isGroup ->
+                                        onNavigateToConversation(groupId, groupName, isGroup)
                                     },
                                     onLongClick = { groupId, groupName, role ->
                                         longClickedChat =
@@ -457,31 +484,98 @@ private fun GroupsTab(
         }
 
         uiState.groups.isEmpty() -> {
-            Box(
+            Column(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = "No groups yet",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+                // Cleanup button for removing invalid data from DB
+                TextButton(
+                    onClick = { chatViewModel.cleanupUnknownData() },
+                    enabled = !uiState.isCleaningUp
+                ) {
+                    if (uiState.isCleaningUp) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(
+                        text = if (uiState.isCleaningUp) "Cleaning..." else "Clean Invalid Data",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                // Show cleanup result message
+                uiState.cleanupMessage?.let { message ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (message.contains("failed", ignoreCase = true))
+                            MaterialTheme.colorScheme.error
+                        else
+                            MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
 
         else -> {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                items(uiState.groups, key = { it.id }) { userGroup ->
-                    GroupListItemFromUserGroup(
-                        userGroup = userGroup,
-                        onClick = {
-                            /* TODO: Open group chat */
-                        },
-                        onLongClick = onLongClick,
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(MaterialTheme.colorScheme.background)
+                ) {
+                    items(uiState.groups, key = { it.id }) { userGroup ->
+                        GroupListItemFromUserGroup(
+                            userGroup = userGroup,
+                            onClick = {
+                                /* TODO: Open group chat */
+                            },
+                            onLongClick = onLongClick,
+                        )
+                    }
+                }
+                // Cleanup button at bottom
+                TextButton(
+                    onClick = { chatViewModel.cleanupUnknownData() },
+                    enabled = !uiState.isCleaningUp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    if (uiState.isCleaningUp) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(
+                        text = if (uiState.isCleaningUp) "Cleaning..." else "Clean Invalid Data",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                // Show cleanup result message
+                uiState.cleanupMessage?.let { message ->
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (message.contains("failed", ignoreCase = true))
+                            MaterialTheme.colorScheme.error
+                        else
+                            MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                     )
                 }
             }
@@ -931,13 +1025,21 @@ private fun DirectChatListItem(
             ?: "Unknown"
     }
 
-    val (otherUserId, displayName) = when {
-        channel.creator?.userId == currentUserId -> {
-            Pair(channel.receiver?.userId ?: "", getDisplayNameFromReceiver(channel.receiver))
-        }
+    // Check if current user is the creator (compare both userId and creatorId)
+    val isCurrentUserCreator = channel.creator?.userId == currentUserId ||
+                               channel.creatorId == currentUserId ||
+                               channel.creator?.id == currentUserId
 
+    val (otherUserId, displayName) = when {
+        isCurrentUserCreator -> {
+            // Current user created this channel, show the receiver
+            val receiverId = channel.receiver?.userId ?: channel.receiverId ?: ""
+            Pair(receiverId, getDisplayNameFromReceiver(channel.receiver))
+        }
         else -> {
-            Pair(channel.creator?.userId ?: "", getDisplayName(channel.creator))
+            // Current user is the receiver, show the creator
+            val creatorId = channel.creator?.userId ?: channel.creatorId ?: ""
+            Pair(creatorId, getDisplayName(channel.creator))
         }
     }
 
@@ -992,14 +1094,66 @@ private fun DirectChatListItem(
 }
 
 @Composable
+private fun MessageBasedChatListItem(
+    chatItem: ChatListItem.MessageBasedChat,
+    onNavigateToConversation: (contactId: String, userName: String) -> Unit,
+    onLongClick: (channelId: String, userName: String) -> Unit
+) {
+    ListItem(
+        headlineContent = {
+            Text(
+                text = chatItem.otherUserName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        },
+        supportingContent = {
+            Text(
+                text = chatItem.lastMessageContent,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+        },
+        leadingContent = {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "User avatar",
+                    modifier = Modifier.size(28.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        },
+        trailingContent = {
+            Text(
+                text = formatTimestamp(chatItem.lastMessageTime),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        modifier = Modifier.combinedClickable(
+            onClick = { onNavigateToConversation(chatItem.otherUserId, chatItem.otherUserName) },
+            onLongClick = { onLongClick(chatItem.channelId, chatItem.otherUserName) }
+        )
+    )
+}
+
+@Composable
 private fun GroupChatListItem(
     chatItem: ChatListItem.GroupChat,
-    onClick: () -> Unit,
+    onNavigateToConversation: (groupId: String, groupName: String, isGroup: Boolean) -> Unit,
     onLongClick: (groupId: String, groupName: String, role: com.cerqa.graphql.type.GroupMemberRole?) -> Unit
 ) {
     val userGroup = chatItem.group
     val groupName = userGroup.group?.name ?: "Unknown Group"
-    val groupId = userGroup.group?.id ?: ""
+    val groupId = userGroup.group?.groupId ?: userGroup.group?.id ?: ""
     val createdAt = userGroup.group?.createdAt ?: ""
     val role: com.cerqa.graphql.type.GroupMemberRole? =
         null  // Role not yet in production backend
@@ -1044,7 +1198,7 @@ private fun GroupChatListItem(
             )
         },
         modifier = Modifier.combinedClickable(
-            onClick = { onClick() },
+            onClick = { onNavigateToConversation(groupId, groupName, true) },
             onLongClick = { onLongClick(groupId, groupName, role) }
         )
     )

@@ -92,3 +92,10 @@ app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+
+# Kotlin metadata/build artifacts
+.kotlin/
+*.klib
+
+# JVM crash logs
+hs_err_pid*.log

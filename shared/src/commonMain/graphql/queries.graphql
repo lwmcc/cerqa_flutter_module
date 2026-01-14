@@ -255,6 +255,51 @@ query ListChannelMessages($channelId: ID!, $limit: Int, $nextToken: String) {
   }
 }
 
+# List all messages sent by a user (to find all conversations they're part of)
+query ListUserSentMessages($senderId: ID!, $limit: Int, $nextToken: String) {
+  listMessages(
+    filter: { senderId: { eq: $senderId } }
+    limit: $limit
+    nextToken: $nextToken
+  ) {
+    items {
+      id
+      channelId
+      content
+      senderId
+      createdAt
+      updatedAt
+      channel {
+        id
+        name
+        creatorId
+        receiverId
+        isGroup
+        isPublic
+        createdAt
+        updatedAt
+        creator {
+          id
+          userId
+          userName
+          name
+          firstName
+          lastName
+        }
+        receiver {
+          id
+          userId
+          userName
+          name
+          firstName
+          lastName
+        }
+      }
+    }
+    nextToken
+  }
+}
+
 # Check if a group name already exists
 query CheckGroupNameExists($name: String!) {
   listGroups(

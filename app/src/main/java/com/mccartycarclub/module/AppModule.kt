@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.amplifyframework.kotlin.core.Amplify
-import com.mccartycarclub.CarClubApplication
 import com.mccartycarclub.data.websocket.AblyRealtimeProvider
 import com.mccartycarclub.data.websocket.AblyService
 import com.mccartycarclub.domain.UserPreferencesManager
@@ -13,22 +12,13 @@ import com.mccartycarclub.domain.helpers.SearchResult
 import com.mccartycarclub.domain.usecases.user.SearchResultBuilder
 import com.mccartycarclub.domain.websocket.AblyProvider
 import com.mccartycarclub.domain.websocket.RealtimeService
-import com.mccartycarclub.pigeon.CerqaFlutterApi
-import com.mccartycarclub.pigeon.ChatHostApi
-import com.mccartycarclub.pigeon.PigeonFlutterApi
 import com.mccartycarclub.receiver.AblyBroadcastReceiver
-import com.mccartycarclub.repository.ChatRepository
-import com.mccartycarclub.repository.ContactsRepository
-import com.mccartycarclub.repository.LocalRepository
 import com.mccartycarclub.repository.datastore.UserPreferences
-import com.mccartycarclub.viewmodels.ChatViewModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.embedding.engine.dart.DartExecutor
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Named
@@ -85,46 +75,4 @@ object AppModule {
     @Provides
     @Singleton
     fun provideSearchResultBuilder(): SearchResult = SearchResultBuilder
-
-    /**
-     * Cached Flutter Engine which enables chat to start up faster than using a new
-     * engine each time chat is started. Uses lazy initialization from Application.
-     */
-    @Provides
-    @Singleton
-    fun provideFlutterEngine(@ApplicationContext context: Context): FlutterEngine {
-        return (context.applicationContext as CarClubApplication).getChatEngine()
-    }
-
-    /**
-     * Initialize the Pigeon Flutter API in order to
-     * send data from Android to Flutter
-     */
-    @Provides
-    @Singleton
-    fun providePigeonFlutterApi(flutterEngine: FlutterEngine): PigeonFlutterApi {
-        return PigeonFlutterApi(flutterEngine.dartExecutor.binaryMessenger)
-    }
-
-    @Provides
-    @Singleton
-    fun provideCerqaFlutterApi(flutterEngine: FlutterEngine): CerqaFlutterApi {
-        return CerqaFlutterApi(flutterEngine.dartExecutor.binaryMessenger)
-    }
-
-    @Provides
-    @Singleton
-    fun provideChatHostApi(
-        chatRepository: ChatRepository,
-        contactsRepository: ContactsRepository,
-        localRepository: LocalRepository,
-        ioDispatcher: CoroutineDispatcher,
-    ): ChatHostApi {
-        return ChatHostApi(
-            chatRepository,
-            contactsRepository,
-            localRepository,
-            ioDispatcher,
-        )
-    }
 }

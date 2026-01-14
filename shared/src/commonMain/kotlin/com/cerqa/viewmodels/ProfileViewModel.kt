@@ -58,31 +58,43 @@ class ProfileViewModel(
             try {
                 println("ProfileViewModel ===== Getting current user ID from auth provider")
                 val userId = authTokenProvider.getCurrentUserId()
-                println("ProfileViewModel ===== Current user ID: $userId")
+                println("ProfileViewModel ===== Current user ID: '$userId' (length: ${userId?.length ?: 0})")
 
-                if (userId != null) {
+                if (userId != null && userId.isNotEmpty()) {
                     // Fetch fresh user data from repository
-                    println("ProfileViewModel ===== Fetching user data from repository")
+                    println("ProfileViewModel ===== Fetching user data from repository for userId: $userId")
                     userRepository.getUser()
                         .onSuccess { userData ->
-                            println("ProfileViewModel ===== User data fetched: userName=${userData.userName}, email=${userData.email}")
+                            println("ProfileViewModel ===== User data fetched successfully!")
+                            println("ProfileViewModel ===== userName=${userData.userName}")
+                            println("ProfileViewModel ===== email=${userData.email}")
+                            println("ProfileViewModel ===== name=${userData.name}")
+                            println("ProfileViewModel ===== userId=${userData.userId}")
                             _userData.value = userData
                             _isProfileComplete.value = true
                             _missingFields.value = emptyList()
                         }
                         .onFailure { error ->
-                            println("ProfileViewModel ===== Failed to fetch user data: ${error.message}")
+                            println("ProfileViewModel ===== Failed to fetch user data!")
+                            println("ProfileViewModel ===== Error message: ${error.message}")
+                            println("ProfileViewModel ===== Error type: ${error::class.simpleName}")
+                            error.printStackTrace()
                             _error.value = "Failed to load user data: ${error.message}"
                             _isProfileComplete.value = false
                         }
                 } else {
-                    println("ProfileViewModel ===== No user ID found - user not authenticated")
+                    println("ProfileViewModel ===== No user ID found or empty - user not authenticated")
+                    println("ProfileViewModel ===== userId value: '$userId'")
                     _error.value = "User not authenticated"
+                    _isProfileComplete.value = false
                 }
             } catch (e: Exception) {
-                println("ProfileViewModel ===== Error calling checkProfileComplete: ${e.message}")
+                println("ProfileViewModel ===== Exception in checkProfileComplete!")
+                println("ProfileViewModel ===== Exception message: ${e.message}")
+                println("ProfileViewModel ===== Exception type: ${e::class.simpleName}")
                 e.printStackTrace()
                 _error.value = e.message ?: "Failed to check profile"
+                _isProfileComplete.value = false
             }
 
             _isLoading.value = false

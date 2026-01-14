@@ -20,13 +20,19 @@ class IOSAuthCallbackImpl: IOSAuthCallback {
                 // Amplify Swift API to fetch Cognito tokens
                 if let cognitoTokensProvider = session as? AuthCognitoTokensProvider {
                     let tokens = try cognitoTokensProvider.getCognitoTokens().get()
-                    completion(tokens.accessToken, nil)
+                    DispatchQueue.main.async {
+                        completion(tokens.accessToken, nil)
+                    }
                 } else {
-                    completion(nil, "Session doesn't contain Cognito tokens")
+                    DispatchQueue.main.async {
+                        completion(nil, "Session doesn't contain Cognito tokens")
+                    }
                 }
 
             } catch {
-                completion(nil, "Failed to get access token: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    completion(nil, "Failed to get access token: \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -35,9 +41,13 @@ class IOSAuthCallbackImpl: IOSAuthCallback {
         Task {
             do {
                 let session = try await Amplify.Auth.fetchAuthSession()
-                completion(KotlinBoolean(value: session.isSignedIn))
+                DispatchQueue.main.async {
+                    completion(KotlinBoolean(value: session.isSignedIn))
+                }
             } catch {
-                completion(KotlinBoolean(value: false))
+                DispatchQueue.main.async {
+                    completion(KotlinBoolean(value: false))
+                }
             }
         }
     }
@@ -46,9 +56,15 @@ class IOSAuthCallbackImpl: IOSAuthCallback {
         Task {
             do {
                 let authUser = try await Amplify.Auth.getCurrentUser()
-                completion(authUser.userId)
+                print("IOSAuthCallbackImpl: Got userId: \(authUser.userId)")
+                DispatchQueue.main.async {
+                    completion(authUser.userId)
+                }
             } catch {
-                completion(nil)
+                print("IOSAuthCallbackImpl: Failed to get userId: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    completion(nil)
+                }
             }
         }
     }

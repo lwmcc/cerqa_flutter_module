@@ -1,18 +1,51 @@
 package com.cerqa.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cerqa.ui.components.MembersBottomSheet
@@ -20,7 +53,7 @@ import com.cerqa.viewmodels.EditGroupViewModel
 import com.cerqa.viewmodels.GroupMember
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun EditGroup(
     groupId: String,
@@ -29,6 +62,7 @@ fun EditGroup(
 ) {
     val uiState by editGroupViewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     // Load group data on first composition
     LaunchedEffect(groupId) {
@@ -47,10 +81,9 @@ fun EditGroup(
         MembersBottomSheet(
             onDismiss = { editGroupViewModel.hideMembersSheet() },
             contacts = uiState.availableContacts,
-            selectedMemberIds = emptySet(), // Not using multi-select here
+            selectedMemberIds = emptySet(),
             isLoading = uiState.isLoadingContacts,
             onToggleMember = { userId ->
-                // Find the contact and add them immediately
                 val contact = uiState.availableContacts.find { it.userId == userId }
                 if (contact != null) {
                     editGroupViewModel.addMember(contact)
@@ -66,7 +99,10 @@ fun EditGroup(
             onDismissRequest = { editGroupViewModel.hideRemoveConfirmation() },
             title = { Text("Remove Member?") },
             text = {
-                Text("Are you sure you want to remove ${uiState.memberToRemove?.name ?: uiState.memberToRemove?.userName ?: "this member"} from the group?")
+                val memberName = uiState.memberToRemove?.name
+                    ?: uiState.memberToRemove?.userName
+                    ?: "this member"
+                Text("Are you sure you want to remove $memberName from the group?")
             },
             confirmButton = {
                 Button(
@@ -86,16 +122,67 @@ fun EditGroup(
         )
     }
 
-    Box(
+    Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
+            .imePadding(),
+        topBar = {
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                ),
+                navigationIcon = {
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                title = {
+                    Text(
+                        text = if (uiState.originalGroupName.isNotEmpty())
+                            uiState.originalGroupName
+                        else
+                            "Edit Group"
+                    )
+                }
+            )
+        },
+        bottomBar = {
+            // Only show button when content is loaded (not loading and has data)
+            if (!uiState.isLoadingGroup && uiState.groupName.isNotEmpty()) {
+                Button(
+                    onClick = { editGroupViewModel.saveChanges() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .height(56.dp),
+                    enabled = !uiState.isSaving &&
+                            uiState.isValid &&
+                            uiState.hasUnsavedChanges
+                ) {
+                    if (uiState.isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    }
+                    Text(
+                        text = if (uiState.isSaving) "Saving..." else "Save Changes",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
         when {
             uiState.isLoadingGroup -> {
-                // Loading state
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
@@ -103,9 +190,10 @@ fun EditGroup(
             }
 
             uiState.error != null && uiState.groupName.isEmpty() -> {
-                // Error state (group failed to load)
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
@@ -131,47 +219,31 @@ fun EditGroup(
             }
 
             else -> {
-                // Main content
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(scrollState)
-                        .padding(24.dp)
-                        .padding(bottom = 96.dp)
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = {
+                                keyboardController?.hide()
+                            })
+                        }
+                        .padding(innerPadding)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        Text(
-                            text = "Update group details and manage members",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // Group Name Section
-                    Text(
-                        text = "Group Name",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    // Group Name Field (pre-filled with original name)
                     OutlinedTextField(
                         value = uiState.groupName,
                         onValueChange = { editGroupViewModel.onGroupNameChanged(it.trim()) },
-                        label = { Text("Enter group name") },
-                        placeholder = { Text("e.g., Weekend Warriors") },
+                        label = { Text("Group Name") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         isError = uiState.groupNameError != null,
                         supportingText = {
                             if (uiState.groupNameError != null) {
                                 Text(
-                                    text = uiState.groupNameError ?: "",
+                                    text = uiState.groupNameError.orEmpty(),
                                     color = MaterialTheme.colorScheme.error
                                 )
                             }
@@ -187,73 +259,34 @@ fun EditGroup(
                         }
                     )
 
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // Members Section
+                    // Members Section Header
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(
-                                text = "Members",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Text(
-                                text = "${uiState.members.size} ${if (uiState.members.size == 1) "member" else "members"}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Text(
+                            text = "Members (${uiState.members.size})",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Add Member Button
+                    // Add Members Button
                     OutlinedButton(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { editGroupViewModel.showMembersSheet() }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "Add member",
+                            contentDescription = "Add members",
                             modifier = Modifier.size(18.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Add Member")
+                        Text("Add Members")
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
                     // Member Chips
-                    if (uiState.members.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AccountCircle,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(48.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                                )
-                                Text(
-                                    text = "No members in this group",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    } else {
+                    if (uiState.members.isNotEmpty()) {
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -270,45 +303,11 @@ fun EditGroup(
 
                     // Error message
                     if (uiState.error != null) {
-                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = uiState.error ?: "",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodyMedium
                         )
-                    }
-                }
-
-                // Sticky bottom button
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.background)
-                        .imePadding()
-                        .padding(horizontal = 24.dp, vertical = 16.dp)
-                ) {
-                    Button(
-                        onClick = { editGroupViewModel.saveChanges() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        enabled = !uiState.isSaving &&
-                                uiState.groupName.length >= 3 &&
-                                uiState.groupNameError == null &&
-                                uiState.members.isNotEmpty()
-                    ) {
-                        if (uiState.isSaving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Saving...")
-                        } else {
-                            Text("Save Changes")
-                        }
                     }
                 }
             }

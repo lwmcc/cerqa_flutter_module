@@ -14,7 +14,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.amplifyframework.ui.authenticator.SignedInState
-import com.mccartycarclub.CarClubApplication.Companion.CHAT_ENGINE_ID
 import com.mccartycarclub.R
 import com.mccartycarclub.domain.model.SmsMessage
 import com.mccartycarclub.navigation.AppDestination
@@ -35,8 +34,6 @@ import com.mccartycarclub.viewmodels.ChatViewModel
 import com.mccartycarclub.viewmodels.ContactsViewModel
 import com.mccartycarclub.viewmodels.MainViewModel
 import com.mccartycarclub.viewmodels.SearchViewModel
-import io.flutter.embedding.android.FlutterActivity
-
 
 @Composable
 fun StartScreen(
@@ -82,14 +79,7 @@ fun StartScreen(
                     navToScreen(
                         route,
                         navActions,
-                        onChatClick = { // TODO: don't need click here and below
-                           /* (context as? Activity)?.let { activity ->
-                                activity.startActivity(
-                                    FlutterActivity.withCachedEngine("cerqa_engine_id")
-                                        .build(activity)
-                                )
-                            }*/
-                        })
+                        onChatClick = { })
                 },
                 onQueryChanged = { query ->
 
@@ -105,13 +95,7 @@ fun StartScreen(
                     navToScreen(
                         route,
                         navActions,
-                        onChatClick = { // TODO: don't need here and above
-                            context.startActivity(
-                                FlutterActivity
-                                    .withCachedEngine(CHAT_ENGINE_ID)
-                                    .build(context)
-                            )
-                        })
+                        onChatClick = { })
                 },
             )
         }
