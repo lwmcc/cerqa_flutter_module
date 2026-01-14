@@ -1153,7 +1153,8 @@ private fun GroupChatListItem(
 ) {
     val userGroup = chatItem.group
     val groupName = userGroup.group?.name ?: "Unknown Group"
-    val groupId = userGroup.group?.groupId ?: userGroup.group?.id ?: ""
+    // Use DynamoDB id (not custom groupId) because UserGroup.groupId references Group's primary key
+    val groupId = userGroup.group?.id ?: ""
     val createdAt = userGroup.group?.createdAt ?: ""
     val role: com.cerqa.graphql.type.GroupMemberRole? =
         null  // Role not yet in production backend

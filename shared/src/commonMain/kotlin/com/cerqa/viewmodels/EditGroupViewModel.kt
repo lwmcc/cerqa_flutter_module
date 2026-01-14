@@ -74,9 +74,11 @@ class EditGroupViewModel(
      * Initialize the screen with group data
      */
     fun loadGroup(groupId: String) {
+        println("EditGroupViewModel: Loading group with id: $groupId")
 
         viewModelScope.launch {
             currentUserId = authTokenProvider.getCurrentUserId()
+            println("EditGroupViewModel: Current user ID: $currentUserId")
 
             _uiState.value = _uiState.value.copy(
                 groupId = groupId,
@@ -87,6 +89,11 @@ class EditGroupViewModel(
             // Load group members
             groupRepository.getGroupMembers(groupId)
                 .onSuccess { userGroups ->
+                    println("EditGroupViewModel: Fetched ${userGroups.size} UserGroup entries")
+                    userGroups.forEach { ug ->
+                        println("EditGroupViewModel: UserGroup - id=${ug.id}, userId=${ug.userId}, userName=${ug.user?.userName}")
+                    }
+
                     // Get the group name from first member's group data
                     val groupName = userGroups.firstOrNull()?.group?.name ?: ""
 
@@ -101,6 +108,7 @@ class EditGroupViewModel(
                                 name = userGroup.user?.name
                             )
                         }
+                    println("EditGroupViewModel: After filtering, ${members.size} members (excluding current user)")
 
                     _uiState.value = _uiState.value.copy(
                         originalGroupName = groupName,
